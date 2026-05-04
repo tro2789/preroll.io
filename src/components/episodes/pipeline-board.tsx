@@ -68,13 +68,13 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
   const sortedStages = [...stages].sort((a, b) => a.position - b.position)
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-4">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
       {sortedStages.map((stage) => {
         const stageEpisodes = episodes.filter((ep) => ep.stage_id === stage.id)
         return (
           <div
             key={stage.id}
-            className="flex min-w-[280px] flex-col rounded-lg bg-zinc-800/50 border border-zinc-800"
+            className="flex min-w-0 flex-col rounded-lg bg-zinc-800/50 border border-zinc-800"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
               <h3 className="text-sm font-semibold text-zinc-200">
