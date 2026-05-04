@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
+import { EpisodeDeliverables } from '@/components/deliverables/episode-deliverables'
 
 export default async function EpisodeDetailPage({
   params,
@@ -10,12 +11,19 @@ export default async function EpisodeDetailPage({
   const { showId, episodeId } = await params
   const supabase = await createClient()
 
-  const { data: episode, error } = await supabase
-    .from('episodes')
-    .select('*, pipeline_stages(id, name, position)')
-    .eq('id', episodeId)
-    .eq('show_id', showId)
-    .single()
+  const [{ data: episode, error }, { data: deliverables }] = await Promise.all([
+    supabase
+      .from('episodes')
+      .select('*, pipeline_stages(id, name, position)')
+      .eq('id', episodeId)
+      .eq('show_id', showId)
+      .single(),
+    supabase
+      .from('deliverables')
+      .select('*')
+      .eq('episode_id', episodeId)
+      .order('created_at', { ascending: false }),
+  ])
 
   if (error || !episode) {
     return (
@@ -142,6 +150,12 @@ export default async function EpisodeDetailPage({
             </p>
           </div>
         )}
+
+        <EpisodeDeliverables
+          showId={showId}
+          episodeId={episodeId}
+          deliverables={deliverables || []}
+        />
       </div>
     </div>
   )

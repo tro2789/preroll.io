@@ -25,7 +25,8 @@ export async function updateSession(request: NextRequest) {
 
   const { data, error } = await supabase.auth.getClaims()
 
-  if ((!data?.claims || error) && request.nextUrl.pathname.startsWith('/app')) {
+  const isProtected = request.nextUrl.pathname.startsWith('/app') || request.nextUrl.pathname.startsWith('/portal')
+  if ((!data?.claims || error) && isProtected) {
     const isRSC = request.headers.get('RSC') === '1'
     const isServerAction = request.headers.has('Next-Action')
     if (!isRSC && !isServerAction) {

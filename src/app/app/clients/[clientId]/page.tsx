@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ClientDetailActions } from './client-detail-actions'
+import { InviteButton } from './invite-button'
 
 export default async function ClientDetailPage({
   params,
@@ -57,6 +58,12 @@ export default async function ClientDetailPage({
           )}
         </div>
         <div className="flex items-center gap-3">
+          <InviteButton
+            clientId={clientId}
+            inviteCode={client.invite_code}
+            clientUserId={client.client_user_id}
+            onboardedAt={client.onboarded_at}
+          />
           <Link
             href={`/app/clients/${clientId}/edit`}
             className="inline-flex items-center rounded-md bg-surface-overlay px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-surface-overlay/80"
