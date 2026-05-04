@@ -32,7 +32,7 @@ export async function PATCH(
   const allowedFields = [
     'title', 'episode_number', 'description', 'stage_id',
     'status', 'scheduled_publish_date', 'frame_io_url',
-    'transistor_episode_id', 'notes', 'published_at',
+    'transistor_episode_id', 'notes', 'published_at', 'image_url',
   ]
   const updateData: Record<string, unknown> = {}
   for (const field of allowedFields) {

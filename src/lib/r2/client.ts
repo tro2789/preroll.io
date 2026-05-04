@@ -26,3 +26,11 @@ export async function getDownloadUrl(key: string): Promise<string> {
   })
   return getSignedUrl(r2, command, { expiresIn: 3600 })
 }
+
+export function resolveImageUrl(keyOrUrl: string | null | undefined): string | null {
+  if (!keyOrUrl) return null
+  if (keyOrUrl.startsWith('http')) return keyOrUrl
+  const publicBase = process.env.R2_PUBLIC_URL
+  if (publicBase) return `${publicBase}/${keyOrUrl}`
+  return null
+}

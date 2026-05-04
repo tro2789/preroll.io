@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Thumbnail } from '@/components/ui/thumbnail'
 
 interface Episode {
   id: string
@@ -8,6 +9,7 @@ interface Episode {
   episode_number: number | null
   scheduled_publish_date: string | null
   frame_io_url: string | null
+  image_url?: string | null
   status: string
 }
 
@@ -18,10 +20,13 @@ interface EpisodeCardProps {
 
 export function EpisodeCard({ episode, showId }: EpisodeCardProps) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-surface-overlay p-2.5 transition-colors hover:border-border-hover">
+    <div className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden transition-colors hover:border-border-hover">
+      {episode.image_url && (
+        <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9]" />
+      )}
       <Link
         href={`/app/shows/${showId}/episodes/${episode.id}`}
-        className="block"
+        className="block p-2.5"
       >
         <div className="flex items-start justify-between gap-2">
           <h4 className="text-sm font-medium text-text-primary leading-tight">

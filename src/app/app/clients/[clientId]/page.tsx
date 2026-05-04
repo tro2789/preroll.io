@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
 import { ClientDetailActions } from './client-detail-actions'
 import { InviteButton } from './invite-button'
+import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ClientDetailPage({
   params,
@@ -33,7 +35,7 @@ export default async function ClientDetailPage({
 
   const { data: shows } = await supabase
     .from('shows')
-    .select('id, name, format, schedule')
+    .select('id, name, format, schedule, cover_art_url')
     .eq('client_id', clientId)
     .order('name')
 
@@ -162,12 +164,15 @@ export default async function ClientDetailPage({
               <Link
                 key={show.id}
                 href={`/app/shows/${show.id}`}
-                className="block rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-hover"
+                className="block rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-hover"
               >
-                <p className="text-sm font-medium text-text-primary">{show.name}</p>
-                <div className="mt-1 flex items-center gap-3 text-xs text-text-tertiary">
-                  {show.format && <span>{show.format}</span>}
-                  {show.schedule && <span>{show.schedule}</span>}
+                <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/9]" />
+                <div className="p-4">
+                  <p className="text-sm font-medium text-text-primary">{show.name}</p>
+                  <div className="mt-1 flex items-center gap-3 text-xs text-text-tertiary">
+                    {show.format && <span>{show.format}</span>}
+                    {show.schedule && <span>{show.schedule}</span>}
+                  </div>
                 </div>
               </Link>
             ))}

@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { EpisodeForm } from '@/components/episodes/episode-form'
+import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 
 interface Stage {
   id: string
@@ -19,6 +20,7 @@ interface EpisodeData {
   stage_id: string | null
   scheduled_publish_date: string | null
   frame_io_url: string | null
+  image_url: string | null
   notes: string | null
 }
 
@@ -59,6 +61,17 @@ export default function EditEpisodePage({
     }
     fetchData()
   }, [showId, episodeId])
+
+  async function handleImageUploaded(fileKey: string) {
+    const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_url: fileKey }),
+    })
+    if (res.ok) {
+      setEpisode((prev) => prev ? { ...prev, image_url: fileKey } : prev)
+    }
+  }
 
   async function handleSubmit(data: {
     title: string
@@ -119,7 +132,14 @@ export default function EditEpisodePage({
       <p className="mt-1 text-sm text-text-secondary">
         Update &ldquo;{episode.title}&rdquo;.
       </p>
-      <div className="mt-6">
+      <div className="mt-6 max-w-lg">
+        <ThumbnailUpload
+          id={episodeId}
+          imageUrl={episode.image_url}
+          showId={showId}
+          onUploaded={handleImageUploaded}
+          className="mb-6"
+        />
         <EpisodeForm
           showId={showId}
           stages={stages}

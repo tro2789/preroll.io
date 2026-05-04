@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ShowForm } from '@/components/shows/show-form'
+import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 
 export default function EditShowPage({
   params,
@@ -31,6 +32,17 @@ export default function EditShowPage({
     }
     fetchShow()
   }, [showId])
+
+  async function handleImageUploaded(fileKey: string) {
+    const res = await fetch(`/api/v1/shows/${showId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cover_art_url: fileKey }),
+    })
+    if (res.ok) {
+      setShow((prev) => prev ? { ...prev, cover_art_url: fileKey } : prev)
+    }
+  }
 
   async function handleSubmit(data: {
     name: string
@@ -80,7 +92,14 @@ export default function EditShowPage({
       <p className="mt-1 text-sm text-text-secondary">
         Update {show.name}&apos;s details.
       </p>
-      <div className="mt-6">
+      <div className="mt-6 max-w-lg">
+        <ThumbnailUpload
+          id={showId}
+          imageUrl={show.cover_art_url || null}
+          showId={showId}
+          onUploaded={handleImageUploaded}
+          className="mb-6"
+        />
         <ShowForm
           clientId={show.client_id || ''}
           defaultValues={{
