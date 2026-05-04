@@ -14,7 +14,6 @@ import {
 } from '@dnd-kit/core'
 import { useDroppable } from '@dnd-kit/core'
 import { useDraggable } from '@dnd-kit/core'
-import { CSS } from '@dnd-kit/utilities'
 import { EpisodeCard } from './episode-card'
 
 interface Stage {
@@ -72,18 +71,14 @@ function DraggableEpisode({
   showId: string
   isDragOverlay?: boolean
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: episode.id,
     data: { episode },
   })
 
-  const style = transform
-    ? { transform: CSS.Translate.toString(transform) }
-    : undefined
-
   if (isDragOverlay) {
     return (
-      <div className="opacity-90 rotate-2 scale-105">
+      <div className="rotate-2 scale-105">
         <EpisodeCard episode={episode} showId={showId} />
       </div>
     )
@@ -92,8 +87,7 @@ function DraggableEpisode({
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-30' : ''}`}
+      className={`cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-0 h-0 overflow-hidden' : ''}`}
       {...listeners}
       {...attributes}
     >
