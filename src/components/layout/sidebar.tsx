@@ -15,13 +15,15 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-        <div className="flex flex-col flex-grow bg-zinc-900 border-r border-zinc-800 pt-5 pb-4 overflow-y-auto">
-          <div className="flex items-center flex-shrink-0 px-4">
-            <span className="text-xl font-bold text-white tracking-tight">PreRoll</span>
+        <div className="flex flex-col flex-grow bg-surface-base border-r border-border-default pt-8 pb-4 overflow-y-auto">
+          <div className="flex items-center flex-shrink-0 px-6">
+            <span className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
+              PreRoll
+            </span>
           </div>
-          <nav className="mt-8 flex-1 px-2 space-y-1">
+          <nav className="mt-10 flex-1 px-3 space-y-0.5">
             {navItems.map((item) => {
               const isActive =
                 item.href === '/app'
@@ -31,15 +33,18 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
-                      ? 'bg-zinc-800 text-white'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+                      ? 'bg-accent-muted text-accent-hover'
+                      : 'text-text-tertiary hover:text-text-primary hover:bg-surface-raised'
                   }`}
                 >
                   <item.icon
                     className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                      isActive ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'
+                      isActive
+                        ? 'text-accent'
+                        : 'text-text-tertiary group-hover:text-text-secondary'
                     }`}
                   />
                   {item.label}
@@ -51,7 +56,7 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-zinc-900 border-t border-zinc-800 flex justify-around py-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-base border-t border-border-default flex justify-around">
         {navItems.map((item) => {
           const isActive =
             item.href === '/app'
@@ -61,8 +66,11 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center px-3 py-1 text-xs ${
-                isActive ? 'text-white' : 'text-zinc-500'
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex flex-col items-center justify-center min-h-[44px] px-3 py-2.5 text-xs transition-colors ${
+                isActive
+                  ? 'text-accent-hover'
+                  : 'text-text-tertiary'
               }`}
             >
               <item.icon className="h-5 w-5 mb-0.5" />
