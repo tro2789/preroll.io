@@ -40,16 +40,15 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 animate-pulse rounded-lg bg-zinc-800/50" />
-          ))}
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+          <div className="h-4 w-48 animate-pulse rounded bg-surface-raised" />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="h-48 animate-pulse rounded-lg bg-zinc-800/50" />
-          <div className="h-48 animate-pulse rounded-lg bg-zinc-800/50" />
+          <div className="h-48 animate-pulse rounded-lg bg-surface-raised" />
+          <div className="h-48 animate-pulse rounded-lg bg-surface-raised" />
         </div>
+        <div className="h-48 animate-pulse rounded-lg bg-surface-raised" />
       </div>
     )
   }
@@ -57,8 +56,8 @@ export default function DashboardPage() {
   if (!data) {
     return (
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="mt-2 text-zinc-400">Failed to load dashboard data.</p>
+        <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+        <p className="mt-2 text-text-secondary">Failed to load dashboard data.</p>
       </div>
     )
   }
@@ -70,14 +69,15 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-
-      <StatsBar stats={data.stats} />
+      <div className="flex items-baseline justify-between gap-4">
+        <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
+        <StatsBar stats={data.stats} />
+      </div>
 
       {isEmpty ? (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-8 text-center">
-          <p className="text-zinc-400">
-            No episodes yet. Start by adding a client and creating a show.
+        <div className="rounded-lg border border-border-subtle bg-surface-raised px-6 py-8 text-center">
+          <p className="text-sm text-text-secondary">
+            Nothing in the pipeline. Add a show to get started.
           </p>
         </div>
       ) : (
@@ -86,7 +86,7 @@ export default function DashboardPage() {
             <AttentionList
               title="Needs Attention"
               episodes={data.episodes_in_progress.slice(0, 8)}
-              emptyMessage="All caught up — no episodes in progress."
+              emptyMessage="All caught up."
             />
             <AttentionList
               title="Upcoming Deadlines"
