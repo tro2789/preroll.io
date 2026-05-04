@@ -28,6 +28,7 @@ interface Episode {
   episode_number: number | null
   scheduled_publish_date: string | null
   frame_io_url: string | null
+  image_url?: string | null
   status: string
   stage_id: string | null
 }

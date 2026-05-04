@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
 import { PipelineBoard } from '@/components/episodes/pipeline-board'
+import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ShowDetailPage({
   params,
@@ -33,7 +35,7 @@ export default async function ShowDetailPage({
 
   const { data: episodes } = await supabase
     .from('episodes')
-    .select('id, title, episode_number, stage_id, status, scheduled_publish_date, frame_io_url')
+    .select('id, title, episode_number, stage_id, status, scheduled_publish_date, frame_io_url, image_url')
     .eq('show_id', showId)
     .order('episode_number', { ascending: true })
 
@@ -44,25 +46,28 @@ export default async function ShowDetailPage({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <div>
-          {client && (
-            <Link
-              href={`/app/clients/${client.id}`}
-              className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
-            >
-              &larr; Client: {client.name}
-            </Link>
-          )}
-          <h1 className="mt-2 text-2xl font-bold text-text-primary">{show.name}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
-            {show.format && (
-              <span className="inline-flex items-center rounded-full bg-accent-muted px-2.5 py-0.5 text-xs font-medium text-accent">
-                {show.format}
-              </span>
+        <div className="flex items-center gap-4">
+          <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="w-16 h-16 shrink-0" />
+          <div>
+            {client && (
+              <Link
+                href={`/app/clients/${client.id}`}
+                className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+              >
+                &larr; Client: {client.name}
+              </Link>
             )}
-            {show.schedule && (
-              <span className="text-sm text-text-secondary">{show.schedule}</span>
-            )}
+            <h1 className="mt-1 text-2xl font-bold text-text-primary">{show.name}</h1>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              {show.format && (
+                <span className="inline-flex items-center rounded-full bg-accent-muted px-2.5 py-0.5 text-xs font-medium text-accent">
+                  {show.format}
+                </span>
+              )}
+              {show.schedule && (
+                <span className="text-sm text-text-secondary">{show.schedule}</span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -112,6 +117,7 @@ export default async function ShowDetailPage({
             episodes={(episodes ?? []).map((ep) => ({
               ...ep,
               frame_io_url: ep.frame_io_url ?? null,
+              image_url: resolveImageUrl(ep.image_url),
             }))}
           />
         )}

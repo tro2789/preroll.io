@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
+import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ShowsPage() {
   const supabase = await createClient()
 
   const { data: shows } = await supabase
     .from('shows')
-    .select('id, name, format, schedule, clients(id, name), episodes(id)')
+    .select('id, name, format, schedule, cover_art_url, clients(id, name), episodes(id)')
     .order('name')
 
   return (
@@ -25,23 +27,26 @@ export default async function ShowsPage() {
               <Link
                 key={show.id}
                 href={`/app/shows/${show.id}`}
-                className="block rounded-lg border border-border-subtle bg-surface-raised p-5 transition-colors hover:border-border-hover"
+                className="block rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-hover"
               >
-                <h3 className="text-sm font-semibold text-text-primary">{show.name}</h3>
-                {client && (
-                  <p className="mt-1 text-xs text-text-tertiary">{client.name}</p>
-                )}
-                <div className="mt-3 flex items-center gap-3 text-xs text-text-secondary">
-                  {show.format && (
-                    <span className="inline-flex items-center rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-                      {show.format}
-                    </span>
+                <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/9]" />
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-text-primary">{show.name}</h3>
+                  {client && (
+                    <p className="mt-1 text-xs text-text-tertiary">{client.name}</p>
                   )}
-                  <span>{episodeCount} {episodeCount === 1 ? 'episode' : 'episodes'}</span>
+                  <div className="mt-2 flex items-center gap-3 text-xs text-text-secondary">
+                    {show.format && (
+                      <span className="inline-flex items-center rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
+                        {show.format}
+                      </span>
+                    )}
+                    <span>{episodeCount} {episodeCount === 1 ? 'episode' : 'episodes'}</span>
+                  </div>
+                  {show.schedule && (
+                    <p className="mt-2 text-xs text-text-tertiary">{show.schedule}</p>
+                  )}
                 </div>
-                {show.schedule && (
-                  <p className="mt-2 text-xs text-text-tertiary">{show.schedule}</p>
-                )}
               </Link>
             )
           })}
