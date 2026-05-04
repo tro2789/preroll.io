@@ -1,0 +1,28 @@
+'use client'
+
+import { use } from 'react'
+import Link from 'next/link'
+import { NotesList } from '@/components/clients/notes-list'
+
+export default function ClientNotesPage({
+  params,
+}: {
+  params: Promise<{ clientId: string }>
+}) {
+  const { clientId } = use(params)
+
+  return (
+    <div>
+      <Link
+        href={`/app/clients/${clientId}`}
+        className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+      >
+        &larr; Back to Client
+      </Link>
+      <h1 className="mt-2 text-2xl font-bold text-white">Meeting Notes</h1>
+      <div className="mt-6">
+        <NotesList clientId={clientId} />
+      </div>
+    </div>
+  )
+}
