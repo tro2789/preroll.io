@@ -24,39 +24,38 @@ function formatDate(dateStr: string): string {
 export function AttentionList({ title, episodes, emptyMessage }: AttentionListProps) {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      <h2 className="text-sm font-medium uppercase tracking-wider text-text-tertiary">{title}</h2>
       {episodes.length === 0 ? (
-        <p className="mt-3 text-sm text-zinc-500">{emptyMessage}</p>
+        <p className="mt-3 text-sm text-text-tertiary">{emptyMessage}</p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 divide-y divide-border-subtle">
           {episodes.map((episode) => (
             <li key={episode.id}>
               <Link
                 href={`/app/shows/${episode.shows?.id}/episodes/${episode.id}`}
-                className="block rounded-lg border border-zinc-800 bg-zinc-800/50 px-4 py-3 transition-colors hover:border-zinc-700 hover:bg-zinc-800"
+                className="flex items-center justify-between gap-2 px-2 py-2.5 transition-colors hover:bg-surface-raised"
               >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    {episode.shows && (
-                      <p className="text-xs text-zinc-500">{episode.shows.name}</p>
-                    )}
-                    <p className="truncate text-sm font-medium text-white">
-                      {episode.title}
-                    </p>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {episode.episode_number !== null && (
-                      <span className="inline-flex items-center rounded-full bg-indigo-900/50 px-2 py-0.5 text-xs font-medium text-indigo-300 border border-indigo-700/50">
-                        #{episode.episode_number}
-                      </span>
-                    )}
-                    <span className="text-xs text-zinc-400">
-                      {episode.scheduled_publish_date
-                        ? formatDate(episode.scheduled_publish_date)
-                        : 'No date set'}
+                <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                  {episode.shows && (
+                    <span className="shrink-0 text-xs text-text-tertiary">
+                      {episode.shows.name}
+                      <span className="mx-1 text-border-default">/</span>
                     </span>
-                  </div>
+                  )}
+                  <span className="truncate text-sm text-text-primary">
+                    {episode.title}
+                  </span>
+                  {episode.episode_number !== null && (
+                    <span className="ml-1 shrink-0 rounded bg-surface-overlay px-1.5 py-0.5 text-xs text-text-secondary">
+                      #{episode.episode_number}
+                    </span>
+                  )}
                 </div>
+                <span className="shrink-0 text-xs text-text-tertiary">
+                  {episode.scheduled_publish_date
+                    ? formatDate(episode.scheduled_publish_date)
+                    : 'No date'}
+                </span>
               </Link>
             </li>
           ))}
