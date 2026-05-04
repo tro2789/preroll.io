@@ -1,0 +1,148 @@
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { EpisodeDetailActions } from './episode-detail-actions'
+
+export default async function EpisodeDetailPage({
+  params,
+}: {
+  params: Promise<{ showId: string; episodeId: string }>
+}) {
+  const { showId, episodeId } = await params
+  const supabase = await createClient()
+
+  const { data: episode, error } = await supabase
+    .from('episodes')
+    .select('*, pipeline_stages(id, name, position)')
+    .eq('id', episodeId)
+    .eq('show_id', showId)
+    .single()
+
+  if (error || !episode) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-zinc-400">Episode not found.</p>
+        <Link
+          href={`/app/shows/${showId}`}
+          className="mt-4 inline-block text-sm text-indigo-400 hover:text-indigo-300"
+        >
+          Back to Show
+        </Link>
+      </div>
+    )
+  }
+
+  const stage = episode.pipeline_stages as { id: string; name: string; position: number } | null
+
+  return (
+    <div>
+      <Link
+        href={`/app/shows/${showId}`}
+        className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+      >
+        &larr; Back to Show
+      </Link>
+
+      <div className="mt-4 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">{episode.title}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            {episode.episode_number != null && (
+              <span className="inline-flex items-center rounded-full bg-zinc-700 px-2.5 py-0.5 text-xs font-medium text-zinc-300">
+                Episode #{episode.episode_number}
+              </span>
+            )}
+            <span className="inline-flex items-center rounded-full bg-indigo-900/50 px-2.5 py-0.5 text-xs font-medium text-indigo-300 border border-indigo-700/50">
+              {episode.status}
+            </span>
+            {stage && (
+              <span className="text-sm text-zinc-400">
+                Stage: {stage.name}
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
+            className="inline-flex items-center rounded-md bg-zinc-700 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-600"
+          >
+            Edit
+          </Link>
+          <EpisodeDetailActions showId={showId} episodeId={episodeId} />
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-6">
+        {episode.description && (
+          <div className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-4">
+            <h3 className="text-sm font-semibold text-zinc-300">Description</h3>
+            <p className="mt-2 text-sm text-zinc-400 whitespace-pre-wrap">
+              {episode.description}
+            </p>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {episode.scheduled_publish_date && (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-4">
+              <h3 className="text-sm font-semibold text-zinc-300">
+                Scheduled Publish Date
+              </h3>
+              <p className="mt-1 text-sm text-white">
+                {episode.scheduled_publish_date}
+              </p>
+            </div>
+          )}
+
+          {episode.published_at && (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-4">
+              <h3 className="text-sm font-semibold text-zinc-300">
+                Published At
+              </h3>
+              <p className="mt-1 text-sm text-white">
+                {new Date(episode.published_at).toLocaleDateString()}
+              </p>
+            </div>
+          )}
+
+          {episode.frame_io_url && (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-4">
+              <h3 className="text-sm font-semibold text-zinc-300">
+                Frame.io Link
+              </h3>
+              <a
+                href={episode.frame_io_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 inline-flex items-center gap-1 text-sm text-indigo-400 hover:text-indigo-300"
+              >
+                Open in Frame.io
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="h-3.5 w-3.5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4.22 11.78a.75.75 0 0 1 0-1.06L9.44 5.5H5.75a.75.75 0 0 1 0-1.5h5.5a.75.75 0 0 1 .75.75v5.5a.75.75 0 0 1-1.5 0V6.56l-5.22 5.22a.75.75 0 0 1-1.06 0Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </a>
+            </div>
+          )}
+        </div>
+
+        {episode.notes && (
+          <div className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-4">
+            <h3 className="text-sm font-semibold text-zinc-300">Notes</h3>
+            <p className="mt-2 text-sm text-zinc-400 whitespace-pre-wrap">
+              {episode.notes}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
