@@ -143,7 +143,7 @@ export default async function ClientDetailPage({
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white">Shows</h2>
           <Link
-            href={`/app/shows/new?clientId=${clientId}`}
+            href={`/app/clients/${clientId}/shows/new`}
             className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
           >
             Add Show
