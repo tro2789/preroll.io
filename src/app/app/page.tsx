@@ -1,106 +1,137 @@
-'use client'
-
-import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
+import { Thumbnail } from '@/components/ui/thumbnail'
 import { StatsBar } from '@/components/dashboard/stats-bar'
 import { AttentionList } from '@/components/dashboard/attention-list'
+import { DashboardActivityFeed } from '@/components/dashboard/activity-feed'
 
-interface Episode {
-  id: string
-  title: string
-  episode_number: number | null
-  status: string
-  scheduled_publish_date: string | null
-  updated_at: string
-  shows: { id: string; name: string } | null
-}
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-interface DashboardData {
-  episodes_in_progress: Episode[]
-  upcoming_deadlines: Episode[]
-  recent_activity: Episode[]
-  stats: {
-    client_count: number
-    show_count: number
-    episodes_this_month: number
-  }
-}
-
-export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/v1/dashboard')
-      .then((res) => res.json())
-      .then((json) => setData(json.data))
-      .catch(() => setData(null))
-      .finally(() => setLoading(false))
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-baseline justify-between">
-          <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
-          <div className="h-4 w-48 animate-pulse rounded bg-surface-raised" />
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="h-48 animate-pulse rounded-lg bg-surface-raised" />
-          <div className="h-48 animate-pulse rounded-lg bg-surface-raised" />
-        </div>
-        <div className="h-48 animate-pulse rounded-lg bg-surface-raised" />
-      </div>
-    )
+  if (!user) {
+    return <p className="text-text-tertiary">Loading...</p>
   }
 
-  if (!data) {
-    return (
-      <div>
-        <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
-        <p className="mt-2 text-text-secondary">Failed to load dashboard data.</p>
-      </div>
-    )
-  }
+  const today = new Date()
+  const nextTwoWeeks = new Date(today.getTime() + 14 * 86400000)
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
+  const todayStr = today.toISOString().split('T')[0]
+  const nextTwoWeeksStr = nextTwoWeeks.toISOString().split('T')[0]
 
-  const isEmpty =
-    data.episodes_in_progress.length === 0 &&
-    data.upcoming_deadlines.length === 0 &&
-    data.recent_activity.length === 0
+  const [
+    showsResult,
+    inProgressResult,
+    deadlinesResult,
+    activityResult,
+    clientCountResult,
+    showCountResult,
+    episodesThisMonthResult,
+    pendingDeliverablesResult,
+  ] = await Promise.all([
+    supabase
+      .from('shows')
+      .select('id, name, cover_art_url, clients(name), episodes(id)')
+      .order('name'),
+
+    supabase
+      .from('episodes')
+      .select('id, title, episode_number, status, scheduled_publish_date, updated_at, pipeline_stages(name), shows(id, name)')
+      .neq('status', 'published')
+      .order('updated_at', { ascending: false })
+      .limit(8),
+
+    supabase
+      .from('episodes')
+      .select('id, title, episode_number, status, scheduled_publish_date, pipeline_stages(name), shows(id, name)')
+      .gte('scheduled_publish_date', todayStr)
+      .lte('scheduled_publish_date', nextTwoWeeksStr)
+      .neq('status', 'published')
+      .order('scheduled_publish_date', { ascending: true })
+      .limit(6),
+
+    supabase
+      .from('activity_log')
+      .select('id, action, description, created_at, shows(name)')
+      .order('created_at', { ascending: false })
+      .limit(8),
+
+    supabase.from('clients').select('*', { count: 'exact', head: true }),
+    supabase.from('shows').select('*', { count: 'exact', head: true }),
+    supabase.from('episodes').select('*', { count: 'exact', head: true }).gte('created_at', monthStart.toISOString()),
+    supabase.from('deliverables').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+  ])
+
+  const shows = showsResult.data || []
+  const inProgress = inProgressResult.data || []
+  const deadlines = deadlinesResult.data || []
+  const activities = activityResult.data || []
+
+  const stats = {
+    client_count: clientCountResult.count ?? 0,
+    show_count: showCountResult.count ?? 0,
+    episodes_this_month: episodesThisMonthResult.count ?? 0,
+    pending_deliverables: pendingDeliverablesResult.count ?? 0,
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-baseline justify-between gap-4">
+    <div className="space-y-8">
+      <div>
         <h1 className="text-2xl font-bold text-text-primary">Dashboard</h1>
-        <StatsBar stats={data.stats} />
+        <div className="mt-4">
+          <StatsBar stats={stats} />
+        </div>
       </div>
 
-      {isEmpty ? (
-        <div className="rounded-lg border border-border-subtle bg-surface-raised px-6 py-8 text-center">
-          <p className="text-sm text-text-secondary">
-            Nothing in the pipeline. Add a show to get started.
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <AttentionList
-              title="Needs Attention"
-              episodes={data.episodes_in_progress.slice(0, 8)}
-              emptyMessage="All caught up."
-            />
-            <AttentionList
-              title="Upcoming Deadlines"
-              episodes={data.upcoming_deadlines}
-              emptyMessage="No deadlines in the next 7 days."
-            />
+      {shows.length > 0 && (
+        <div>
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">Shows</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {shows.map((show) => {
+              const client = show.clients as unknown as { name: string } | { name: string }[] | null
+              const clientName = Array.isArray(client) ? client[0]?.name : client?.name
+              const episodeCount = (show.episodes as { id: string }[] | null)?.length ?? 0
+              return (
+                <Link
+                  key={show.id}
+                  href={`/app/shows/${show.id}`}
+                  className="rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-default group"
+                >
+                  <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/9]" />
+                  <div className="p-3">
+                    <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors truncate">
+                      {show.name}
+                    </p>
+                    <p className="text-xs text-text-tertiary mt-0.5">
+                      {clientName && <>{clientName} &middot; </>}{episodeCount} ep
+                    </p>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
+        </div>
+      )}
 
-          <AttentionList
-            title="Recent Activity"
-            episodes={data.recent_activity}
-            emptyMessage="No recent activity."
-          />
-        </>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <AttentionList
+          title="In Progress"
+          episodes={inProgress}
+          emptyMessage="All caught up."
+        />
+        <AttentionList
+          title="Upcoming Deadlines"
+          episodes={deadlines}
+          emptyMessage="No deadlines in the next 2 weeks."
+        />
+      </div>
+
+      {activities.length > 0 && (
+        <div>
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">Recent Activity</h2>
+          <DashboardActivityFeed activities={activities} />
+        </div>
       )}
     </div>
   )
