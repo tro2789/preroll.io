@@ -16,7 +16,7 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-900">
+    <div className="min-h-screen bg-surface-base">
       <Sidebar />
       <div className="md:pl-64 flex flex-col min-h-screen">
         <Header email={user.email ?? ''} />
