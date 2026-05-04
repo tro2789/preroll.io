@@ -12,7 +12,7 @@ export default async function ShowsPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Shows</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Shows</h1>
       </div>
 
       {shows && shows.length > 0 ? (
@@ -25,33 +25,33 @@ export default async function ShowsPage() {
               <Link
                 key={show.id}
                 href={`/app/shows/${show.id}`}
-                className="block rounded-lg border border-zinc-800 bg-zinc-800/50 p-5 transition-colors hover:border-zinc-700 hover:bg-zinc-800"
+                className="block rounded-lg border border-border-subtle bg-surface-raised p-5 transition-colors hover:border-border-hover"
               >
-                <h3 className="text-sm font-semibold text-white">{show.name}</h3>
+                <h3 className="text-sm font-semibold text-text-primary">{show.name}</h3>
                 {client && (
-                  <p className="mt-1 text-xs text-zinc-500">{client.name}</p>
+                  <p className="mt-1 text-xs text-text-tertiary">{client.name}</p>
                 )}
-                <div className="mt-3 flex items-center gap-3 text-xs text-zinc-400">
+                <div className="mt-3 flex items-center gap-3 text-xs text-text-secondary">
                   {show.format && (
-                    <span className="inline-flex items-center rounded-full bg-indigo-900/50 px-2 py-0.5 text-xs text-indigo-300 border border-indigo-700/50">
+                    <span className="inline-flex items-center rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
                       {show.format}
                     </span>
                   )}
                   <span>{episodeCount} {episodeCount === 1 ? 'episode' : 'episodes'}</span>
                 </div>
                 {show.schedule && (
-                  <p className="mt-2 text-xs text-zinc-500">{show.schedule}</p>
+                  <p className="mt-2 text-xs text-text-tertiary">{show.schedule}</p>
                 )}
               </Link>
             )
           })}
         </div>
       ) : (
-        <div className="mt-6 rounded-lg border border-zinc-800 bg-zinc-800/50 p-8 text-center">
-          <p className="text-zinc-400">No shows yet. Add a client first, then create a show.</p>
+        <div className="mt-6 rounded-lg border border-border-subtle bg-surface-raised p-8 text-center">
+          <p className="text-text-secondary">No shows yet. Start with a client.</p>
           <Link
             href="/app/clients"
-            className="mt-3 inline-block text-sm text-indigo-400 hover:text-indigo-300"
+            className="mt-3 inline-block text-sm text-accent hover:text-accent-hover"
           >
             Go to Clients
           </Link>

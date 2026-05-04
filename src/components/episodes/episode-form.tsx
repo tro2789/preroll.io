@@ -64,22 +64,22 @@ export function EpisodeForm({
   }
 
   const inputClass =
-    'w-full rounded-md border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
-  const labelClass = 'block text-sm font-medium text-zinc-300 mb-1'
+    'w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent'
+  const labelClass = 'block text-sm font-medium text-text-secondary mb-1'
 
   const sortedStages = [...stages].sort((a, b) => a.position - b.position)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 max-w-lg">
       {error && (
-        <div className="rounded-md border border-red-800 bg-red-900/30 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-md border border-error/40 bg-error/10 px-4 py-3 text-sm text-error">
           {error}
         </div>
       )}
 
       <div>
         <label htmlFor="title" className={labelClass}>
-          Title <span className="text-red-400">*</span>
+          Title <span className="text-error">*</span>
         </label>
         <input
           id="title"
@@ -190,7 +190,7 @@ export function EpisodeForm({
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? 'Saving...' : submitLabel}
       </button>

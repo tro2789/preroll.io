@@ -18,18 +18,18 @@ interface EpisodeCardProps {
 
 export function EpisodeCard({ episode, showId }: EpisodeCardProps) {
   return (
-    <div className="rounded-lg border border-zinc-700 bg-zinc-800 p-3 transition-colors hover:border-zinc-600">
+    <div className="rounded-lg border border-border-subtle bg-surface-overlay p-2.5 transition-colors hover:border-border-hover">
       <Link
         href={`/app/shows/${showId}/episodes/${episode.id}`}
         className="block"
       >
         <div className="flex items-start justify-between gap-2">
-          <h4 className="text-sm font-medium text-white leading-tight">
+          <h4 className="text-sm font-medium text-text-primary leading-tight">
             {episode.title}
           </h4>
           {episode.frame_io_url && (
             <span
-              className="shrink-0 text-indigo-400"
+              className="shrink-0 text-accent"
               title="Frame.io link available"
             >
               <svg
@@ -45,12 +45,12 @@ export function EpisodeCard({ episode, showId }: EpisodeCardProps) {
         </div>
         <div className="mt-2 flex items-center gap-2">
           {episode.episode_number != null && (
-            <span className="inline-flex items-center rounded-full bg-zinc-700 px-2 py-0.5 text-xs font-medium text-zinc-300">
+            <span className="text-xs text-text-tertiary">
               #{episode.episode_number}
             </span>
           )}
           {episode.scheduled_publish_date && (
-            <span className="text-xs text-zinc-500">
+            <span className="text-xs text-text-tertiary">
               {episode.scheduled_publish_date}
             </span>
           )}

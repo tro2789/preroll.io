@@ -46,12 +46,12 @@ function DroppableColumn({ stage, children }: { stage: Stage; children: React.Re
       ref={setNodeRef}
       className={`flex min-w-0 flex-col rounded-lg border transition-colors ${
         isOver
-          ? 'bg-indigo-950/30 border-indigo-700/50'
-          : 'bg-zinc-800/50 border-zinc-800'
+          ? 'bg-accent-muted/30 border-accent/40'
+          : 'bg-surface-raised border-border-subtle'
       }`}
     >
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-zinc-800">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+      <div className="flex items-center justify-between px-3 py-2.5 border-b border-border-subtle">
+        <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
           {stage.name}
         </h3>
       </div>
@@ -188,7 +188,7 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
                 />
               ))}
               {stageEpisodes.length === 0 && (
-                <p className="text-xs text-zinc-600 text-center py-4">
+                <p className="text-xs text-text-tertiary text-center py-4">
                   No episodes
                 </p>
               )}
