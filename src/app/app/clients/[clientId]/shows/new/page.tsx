@@ -41,12 +41,12 @@ export default function NewShowPage({
     <div>
       <Link
         href={`/app/clients/${clientId}`}
-        className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
       >
         &larr; Back to Client
       </Link>
-      <h1 className="mt-2 text-2xl font-bold text-white">Add Show</h1>
-      <p className="mt-1 text-sm text-zinc-400">
+      <h1 className="mt-2 text-2xl font-bold text-text-primary">Add Show</h1>
+      <p className="mt-1 text-sm text-text-secondary">
         Create a new show for this client.
       </p>
       <div className="mt-6">

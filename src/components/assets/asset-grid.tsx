@@ -57,7 +57,7 @@ function formatFileSize(bytes?: number): string {
 export function AssetGrid({ assets, onDelete }: AssetGridProps) {
   if (assets.length === 0) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-text-tertiary">
         No assets yet. Upload one to get started.
       </p>
     )
@@ -92,30 +92,30 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
 
         return (
           <section key={type}>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-400 mb-3">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">
               {ASSET_TYPE_ICONS[type]} {ASSET_TYPE_LABELS[type]}{' '}
-              <span className="text-zinc-500">({group.length})</span>
+              <span className="text-text-tertiary">({group.length})</span>
             </h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {group.map((asset) => (
                 <div
                   key={asset.id}
-                  className="rounded-lg border border-zinc-800 bg-zinc-800/50 p-4 transition-colors hover:border-zinc-700"
+                  className="rounded-lg border border-border-subtle bg-surface-raised p-4 transition-colors hover:border-border-hover"
                 >
                   <div className="text-2xl mb-2">
                     {ASSET_TYPE_ICONS[asset.asset_type as AssetType]}
                   </div>
                   <p
-                    className="text-sm font-medium text-white truncate"
+                    className="text-sm font-medium text-text-primary truncate"
                     title={asset.name}
                   >
                     {asset.name}
                   </p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="inline-flex items-center rounded-full bg-indigo-900/50 px-2 py-0.5 text-xs font-medium text-indigo-300 border border-indigo-700/50">
+                    <span className="inline-flex items-center rounded-full bg-surface-overlay px-2 py-0.5 text-xs font-medium text-text-secondary">
                       {ASSET_TYPE_LABELS[asset.asset_type as AssetType]}
                     </span>
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-text-tertiary">
                       {formatFileSize(asset.file_size)}
                     </span>
                   </div>
@@ -123,7 +123,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                     <button
                       type="button"
                       onClick={() => onDelete(asset.id)}
-                      className="mt-3 text-xs text-red-400 hover:text-red-300 transition-colors"
+                      className="mt-3 text-xs text-text-tertiary hover:text-error transition-colors"
                     >
                       Delete
                     </button>

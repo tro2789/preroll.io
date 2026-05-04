@@ -66,19 +66,19 @@ export default function NewEpisodePage({
   }
 
   if (loading) {
-    return <p className="text-zinc-400">Loading...</p>
+    return <p className="text-text-tertiary">Loading...</p>
   }
 
   return (
     <div>
       <Link
         href={`/app/shows/${showId}`}
-        className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
       >
         &larr; Back to Show
       </Link>
-      <h1 className="mt-2 text-2xl font-bold text-white">Add Episode</h1>
-      <p className="mt-1 text-sm text-zinc-400">
+      <h1 className="mt-2 text-2xl font-bold text-text-primary">Add Episode</h1>
+      <p className="mt-1 text-sm text-text-secondary">
         Create a new episode for this show.
       </p>
       <div className="mt-6">

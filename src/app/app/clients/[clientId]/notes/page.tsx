@@ -15,11 +15,11 @@ export default function ClientNotesPage({
     <div>
       <Link
         href={`/app/clients/${clientId}`}
-        className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
       >
         &larr; Back to Client
       </Link>
-      <h1 className="mt-2 text-2xl font-bold text-white">Meeting Notes</h1>
+      <h1 className="mt-2 text-2xl font-bold text-text-primary">Meeting Notes</h1>
       <div className="mt-6">
         <NotesList clientId={clientId} />
       </div>

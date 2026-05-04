@@ -111,7 +111,7 @@ export function UploadButton({ showId, onUploadComplete }: UploadButtonProps) {
         value={assetType}
         onChange={(e) => setAssetType(e.target.value as AssetType)}
         disabled={uploading}
-        className="rounded-md border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+        className="rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
       >
         {ASSET_TYPES.map((t) => (
           <option key={t.value} value={t.value}>
@@ -124,7 +124,7 @@ export function UploadButton({ showId, onUploadComplete }: UploadButtonProps) {
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
-        className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {uploading ? (
           <>
@@ -164,7 +164,7 @@ export function UploadButton({ showId, onUploadComplete }: UploadButtonProps) {
       />
 
       {error && (
-        <span className="text-sm text-red-400">{error}</span>
+        <span className="text-sm text-error">{error}</span>
       )}
     </div>
   )

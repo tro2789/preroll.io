@@ -83,28 +83,28 @@ export function NotesList({ clientId }: { clientId: string }) {
   }
 
   const inputClass =
-    'w-full rounded-md border border-zinc-600 bg-zinc-700 px-3 py-2 text-sm text-white placeholder-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
-  const labelClass = 'block text-sm font-medium text-zinc-300 mb-1'
+    'w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent'
+  const labelClass = 'block text-sm font-medium text-text-secondary mb-1'
 
   if (loading) {
-    return <p className="text-zinc-400">Loading notes...</p>
+    return <p className="text-text-tertiary">Loading notes...</p>
   }
 
   return (
     <div className="space-y-4">
       {error && (
-        <div className="rounded-md border border-red-800 bg-red-900/30 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-md border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
           {error}
         </div>
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-text-tertiary">
           {notes.length} {notes.length === 1 ? 'note' : 'notes'}
         </p>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
+          className="inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
         >
           {showForm ? 'Cancel' : 'Add Note'}
         </button>
@@ -113,7 +113,7 @@ export function NotesList({ clientId }: { clientId: string }) {
       {showForm && (
         <form
           onSubmit={handleCreate}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 p-4 space-y-4"
+          className="rounded-lg border border-border-default bg-surface-raised p-4 space-y-4"
         >
           <div>
             <label htmlFor="note-title" className={labelClass}>
@@ -146,7 +146,7 @@ export function NotesList({ clientId }: { clientId: string }) {
           </div>
           <div>
             <label htmlFor="note-content" className={labelClass}>
-              Content <span className="text-red-400">*</span>
+              Content <span className="text-error">*</span>
             </label>
             <textarea
               id="note-content"
@@ -163,7 +163,7 @@ export function NotesList({ clientId }: { clientId: string }) {
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? 'Saving...' : 'Save Note'}
           </button>
@@ -171,7 +171,7 @@ export function NotesList({ clientId }: { clientId: string }) {
       )}
 
       {notes.length === 0 && !showForm ? (
-        <p className="text-center text-zinc-500 py-8">
+        <p className="text-center text-text-tertiary py-8">
           No meeting notes yet. Click &ldquo;Add Note&rdquo; to create one.
         </p>
       ) : (
@@ -181,41 +181,41 @@ export function NotesList({ clientId }: { clientId: string }) {
             return (
               <div
                 key={note.id}
-                className="rounded-lg border border-zinc-700 bg-zinc-800/50"
+                className="rounded-lg border border-border-subtle bg-surface-raised"
               >
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : note.id)}
                   className="w-full px-4 py-3 text-left flex items-center justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
+                    <p className="text-sm font-medium text-text-primary truncate">
                       {note.title || 'Untitled'}
                     </p>
                     {note.meeting_date && (
-                      <p className="text-xs text-zinc-400 mt-0.5">
+                      <p className="text-xs text-text-tertiary mt-0.5">
                         {new Date(note.meeting_date).toLocaleDateString()}
                       </p>
                     )}
                     {!isExpanded && (
-                      <p className="text-xs text-zinc-500 mt-1 truncate">
+                      <p className="text-xs text-text-tertiary mt-1 truncate">
                         {note.content.slice(0, 100)}
                         {note.content.length > 100 ? '...' : ''}
                       </p>
                     )}
                   </div>
-                  <span className="ml-2 text-zinc-400 text-xs shrink-0">
+                  <span className="ml-2 text-text-tertiary text-xs shrink-0">
                     {isExpanded ? 'Collapse' : 'Expand'}
                   </span>
                 </button>
                 {isExpanded && (
-                  <div className="px-4 pb-4 border-t border-zinc-700 pt-3">
-                    <p className="text-sm text-zinc-300 whitespace-pre-wrap">
+                  <div className="px-4 pb-4 border-t border-border-subtle pt-3">
+                    <p className="text-sm text-text-secondary whitespace-pre-wrap">
                       {note.content}
                     </p>
                     <div className="mt-3 flex justify-end">
                       <button
                         onClick={() => handleDelete(note.id)}
-                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        className="text-xs text-text-tertiary hover:text-error transition-colors"
                       >
                         Delete Note
                       </button>

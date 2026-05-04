@@ -87,13 +87,13 @@ export default function ShowAssetsPage({
     <div>
       <Link
         href={`/app/shows/${showId}`}
-        className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
       >
         &larr; Back to Show
       </Link>
 
       <div className="mt-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Asset Library</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Asset Library</h1>
       </div>
 
       <div className="mt-6">
@@ -109,8 +109,8 @@ export default function ShowAssetsPage({
             onClick={() => setFilter(option.value)}
             className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
               filter === option.value
-                ? 'bg-indigo-600 text-white'
-                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                ? 'bg-accent-muted text-accent'
+                : 'bg-surface-raised text-text-secondary hover:text-text-primary'
             }`}
           >
             {option.label}
@@ -123,7 +123,7 @@ export default function ShowAssetsPage({
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <svg
-              className="h-6 w-6 animate-spin text-zinc-400"
+              className="h-6 w-6 animate-spin text-text-tertiary"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -144,7 +144,7 @@ export default function ShowAssetsPage({
             </svg>
           </div>
         ) : error ? (
-          <div className="rounded-md border border-red-800 bg-red-900/30 px-4 py-3 text-sm text-red-300">
+          <div className="rounded-md border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
             {error}
           </div>
         ) : (
