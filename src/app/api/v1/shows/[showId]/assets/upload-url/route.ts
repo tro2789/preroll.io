@@ -11,7 +11,7 @@ export async function POST(
   if (error) return error
 
   const body = await request.json()
-  const { filename, contentType, assetType, episodeId } = body
+  const { filename, contentType, assetType } = body
 
   if (!filename || !contentType || !assetType) {
     return errorResponse('filename, contentType, and assetType are required', 400)
