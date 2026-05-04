@@ -51,16 +51,16 @@ export default function EditShowPage({
   }
 
   if (loading) {
-    return <p className="text-zinc-400">Loading...</p>
+    return <p className="text-text-tertiary">Loading...</p>
   }
 
   if (error || !show) {
     return (
       <div className="text-center py-12">
-        <p className="text-zinc-400">{error || 'Show not found.'}</p>
+        <p className="text-text-secondary">{error || 'Show not found.'}</p>
         <Link
           href="/app/clients"
-          className="mt-4 inline-block text-sm text-indigo-400 hover:text-indigo-300"
+          className="mt-4 inline-block text-sm text-accent hover:text-accent-hover"
         >
           Back to Clients
         </Link>
@@ -72,12 +72,12 @@ export default function EditShowPage({
     <div>
       <Link
         href={`/app/shows/${showId}`}
-        className="text-sm text-zinc-400 hover:text-zinc-300 transition-colors"
+        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
       >
         &larr; Back to Show
       </Link>
-      <h1 className="mt-2 text-2xl font-bold text-white">Edit Show</h1>
-      <p className="mt-1 text-sm text-zinc-400">
+      <h1 className="mt-2 text-2xl font-bold text-text-primary">Edit Show</h1>
+      <p className="mt-1 text-sm text-text-secondary">
         Update {show.name}&apos;s details.
       </p>
       <div className="mt-6">

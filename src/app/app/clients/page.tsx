@@ -12,10 +12,10 @@ export default async function ClientsPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Clients</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Clients</h1>
         <Link
           href="/app/clients/new"
-          className="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
+          className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
         >
           Add Client
         </Link>
@@ -29,10 +29,7 @@ export default async function ClientsPage() {
         </div>
       ) : (
         <div className="mt-12 text-center">
-          <p className="text-zinc-400">No clients yet.</p>
-          <p className="mt-1 text-sm text-zinc-500">
-            Get started by adding your first client.
-          </p>
+          <p className="text-text-secondary">No clients yet. Add your first.</p>
         </div>
       )}
     </div>

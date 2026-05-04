@@ -38,7 +38,7 @@ export function EpisodeDetailActions({ showId, episodeId }: EpisodeDetailActions
     <button
       onClick={handleDelete}
       disabled={deleting}
-      className="inline-flex items-center rounded-md bg-red-900/50 border border-red-800 px-3 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="text-sm font-medium text-text-tertiary transition-colors hover:text-error disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {deleting ? 'Deleting...' : 'Delete'}
     </button>
