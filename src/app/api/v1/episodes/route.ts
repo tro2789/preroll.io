@@ -1,0 +1,38 @@
+import { NextRequest } from 'next/server'
+import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+
+export async function GET(request: NextRequest) {
+  const { supabase, error } = await getAuthenticatedClient()
+  if (error) return error
+
+  const status = request.nextUrl.searchParams.get('status')
+  const showId = request.nextUrl.searchParams.get('show_id')
+  const stageId = request.nextUrl.searchParams.get('stage_id')
+  const upcoming = request.nextUrl.searchParams.get('upcoming')
+
+  let query = supabase!
+    .from('episodes')
+    .select('*, shows(id, name)')
+    .order('scheduled_publish_date', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false })
+
+  if (status) {
+    query = query.eq('status', status)
+  }
+  if (showId) {
+    query = query.eq('show_id', showId)
+  }
+  if (stageId) {
+    query = query.eq('stage_id', stageId)
+  }
+  if (upcoming === 'true') {
+    const today = new Date().toISOString().split('T')[0]
+    const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    query = query.gte('scheduled_publish_date', today).lte('scheduled_publish_date', nextWeek)
+  }
+
+  const { data, error: dbError } = await query
+
+  if (dbError) return errorResponse(dbError.message, 500)
+  return jsonResponse(data)
+}
