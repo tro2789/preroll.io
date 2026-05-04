@@ -42,6 +42,7 @@ export async function PATCH(
   }
 
   // If stage_id is changing, derive status from the new stage name
+  let newStageName: string | null = null
   if ('stage_id' in body && body.stage_id) {
     const { data: stage } = await supabase!
       .from('pipeline_stages')
@@ -50,6 +51,7 @@ export async function PATCH(
       .single()
 
     if (stage) {
+      newStageName = stage.name
       const derivedStatus = mapStageNameToStatus(stage.name)
       if (derivedStatus) {
         updateData['status'] = derivedStatus
@@ -66,6 +68,17 @@ export async function PATCH(
     .single()
 
   if (dbError) return errorResponse(dbError.message, 500)
+
+  if (newStageName) {
+    await supabase!.from('activity_log').insert({
+      show_id: showId,
+      episode_id: episodeId,
+      action: 'episode_stage_changed',
+      description: `Episode '${data.title}' moved to ${newStageName}`,
+      metadata: { stage_id: body.stage_id, stage_name: newStageName },
+    })
+  }
+
   return jsonResponse(data)
 }
 
