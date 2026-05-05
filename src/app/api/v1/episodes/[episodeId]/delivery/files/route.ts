@@ -44,15 +44,6 @@ export async function GET(
       return errorResponse(`${provider.displayName} does not support listing folder contents`, 400)
     }
 
-    try {
-      const folder = await provider.getFileDetails(token, accountId, integration.external_folder_id)
-      if (!folder) {
-        return errorResponse('Delivery folder no longer exists', 410)
-      }
-    } catch {
-      return errorResponse('Delivery folder no longer exists or is inaccessible', 410)
-    }
-
     const cursor = request.nextUrl.searchParams.get('cursor') || undefined
     const result = await provider.listFolderContents(token, accountId, integration.external_folder_id, cursor)
 
