@@ -128,8 +128,16 @@ export function DeliveryPanel({
   const [manualLoading, setManualLoading] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
   const [showConnectModal, setShowConnectModal] = useState(false)
+  const [showProviderPicker, setShowProviderPicker] = useState(false)
   const [projectMissing, setProjectMissing] = useState(false)
   const [recreating, setRecreating] = useState(false)
+
+  const providerDisplayNames: Record<string, string> = {
+    frame_io: 'Frame.io',
+    google_drive: 'Google Drive',
+    vimeo: 'Vimeo',
+    dropbox: 'Dropbox',
+  }
 
   const hasProject = !!integration?.externalProjectId
   const hasProvider = connectedProviders.length > 0
@@ -164,11 +172,24 @@ export function DeliveryPanel({
     if (isLive) fetchFiles()
   }, [isLive, fetchFiles])
 
-  async function handleCreateProject() {
+  function handleCreateProject() {
+    if (connectedProviders.length > 1) {
+      setShowProviderPicker(true)
+    } else {
+      createProjectWithProvider(connectedProviders[0])
+    }
+  }
+
+  async function createProjectWithProvider(provider: IntegrationProvider) {
+    setShowProviderPicker(false)
     setCreatingProject(true)
     setCreateError(null)
     try {
-      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery`, { method: 'POST' })
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider }),
+      })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to create project')
       const data = json.data?.integration || json.data
@@ -502,6 +523,35 @@ export function DeliveryPanel({
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showProviderPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-text-primary">Choose a delivery provider</h3>
+            <p className="mt-2 text-sm text-text-secondary">
+              Where should files for this episode be stored?
+            </p>
+            <div className="mt-4 space-y-2">
+              {connectedProviders.map((p) => (
+                <button
+                  key={p}
+                  onClick={() => createProjectWithProvider(p)}
+                  disabled={creatingProject}
+                  className="w-full rounded-lg border border-border-subtle bg-surface-overlay px-4 py-3 text-left text-sm font-medium text-text-primary transition-colors hover:border-accent hover:bg-accent/5 disabled:opacity-50"
+                >
+                  {providerDisplayNames[p] || p}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowProviderPicker(false)}
+              className="mt-3 w-full rounded-md px-4 py-2 text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
