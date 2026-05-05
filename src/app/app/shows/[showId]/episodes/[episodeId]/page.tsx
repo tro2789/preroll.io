@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
-import { EpisodeDeliverables } from '@/components/deliverables/episode-deliverables'
-import { EpisodeFileLinks } from '@/components/integrations/episode-file-links'
+import { FrameIoPanel } from '@/components/episodes/frameio-panel'
 
 export default async function EpisodeDetailPage({
   params,
@@ -14,7 +13,7 @@ export default async function EpisodeDetailPage({
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: episode, error }, { data: deliverables }, { data: fileRefs }, { data: integrations }] = await Promise.all([
+  const [{ data: episode, error }, { data: deliverables }, { data: integrations }] = await Promise.all([
     supabase
       .from('episodes')
       .select('*, pipeline_stages(id, name, position)')
@@ -23,11 +22,6 @@ export default async function EpisodeDetailPage({
       .single(),
     supabase
       .from('deliverables')
-      .select('*')
-      .eq('episode_id', episodeId)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('file_references')
       .select('*')
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false }),
@@ -125,34 +119,6 @@ export default async function EpisodeDetailPage({
               </p>
             </div>
           )}
-
-          {episode.frame_io_url && (
-            <div className="rounded-lg border border-border-subtle bg-surface-raised p-4">
-              <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-                Frame.io Link
-              </h3>
-              <a
-                href={episode.frame_io_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-flex items-center gap-1 text-sm text-accent hover:text-accent-hover"
-              >
-                Open in Frame.io
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 16 16"
-                  fill="currentColor"
-                  className="h-3.5 w-3.5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M4.22 11.78a.75.75 0 0 1 0-1.06L9.44 5.5H5.75a.75.75 0 0 1 0-1.5h5.5a.75.75 0 0 1 .75.75v5.5a.75.75 0 0 1-1.5 0V6.56l-5.22 5.22a.75.75 0 0 1-1.06 0Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </a>
-            </div>
-          )}
         </div>
 
         {episode.notes && (
@@ -164,17 +130,13 @@ export default async function EpisodeDetailPage({
           </div>
         )}
 
-        <EpisodeFileLinks
+        <FrameIoPanel
           episodeId={episodeId}
           showId={showId}
-          fileReferences={fileRefs || []}
-          hasFrameIo={(integrations || []).length > 0}
-        />
-
-        <EpisodeDeliverables
-          showId={showId}
-          episodeId={episodeId}
+          frameioProjectId={episode.frameio_project_id || null}
+          frameioRootFolderId={episode.frameio_root_folder_id || null}
           deliverables={deliverables || []}
+          hasFrameIo={(integrations || []).length > 0}
         />
       </div>
     </div>
