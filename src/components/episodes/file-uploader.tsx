@@ -306,7 +306,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, onUplo
         <div className="fixed bottom-4 right-4 z-40 w-72 rounded-lg border border-border-subtle bg-surface-raised shadow-lg overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle">
             <span className="text-xs font-medium text-text-primary">
-              {hasActiveUploads ? 'Uploading...' : 'Uploads complete'}
+              {hasActiveUploads ? 'Uploading...' : 'Uploads'}
             </span>
             {!hasActiveUploads && (
               <button
