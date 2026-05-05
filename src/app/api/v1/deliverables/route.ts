@@ -49,6 +49,19 @@ export async function POST(request: Request) {
 
   if (dbError) return errorResponse(dbError.message, 500)
 
+  if (body.frameio_file_id && body.episode_id) {
+    const { data: { user } } = await supabase!.auth.getUser()
+    await supabase!.from('file_references').insert({
+      user_id: user!.id,
+      provider: 'frame_io',
+      external_id: body.frameio_file_id,
+      name: body.title,
+      external_url: body.file_url || null,
+      episode_id: body.episode_id,
+      deliverable_id: data.id,
+    })
+  }
+
   await supabase!.from('activity_log').insert({
     show_id: body.show_id,
     episode_id: body.episode_id || null,
