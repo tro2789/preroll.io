@@ -60,6 +60,7 @@ export async function POST(
     }, 201)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to initiate upload'
-    return errorResponse(message, 500)
+    const isNotFound = message.includes('404') || message.includes('not found') || message.includes('trashed')
+    return errorResponse(message, isNotFound ? 410 : 500)
   }
 }

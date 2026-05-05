@@ -475,10 +475,11 @@ export function DeliveryPanel({
     <>
       <FileUploader
         episodeId={episodeId}
-        enabled={isLive}
+        enabled={isLive && !projectMissing}
         listenForDrags
         onUploadComplete={fetchFiles}
         onUnavailableDrop={() => setShowConnectModal(true)}
+        onProjectMissing={() => setProjectMissing(true)}
       />
 
       {showConnectModal && (
