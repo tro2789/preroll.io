@@ -282,57 +282,78 @@ export function FrameIoPanel({
     )
   }
 
-  function renderFileRow(file: BrowseItem) {
-    const linked = isFileLinkedAsDeliverable(file)
-    const style = linked ? statusStyles[linked.status] || statusStyles.pending : null
-
+  function renderFileTable() {
     return (
-      <div key={file.id} className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-overlay p-2">
-        <a href={file.viewUrl || '#'} target="_blank" rel="noopener noreferrer" className="shrink-0 block w-16 aspect-video rounded overflow-hidden">
-          {file.thumbnailUrl ? (
-            <img src={file.thumbnailUrl} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full" style={{ background: getGradient(file.id) }} />
-          )}
-        </a>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
-          <div className="mt-0.5 flex items-center gap-2 text-xs text-text-tertiary">
-            {file.fileSize != null && file.fileSize > 0 && <span>{formatFileSize(file.fileSize)}</span>}
-            {file.durationSeconds != null && file.durationSeconds > 0 && (
-              <span>&middot; {formatDuration(file.durationSeconds)}</span>
-            )}
-            {file.createdAt && (
-              <span>&middot; {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-            )}
-            {linked && <span className="text-text-secondary">&middot; {typeLabels[linked.type] || linked.type}</span>}
-          </div>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {linked && style ? (
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>{style.label}</span>
-          ) : (
-            <>
-              <select
-                value={selectedTypes[file.id] || 'rough_cut'}
-                onChange={(e) => setSelectedTypes((prev) => ({ ...prev, [file.id]: e.target.value }))}
-                className="rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
-              >
-                {deliverableTypes.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => handleSubmitForReview(file)}
-                disabled={submitting === file.id}
-                className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 whitespace-nowrap"
-              >
-                {submitting === file.id ? '...' : 'Submit'}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+      <table className="w-full text-left">
+        <thead>
+          <tr className="text-xs font-medium text-text-tertiary border-b border-border-subtle">
+            <th className="pb-2 pr-3 font-medium">Name</th>
+            <th className="pb-2 pr-3 font-medium w-20">Size</th>
+            <th className="pb-2 pr-3 font-medium w-16">Duration</th>
+            <th className="pb-2 pr-3 font-medium w-20">Uploaded</th>
+            <th className="pb-2 font-medium w-48 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-subtle">
+          {files.map((file) => {
+            const linked = isFileLinkedAsDeliverable(file)
+            const style = linked ? statusStyles[linked.status] || statusStyles.pending : null
+
+            return (
+              <tr key={file.id} className="group">
+                <td className="py-2 pr-3">
+                  <div className="flex items-center gap-3">
+                    <a href={file.viewUrl || '#'} target="_blank" rel="noopener noreferrer" className="shrink-0 block w-14 aspect-video rounded overflow-hidden">
+                      {file.thumbnailUrl ? (
+                        <img src={file.thumbnailUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="h-full w-full" style={{ background: getGradient(file.id) }} />
+                      )}
+                    </a>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
+                      {linked && <p className="text-xs text-text-secondary">{typeLabels[linked.type] || linked.type}</p>}
+                    </div>
+                  </div>
+                </td>
+                <td className="py-2 pr-3 text-xs text-text-tertiary tabular-nums">
+                  {file.fileSize != null && file.fileSize > 0 ? formatFileSize(file.fileSize) : '—'}
+                </td>
+                <td className="py-2 pr-3 text-xs text-text-tertiary tabular-nums">
+                  {file.durationSeconds != null && file.durationSeconds > 0 ? formatDuration(file.durationSeconds) : '—'}
+                </td>
+                <td className="py-2 pr-3 text-xs text-text-tertiary">
+                  {file.createdAt ? new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+                </td>
+                <td className="py-2 text-right">
+                  {linked && style ? (
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>{style.label}</span>
+                  ) : (
+                    <div className="flex items-center justify-end gap-1.5">
+                      <select
+                        value={selectedTypes[file.id] || 'rough_cut'}
+                        onChange={(e) => setSelectedTypes((prev) => ({ ...prev, [file.id]: e.target.value }))}
+                        className="rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
+                      >
+                        {deliverableTypes.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleSubmitForReview(file)}
+                        disabled={submitting === file.id}
+                        className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 whitespace-nowrap"
+                      >
+                        {submitting === file.id ? '...' : 'Submit'}
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     )
   }
 
@@ -419,9 +440,7 @@ export function FrameIoPanel({
                 {files.map(renderFileCard)}
               </div>
             ) : (
-              <div className="space-y-1.5">
-                {files.map(renderFileRow)}
-              </div>
+              renderFileTable()
             )
           )}
 
