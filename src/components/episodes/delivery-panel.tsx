@@ -128,6 +128,8 @@ export function DeliveryPanel({
   const [manualLoading, setManualLoading] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
   const [showConnectModal, setShowConnectModal] = useState(false)
+  const [projectMissing, setProjectMissing] = useState(false)
+  const [recreating, setRecreating] = useState(false)
 
   const hasProject = !!integration?.externalProjectId
   const hasProvider = connectedProviders.length > 0
@@ -142,9 +144,14 @@ export function DeliveryPanel({
     try {
       const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files`)
       if (!res.ok) {
+        if (res.status === 410) {
+          setProjectMissing(true)
+          return
+        }
         const json = await res.json().catch(() => ({ error: 'Failed to load files' }))
         throw new Error(json.error || `Failed to load files (${res.status})`)
       }
+      setProjectMissing(false)
       const json = await res.json()
       setFiles(json.data?.items || [])
     } catch (err) {
@@ -178,6 +185,36 @@ export function DeliveryPanel({
       setCreateError(err instanceof Error ? err.message : 'Failed to create project')
     } finally {
       setCreatingProject(false)
+    }
+  }
+
+  async function handleRecreateProject() {
+    setRecreating(true)
+    setCreateError(null)
+    try {
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recreate: true }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to recreate project')
+      const data = json.data?.integration || json.data
+      setIntegration({
+        provider: data.provider,
+        externalProjectId: data.external_project_id,
+        externalFolderId: data.external_folder_id,
+        externalViewUrl: data.external_view_url,
+        displayName: data.display_name || data.provider,
+      })
+      setProjectMissing(false)
+      setFilesError(null)
+      setFiles([])
+      router.refresh()
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Failed to recreate project')
+    } finally {
+      setRecreating(false)
     }
   }
 
@@ -538,11 +575,30 @@ export function DeliveryPanel({
             </div>
           )}
 
-          {filesError && <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{filesError}</div>}
+          {filesError && !projectMissing && <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{filesError}</div>}
           {submitError && <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{submitError}</div>}
 
+          {/* Project folder missing (deleted/trashed on provider) */}
+          {projectMissing && (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+              <p className="text-sm font-medium text-text-primary">Project folder not found</p>
+              <p className="mt-1 text-xs text-text-secondary">
+                The {providerDisplayName} folder for this episode was deleted or moved to trash.
+                You can recreate it — any previously uploaded files will not be recovered.
+              </p>
+              {createError && <p className="mt-2 text-xs text-error">{createError}</p>}
+              <button
+                onClick={handleRecreateProject}
+                disabled={recreating}
+                className="mt-3 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+              >
+                {recreating ? 'Recreating...' : 'Recreate Project'}
+              </button>
+            </div>
+          )}
+
           {/* File grid or list */}
-          {isLive && !filesLoading && files.length > 0 && (
+          {isLive && !projectMissing && !filesLoading && files.length > 0 && (
             viewMode === 'grid' ? (
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
                 {files.map(renderFileCard)}
@@ -568,7 +624,7 @@ export function DeliveryPanel({
           )}
 
           {/* Empty state — project linked and provider connected */}
-          {isLive && !filesLoading && files.length === 0 && !filesError && (
+          {isLive && !projectMissing && !filesLoading && files.length === 0 && !filesError && (
             <div className="py-12 text-center">
               <p className="text-sm text-text-tertiary">No files yet.</p>
               <p className="mt-1 text-xs text-text-tertiary">Drag files anywhere on this page to upload, or click Upload above.</p>

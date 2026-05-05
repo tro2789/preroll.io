@@ -71,15 +71,18 @@ export async function POST(
   const show = episode.shows as unknown as { name: string; clients: { user_id: string } } | null
   if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
 
-  // No switching: reject if already connected
   const { data: existing } = await supabase!
     .from('episode_integrations')
     .select('id')
     .eq('episode_id', episodeId)
     .maybeSingle()
 
-  if (existing) {
+  if (existing && !body.recreate) {
     return errorResponse('Episode already has a delivery provider connected', 409)
+  }
+
+  if (existing && body.recreate) {
+    await supabase!.from('episode_integrations').delete().eq('id', existing.id)
   }
 
   // Determine which provider to use
