@@ -64,4 +64,17 @@ export interface IntegrationProviderClient {
 
   createShare?(accessToken: string, accountId: string, assetIds: string[], name: string): Promise<ShareLink>
   verifyWebhookSignature?(payload: string, signature: string, timestamp: string): boolean
+
+  createProject?(accessToken: string, accountId: string, workspaceId: string, name: string): Promise<{
+    id: string
+    rootFolderId: string
+    viewUrl: string
+  }>
+
+  createFileUpload?(accessToken: string, accountId: string, folderId: string, fileName: string, fileSize: number): Promise<{
+    fileId: string
+    uploadUrls: { url: string; size: number }[]
+  }>
+
+  listFolderContents?(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult>
 }
