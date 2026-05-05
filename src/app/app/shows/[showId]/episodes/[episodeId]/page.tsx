@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
-import { FrameIoPanel } from '@/components/episodes/frameio-panel'
+import { DeliveryPanel } from '@/components/episodes/delivery-panel'
+import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
   params,
@@ -13,7 +14,7 @@ export default async function EpisodeDetailPage({
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: episode, error }, { data: deliverables }, { data: integrations }] = await Promise.all([
+  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }] = await Promise.all([
     supabase
       .from('episodes')
       .select('*, pipeline_stages(id, name, position)')
@@ -26,10 +27,14 @@ export default async function EpisodeDetailPage({
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false }),
     supabase
+      .from('episode_integrations')
+      .select('*')
+      .eq('episode_id', episodeId)
+      .maybeSingle(),
+    supabase
       .from('user_integrations')
       .select('provider')
-      .eq('user_id', user!.id)
-      .eq('provider', 'frame_io'),
+      .eq('user_id', user!.id),
   ])
 
   if (error || !episode) {
@@ -47,7 +52,21 @@ export default async function EpisodeDetailPage({
   }
 
   const stage = episode.pipeline_stages as { id: string; name: string; position: number } | null
-  const hasFrameIo = (integrations || []).length > 0
+
+  const providerDisplayNames: Record<string, string> = {
+    frame_io: 'Frame.io',
+    google_drive: 'Google Drive',
+    vimeo: 'Vimeo',
+    dropbox: 'Dropbox',
+  }
+
+  const integration = episodeIntegration ? {
+    provider: episodeIntegration.provider as IntegrationProvider,
+    externalProjectId: episodeIntegration.external_project_id,
+    externalFolderId: episodeIntegration.external_folder_id,
+    externalViewUrl: episodeIntegration.external_view_url,
+    displayName: providerDisplayNames[episodeIntegration.provider] || episodeIntegration.provider,
+  } : null
 
   const statusColors: Record<string, string> = {
     planning: 'bg-sky-500/15 text-sky-400',
@@ -93,13 +112,12 @@ export default async function EpisodeDetailPage({
       </div>
 
       <div className="mt-6">
-        <FrameIoPanel
+        <DeliveryPanel
           episodeId={episodeId}
           showId={showId}
-          frameioProjectId={episode.frameio_project_id || null}
-          frameioRootFolderId={episode.frameio_root_folder_id || null}
+          integration={integration}
           deliverables={deliverables || []}
-          hasFrameIo={hasFrameIo}
+          connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
           episode={{
             scheduled_publish_date: episode.scheduled_publish_date,
             published_at: episode.published_at,

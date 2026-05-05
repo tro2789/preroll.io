@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DeliverableList } from '@/components/deliverables/deliverable-list'
-import { FrameIoUploader } from './frameio-uploader'
+import { FileUploader } from './file-uploader'
 import { getGradient } from '@/lib/ui/gradient'
+import type { IntegrationProvider } from '@/lib/integrations/types'
 
 interface Deliverable {
   id: string
@@ -39,13 +40,20 @@ interface EpisodeMeta {
   stage: { name: string } | null
 }
 
-interface FrameIoPanelProps {
+interface DeliveryIntegration {
+  provider: IntegrationProvider
+  externalProjectId: string | null
+  externalFolderId: string | null
+  externalViewUrl: string | null
+  displayName: string
+}
+
+interface DeliveryPanelProps {
   episodeId: string
   showId: string
-  frameioProjectId: string | null
-  frameioRootFolderId: string | null
+  integration: DeliveryIntegration | null
   deliverables: Deliverable[]
-  hasFrameIo: boolean
+  connectedProviders: IntegrationProvider[]
   episode: EpisodeMeta
 }
 
@@ -89,14 +97,13 @@ const typeLabels: Record<string, string> = {
   outro: 'Outro', social_clip: 'Social Clip', other: 'Other',
 }
 
-export function FrameIoPanel({
-  episodeId, showId, frameioProjectId: initialProjectId, frameioRootFolderId: initialRootFolderId,
-  deliverables, hasFrameIo, episode,
-}: FrameIoPanelProps) {
+export function DeliveryPanel({
+  episodeId, showId, integration: initialIntegration,
+  deliverables, connectedProviders, episode,
+}: DeliveryPanelProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [frameioProjectId, setFrameioProjectId] = useState(initialProjectId)
-  const [frameioViewUrl, setFrameioViewUrl] = useState<string | null>(null)
+  const [integration, setIntegration] = useState(initialIntegration)
   const [creatingProject, setCreatingProject] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
 
@@ -120,12 +127,16 @@ export function FrameIoPanel({
   const [manualLoading, setManualLoading] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
 
+  const hasProject = !!integration?.externalProjectId
+  const hasProvider = connectedProviders.length > 0
+  const providerDisplayName = integration?.displayName || 'Provider'
+
   const fetchFiles = useCallback(async () => {
-    if (!frameioProjectId) return
+    if (!hasProject) return
     setFilesLoading(true)
     setFilesError(null)
     try {
-      const res = await fetch(`/api/v1/episodes/${episodeId}/frameio-files`)
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files`)
       if (!res.ok) {
         const json = await res.json().catch(() => ({ error: 'Failed to load files' }))
         throw new Error(json.error || `Failed to load files (${res.status})`)
@@ -137,21 +148,27 @@ export function FrameIoPanel({
     } finally {
       setFilesLoading(false)
     }
-  }, [episodeId, frameioProjectId])
+  }, [episodeId, hasProject])
 
   useEffect(() => {
-    if (frameioProjectId) fetchFiles()
-  }, [frameioProjectId, fetchFiles])
+    if (hasProject) fetchFiles()
+  }, [hasProject, fetchFiles])
 
   async function handleCreateProject() {
     setCreatingProject(true)
     setCreateError(null)
     try {
-      const res = await fetch(`/api/v1/episodes/${episodeId}/frameio-project`, { method: 'POST' })
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery`, { method: 'POST' })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to create project')
-      setFrameioProjectId(json.data?.frameio_project_id || null)
-      setFrameioViewUrl(json.data?.frameio_view_url || null)
+      const data = json.data?.integration || json.data
+      setIntegration({
+        provider: data.provider,
+        externalProjectId: data.external_project_id,
+        externalFolderId: data.external_folder_id,
+        externalViewUrl: data.external_view_url,
+        displayName: data.display_name || data.provider,
+      })
       router.refresh()
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'Failed to create project')
@@ -176,7 +193,9 @@ export function FrameIoPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           show_id: showId, episode_id: episodeId, type,
-          title: file.name, file_url: file.viewUrl || null, frameio_file_id: file.id,
+          title: file.name, file_url: file.viewUrl || null,
+          external_file_id: file.id,
+          provider: integration?.provider,
         }),
       })
       if (!res.ok) {
@@ -413,17 +432,17 @@ export function FrameIoPanel({
 
   return (
     <>
-      <FrameIoUploader episodeId={episodeId} enabled={!!frameioProjectId} onUploadComplete={fetchFiles} />
+      <FileUploader episodeId={episodeId} enabled={hasProject} onUploadComplete={fetchFiles} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]">
         {/* Main: files */}
         <div className="min-w-0 space-y-4">
           {/* Header bar */}
-          {hasFrameIo && (
+          {hasProvider && (
             <div className="flex items-center justify-between">
-              {!frameioProjectId ? (
+              {!hasProject ? (
                 <>
-                  <p className="text-sm text-text-secondary">No Frame.io project linked.</p>
+                  <p className="text-sm text-text-secondary">No delivery project linked.</p>
                   <button
                     onClick={handleCreateProject}
                     disabled={creatingProject}
@@ -472,9 +491,9 @@ export function FrameIoPanel({
                     >
                       Refresh
                     </button>
-                    {frameioViewUrl && (
-                      <a href={frameioViewUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover transition-colors">
-                        Frame.io
+                    {integration?.externalViewUrl && (
+                      <a href={integration.externalViewUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover transition-colors">
+                        {providerDisplayName}
                       </a>
                     )}
                   </div>
@@ -488,7 +507,7 @@ export function FrameIoPanel({
           {submitError && <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{submitError}</div>}
 
           {/* File grid or list */}
-          {frameioProjectId && !filesLoading && files.length > 0 && (
+          {hasProject && !filesLoading && files.length > 0 && (
             viewMode === 'grid' ? (
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
                 {files.map(renderFileCard)}
@@ -499,7 +518,7 @@ export function FrameIoPanel({
           )}
 
           {/* Loading skeleton */}
-          {frameioProjectId && filesLoading && files.length === 0 && (
+          {hasProject && filesLoading && files.length === 0 && (
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden animate-pulse">
@@ -514,17 +533,17 @@ export function FrameIoPanel({
           )}
 
           {/* Empty state */}
-          {frameioProjectId && !filesLoading && files.length === 0 && !filesError && (
+          {hasProject && !filesLoading && files.length === 0 && !filesError && (
             <div className="py-12 text-center">
               <p className="text-sm text-text-tertiary">No files yet.</p>
               <p className="mt-1 text-xs text-text-tertiary">Drag files anywhere on this page to upload, or click Upload above.</p>
             </div>
           )}
 
-          {/* No Frame.io connected empty state */}
-          {!hasFrameIo && (
+          {/* No provider connected empty state */}
+          {!hasProvider && (
             <div className="py-12 text-center">
-              <p className="text-sm text-text-tertiary">Connect Frame.io in Settings to upload and manage files.</p>
+              <p className="text-sm text-text-tertiary">Connect a delivery provider in Settings to upload and manage files.</p>
             </div>
           )}
         </div>
@@ -567,7 +586,7 @@ export function FrameIoPanel({
             )}
           </div>
 
-          {/* Deliverables — only show manual ones not already visible in the file table */}
+          {/* Deliverables */}
           {(() => {
             const fileIds = files.map((f) => f.id)
             const manualDeliverables = deliverables.filter((d) => {
@@ -575,7 +594,7 @@ export function FrameIoPanel({
               return !fileIds.some((fid) => d.file_url!.includes(fid))
             })
             const totalLinked = deliverables.length - manualDeliverables.length
-            const showSection = manualDeliverables.length > 0 || !hasFrameIo || showManualForm
+            const showSection = manualDeliverables.length > 0 || !hasProvider || showManualForm
 
             return showSection ? (
               <>

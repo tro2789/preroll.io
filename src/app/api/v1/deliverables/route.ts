@@ -49,12 +49,15 @@ export async function POST(request: Request) {
 
   if (dbError) return errorResponse(dbError.message, 500)
 
-  if (body.frameio_file_id && body.episode_id) {
+  const externalFileId = body.external_file_id || body.frameio_file_id
+  const fileProvider = body.provider || (body.frameio_file_id ? 'frame_io' : null)
+
+  if (externalFileId && fileProvider && body.episode_id) {
     const { data: { user } } = await supabase!.auth.getUser()
     await supabase!.from('file_references').insert({
       user_id: user!.id,
-      provider: 'frame_io',
-      external_id: body.frameio_file_id,
+      provider: fileProvider,
+      external_id: externalFileId,
       name: body.title,
       external_url: body.file_url || null,
       episode_id: body.episode_id,

@@ -42,10 +42,22 @@ export interface ShareLink {
   expiresAt?: string
 }
 
+export type UploadProtocol = 'presigned-chunks' | 'resumable' | 'tus'
+
+export interface ProviderCapabilities {
+  canCreateProject: boolean
+  canUpload: boolean
+  canBrowse: boolean
+  canShare: boolean
+  uploadProtocol?: UploadProtocol
+  projectLabel?: string
+}
+
 export interface IntegrationProviderClient {
   readonly providerName: IntegrationProvider
   readonly displayName: string
   readonly oauthConfig: OAuthConfig
+  readonly capabilities: ProviderCapabilities
 
   getAuthUrl(state: string, redirectUri: string): string
   exchangeCode(code: string, redirectUri: string): Promise<{
@@ -74,7 +86,9 @@ export interface IntegrationProviderClient {
 
   createFileUpload?(accessToken: string, accountId: string, folderId: string, fileName: string, fileSize: number): Promise<{
     fileId: string
-    uploadUrls: { url: string; size: number }[]
+    uploadUrls?: { url: string; size: number }[]
+    resumableUrl?: string
+    tusUrl?: string
   }>
 
   listFolderContents?(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult>
