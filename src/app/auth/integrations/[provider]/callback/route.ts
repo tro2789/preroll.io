@@ -75,6 +75,7 @@ export async function GET(
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error(`OAuth callback error for ${providerName}:`, message)
-    return NextResponse.redirect(`${origin}/app/settings/integrations?error=exchange_failed`)
+    const detail = encodeURIComponent(message.slice(0, 200))
+    return NextResponse.redirect(`${origin}/app/settings/integrations?error=exchange_failed&detail=${detail}`)
   }
 }
