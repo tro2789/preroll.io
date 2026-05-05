@@ -75,13 +75,18 @@ class FrameIoClient implements IntegrationProviderClient {
     }
 
     const tokens = await res.json()
-    const me = await frameioFetch('/me', tokens.access_token)
+    const meResponse = await frameioFetch('/me', tokens.access_token)
+    const me = meResponse.data || meResponse
+
+    const accountsResponse = await frameioFetch('/accounts', tokens.access_token)
+    const accounts = accountsResponse.data || accountsResponse
+    const primaryAccount = Array.isArray(accounts) ? accounts[0] : null
 
     const account: ProviderAccount = {
-      id: me.account_id || me.id,
+      id: primaryAccount?.id || me.id,
       name: me.name || me.email || 'Frame.io User',
       email: me.email,
-      avatarUrl: me.image_64 || me.image_128,
+      avatarUrl: me.avatar_url,
     }
 
     return {
@@ -145,13 +150,15 @@ class FrameIoClient implements IntegrationProviderClient {
       url = `/accounts/${acctId}/workspaces/${entityId}/projects`
       breadcrumbLabel = 'Projects'
     } else if (type === 'project') {
-      const project = await frameioFetch(`/accounts/${acctId}/projects/${entityId}`, accessToken)
+      const projectRes = await frameioFetch(`/accounts/${acctId}/projects/${entityId}`, accessToken)
+      const project = projectRes.data || projectRes
       const rootFolderId = project.root_folder_id || project.root_asset_id
       url = `/accounts/${acctId}/folders/${rootFolderId}/children`
       breadcrumbLabel = project.name || 'Project'
     } else if (type === 'folder') {
       url = `/accounts/${acctId}/folders/${entityId}/children`
-      const folder = await frameioFetch(`/accounts/${acctId}/folders/${entityId}`, accessToken).catch(() => null)
+      const folderRes = await frameioFetch(`/accounts/${acctId}/folders/${entityId}`, accessToken).catch(() => null)
+      const folder = folderRes?.data || folderRes
       breadcrumbLabel = (folder?.name as string) || 'Folder'
     } else {
       throw new Error(`Unknown browse path type: ${type}`)
@@ -195,7 +202,8 @@ class FrameIoClient implements IntegrationProviderClient {
   }
 
   async getFileDetails(accessToken: string, accountId: string, fileId: string): Promise<BrowseItem> {
-    const data = await frameioFetch(`/accounts/${accountId}/files/${fileId}`, accessToken)
+    const res = await frameioFetch(`/accounts/${accountId}/files/${fileId}`, accessToken)
+    const data = res.data || res
     return {
       id: data.id,
       name: data.name,
@@ -214,7 +222,7 @@ class FrameIoClient implements IntegrationProviderClient {
   }
 
   async createShare(accessToken: string, accountId: string, assetIds: string[], name: string): Promise<ShareLink> {
-    const data = await frameioFetch(`/accounts/${accountId}/shares`, accessToken, {
+    const res = await frameioFetch(`/accounts/${accountId}/shares`, accessToken, {
       method: 'POST',
       body: JSON.stringify({
         name,
@@ -223,6 +231,7 @@ class FrameIoClient implements IntegrationProviderClient {
         enable_downloading: true,
       }),
     })
+    const data = res.data || res
     return {
       url: data.short_url || data.url,
       name: data.name || name,
