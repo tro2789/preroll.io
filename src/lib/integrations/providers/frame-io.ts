@@ -66,7 +66,6 @@ class FrameIoClient implements IntegrationProviderClient {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: redirectUri,
       }).toString(),
     })
 
