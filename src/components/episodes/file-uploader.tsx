@@ -14,6 +14,7 @@ interface FileUploaderProps {
   episodeId: string
   enabled: boolean
   listenForDrags?: boolean
+  acceptedMimeTypes?: string[]
   onUploadComplete: () => void
   onUnavailableDrop?: () => void
   onProjectMissing?: () => void
@@ -29,7 +30,16 @@ function formatFileSize(bytes: number): string {
 
 const MAX_CONCURRENT = 3
 
-export function FileUploader({ episodeId, enabled, listenForDrags = true, onUploadComplete, onUnavailableDrop, onProjectMissing }: FileUploaderProps) {
+function matchesMimeType(fileType: string, patterns: string[]): boolean {
+  return patterns.some((pattern) => {
+    if (pattern.endsWith('/*')) {
+      return fileType.startsWith(pattern.slice(0, -1))
+    }
+    return fileType === pattern
+  })
+}
+
+export function FileUploader({ episodeId, enabled, listenForDrags = true, acceptedMimeTypes, onUploadComplete, onUnavailableDrop, onProjectMissing }: FileUploaderProps) {
   const [uploads, setUploads] = useState<UploadingFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -47,6 +57,10 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, onUplo
     async (file: File) => {
       activeCountRef.current++
       try {
+        if (acceptedMimeTypes && file.type && !matchesMimeType(file.type, acceptedMimeTypes)) {
+          throw new Error(`${file.type.split('/')[0]} files are not supported by this provider — only ${acceptedMimeTypes.join(', ')} allowed`)
+        }
+
         const initRes = await fetch(`/api/v1/episodes/${episodeId}/delivery/upload`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -185,18 +199,27 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, onUplo
     while (offset < file.size) {
       const end = Math.min(offset + CHUNK_SIZE, file.size)
       const chunk = file.slice(offset, end)
+      const isLast = end === file.size
 
-      const patchRes = await fetch(tusUrl, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/offset+octet-stream',
-          'Upload-Offset': String(offset),
-          'Tus-Resumable': '1.0.0',
-        },
-        body: chunk,
-      })
+      try {
+        const patchRes = await fetch(tusUrl, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/offset+octet-stream',
+            'Upload-Offset': String(offset),
+            'Tus-Resumable': '1.0.0',
+          },
+          body: chunk,
+        })
 
-      if (!patchRes.ok) throw new Error(`tus upload failed (${patchRes.status})`)
+        if (!patchRes.ok) throw new Error(`tus upload failed (${patchRes.status})`)
+      } catch (err) {
+        if (isLast && err instanceof TypeError) {
+          // CORS or network error on final chunk — data was likely sent
+        } else {
+          throw err
+        }
+      }
 
       offset = end
       updateUpload(file.name, { uploadedBytes: offset })

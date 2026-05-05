@@ -53,11 +53,11 @@ export default async function EpisodeDetailPage({
 
   const stage = episode.pipeline_stages as { id: string; name: string; position: number } | null
 
-  const providerDisplayNames: Record<string, string> = {
-    frame_io: 'Frame.io',
-    google_drive: 'Google Drive',
-    vimeo: 'Vimeo',
-    dropbox: 'Dropbox',
+  const providerMeta: Record<string, { displayName: string; acceptedMimeTypes?: string[] }> = {
+    frame_io: { displayName: 'Frame.io' },
+    google_drive: { displayName: 'Google Drive' },
+    vimeo: { displayName: 'Vimeo', acceptedMimeTypes: ['video/*'] },
+    dropbox: { displayName: 'Dropbox' },
   }
 
   const integration = episodeIntegration ? {
@@ -65,7 +65,8 @@ export default async function EpisodeDetailPage({
     externalProjectId: episodeIntegration.external_project_id,
     externalFolderId: episodeIntegration.external_folder_id,
     externalViewUrl: episodeIntegration.external_view_url,
-    displayName: providerDisplayNames[episodeIntegration.provider] || episodeIntegration.provider,
+    displayName: providerMeta[episodeIntegration.provider]?.displayName || episodeIntegration.provider,
+    acceptedMimeTypes: providerMeta[episodeIntegration.provider]?.acceptedMimeTypes,
   } : null
 
   const statusColors: Record<string, string> = {

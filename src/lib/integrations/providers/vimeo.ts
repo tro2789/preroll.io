@@ -70,6 +70,7 @@ class VimeoClient implements IntegrationProviderClient {
     canShare: true,
     uploadProtocol: 'tus',
     projectLabel: 'Project',
+    acceptedMimeTypes: ['video/*'],
   }
 
   get oauthConfig(): OAuthConfig {
