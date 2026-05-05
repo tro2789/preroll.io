@@ -224,7 +224,7 @@ class GoogleDriveClient implements IntegrationProviderClient {
   }
 
   async createFileUpload(accessToken: string, _accountId: string, folderId: string, fileName: string, fileSize: number) {
-    const res = await driveFetch('/upload/files?uploadType=resumable', accessToken, {
+    const res = await driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable', accessToken, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
