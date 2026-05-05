@@ -185,8 +185,18 @@ class GoogleDriveClient implements IntegrationProviderClient {
     return mapDriveItem(data)
   }
 
-  async createProject(accessToken: string, _accountId: string, _workspaceId: string, name: string) {
-    const parentId = await this.getOrCreatePreRollFolder(accessToken)
+  async createProject(accessToken: string, _accountId: string, _workspaceId: string, name: string, context?: {
+    clientName?: string
+    showName?: string
+  }) {
+    let parentId = await this.getOrCreateFolder(accessToken, 'PreRoll', 'root')
+
+    if (context?.clientName) {
+      parentId = await this.getOrCreateFolder(accessToken, context.clientName, parentId)
+    }
+    if (context?.showName) {
+      parentId = await this.getOrCreateFolder(accessToken, context.showName, parentId)
+    }
 
     const data = await driveJson('/files', accessToken, {
       method: 'POST',
@@ -204,8 +214,9 @@ class GoogleDriveClient implements IntegrationProviderClient {
     }
   }
 
-  private async getOrCreatePreRollFolder(accessToken: string): Promise<string> {
-    const q = `name = 'PreRoll' and mimeType = 'application/vnd.google-apps.folder' and 'root' in parents and trashed = false`
+  private async getOrCreateFolder(accessToken: string, name: string, parentId: string): Promise<string> {
+    const parentClause = parentId === 'root' ? `'root' in parents` : `'${parentId}' in parents`
+    const q = `name = '${name.replace(/'/g, "\\'")}' and mimeType = 'application/vnd.google-apps.folder' and ${parentClause} and trashed = false`
     const search = await driveJson(`/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`, accessToken)
 
     if (search.files?.length > 0) {
@@ -215,8 +226,9 @@ class GoogleDriveClient implements IntegrationProviderClient {
     const created = await driveJson('/files', accessToken, {
       method: 'POST',
       body: JSON.stringify({
-        name: 'PreRoll',
+        name,
         mimeType: 'application/vnd.google-apps.folder',
+        ...(parentId !== 'root' ? { parents: [parentId] } : {}),
       }),
     })
 

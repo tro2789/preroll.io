@@ -62,13 +62,13 @@ export async function POST(
 
   const { data: episode, error: dbError } = await supabase!
     .from('episodes')
-    .select('id, title, episode_number, shows(id, name, client_id, clients(user_id))')
+    .select('id, title, episode_number, shows(id, name, client_id, clients(user_id, name, company))')
     .eq('id', episodeId)
     .single()
 
   if (dbError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { name: string; clients: { user_id: string } } | null
+  const show = episode.shows as unknown as { name: string; clients: { user_id: string; name: string; company: string | null } } | null
   if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
 
   const { data: existing } = await supabase!
@@ -146,11 +146,13 @@ export async function POST(
         projectName = `${showName} - ${episode.title}`
       }
 
+      const clientName = show.clients.company || show.clients.name
       const project = await provider.createProject(
         token,
         userIntegration.account_id,
         userIntegration.workspace_id,
-        projectName
+        projectName,
+        { clientName, showName }
       )
 
       externalProjectId = project.id

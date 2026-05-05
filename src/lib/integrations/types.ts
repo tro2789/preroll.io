@@ -78,7 +78,10 @@ export interface IntegrationProviderClient {
   createShare?(accessToken: string, accountId: string, assetIds: string[], name: string): Promise<ShareLink>
   verifyWebhookSignature?(payload: string, signature: string, timestamp: string): boolean
 
-  createProject?(accessToken: string, accountId: string, workspaceId: string, name: string): Promise<{
+  createProject?(accessToken: string, accountId: string, workspaceId: string, name: string, context?: {
+    clientName?: string
+    showName?: string
+  }): Promise<{
     id: string
     rootFolderId: string
     viewUrl: string
