@@ -110,6 +110,9 @@ export function FrameIoPanel({
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
+  const [sortKey, setSortKey] = useState<'name' | 'size' | 'type' | 'date'>('date')
+  const [sortAsc, setSortAsc] = useState(false)
+
   const [showManualForm, setShowManualForm] = useState(false)
   const [manualTitle, setManualTitle] = useState('')
   const [manualType, setManualType] = useState('rough_cut')
@@ -250,7 +253,7 @@ export function FrameIoPanel({
             <p className="text-sm font-medium text-text-primary truncate" title={file.name}>{file.name}</p>
             <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-text-tertiary">
               {file.fileSize != null && file.fileSize > 0 && <span>{formatFileSize(file.fileSize)}</span>}
-              {file.durationSeconds != null && file.durationSeconds > 0 && <span>&middot; {formatDuration(file.durationSeconds)}</span>}
+              <span>&middot; {getFileExt(file.name)}</span>
               {file.createdAt && (
                 <span>&middot; {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
               )}
@@ -282,20 +285,71 @@ export function FrameIoPanel({
     )
   }
 
+  function getFileExt(name: string): string {
+    const dot = name.lastIndexOf('.')
+    return dot >= 0 ? name.substring(dot + 1).toUpperCase() : '—'
+  }
+
+  function handleSort(key: typeof sortKey) {
+    if (sortKey === key) {
+      setSortAsc(!sortAsc)
+    } else {
+      setSortKey(key)
+      setSortAsc(key === 'name')
+    }
+  }
+
+  function getSortedFiles(): BrowseItem[] {
+    const sorted = [...files].sort((a, b) => {
+      switch (sortKey) {
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'size':
+          return (a.fileSize || 0) - (b.fileSize || 0)
+        case 'type':
+          return getFileExt(a.name).localeCompare(getFileExt(b.name))
+        case 'date':
+          return (a.createdAt || '').localeCompare(b.createdAt || '')
+        default:
+          return 0
+      }
+    })
+    return sortAsc ? sorted : sorted.reverse()
+  }
+
+  function SortHeader({ label, column, width }: { label: string; column: typeof sortKey; width: string }) {
+    const active = sortKey === column
+    return (
+      <th className={`pb-2 pr-3 font-medium ${width}`}>
+        <button
+          onClick={() => handleSort(column)}
+          className={`inline-flex items-center gap-1 transition-colors ${active ? 'text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+        >
+          {label}
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="currentColor" className={`h-3 w-3 transition-transform ${active && sortAsc ? 'rotate-180' : ''}`}>
+            <path d="M6 8.25a.75.75 0 0 1-.53-.22l-2.5-2.5a.75.75 0 1 1 1.06-1.06L6 6.44l1.97-1.97a.75.75 0 1 1 1.06 1.06l-2.5 2.5a.75.75 0 0 1-.53.22Z" />
+          </svg>
+        </button>
+      </th>
+    )
+  }
+
   function renderFileTable() {
+    const sorted = getSortedFiles()
+
     return (
       <table className="w-full text-left">
         <thead>
-          <tr className="text-xs font-medium text-text-tertiary border-b border-border-subtle">
-            <th className="pb-2 pr-3 font-medium">Name</th>
-            <th className="pb-2 pr-3 font-medium w-20">Size</th>
-            <th className="pb-2 pr-3 font-medium w-16">Duration</th>
-            <th className="pb-2 pr-3 font-medium w-20">Uploaded</th>
-            <th className="pb-2 font-medium w-48 text-right">Action</th>
+          <tr className="text-xs font-medium border-b border-border-subtle">
+            <SortHeader label="Name" column="name" width="" />
+            <SortHeader label="Size" column="size" width="w-20" />
+            <SortHeader label="Type" column="type" width="w-16" />
+            <SortHeader label="Uploaded" column="date" width="w-20" />
+            <th className="pb-2 font-medium w-48 text-right text-text-tertiary">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border-subtle">
-          {files.map((file) => {
+          {sorted.map((file) => {
             const linked = isFileLinkedAsDeliverable(file)
             const style = linked ? statusStyles[linked.status] || statusStyles.pending : null
 
@@ -319,8 +373,8 @@ export function FrameIoPanel({
                 <td className="py-2 pr-3 text-xs text-text-tertiary tabular-nums">
                   {file.fileSize != null && file.fileSize > 0 ? formatFileSize(file.fileSize) : '—'}
                 </td>
-                <td className="py-2 pr-3 text-xs text-text-tertiary tabular-nums">
-                  {file.durationSeconds != null && file.durationSeconds > 0 ? formatDuration(file.durationSeconds) : '—'}
+                <td className="py-2 pr-3 text-xs text-text-tertiary">
+                  {getFileExt(file.name)}
                 </td>
                 <td className="py-2 pr-3 text-xs text-text-tertiary">
                   {file.createdAt ? new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
