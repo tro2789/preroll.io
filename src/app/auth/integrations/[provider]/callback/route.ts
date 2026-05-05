@@ -70,6 +70,8 @@ export async function GET(
           workspaceId = workspaces[0].id
         }
       } catch {}
+    } else if (providerName === 'google_drive') {
+      workspaceId = 'root'
     }
 
     await supabase.from('user_integrations').upsert({
