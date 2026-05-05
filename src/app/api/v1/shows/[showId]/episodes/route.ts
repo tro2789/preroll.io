@@ -119,15 +119,21 @@ export async function POST(
 
           const { data: show } = await supabase!
             .from('shows')
-            .select('name')
+            .select('name, client_id, clients(name, company)')
             .eq('id', showId)
             .single()
 
+          const showRecord = show as unknown as { name: string; clients: { name: string; company: string | null } | null } | null
           const date = new Date().toISOString().split('T')[0]
           const epNum = body.episode_number ? ` - EP${String(body.episode_number).padStart(2, '0')}` : ''
-          const projectName = `${date} - ${show?.name || 'Show'}${epNum} - ${body.title}`
+          const showName = showRecord?.name || 'Show'
+          const projectName = `${date} - ${showName}${epNum} - ${body.title}`
+          const clientName = showRecord?.clients?.company || showRecord?.clients?.name
 
-          const project = await provider.createProject(token, eligible.account_id!, eligible.workspace_id!, projectName)
+          const project = await provider.createProject(token, eligible.account_id!, eligible.workspace_id!, projectName, {
+            clientName: clientName || undefined,
+            showName,
+          })
 
           await supabase!
             .from('episode_integrations')
