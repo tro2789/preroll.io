@@ -153,10 +153,10 @@ class FrameIoClient implements IntegrationProviderClient {
       const projectRes = await frameioFetch(`/accounts/${acctId}/projects/${entityId}`, accessToken)
       const project = projectRes.data || projectRes
       const rootFolderId = project.root_folder_id || project.root_asset_id
-      url = `/accounts/${acctId}/folders/${rootFolderId}/children`
+      url = `/accounts/${acctId}/folders/${rootFolderId}/children?include=media_links.thumbnail`
       breadcrumbLabel = project.name || 'Project'
     } else if (type === 'folder') {
-      url = `/accounts/${acctId}/folders/${entityId}/children`
+      url = `/accounts/${acctId}/folders/${entityId}/children?include=media_links.thumbnail`
       const folderRes = await frameioFetch(`/accounts/${acctId}/folders/${entityId}`, accessToken).catch(() => null)
       const folder = folderRes?.data || folderRes
       breadcrumbLabel = (folder?.name as string) || 'Folder'
@@ -174,11 +174,13 @@ class FrameIoClient implements IntegrationProviderClient {
         : item.type === 'file' ? 'file'
         : type === 'workspace' ? 'project'
         : 'file'
+      const mediaLinks = item.media_links as Record<string, Record<string, string>> | undefined
+      const thumbUrl = mediaLinks?.thumbnail?.url || (item.thumb_360 || item.thumb || item.thumbnail_url) as string | undefined
       return {
         id: item.id as string,
         name: item.name as string,
         type: itemType as BrowseItem['type'],
-        thumbnailUrl: (item.thumb_360 || item.thumb || item.thumbnail_url) as string | undefined,
+        thumbnailUrl: thumbUrl,
         viewUrl: item.view_url as string | undefined,
         mimeType: item.media_type as string | undefined,
         fileSize: item.file_size as number | undefined,
@@ -273,7 +275,7 @@ class FrameIoClient implements IntegrationProviderClient {
   }
 
   async listFolderContents(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
-    let url = `/accounts/${accountId}/folders/${folderId}/children?page_size=50`
+    let url = `/accounts/${accountId}/folders/${folderId}/children?page_size=50&include=media_links.thumbnail`
     if (cursor) url += `&after=${cursor}`
 
     const data = await frameioFetch(url, accessToken)
@@ -283,11 +285,13 @@ class FrameIoClient implements IntegrationProviderClient {
         : item.type === 'version_stack' ? 'file'
         : item.type === 'file' ? 'file'
         : 'file'
+      const mediaLinks = item.media_links as Record<string, Record<string, string>> | undefined
+      const thumbUrl = mediaLinks?.thumbnail?.url || (item.thumb_360 || item.thumb || item.thumbnail_url) as string | undefined
       return {
         id: item.id as string,
         name: item.name as string,
         type: itemType as BrowseItem['type'],
-        thumbnailUrl: (item.thumb_360 || item.thumb || item.thumbnail_url) as string | undefined,
+        thumbnailUrl: thumbUrl,
         viewUrl: item.view_url as string | undefined,
         mimeType: item.media_type as string | undefined,
         fileSize: item.file_size as number | undefined,
