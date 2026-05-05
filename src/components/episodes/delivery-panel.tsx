@@ -553,7 +553,16 @@ export function DeliveryPanel({
           {/* No provider connected at all */}
           {!hasProvider && !hasProject && (
             <div className="py-12 text-center">
-              <p className="text-sm text-text-tertiary">No delivery provider connected. You can still add deliverables manually.</p>
+              <p className="text-sm text-text-tertiary">No delivery provider connected.</p>
+              <p className="mt-1 text-xs text-text-tertiary">Connect one in Settings to upload and manage files, or add deliverables manually below.</p>
+              {!showManualForm && (
+                <button
+                  onClick={() => setShowManualForm(true)}
+                  className="mt-4 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors"
+                >
+                  Add Deliverable
+                </button>
+              )}
             </div>
           )}
         </div>
