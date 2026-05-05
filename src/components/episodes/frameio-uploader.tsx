@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 
 interface UploadingFile {
   name: string
@@ -12,6 +12,7 @@ interface UploadingFile {
 
 interface FrameIoUploaderProps {
   episodeId: string
+  enabled: boolean
   onUploadComplete: () => void
 }
 
@@ -25,12 +26,13 @@ function formatFileSize(bytes: number): string {
 
 const MAX_CONCURRENT = 3
 
-export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploaderProps) {
+export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameIoUploaderProps) {
   const [uploads, setUploads] = useState<UploadingFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const activeCountRef = useRef(0)
   const queueRef = useRef<File[]>([])
+  const dragCountRef = useRef(0)
 
   const updateUpload = useCallback((name: string, updates: Partial<UploadingFile>) => {
     setUploads((prev) =>
@@ -42,7 +44,6 @@ export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploader
     async (file: File) => {
       activeCountRef.current++
       try {
-        // Step 1: Initiate upload via our API
         const initRes = await fetch(`/api/v1/episodes/${episodeId}/frameio-upload`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -57,7 +58,6 @@ export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploader
         const { data } = await initRes.json()
         const { uploadUrls } = data as { fileId: string; uploadUrls: { url: string; size: number }[] }
 
-        // Step 2: Upload each chunk to presigned URLs
         let offset = 0
         for (const urlInfo of uploadUrls) {
           const chunkSize = urlInfo.size
@@ -73,10 +73,7 @@ export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploader
             body: chunk,
           })
 
-          if (!putRes.ok) {
-            throw new Error(`Chunk upload failed (${putRes.status})`)
-          }
-
+          if (!putRes.ok) throw new Error(`Chunk upload failed (${putRes.status})`)
           updateUpload(file.name, { uploadedBytes: Math.min(offset, file.size) })
         }
 
@@ -86,12 +83,10 @@ export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploader
         updateUpload(file.name, { status: 'error', error: message })
       } finally {
         activeCountRef.current--
-        // Process next file from queue
         const next = queueRef.current.shift()
         if (next) {
           processFile(next)
         } else if (activeCountRef.current === 0) {
-          // All done
           onUploadComplete()
         }
       }
@@ -102,8 +97,6 @@ export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploader
   const startUploads = useCallback(
     (files: File[]) => {
       if (files.length === 0) return
-
-      // Add all files to state
       const newUploads: UploadingFile[] = files.map((f) => ({
         name: f.name,
         totalBytes: f.size,
@@ -111,8 +104,6 @@ export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploader
         status: 'uploading' as const,
       }))
       setUploads((prev) => [...prev, ...newUploads])
-
-      // Queue all files, then kick off up to MAX_CONCURRENT
       queueRef.current.push(...files)
       while (activeCountRef.current < MAX_CONCURRENT && queueRef.current.length > 0) {
         const file = queueRef.current.shift()!
@@ -122,108 +113,143 @@ export function FrameIoUploader({ episodeId, onUploadComplete }: FrameIoUploader
     [processFile]
   )
 
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+  useEffect(() => {
+    if (!enabled) return
 
-  function handleDragLeave(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-  }
+    function handleDragEnter(e: DragEvent) {
+      e.preventDefault()
+      dragCountRef.current++
+      if (dragCountRef.current === 1) setIsDragging(true)
+    }
 
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-    const files = Array.from(e.dataTransfer.files)
-    startUploads(files)
-  }
+    function handleDragLeave(e: DragEvent) {
+      e.preventDefault()
+      dragCountRef.current--
+      if (dragCountRef.current === 0) setIsDragging(false)
+    }
+
+    function handleDragOver(e: DragEvent) {
+      e.preventDefault()
+    }
+
+    function handleDrop(e: DragEvent) {
+      e.preventDefault()
+      dragCountRef.current = 0
+      setIsDragging(false)
+      const files = Array.from(e.dataTransfer?.files || [])
+      startUploads(files)
+    }
+
+    window.addEventListener('dragenter', handleDragEnter)
+    window.addEventListener('dragleave', handleDragLeave)
+    window.addEventListener('dragover', handleDragOver)
+    window.addEventListener('drop', handleDrop)
+
+    return () => {
+      window.removeEventListener('dragenter', handleDragEnter)
+      window.removeEventListener('dragleave', handleDragLeave)
+      window.removeEventListener('dragover', handleDragOver)
+      window.removeEventListener('drop', handleDrop)
+    }
+  }, [enabled, startUploads])
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || [])
     startUploads(files)
-    // Reset input so re-selecting the same file works
     e.target.value = ''
   }
 
-  const activeUploads = uploads.filter((u) => u.status === 'uploading' || u.status === 'done')
+  const activeUploads = uploads.filter((u) => u.status !== 'done' || Date.now() - Date.now() < 3000)
+  const hasActiveUploads = uploads.some((u) => u.status === 'uploading')
 
   return (
-    <div className="space-y-3">
-      {/* Drop zone */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-6 transition-colors ${
-          isDragging
-            ? 'border-accent bg-accent/5'
-            : 'border-border-subtle hover:border-text-tertiary'
-        }`}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="mb-2 h-6 w-6 text-text-tertiary"
-        >
-          <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
-          <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
-        </svg>
-        <p className="text-sm text-text-secondary">
-          Drop files here or <span className="text-accent">browse</span>
-        </p>
-        <p className="mt-0.5 text-xs text-text-tertiary">
-          Upload to Frame.io project
-        </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={handleFileInput}
-          className="hidden"
-        />
-      </div>
-
-      {/* Progress bars */}
-      {activeUploads.length > 0 && (
-        <div className="space-y-2">
-          {activeUploads.map((u) => {
-            const pct = u.totalBytes > 0 ? Math.round((u.uploadedBytes / u.totalBytes) * 100) : 0
-            return (
-              <div key={u.name} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="truncate text-text-primary">{u.name}</span>
-                  <span className="ml-2 shrink-0 text-text-tertiary">
-                    {u.status === 'done' ? (
-                      <span className="text-emerald-400">Done</span>
-                    ) : u.status === 'error' ? (
-                      <span className="text-red-400" title={u.error}>
-                        Failed
-                      </span>
-                    ) : (
-                      `${pct}%`
-                    )}
-                  </span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-overlay">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      u.status === 'error'
-                        ? 'bg-red-500'
-                        : u.status === 'done'
-                          ? 'bg-emerald-500'
-                          : 'bg-accent'
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            )
-          })}
+    <>
+      {/* Full-window drag overlay */}
+      {isDragging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="rounded-2xl border-2 border-dashed border-accent bg-accent/10 px-16 py-12 text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="mx-auto mb-3 h-8 w-8 text-accent"
+            >
+              <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
+              <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+            </svg>
+            <p className="text-lg font-semibold text-text-primary">Drop files to upload</p>
+            <p className="mt-1 text-sm text-text-secondary">Files will be uploaded to Frame.io</p>
+          </div>
         </div>
       )}
-    </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={handleFileInput}
+        className="hidden"
+      />
+
+      {/* Upload progress (fixed bottom-right) */}
+      {uploads.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-40 w-72 rounded-lg border border-border-subtle bg-surface-raised shadow-lg overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle">
+            <span className="text-xs font-medium text-text-primary">
+              {hasActiveUploads ? 'Uploading...' : 'Uploads complete'}
+            </span>
+            {!hasActiveUploads && (
+              <button
+                onClick={() => setUploads([])}
+                className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
+              >
+                Dismiss
+              </button>
+            )}
+          </div>
+          <div className="max-h-48 overflow-y-auto">
+            {uploads.map((u) => {
+              const pct = u.totalBytes > 0 ? Math.round((u.uploadedBytes / u.totalBytes) * 100) : 0
+              return (
+                <div key={u.name} className="px-3 py-2 space-y-1 border-b border-border-subtle last:border-0">
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate text-text-primary">{u.name}</span>
+                    <span className="shrink-0">
+                      {u.status === 'done' ? (
+                        <span className="text-emerald-400">Done</span>
+                      ) : u.status === 'error' ? (
+                        <span className="text-red-400">Failed</span>
+                      ) : (
+                        <span className="text-text-tertiary tabular-nums">{pct}%</span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="h-1 w-full overflow-hidden rounded-full bg-surface-overlay">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        u.status === 'error' ? 'bg-red-500' : u.status === 'done' ? 'bg-emerald-500' : 'bg-accent'
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+export function UploadButton({ fileInputRef }: { fileInputRef: React.RefObject<HTMLInputElement | null> }) {
+  return (
+    <button
+      onClick={() => fileInputRef.current?.click()}
+      className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
+    >
+      Upload
+    </button>
   )
 }
