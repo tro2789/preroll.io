@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { FilePickerModal } from '@/components/integrations/file-picker-modal'
 
 interface DeliverableFormProps {
   showId: string
@@ -29,6 +30,18 @@ export function DeliverableForm({ showId, episodeId, onClose }: DeliverableFormP
   const [fileUrl, setFileUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasFrameIo, setHasFrameIo] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/v1/integrations')
+      .then((res) => res.json())
+      .then((json) => {
+        const connected = (json.data || []).some((i: { provider: string }) => i.provider === 'frame_io')
+        setHasFrameIo(connected)
+      })
+      .catch(() => {})
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -103,9 +116,20 @@ export function DeliverableForm({ showId, episodeId, onClose }: DeliverableFormP
       </div>
 
       <div>
-        <label htmlFor="del-url" className="block text-xs font-medium text-text-secondary mb-1">
-          File URL (Frame.io, Drive, etc.)
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label htmlFor="del-url" className="block text-xs font-medium text-text-secondary">
+            File URL
+          </label>
+          {hasFrameIo && (
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="text-xs text-accent hover:text-accent-hover transition-colors"
+            >
+              Browse Frame.io
+            </button>
+          )}
+        </div>
         <input
           id="del-url"
           type="url"
@@ -115,6 +139,16 @@ export function DeliverableForm({ showId, episodeId, onClose }: DeliverableFormP
           placeholder="https://..."
         />
       </div>
+
+      <FilePickerModal
+        provider="frame_io"
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onSelect={(item) => {
+          setFileUrl(item.thumbnailUrl || `https://app.frame.io/player/${item.id}`)
+          if (!title) setTitle(item.name)
+        }}
+      />
 
       <div>
         <label htmlFor="del-desc" className="block text-xs font-medium text-text-secondary mb-1">
