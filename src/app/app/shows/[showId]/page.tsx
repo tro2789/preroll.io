@@ -35,7 +35,7 @@ export default async function ShowDetailPage({
 
   const { data: episodes } = await supabase
     .from('episodes')
-    .select('id, title, episode_number, stage_id, status, scheduled_publish_date, frame_io_url, image_url')
+    .select('id, title, episode_number, stage_id, status, scheduled_publish_date, frame_io_url')
     .eq('show_id', showId)
     .order('episode_number', { ascending: true })
 
@@ -117,7 +117,6 @@ export default async function ShowDetailPage({
             episodes={(episodes ?? []).map((ep) => ({
               ...ep,
               frame_io_url: ep.frame_io_url ?? null,
-              image_url: resolveImageUrl(ep.image_url),
             }))}
           />
         )}
