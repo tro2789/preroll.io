@@ -51,6 +51,7 @@ export interface ProviderCapabilities {
   canShare: boolean
   uploadProtocol?: UploadProtocol
   projectLabel?: string
+  acceptedMimeTypes?: string[]
 }
 
 export interface IntegrationProviderClient {

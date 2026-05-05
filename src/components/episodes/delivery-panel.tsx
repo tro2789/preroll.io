@@ -47,6 +47,7 @@ interface DeliveryIntegration {
   externalFolderId: string | null
   externalViewUrl: string | null
   displayName: string
+  acceptedMimeTypes?: string[]
 }
 
 interface DeliveryPanelProps {
@@ -497,6 +498,7 @@ export function DeliveryPanel({
         episodeId={episodeId}
         enabled={isLive && !projectMissing}
         listenForDrags
+        acceptedMimeTypes={integration?.acceptedMimeTypes}
         onUploadComplete={fetchFiles}
         onUnavailableDrop={() => setShowConnectModal(true)}
         onProjectMissing={() => setProjectMissing(true)}
