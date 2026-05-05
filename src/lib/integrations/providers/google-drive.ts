@@ -178,7 +178,10 @@ class GoogleDriveClient implements IntegrationProviderClient {
   }
 
   async getFileDetails(accessToken: string, _accountId: string, fileId: string): Promise<BrowseItem> {
-    const data = await driveJson(`/files/${fileId}?fields=${FILE_FIELDS}`, accessToken)
+    const data = await driveJson(`/files/${fileId}?fields=${FILE_FIELDS},trashed`, accessToken)
+    if (data.trashed) {
+      throw new Error('File has been trashed')
+    }
     return mapDriveItem(data)
   }
 
