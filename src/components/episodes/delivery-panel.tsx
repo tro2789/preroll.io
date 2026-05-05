@@ -138,7 +138,7 @@ export function DeliveryPanel({
   const providerDisplayName = integration?.displayName || 'Provider'
 
   const fetchFiles = useCallback(async () => {
-    if (!isLive) return
+    if (!isLive || projectMissing) return
     setFilesLoading(true)
     setFilesError(null)
     try {
@@ -151,7 +151,6 @@ export function DeliveryPanel({
         const json = await res.json().catch(() => ({ error: 'Failed to load files' }))
         throw new Error(json.error || `Failed to load files (${res.status})`)
       }
-      setProjectMissing(false)
       const json = await res.json()
       setFiles(json.data?.items || [])
     } catch (err) {
@@ -159,7 +158,7 @@ export function DeliveryPanel({
     } finally {
       setFilesLoading(false)
     }
-  }, [episodeId, isLive])
+  }, [episodeId, isLive, projectMissing])
 
   useEffect(() => {
     if (isLive) fetchFiles()
