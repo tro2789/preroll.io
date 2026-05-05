@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { EpisodeDeliverables } from '@/components/deliverables/episode-deliverables'
+import { EpisodeFileLinks } from '@/components/integrations/episode-file-links'
 
 export default async function EpisodeDetailPage({
   params,
@@ -11,7 +12,9 @@ export default async function EpisodeDetailPage({
   const { showId, episodeId } = await params
   const supabase = await createClient()
 
-  const [{ data: episode, error }, { data: deliverables }] = await Promise.all([
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [{ data: episode, error }, { data: deliverables }, { data: fileRefs }, { data: integrations }] = await Promise.all([
     supabase
       .from('episodes')
       .select('*, pipeline_stages(id, name, position)')
@@ -23,6 +26,16 @@ export default async function EpisodeDetailPage({
       .select('*')
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('file_references')
+      .select('*')
+      .eq('episode_id', episodeId)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('user_integrations')
+      .select('provider')
+      .eq('user_id', user!.id)
+      .eq('provider', 'frame_io'),
   ])
 
   if (error || !episode) {
@@ -150,6 +163,13 @@ export default async function EpisodeDetailPage({
             </p>
           </div>
         )}
+
+        <EpisodeFileLinks
+          episodeId={episodeId}
+          showId={showId}
+          fileReferences={fileRefs || []}
+          hasFrameIo={(integrations || []).length > 0}
+        />
 
         <EpisodeDeliverables
           showId={showId}
