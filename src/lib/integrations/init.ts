@@ -1,5 +1,6 @@
 import { registerProvider } from './registry'
 import { createFrameIoClient } from './providers/frame-io'
+import { createGoogleDriveClient } from './providers/google-drive'
 
 let initialized = false
 
@@ -17,8 +18,8 @@ export function ensureProvidersRegistered() {
   registerProvider({
     name: 'google_drive',
     displayName: 'Google Drive',
-    comingSoon: true,
-    getClient: () => { throw new Error('Google Drive integration is not yet available') },
+    comingSoon: false,
+    getClient: createGoogleDriveClient,
   })
 
   registerProvider({
