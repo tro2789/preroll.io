@@ -73,7 +73,7 @@ export async function POST(
 
   const { data: existing } = await supabase!
     .from('episode_integrations')
-    .select('id')
+    .select('id, provider')
     .eq('episode_id', episodeId)
     .maybeSingle()
 
@@ -87,7 +87,9 @@ export async function POST(
 
   // Determine which provider to use
   let providerName: IntegrationProvider
-  if (body.provider) {
+  if (existing && body.recreate) {
+    providerName = existing.provider as IntegrationProvider
+  } else if (body.provider) {
     providerName = body.provider
   } else {
     // Auto-select: fetch user's connected integrations
