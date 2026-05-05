@@ -92,64 +92,22 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
-        {/* Main content: Frame.io panel */}
-        <div className="min-w-0">
-          <FrameIoPanel
-            episodeId={episodeId}
-            showId={showId}
-            frameioProjectId={episode.frameio_project_id || null}
-            frameioRootFolderId={episode.frameio_root_folder_id || null}
-            deliverables={deliverables || []}
-            hasFrameIo={hasFrameIo}
-          />
-        </div>
-
-        {/* Sidebar: episode metadata */}
-        <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
-          <div className="space-y-3">
-            {episode.scheduled_publish_date && (
-              <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Publish Date</h4>
-                <p className="mt-0.5 text-sm text-text-primary">{episode.scheduled_publish_date}</p>
-              </div>
-            )}
-
-            {episode.published_at && (
-              <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Published</h4>
-                <p className="mt-0.5 text-sm text-text-primary">
-                  {new Date(episode.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </p>
-              </div>
-            )}
-
-            {stage && (
-              <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Pipeline Stage</h4>
-                <p className="mt-0.5 text-sm text-text-primary">{stage.name}</p>
-              </div>
-            )}
-          </div>
-
-          {episode.description && (
-            <div>
-              <h4 className="text-xs font-medium text-text-tertiary">Description</h4>
-              <p className="mt-1 text-sm text-text-secondary leading-relaxed whitespace-pre-wrap line-clamp-6">
-                {episode.description}
-              </p>
-            </div>
-          )}
-
-          {episode.notes && (
-            <div>
-              <h4 className="text-xs font-medium text-text-tertiary">Notes</h4>
-              <p className="mt-1 text-sm text-text-secondary leading-relaxed whitespace-pre-wrap line-clamp-6">
-                {episode.notes}
-              </p>
-            </div>
-          )}
-        </aside>
+      <div className="mt-6">
+        <FrameIoPanel
+          episodeId={episodeId}
+          showId={showId}
+          frameioProjectId={episode.frameio_project_id || null}
+          frameioRootFolderId={episode.frameio_root_folder_id || null}
+          deliverables={deliverables || []}
+          hasFrameIo={hasFrameIo}
+          episode={{
+            scheduled_publish_date: episode.scheduled_publish_date,
+            published_at: episode.published_at,
+            description: episode.description,
+            notes: episode.notes,
+            stage: stage ? { name: stage.name } : null,
+          }}
+        />
       </div>
     </div>
   )

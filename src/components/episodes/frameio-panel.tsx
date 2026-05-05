@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { DeliverableList } from '@/components/deliverables/deliverable-list'
 import { FrameIoUploader } from './frameio-uploader'
@@ -30,6 +30,14 @@ interface BrowseItem {
   metadata?: Record<string, unknown>
 }
 
+interface EpisodeMeta {
+  scheduled_publish_date: string | null
+  published_at: string | null
+  description: string | null
+  notes: string | null
+  stage: { name: string } | null
+}
+
 interface FrameIoPanelProps {
   episodeId: string
   showId: string
@@ -37,6 +45,7 @@ interface FrameIoPanelProps {
   frameioRootFolderId: string | null
   deliverables: Deliverable[]
   hasFrameIo: boolean
+  episode: EpisodeMeta
 }
 
 const deliverableTypes = [
@@ -74,26 +83,17 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
 }
 
 const typeLabels: Record<string, string> = {
-  rough_cut: 'Rough Cut',
-  final_cut: 'Final Cut',
-  thumbnail: 'Thumbnail',
-  show_notes: 'Show Notes',
-  cover_art: 'Cover Art',
-  intro: 'Intro',
-  outro: 'Outro',
-  social_clip: 'Social Clip',
-  other: 'Other',
+  rough_cut: 'Rough Cut', final_cut: 'Final Cut', thumbnail: 'Thumbnail',
+  show_notes: 'Show Notes', cover_art: 'Cover Art', intro: 'Intro',
+  outro: 'Outro', social_clip: 'Social Clip', other: 'Other',
 }
 
 export function FrameIoPanel({
-  episodeId,
-  showId,
-  frameioProjectId: initialProjectId,
-  frameioRootFolderId: initialRootFolderId,
-  deliverables,
-  hasFrameIo,
+  episodeId, showId, frameioProjectId: initialProjectId, frameioRootFolderId: initialRootFolderId,
+  deliverables, hasFrameIo, episode,
 }: FrameIoPanelProps) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [frameioProjectId, setFrameioProjectId] = useState(initialProjectId)
   const [frameioViewUrl, setFrameioViewUrl] = useState<string | null>(null)
   const [creatingProject, setCreatingProject] = useState(false)
@@ -113,7 +113,6 @@ export function FrameIoPanel({
   const [manualTitle, setManualTitle] = useState('')
   const [manualType, setManualType] = useState('rough_cut')
   const [manualFileUrl, setManualFileUrl] = useState('')
-  const [manualDescription, setManualDescription] = useState('')
   const [manualLoading, setManualLoading] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
 
@@ -172,12 +171,8 @@ export function FrameIoPanel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          show_id: showId,
-          episode_id: episodeId,
-          type,
-          title: file.name,
-          file_url: file.viewUrl || null,
-          frameio_file_id: file.id,
+          show_id: showId, episode_id: episodeId, type,
+          title: file.name, file_url: file.viewUrl || null, frameio_file_id: file.id,
         }),
       })
       if (!res.ok) {
@@ -196,7 +191,6 @@ export function FrameIoPanel({
     setManualTitle('')
     setManualType('rough_cut')
     setManualFileUrl('')
-    setManualDescription('')
     setManualError(null)
     setShowManualForm(false)
   }
@@ -210,12 +204,8 @@ export function FrameIoPanel({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          show_id: showId,
-          episode_id: episodeId,
-          type: manualType,
-          title: manualTitle,
-          description: manualDescription || null,
-          file_url: manualFileUrl || null,
+          show_id: showId, episode_id: episodeId, type: manualType,
+          title: manualTitle, file_url: manualFileUrl || null,
         }),
       })
       if (!res.ok) {
@@ -231,21 +221,13 @@ export function FrameIoPanel({
     }
   }
 
-  // --- Render helpers ---
-
   function renderFileCard(file: BrowseItem) {
     const linked = isFileLinkedAsDeliverable(file)
     const style = linked ? statusStyles[linked.status] || statusStyles.pending : null
 
     return (
-      <div key={file.id} className="group rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden">
-        {/* Thumbnail */}
-        <a
-          href={file.viewUrl || '#'}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block relative aspect-video overflow-hidden"
-        >
+      <div key={file.id} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden">
+        <a href={file.viewUrl || '#'} target="_blank" rel="noopener noreferrer" className="block relative aspect-video overflow-hidden">
           {file.thumbnailUrl ? (
             <img src={file.thumbnailUrl} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -262,8 +244,6 @@ export function FrameIoPanel({
             </span>
           )}
         </a>
-
-        {/* Info + actions */}
         <div className="p-2.5 space-y-2">
           <div>
             <p className="text-sm font-medium text-text-primary truncate" title={file.name}>{file.name}</p>
@@ -272,7 +252,6 @@ export function FrameIoPanel({
               {linked && <span className="text-text-secondary">{typeLabels[linked.type] || linked.type}</span>}
             </div>
           </div>
-
           {!linked && (
             <div className="flex items-center gap-1.5">
               <select
@@ -304,19 +283,13 @@ export function FrameIoPanel({
 
     return (
       <div key={file.id} className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-overlay p-2">
-        <a
-          href={file.viewUrl || '#'}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 block w-16 aspect-video rounded overflow-hidden"
-        >
+        <a href={file.viewUrl || '#'} target="_blank" rel="noopener noreferrer" className="shrink-0 block w-16 aspect-video rounded overflow-hidden">
           {file.thumbnailUrl ? (
             <img src={file.thumbnailUrl} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="h-full w-full" style={{ background: getGradient(file.id) }} />
           )}
         </a>
-
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
           <div className="mt-0.5 flex items-center gap-2 text-xs text-text-tertiary">
@@ -325,7 +298,6 @@ export function FrameIoPanel({
             {linked && <span className="text-text-secondary">{typeLabels[linked.type] || linked.type}</span>}
           </div>
         </div>
-
         <div className="flex shrink-0 items-center gap-2">
           {linked && style ? (
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>{style.label}</span>
@@ -354,226 +326,230 @@ export function FrameIoPanel({
     )
   }
 
-  // --- Main render ---
-
   return (
-    <div className="space-y-5">
-      {/* Project header bar */}
-      {hasFrameIo && (
-        <div className="flex items-center justify-between">
-          {!frameioProjectId ? (
-            <>
-              <p className="text-sm text-text-secondary">No Frame.io project linked.</p>
-              <button
-                onClick={handleCreateProject}
-                disabled={creatingProject}
-                className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-              >
-                {creatingProject ? 'Creating...' : 'Create Project'}
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-3">
-                <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Files</h3>
-                {files.length > 0 && (
-                  <span className="text-xs text-text-tertiary">{files.length}</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                {/* View toggle */}
-                <div className="flex items-center rounded-md border border-border-subtle overflow-hidden">
+    <>
+      <FrameIoUploader episodeId={episodeId} enabled={!!frameioProjectId} onUploadComplete={fetchFiles} />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]">
+        {/* Main: files */}
+        <div className="min-w-0 space-y-4">
+          {/* Header bar */}
+          {hasFrameIo && (
+            <div className="flex items-center justify-between">
+              {!frameioProjectId ? (
+                <>
+                  <p className="text-sm text-text-secondary">No Frame.io project linked.</p>
                   <button
-                    onClick={() => setViewMode('grid')}
-                    className={`px-2 py-1 transition-colors ${viewMode === 'grid' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
-                    title="Grid view"
+                    onClick={handleCreateProject}
+                    disabled={creatingProject}
+                    className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-                      <path d="M1 2.75A1.75 1.75 0 0 1 2.75 1h2.5A1.75 1.75 0 0 1 7 2.75v2.5A1.75 1.75 0 0 1 5.25 7h-2.5A1.75 1.75 0 0 1 1 5.25v-2.5ZM9 2.75A1.75 1.75 0 0 1 10.75 1h2.5A1.75 1.75 0 0 1 15 2.75v2.5A1.75 1.75 0 0 1 13.25 7h-2.5A1.75 1.75 0 0 1 9 5.25v-2.5ZM1 10.75A1.75 1.75 0 0 1 2.75 9h2.5A1.75 1.75 0 0 1 7 10.75v2.5A1.75 1.75 0 0 1 5.25 15h-2.5A1.75 1.75 0 0 1 1 13.25v-2.5ZM9 10.75A1.75 1.75 0 0 1 10.75 9h2.5A1.75 1.75 0 0 1 15 10.75v2.5A1.75 1.75 0 0 1 13.25 15h-2.5A1.75 1.75 0 0 1 9 13.25v-2.5Z" />
-                    </svg>
+                    {creatingProject ? 'Creating...' : 'Create Project'}
                   </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Files</h3>
+                    {files.length > 0 && <span className="text-xs text-text-tertiary">{files.length}</span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center rounded-md border border-border-subtle overflow-hidden">
+                      <button
+                        onClick={() => setViewMode('grid')}
+                        className={`px-2 py-1 transition-colors ${viewMode === 'grid' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+                        title="Grid view"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+                          <path d="M1 2.75A1.75 1.75 0 0 1 2.75 1h2.5A1.75 1.75 0 0 1 7 2.75v2.5A1.75 1.75 0 0 1 5.25 7h-2.5A1.75 1.75 0 0 1 1 5.25v-2.5ZM9 2.75A1.75 1.75 0 0 1 10.75 1h2.5A1.75 1.75 0 0 1 15 2.75v2.5A1.75 1.75 0 0 1 13.25 7h-2.5A1.75 1.75 0 0 1 9 5.25v-2.5ZM1 10.75A1.75 1.75 0 0 1 2.75 9h2.5A1.75 1.75 0 0 1 7 10.75v2.5A1.75 1.75 0 0 1 5.25 15h-2.5A1.75 1.75 0 0 1 1 13.25v-2.5ZM9 10.75A1.75 1.75 0 0 1 10.75 9h2.5A1.75 1.75 0 0 1 15 10.75v2.5A1.75 1.75 0 0 1 13.25 15h-2.5A1.75 1.75 0 0 1 9 13.25v-2.5Z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setViewMode('list')}
+                        className={`px-2 py-1 transition-colors ${viewMode === 'list' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
+                        title="List view"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+                          <path fillRule="evenodd" d="M2 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 8Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 12Z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
+                    >
+                      Upload
+                    </button>
+                    <button
+                      onClick={fetchFiles}
+                      disabled={filesLoading}
+                      className="text-xs text-text-tertiary hover:text-text-primary transition-colors disabled:opacity-50"
+                    >
+                      Refresh
+                    </button>
+                    {frameioViewUrl && (
+                      <a href={frameioViewUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover transition-colors">
+                        Frame.io
+                      </a>
+                    )}
+                  </div>
+                </>
+              )}
+              {createError && <p className="text-xs text-error">{createError}</p>}
+            </div>
+          )}
+
+          {filesError && <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{filesError}</div>}
+          {submitError && <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{submitError}</div>}
+
+          {/* File grid or list */}
+          {frameioProjectId && !filesLoading && files.length > 0 && (
+            viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+                {files.map(renderFileCard)}
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {files.map(renderFileRow)}
+              </div>
+            )
+          )}
+
+          {/* Loading skeleton */}
+          {frameioProjectId && filesLoading && files.length === 0 && (
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden animate-pulse">
+                  <div className="aspect-video bg-surface-raised" />
+                  <div className="p-2.5 space-y-2">
+                    <div className="h-4 w-3/4 rounded bg-surface-raised" />
+                    <div className="h-3 w-1/2 rounded bg-surface-raised" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {frameioProjectId && !filesLoading && files.length === 0 && !filesError && (
+            <div className="py-12 text-center">
+              <p className="text-sm text-text-tertiary">No files yet.</p>
+              <p className="mt-1 text-xs text-text-tertiary">Drag files anywhere on this page to upload, or click Upload above.</p>
+            </div>
+          )}
+
+          {/* No Frame.io connected empty state */}
+          {!hasFrameIo && (
+            <div className="py-12 text-center">
+              <p className="text-sm text-text-tertiary">Connect Frame.io in Settings to upload and manage files.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar: metadata + deliverables */}
+        <aside className="space-y-5 lg:sticky lg:top-4 lg:self-start">
+          {/* Episode metadata */}
+          <div className="space-y-3">
+            {episode.stage && (
+              <div>
+                <h4 className="text-xs font-medium text-text-tertiary">Stage</h4>
+                <p className="mt-0.5 text-sm text-text-primary">{episode.stage.name}</p>
+              </div>
+            )}
+            {episode.scheduled_publish_date && (
+              <div>
+                <h4 className="text-xs font-medium text-text-tertiary">Publish Date</h4>
+                <p className="mt-0.5 text-sm text-text-primary">{episode.scheduled_publish_date}</p>
+              </div>
+            )}
+            {episode.published_at && (
+              <div>
+                <h4 className="text-xs font-medium text-text-tertiary">Published</h4>
+                <p className="mt-0.5 text-sm text-text-primary">
+                  {new Date(episode.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </p>
+              </div>
+            )}
+            {episode.description && (
+              <div>
+                <h4 className="text-xs font-medium text-text-tertiary">Description</h4>
+                <p className="mt-1 text-xs text-text-secondary leading-relaxed whitespace-pre-wrap line-clamp-4">{episode.description}</p>
+              </div>
+            )}
+            {episode.notes && (
+              <div>
+                <h4 className="text-xs font-medium text-text-tertiary">Notes</h4>
+                <p className="mt-1 text-xs text-text-secondary leading-relaxed whitespace-pre-wrap line-clamp-4">{episode.notes}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-border-subtle" />
+
+          {/* Deliverables */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-medium text-text-tertiary">
+                Deliverables{deliverables.length > 0 && ` (${deliverables.length})`}
+              </h4>
+              {!showManualForm && (
+                <button onClick={() => setShowManualForm(true)} className="text-xs text-text-tertiary hover:text-text-primary transition-colors">
+                  + Add
+                </button>
+              )}
+            </div>
+
+            {showManualForm && (
+              <form onSubmit={handleManualSubmit} className="space-y-2">
+                {manualError && <div className="rounded bg-error/10 border border-error/30 px-2 py-1 text-xs text-error">{manualError}</div>}
+                <input
+                  type="text"
+                  value={manualTitle}
+                  onChange={(e) => setManualTitle(e.target.value)}
+                  required
+                  placeholder="Title"
+                  className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                />
+                <select
+                  value={manualType}
+                  onChange={(e) => setManualType(e.target.value)}
+                  className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
+                >
+                  {deliverableTypes.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="url"
+                  value={manualFileUrl}
+                  onChange={(e) => setManualFileUrl(e.target.value)}
+                  placeholder="File URL (optional)"
+                  className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                />
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setViewMode('list')}
-                    className={`px-2 py-1 transition-colors ${viewMode === 'list' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
-                    title="List view"
+                    type="submit"
+                    disabled={manualLoading || !manualTitle.trim()}
+                    className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-                      <path fillRule="evenodd" d="M2 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 8Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 12Z" clipRule="evenodd" />
-                    </svg>
+                    {manualLoading ? '...' : 'Submit'}
+                  </button>
+                  <button type="button" onClick={resetManualForm} className="text-xs text-text-tertiary hover:text-text-secondary transition-colors">
+                    Cancel
                   </button>
                 </div>
-                <button
-                  onClick={fetchFiles}
-                  disabled={filesLoading}
-                  className="text-xs text-text-tertiary hover:text-text-primary transition-colors disabled:opacity-50"
-                >
-                  {filesLoading ? 'Loading...' : 'Refresh'}
-                </button>
-                {frameioViewUrl && (
-                  <a
-                    href={frameioViewUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-accent hover:text-accent-hover transition-colors"
-                  >
-                    Open in Frame.io
-                  </a>
-                )}
-              </div>
-            </>
-          )}
-          {createError && (
-            <p className="text-xs text-error">{createError}</p>
-          )}
-        </div>
-      )}
+              </form>
+            )}
 
-      {/* Error states */}
-      {filesError && (
-        <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{filesError}</div>
-      )}
-      {submitError && (
-        <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{submitError}</div>
-      )}
+            <DeliverableList deliverables={deliverables} />
 
-      {/* File grid or list */}
-      {frameioProjectId && !filesLoading && files.length > 0 && (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-            {files.map(renderFileCard)}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            {files.map(renderFileRow)}
-          </div>
-        )
-      )}
-
-      {/* Loading skeleton */}
-      {frameioProjectId && filesLoading && files.length === 0 && (
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden animate-pulse">
-              <div className="aspect-video bg-surface-raised" />
-              <div className="p-2.5 space-y-2">
-                <div className="h-4 w-3/4 rounded bg-surface-raised" />
-                <div className="h-3 w-1/2 rounded bg-surface-raised" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {frameioProjectId && !filesLoading && files.length === 0 && !filesError && (
-        <p className="py-4 text-center text-xs text-text-tertiary">
-          No files yet. Upload your first file below.
-        </p>
-      )}
-
-      {/* Upload zone */}
-      {frameioProjectId && (
-        <FrameIoUploader episodeId={episodeId} onUploadComplete={fetchFiles} />
-      )}
-
-      {/* Deliverables section */}
-      {deliverables.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-              Deliverables
-              <span className="ml-1 normal-case tracking-normal">({deliverables.length})</span>
-            </h3>
-            {!showManualForm && (
-              <button
-                onClick={() => setShowManualForm(true)}
-                className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
-              >
-                + Manual
-              </button>
+            {deliverables.length === 0 && !showManualForm && (
+              <p className="text-xs text-text-tertiary">No deliverables yet.</p>
             )}
           </div>
-          <DeliverableList deliverables={deliverables} />
-        </div>
-      )}
-
-      {/* Manual form fallback (shown when no deliverables exist or explicitly opened) */}
-      {deliverables.length === 0 && !hasFrameIo && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Deliverables</h3>
-            {!showManualForm && (
-              <button
-                onClick={() => setShowManualForm(true)}
-                className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
-              >
-                + Manual
-              </button>
-            )}
-          </div>
-          {!showManualForm && (
-            <p className="py-4 text-center text-xs text-text-tertiary">No deliverables submitted yet.</p>
-          )}
-        </div>
-      )}
-
-      {showManualForm && (
-        <form onSubmit={handleManualSubmit} className="rounded-lg border border-border-subtle bg-surface-overlay p-4 space-y-3">
-          {manualError && (
-            <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{manualError}</div>
-          )}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label htmlFor="manual-title" className="block text-xs font-medium text-text-secondary mb-1">Title</label>
-              <input
-                id="manual-title"
-                type="text"
-                value={manualTitle}
-                onChange={(e) => setManualTitle(e.target.value)}
-                required
-                className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-                placeholder="Episode 5 Rough Cut"
-              />
-            </div>
-            <div>
-              <label htmlFor="manual-type" className="block text-xs font-medium text-text-secondary mb-1">Type</label>
-              <select
-                id="manual-type"
-                value={manualType}
-                onChange={(e) => setManualType(e.target.value)}
-                className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none"
-              >
-                {deliverableTypes.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div>
-            <label htmlFor="manual-url" className="block text-xs font-medium text-text-secondary mb-1">File URL</label>
-            <input
-              id="manual-url"
-              type="url"
-              value={manualFileUrl}
-              onChange={(e) => setManualFileUrl(e.target.value)}
-              className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-              placeholder="https://..."
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="submit"
-              disabled={manualLoading || !manualTitle.trim()}
-              className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-            >
-              {manualLoading ? 'Submitting...' : 'Submit for Review'}
-            </button>
-            <button type="button" onClick={resetManualForm} className="text-xs text-text-tertiary hover:text-text-secondary transition-colors">
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
+        </aside>
+      </div>
+    </>
   )
 }
