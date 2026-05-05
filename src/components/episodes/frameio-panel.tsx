@@ -27,6 +27,7 @@ interface BrowseItem {
   mimeType?: string
   fileSize?: number
   durationSeconds?: number
+  createdAt?: string
   metadata?: Record<string, unknown>
 }
 
@@ -247,9 +248,13 @@ export function FrameIoPanel({
         <div className="p-2.5 space-y-2">
           <div>
             <p className="text-sm font-medium text-text-primary truncate" title={file.name}>{file.name}</p>
-            <div className="mt-0.5 flex items-center gap-2 text-xs text-text-tertiary">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-text-tertiary">
               {file.fileSize != null && file.fileSize > 0 && <span>{formatFileSize(file.fileSize)}</span>}
-              {linked && <span className="text-text-secondary">{typeLabels[linked.type] || linked.type}</span>}
+              {file.durationSeconds != null && file.durationSeconds > 0 && <span>&middot; {formatDuration(file.durationSeconds)}</span>}
+              {file.createdAt && (
+                <span>&middot; {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+              )}
+              {linked && <span className="text-text-secondary">&middot; {typeLabels[linked.type] || linked.type}</span>}
             </div>
           </div>
           {!linked && (
@@ -294,8 +299,13 @@ export function FrameIoPanel({
           <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
           <div className="mt-0.5 flex items-center gap-2 text-xs text-text-tertiary">
             {file.fileSize != null && file.fileSize > 0 && <span>{formatFileSize(file.fileSize)}</span>}
-            {file.durationSeconds != null && file.durationSeconds > 0 && <span>{formatDuration(file.durationSeconds)}</span>}
-            {linked && <span className="text-text-secondary">{typeLabels[linked.type] || linked.type}</span>}
+            {file.durationSeconds != null && file.durationSeconds > 0 && (
+              <span>&middot; {formatDuration(file.durationSeconds)}</span>
+            )}
+            {file.createdAt && (
+              <span>&middot; {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+            )}
+            {linked && <span className="text-text-secondary">&middot; {typeLabels[linked.type] || linked.type}</span>}
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2">
