@@ -183,11 +183,14 @@ class GoogleDriveClient implements IntegrationProviderClient {
   }
 
   async createProject(accessToken: string, _accountId: string, _workspaceId: string, name: string) {
+    const parentId = await this.getOrCreatePreRollFolder(accessToken)
+
     const data = await driveJson('/files', accessToken, {
       method: 'POST',
       body: JSON.stringify({
         name,
         mimeType: 'application/vnd.google-apps.folder',
+        parents: [parentId],
       }),
     })
 
@@ -196,6 +199,25 @@ class GoogleDriveClient implements IntegrationProviderClient {
       rootFolderId: data.id as string,
       viewUrl: `https://drive.google.com/drive/folders/${data.id}`,
     }
+  }
+
+  private async getOrCreatePreRollFolder(accessToken: string): Promise<string> {
+    const q = `name = 'PreRoll' and mimeType = 'application/vnd.google-apps.folder' and 'root' in parents and trashed = false`
+    const search = await driveJson(`/files?q=${encodeURIComponent(q)}&fields=files(id)&pageSize=1`, accessToken)
+
+    if (search.files?.length > 0) {
+      return search.files[0].id as string
+    }
+
+    const created = await driveJson('/files', accessToken, {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'PreRoll',
+        mimeType: 'application/vnd.google-apps.folder',
+      }),
+    })
+
+    return created.id as string
   }
 
   async createFileUpload(accessToken: string, _accountId: string, folderId: string, fileName: string, fileSize: number) {
