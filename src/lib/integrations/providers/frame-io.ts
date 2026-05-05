@@ -246,6 +246,67 @@ class FrameIoClient implements IntegrationProviderClient {
     const expected = createHmac('sha256', secret).update(message).digest('hex')
     return `v0=${expected}` === signature
   }
+
+  async createProject(accessToken: string, accountId: string, workspaceId: string, name: string) {
+    const res = await frameioFetch(`/accounts/${accountId}/workspaces/${workspaceId}/projects`, accessToken, {
+      method: 'POST',
+      body: JSON.stringify({ data: { name } }),
+    })
+    const data = res.data || res
+    return {
+      id: data.id as string,
+      rootFolderId: (data.root_folder_id || data.root_asset_id) as string,
+      viewUrl: data.view_url as string,
+    }
+  }
+
+  async createFileUpload(accessToken: string, accountId: string, folderId: string, fileName: string, fileSize: number) {
+    const res = await frameioFetch(`/accounts/${accountId}/folders/${folderId}/files/local_upload`, accessToken, {
+      method: 'POST',
+      body: JSON.stringify({ data: { name: fileName, file_size: fileSize } }),
+    })
+    const data = res.data || res
+    return {
+      fileId: data.id as string,
+      uploadUrls: (data.upload_urls as { url: string; size: number }[]) || [],
+    }
+  }
+
+  async listFolderContents(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
+    let url = `/accounts/${accountId}/folders/${folderId}/children?page_size=50`
+    if (cursor) url += `&after=${cursor}`
+
+    const data = await frameioFetch(url, accessToken)
+    const rawItems = data.data || data
+    const items: BrowseItem[] = (Array.isArray(rawItems) ? rawItems : []).map((item: Record<string, unknown>) => {
+      const itemType = item.type === 'folder' ? 'folder'
+        : item.type === 'version_stack' ? 'file'
+        : item.type === 'file' ? 'file'
+        : 'file'
+      return {
+        id: item.id as string,
+        name: item.name as string,
+        type: itemType as BrowseItem['type'],
+        thumbnailUrl: (item.thumb_360 || item.thumb || item.thumbnail_url) as string | undefined,
+        viewUrl: item.view_url as string | undefined,
+        mimeType: item.media_type as string | undefined,
+        fileSize: item.file_size as number | undefined,
+        durationSeconds: item.duration as number | undefined,
+        metadata: {
+          label: item.label,
+          comment_count: item.comment_count,
+          status: item.status,
+        },
+      }
+    })
+
+    const nextCursor = data.links?.next as string | undefined
+    return {
+      items,
+      breadcrumb: [],
+      pagination: { cursor: nextCursor, hasMore: !!nextCursor },
+    }
+  }
 }
 
 let instance: FrameIoClient | null = null
