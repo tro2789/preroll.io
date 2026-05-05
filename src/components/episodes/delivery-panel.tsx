@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { DeliverableList } from '@/components/deliverables/deliverable-list'
 import { FileUploader } from './file-uploader'
+import { EpisodeAssets } from './episode-assets'
 import { getGradient } from '@/lib/ui/gradient'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
@@ -832,6 +833,9 @@ export function DeliveryPanel({
               </>
             ) : null
           })()}
+
+          <div className="border-t border-border-subtle" />
+          <EpisodeAssets episodeId={episodeId} />
         </aside>
       </div>
     </>
