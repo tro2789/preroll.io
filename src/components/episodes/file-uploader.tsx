@@ -16,6 +16,7 @@ interface FileUploaderProps {
   listenForDrags?: boolean
   onUploadComplete: () => void
   onUnavailableDrop?: () => void
+  onProjectMissing?: () => void
 }
 
 function formatFileSize(bytes: number): string {
@@ -28,7 +29,7 @@ function formatFileSize(bytes: number): string {
 
 const MAX_CONCURRENT = 3
 
-export function FileUploader({ episodeId, enabled, listenForDrags = true, onUploadComplete, onUnavailableDrop }: FileUploaderProps) {
+export function FileUploader({ episodeId, enabled, listenForDrags = true, onUploadComplete, onUnavailableDrop, onProjectMissing }: FileUploaderProps) {
   const [uploads, setUploads] = useState<UploadingFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -53,6 +54,9 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, onUplo
         })
 
         if (!initRes.ok) {
+          if (initRes.status === 410 && onProjectMissing) {
+            onProjectMissing()
+          }
           const json = await initRes.json().catch(() => ({ error: 'Upload init failed' }))
           throw new Error(json.error || `Upload init failed (${initRes.status})`)
         }
