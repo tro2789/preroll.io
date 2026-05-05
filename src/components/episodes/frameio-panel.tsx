@@ -567,70 +567,92 @@ export function FrameIoPanel({
             )}
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-border-subtle" />
+          {/* Deliverables — only show manual ones not already visible in the file table */}
+          {(() => {
+            const fileIds = files.map((f) => f.id)
+            const manualDeliverables = deliverables.filter((d) => {
+              if (!d.file_url) return true
+              return !fileIds.some((fid) => d.file_url!.includes(fid))
+            })
+            const totalLinked = deliverables.length - manualDeliverables.length
+            const showSection = manualDeliverables.length > 0 || !hasFrameIo || showManualForm
 
-          {/* Deliverables */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-medium text-text-tertiary">
-                Deliverables{deliverables.length > 0 && ` (${deliverables.length})`}
-              </h4>
-              {!showManualForm && (
-                <button onClick={() => setShowManualForm(true)} className="text-xs text-text-tertiary hover:text-text-primary transition-colors">
-                  + Add
-                </button>
-              )}
-            </div>
+            return showSection ? (
+              <>
+                <div className="border-t border-border-subtle" />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-medium text-text-tertiary">
+                      {manualDeliverables.length > 0 ? `Deliverables (${manualDeliverables.length})` : 'Deliverables'}
+                    </h4>
+                    {!showManualForm && (
+                      <button onClick={() => setShowManualForm(true)} className="text-xs text-text-tertiary hover:text-text-primary transition-colors">
+                        + Add
+                      </button>
+                    )}
+                  </div>
 
-            {showManualForm && (
-              <form onSubmit={handleManualSubmit} className="space-y-2">
-                {manualError && <div className="rounded bg-error/10 border border-error/30 px-2 py-1 text-xs text-error">{manualError}</div>}
-                <input
-                  type="text"
-                  value={manualTitle}
-                  onChange={(e) => setManualTitle(e.target.value)}
-                  required
-                  placeholder="Title"
-                  className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-                />
-                <select
-                  value={manualType}
-                  onChange={(e) => setManualType(e.target.value)}
-                  className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
-                >
-                  {deliverableTypes.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
-                </select>
-                <input
-                  type="url"
-                  value={manualFileUrl}
-                  onChange={(e) => setManualFileUrl(e.target.value)}
-                  placeholder="File URL (optional)"
-                  className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    type="submit"
-                    disabled={manualLoading || !manualTitle.trim()}
-                    className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-                  >
-                    {manualLoading ? '...' : 'Submit'}
-                  </button>
-                  <button type="button" onClick={resetManualForm} className="text-xs text-text-tertiary hover:text-text-secondary transition-colors">
-                    Cancel
+                  {showManualForm && (
+                    <form onSubmit={handleManualSubmit} className="space-y-2">
+                      {manualError && <div className="rounded bg-error/10 border border-error/30 px-2 py-1 text-xs text-error">{manualError}</div>}
+                      <input
+                        type="text"
+                        value={manualTitle}
+                        onChange={(e) => setManualTitle(e.target.value)}
+                        required
+                        placeholder="Title"
+                        className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                      />
+                      <select
+                        value={manualType}
+                        onChange={(e) => setManualType(e.target.value)}
+                        className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
+                      >
+                        {deliverableTypes.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="url"
+                        value={manualFileUrl}
+                        onChange={(e) => setManualFileUrl(e.target.value)}
+                        placeholder="File URL (optional)"
+                        className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                      />
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="submit"
+                          disabled={manualLoading || !manualTitle.trim()}
+                          className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                        >
+                          {manualLoading ? '...' : 'Submit'}
+                        </button>
+                        <button type="button" onClick={resetManualForm} className="text-xs text-text-tertiary hover:text-text-secondary transition-colors">
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  <DeliverableList deliverables={manualDeliverables} />
+
+                  {manualDeliverables.length === 0 && !showManualForm && (
+                    <p className="text-xs text-text-tertiary">No manual deliverables.</p>
+                  )}
+                </div>
+              </>
+            ) : totalLinked > 0 ? (
+              <>
+                <div className="border-t border-border-subtle" />
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-text-tertiary">{totalLinked} deliverable{totalLinked !== 1 ? 's' : ''} linked above</p>
+                  <button onClick={() => setShowManualForm(true)} className="text-xs text-text-tertiary hover:text-text-primary transition-colors">
+                    + Add
                   </button>
                 </div>
-              </form>
-            )}
-
-            <DeliverableList deliverables={deliverables} />
-
-            {deliverables.length === 0 && !showManualForm && (
-              <p className="text-xs text-text-tertiary">No deliverables yet.</p>
-            )}
-          </div>
+              </>
+            ) : null
+          })()}
         </aside>
       </div>
     </>
