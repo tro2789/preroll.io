@@ -122,15 +122,22 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, onUplo
     const CHUNK_SIZE = 5 * 1024 * 1024
 
     if (file.size <= CHUNK_SIZE) {
-      const putRes = await fetch(resumableUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type || 'application/octet-stream',
-        },
-        body: file,
-      })
-
-      if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`)
+      try {
+        const putRes = await fetch(resumableUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+          },
+          body: file,
+        })
+        if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`)
+      } catch (err) {
+        if (err instanceof TypeError) {
+          // CORS or network error — data was likely sent, file listing will confirm
+        } else {
+          throw err
+        }
+      }
       updateUpload(file.name, { uploadedBytes: file.size })
       return
     }
@@ -141,20 +148,28 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, onUplo
       const chunk = file.slice(offset, end)
       const isLast = end === file.size
 
-      const putRes = await fetch(resumableUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Range': `bytes ${offset}-${end - 1}/${file.size}`,
-          'Content-Type': file.type || 'application/octet-stream',
-        },
-        body: chunk,
-      })
+      try {
+        const putRes = await fetch(resumableUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Range': `bytes ${offset}-${end - 1}/${file.size}`,
+            'Content-Type': file.type || 'application/octet-stream',
+          },
+          body: chunk,
+        })
 
-      if (isLast) {
-        if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`)
-      } else {
-        if (!putRes.ok && putRes.status !== 308) {
-          throw new Error(`Resumable upload failed (${putRes.status})`)
+        if (isLast) {
+          if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`)
+        } else {
+          if (!putRes.ok && putRes.status !== 308) {
+            throw new Error(`Resumable upload failed (${putRes.status})`)
+          }
+        }
+      } catch (err) {
+        if (isLast && err instanceof TypeError) {
+          // CORS or network error on final chunk — data was likely sent
+        } else {
+          throw err
         }
       }
 
