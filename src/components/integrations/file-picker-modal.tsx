@@ -9,6 +9,7 @@ interface BrowseItem {
   name: string
   type: 'folder' | 'file' | 'project' | 'workspace'
   thumbnailUrl?: string
+  viewUrl?: string
   mimeType?: string
   fileSize?: number
   durationSeconds?: number

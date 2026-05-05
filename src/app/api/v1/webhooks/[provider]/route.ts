@@ -40,13 +40,30 @@ export async function POST(
 
   const eventType = (payload.type as string) || 'unknown'
   const resourceId = (payload.resource as Record<string, unknown>)?.id as string | undefined
+  const eventId = (payload.id as string) || undefined
 
   const supabase = getServiceClient()
+
+  if (eventId) {
+    const { data: existing } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('provider', providerName)
+      .eq('external_id', eventId)
+      .eq('event_type', eventType)
+      .not('processed_at', 'is', null)
+      .limit(1)
+      .single()
+
+    if (existing) {
+      return NextResponse.json({ received: true, duplicate: true })
+    }
+  }
 
   await supabase.from('webhook_events').insert({
     provider: providerName,
     event_type: eventType,
-    external_id: resourceId || null,
+    external_id: eventId || resourceId || null,
     payload,
   })
 
@@ -123,7 +140,7 @@ export async function POST(
 
   await supabase.from('webhook_events').update({ processed_at: new Date().toISOString() })
     .eq('provider', providerName)
-    .eq('external_id', resourceId)
+    .eq('external_id', eventId || resourceId)
     .eq('event_type', eventType)
     .is('processed_at', null)
 
