@@ -90,6 +90,53 @@ export async function POST(
     .single()
 
   if (dbError) return errorResponse(dbError.message, 500)
+
+  // Auto-create Frame.io project if user has integration connected
+  try {
+    const { data: { user } } = await supabase!.auth.getUser()
+    if (user) {
+      const { data: integration } = await supabase!
+        .from('user_integrations')
+        .select('account_id, workspace_id')
+        .eq('user_id', user.id)
+        .eq('provider', 'frame_io')
+        .single()
+
+      if (integration?.account_id && integration?.workspace_id) {
+        const { getValidToken } = await import('@/lib/integrations/token-refresh')
+        const { getProvider } = await import('@/lib/integrations/registry')
+        const { ensureProvidersRegistered } = await import('@/lib/integrations/init')
+        ensureProvidersRegistered()
+
+        const token = await getValidToken(user.id, 'frame_io')
+        const provider = getProvider('frame_io')
+
+        const { data: show } = await supabase!
+          .from('shows')
+          .select('name')
+          .eq('id', showId)
+          .single()
+
+        const date = new Date().toISOString().split('T')[0]
+        const epNum = body.episode_number ? ` - EP${String(body.episode_number).padStart(2, '0')}` : ''
+        const projectName = `${date} - ${show?.name || 'Show'}${epNum} - ${body.title}`
+
+        if (provider.createProject) {
+          const project = await provider.createProject(token, integration.account_id, integration.workspace_id, projectName)
+          await supabase!
+            .from('episodes')
+            .update({ frameio_project_id: project.id, frameio_root_folder_id: project.rootFolderId })
+            .eq('id', data.id)
+
+          data.frameio_project_id = project.id
+          data.frameio_root_folder_id = project.rootFolderId
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Auto-create Frame.io project failed:', err instanceof Error ? err.message : err)
+  }
+
   return jsonResponse(data, 201)
 }
 
