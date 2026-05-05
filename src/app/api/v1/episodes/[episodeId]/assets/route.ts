@@ -85,8 +85,18 @@ export async function POST(
 
   if (dbError) return errorResponse(dbError.message, 500)
 
+  const assetUrl = resolveImageUrl(file_key)
+
+  if (asset_type === 'thumbnail' && assetUrl) {
+    await supabase!.from('episodes').update({ image_url: assetUrl }).eq('id', episodeId)
+  }
+
+  if (asset_type === 'cover_art' && assetUrl) {
+    await supabase!.from('shows').update({ cover_art_url: assetUrl }).eq('id', episode.show_id)
+  }
+
   return jsonResponse({
     ...data,
-    url: resolveImageUrl(file_key),
+    url: assetUrl,
   }, 201)
 }
