@@ -24,7 +24,7 @@ export async function GET(
     const cursor = request.nextUrl.searchParams.get('cursor') || undefined
 
     const result = await provider.browse(token, accountId, path, cursor)
-    return jsonResponse(result)
+    return jsonResponse({ ...result, accountId })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Browse failed'
     return errorResponse(message, 500)
