@@ -240,35 +240,19 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, onUplo
     <>
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          {enabled ? (
-            <div className="rounded-2xl border-2 border-dashed border-accent bg-accent/10 px-16 py-12 text-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="mx-auto mb-3 h-8 w-8 text-accent"
-              >
-                <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
-                <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
-              </svg>
-              <p className="text-lg font-semibold text-text-primary">Drop files to upload</p>
-              <p className="mt-1 text-sm text-text-secondary">Files will be uploaded to your delivery project</p>
-            </div>
-          ) : (
-            <div className="rounded-2xl border-2 border-dashed border-border-subtle bg-surface-raised/90 px-16 py-12 text-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="mx-auto mb-3 h-8 w-8 text-text-tertiary"
-              >
-                <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
-                <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
-              </svg>
-              <p className="text-lg font-semibold text-text-primary">No delivery provider connected</p>
-              <p className="mt-1 text-sm text-text-secondary">Drop to connect a provider first</p>
-            </div>
-          )}
+          <div className="rounded-2xl border-2 border-dashed border-accent bg-accent/10 px-16 py-12 text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="mx-auto mb-3 h-8 w-8 text-accent"
+            >
+              <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
+              <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+            </svg>
+            <p className="text-lg font-semibold text-text-primary">Drop files to upload</p>
+            <p className="mt-1 text-sm text-text-secondary">Files will be uploaded to your delivery project</p>
+          </div>
         </div>
       )}
 
