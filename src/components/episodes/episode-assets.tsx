@@ -134,7 +134,7 @@ export function EpisodeAssets({ episodeId }: EpisodeAssetsProps) {
           value={assetType}
           onChange={(e) => setAssetType(e.target.value as AssetType)}
           disabled={uploading}
-          className="min-w-0 flex-1 rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
+          className="rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
         >
           {ASSET_TYPES.map((t) => (
             <option key={t.value} value={t.value}>{t.label}</option>
