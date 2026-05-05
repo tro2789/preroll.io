@@ -129,10 +129,12 @@ export function DeliveryPanel({
 
   const hasProject = !!integration?.externalProjectId
   const hasProvider = connectedProviders.length > 0
+  const providerConnected = !!integration && connectedProviders.includes(integration.provider)
+  const isLive = hasProject && providerConnected
   const providerDisplayName = integration?.displayName || 'Provider'
 
   const fetchFiles = useCallback(async () => {
-    if (!hasProject) return
+    if (!isLive) return
     setFilesLoading(true)
     setFilesError(null)
     try {
@@ -148,11 +150,11 @@ export function DeliveryPanel({
     } finally {
       setFilesLoading(false)
     }
-  }, [episodeId, hasProject])
+  }, [episodeId, isLive])
 
   useEffect(() => {
-    if (hasProject) fetchFiles()
-  }, [hasProject, fetchFiles])
+    if (isLive) fetchFiles()
+  }, [isLive, fetchFiles])
 
   async function handleCreateProject() {
     setCreatingProject(true)
@@ -432,7 +434,7 @@ export function DeliveryPanel({
 
   return (
     <>
-      <FileUploader episodeId={episodeId} enabled={hasProject} onUploadComplete={fetchFiles} />
+      <FileUploader episodeId={episodeId} enabled={isLive} onUploadComplete={fetchFiles} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]">
         {/* Main: files */}
@@ -507,7 +509,7 @@ export function DeliveryPanel({
           {submitError && <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{submitError}</div>}
 
           {/* File grid or list */}
-          {hasProject && !filesLoading && files.length > 0 && (
+          {isLive && !filesLoading && files.length > 0 && (
             viewMode === 'grid' ? (
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
                 {files.map(renderFileCard)}
@@ -518,7 +520,7 @@ export function DeliveryPanel({
           )}
 
           {/* Loading skeleton */}
-          {hasProject && filesLoading && files.length === 0 && (
+          {isLive && filesLoading && files.length === 0 && (
             <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden animate-pulse">
@@ -532,18 +534,26 @@ export function DeliveryPanel({
             </div>
           )}
 
-          {/* Empty state */}
-          {hasProject && !filesLoading && files.length === 0 && !filesError && (
+          {/* Empty state — project linked and provider connected */}
+          {isLive && !filesLoading && files.length === 0 && !filesError && (
             <div className="py-12 text-center">
               <p className="text-sm text-text-tertiary">No files yet.</p>
               <p className="mt-1 text-xs text-text-tertiary">Drag files anywhere on this page to upload, or click Upload above.</p>
             </div>
           )}
 
-          {/* No provider connected empty state */}
-          {!hasProvider && (
+          {/* Project linked but provider disconnected */}
+          {hasProject && !providerConnected && (
             <div className="py-12 text-center">
-              <p className="text-sm text-text-tertiary">Connect a delivery provider in Settings to upload and manage files.</p>
+              <p className="text-sm text-text-tertiary">This episode has a {providerDisplayName} project linked, but {providerDisplayName} is disconnected.</p>
+              <p className="mt-1 text-xs text-text-tertiary">Reconnect in Settings to view files and upload.</p>
+            </div>
+          )}
+
+          {/* No provider connected at all */}
+          {!hasProvider && !hasProject && (
+            <div className="py-12 text-center">
+              <p className="text-sm text-text-tertiary">No delivery provider connected. You can still add deliverables manually.</p>
             </div>
           )}
         </div>
