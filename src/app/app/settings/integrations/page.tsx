@@ -5,7 +5,7 @@ import { ConnectedAccountCard } from '@/components/integrations/connected-accoun
 
 const PROVIDERS = [
   { name: 'frame_io', displayName: 'Frame.io', comingSoon: false },
-  { name: 'google_drive', displayName: 'Google Drive', comingSoon: true },
+  { name: 'google_drive', displayName: 'Google Drive', comingSoon: false },
   { name: 'vimeo', displayName: 'Vimeo', comingSoon: true },
   { name: 'dropbox', displayName: 'Dropbox', comingSoon: true },
 ]
