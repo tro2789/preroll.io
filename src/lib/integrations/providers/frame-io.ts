@@ -185,6 +185,7 @@ class FrameIoClient implements IntegrationProviderClient {
         mimeType: item.media_type as string | undefined,
         fileSize: item.file_size as number | undefined,
         durationSeconds: item.duration as number | undefined,
+        createdAt: item.created_at as string | undefined,
         metadata: {
           label: item.label,
           comment_count: item.comment_count,
@@ -296,6 +297,7 @@ class FrameIoClient implements IntegrationProviderClient {
         mimeType: item.media_type as string | undefined,
         fileSize: item.file_size as number | undefined,
         durationSeconds: item.duration as number | undefined,
+        createdAt: item.created_at as string | undefined,
         metadata: {
           label: item.label,
           comment_count: item.comment_count,

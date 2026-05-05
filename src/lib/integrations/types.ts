@@ -25,6 +25,7 @@ export interface BrowseItem {
   mimeType?: string
   fileSize?: number
   durationSeconds?: number
+  createdAt?: string
   metadata?: Record<string, unknown>
   childrenCount?: number
 }
