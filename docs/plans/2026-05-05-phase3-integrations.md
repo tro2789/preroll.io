@@ -2,11 +2,13 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Build a multi-provider integration foundation and a deep Frame.io integration as the first provider. Producers can connect their Frame.io account via OAuth, browse projects and assets, link Frame.io assets to episodes/deliverables, create review links, and receive webhook updates -- all without leaving PreRoll.
+**Goal:** Build a multi-provider integration foundation and a deep Frame.io integration as the first provider. Producers can connect their Frame.io account via OAuth, browse projects and files, link Frame.io files to episodes/deliverables, create shares (review links), and receive webhook updates -- all without leaving PreRoll.
 
 **Architecture:** A `user_integrations` table stores OAuth credentials per provider per user. A `file_references` table decouples external file pointers from any single provider. All provider interactions go through PreRoll API routes (server-side only, never client-side). A provider abstraction layer (`src/lib/integrations/`) makes adding future providers (Google Drive, Vimeo, Dropbox) straightforward without restructuring.
 
 **Tech Stack:** Same as Phases 1-2 (Next.js 16, Supabase, Tailwind v4). No additional runtime dependencies required -- all OAuth/HTTP interactions use native `fetch`. Token encryption uses Node.js built-in `crypto` (AES-256-GCM).
+
+**Frame.io API Version:** V4 (the current API). V2 is incompatible with V4 accounts and effectively deprecated. OAuth goes through Adobe IMS. App registration at Adobe Developer Console. Key terminology: Teams → Workspaces, Assets → Files/Folders, Review Links → Shares.
 
 ---
 
@@ -177,7 +179,7 @@ src/
 │       ├── token-refresh.ts                      -- Refresh token utility
 │       ├── registry.ts                           -- Provider registry (maps enum -> implementation)
 │       └── providers/
-│           ├── frame-io.ts                       -- Frame.io V2 API client
+│           ├── frame-io.ts                       -- Frame.io V4 API client
 │           ├── google-drive.ts                   -- (stub for future)
 │           ├── vimeo.ts                          -- (stub for future)
 │           └── dropbox.ts                        -- (stub for future)
@@ -197,8 +199,8 @@ supabase/
 | GET | `/api/v1/integrations` | List user's connected integrations |
 | DELETE | `/api/v1/integrations?provider=frame_io` | Disconnect a provider |
 | GET | `/api/v1/integrations/[provider]/auth-url` | Generate OAuth authorization URL |
-| GET | `/api/v1/integrations/[provider]/browse?path=` | Browse files/projects on the provider |
-| POST | `/api/v1/integrations/[provider]/review-link` | Create a Frame.io review link |
+| GET | `/api/v1/integrations/[provider]/browse?path=&cursor=` | Browse files/projects on the provider |
+| POST | `/api/v1/integrations/[provider]/review-link` | Create a Frame.io share (review link) |
 | GET | `/api/v1/integrations/file-references?episode_id=` | List file references for an episode/deliverable |
 | POST | `/api/v1/integrations/file-references` | Link an external file to an episode/deliverable |
 | GET | `/api/v1/integrations/file-references/[id]` | Get file reference detail (with fresh metadata) |
@@ -240,7 +242,7 @@ export interface ProviderAccount {
 export interface BrowseItem {
   id: string
   name: string
-  type: 'folder' | 'file' | 'project' | 'team'
+  type: 'folder' | 'file' | 'project' | 'workspace'
   thumbnailUrl?: string
   mimeType?: string
   fileSize?: number
@@ -252,7 +254,7 @@ export interface BrowseItem {
 export interface BrowseResult {
   items: BrowseItem[]
   breadcrumb: { id: string; name: string }[]
-  pagination?: { page: number; pageSize: number; hasMore: boolean }
+  pagination?: { cursor?: string; hasMore: boolean }
 }
 
 export interface ReviewLink {
@@ -270,7 +272,7 @@ export interface IntegrationProviderClient {
   exchangeCode(code: string): Promise<{ accessToken: string; refreshToken?: string; expiresAt?: Date; account: ProviderAccount }>
   refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken?: string; expiresAt?: Date }>
 
-  browse(accessToken: string, path?: string, page?: number): Promise<BrowseResult>
+  browse(accessToken: string, path?: string, cursor?: string): Promise<BrowseResult>
   getAssetDetails(accessToken: string, assetId: string): Promise<BrowseItem>
 
   createReviewLink?(accessToken: string, assetIds: string[], name: string): Promise<ReviewLink>
@@ -283,14 +285,15 @@ export interface IntegrationProviderClient {
 ## Environment Variables (New)
 
 ```
-# Frame.io OAuth (register app at https://developer.frame.io)
+# Frame.io V4 OAuth via Adobe IMS (register app at https://developer.adobe.com/developer-console/)
+# Create a project, add Frame.io API, configure OAuth Web App credential
 FRAMEIO_CLIENT_ID=
 FRAMEIO_CLIENT_SECRET=
 
 # Token encryption key (generate: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 INTEGRATION_ENCRYPTION_KEY=
 
-# Frame.io Webhook secret (from developer.frame.io webhook config)
+# Frame.io Webhook secret (from V4 webhook configuration)
 FRAMEIO_WEBHOOK_SECRET=
 ```
 
@@ -344,23 +347,36 @@ Define the `IntegrationProviderClient` interface and a registry that maps provid
 **Files:**
 - Create: `src/lib/integrations/providers/frame-io.ts`
 
-Implement the full Frame.io V2 API client:
-- **OAuth config:** auth URL `https://applications.frame.io/oauth2/auth`, token URL `https://applications.frame.io/oauth2/token`, scopes `offline account.read team.read project.read asset.read asset.create comment.read reviewlink.read reviewlink.create`
-- **`getAuthUrl(state)`** -- builds authorization URL with client_id, redirect_uri, scope, state, response_type=code
-- **`exchangeCode(code)`** -- POST to token URL with Basic auth header, returns tokens + fetches `/v2/me` for account info
-- **`refreshAccessToken(refreshToken)`** -- POST with grant_type=refresh_token (returns NEW refresh token that must be stored)
-- **`browse(accessToken, path, page)`** -- hierarchical browsing:
-  - No path: `GET /v2/me` then `GET /v2/accounts/{id}/teams` (list teams)
-  - Path = `team:{id}`: `GET /v2/teams/{id}/projects`
-  - Path = `project:{id}`: get project root asset, then `GET /v2/assets/{root_asset_id}/children`
-  - Path = `folder:{id}`: `GET /v2/assets/{id}/children`
-  - Returns items with `type`, `thumbnailUrl`, `metadata.label`, `metadata.comment_count`
-- **`getAssetDetails(accessToken, assetId)`** -- `GET /v2/assets/{assetId}`
-- **`createReviewLink(accessToken, assetIds, name)`** -- `POST /v2/projects/{project_id}/review_links`
-- **`verifyWebhookSignature(payload, signature, timestamp)`** -- HMAC-SHA256 verification
-- Includes pagination handling (page/page_size params)
+Implement the full Frame.io V4 API client (base URL: `https://api.frame.io/v4`):
 
-**Commit:** `feat: add Frame.io V2 API provider client`
+**OAuth config (Adobe IMS):**
+- Auth URL: `https://ims-na1.adobelogin.com/ims/authorize/v2`
+- Token URL: `https://ims-na1.adobelogin.com/ims/token/v3`
+- Scopes: `offline_access openid email profile additional_info.roles` (all 5 required)
+- Token lifetimes: access token = 24h, refresh token = 14 days
+
+**Methods:**
+- **`getAuthUrl(state)`** -- builds Adobe IMS authorization URL with client_id, redirect_uri, scope, state, response_type=code
+- **`exchangeCode(code)`** -- POST to Adobe IMS token URL with Basic auth header (base64 client_id:client_secret), returns tokens + fetches `GET /v4/me` for account info
+- **`refreshAccessToken(refreshToken)`** -- POST to Adobe IMS with grant_type=refresh_token
+- **`browse(accessToken, path, cursor)`** -- hierarchical browsing:
+  - No path: `GET /v4/me` to get account_id, then `GET /v4/accounts/{account_id}/workspaces` (list workspaces)
+  - Path = `workspace:{account_id}:{workspace_id}`: `GET /v4/accounts/{account_id}/workspaces/{workspace_id}/projects`
+  - Path = `project:{account_id}:{project_id}`: get project root folder, then `GET /v4/accounts/{account_id}/folders/{root_folder_id}/children`
+  - Path = `folder:{account_id}:{folder_id}`: `GET /v4/accounts/{account_id}/folders/{folder_id}/children`
+  - Returns items with `type`, `thumbnailUrl`, `metadata.label`, `metadata.comment_count`
+  - Cursor-based pagination via `links.next` in response
+- **`getAssetDetails(accessToken, assetId)`** -- `GET /v4/accounts/{account_id}/files/{assetId}`
+- **`createShare(accessToken, assetIds, name)`** -- creates a V4 Share (replaces V2 review links) via `POST /v4/accounts/{account_id}/shares`
+- **`verifyWebhookSignature(payload, signature, timestamp)`** -- HMAC-SHA256: `v0:{timestamp}:{body}`, compare against `X-Frameio-Signature` header
+
+**Notes:**
+- All V4 endpoints require `account_id` in the path -- stored in `user_integrations.account_id` after initial OAuth
+- Cursor-based pagination: pass `cursor` from `links.next`, not page numbers
+- Rate limits: leaky bucket, 10-100 req/sec depending on resource. Respect `x-ratelimit-remaining` header.
+- OpenAPI spec available at `https://api.frame.io/v4/openapi.json` for reference
+
+**Commit:** `feat: add Frame.io V4 API provider client`
 
 ---
 
@@ -372,7 +388,7 @@ Implement the full Frame.io V2 API client:
 Utility that retrieves a valid access token, refreshing if needed:
 - `getValidToken(userId: string, provider: IntegrationProvider): Promise<string>`
   - Reads integration from DB using Supabase service role client (bypasses RLS)
-  - If `token_expires_at` is within 5 minutes of now, refresh the token
+  - If `token_expires_at` is within 30 minutes of now, refresh the token (Frame.io V4 access tokens last 24h, refresh tokens 14 days)
   - Decrypt token, refresh if needed, re-encrypt and update DB
   - Return the valid access token (decrypted, in memory only)
 
@@ -457,12 +473,12 @@ Utility that retrieves a valid access token, refreshing if needed:
 **Files:**
 - Create: `src/app/api/v1/integrations/[provider]/browse/route.ts`
 
-**GET `/api/v1/integrations/[provider]/browse?path=&page=1`:**
+**GET `/api/v1/integrations/[provider]/browse?path=&cursor=`:**
 - Requires authentication
 - Calls `getValidToken(userId, provider)` for a fresh token
-- Calls `provider.browse(token, path, page)`
-- Returns `{ data: { items, breadcrumb, pagination } }`
-- Path encoding: `team:abc123`, `project:def456`, `folder:ghi789`
+- Calls `provider.browse(token, path, cursor)`
+- Returns `{ data: { items, breadcrumb, pagination: { cursor, hasMore } } }`
+- Path encoding: `workspace:{accountId}:{workspaceId}`, `project:{accountId}:{projectId}`, `folder:{accountId}:{folderId}`
 
 **Commit:** `feat: add integration file browsing API endpoint`
 
@@ -545,7 +561,7 @@ Update the deliverable form's "File URL" field:
 
 ---
 
-### Task 15: Create Review Link Endpoint + UI
+### Task 15: Create Share (Review Link) Endpoint + UI
 
 **Files:**
 - Create: `src/app/api/v1/integrations/[provider]/review-link/route.ts`
@@ -553,12 +569,12 @@ Update the deliverable form's "File URL" field:
 
 **POST `/api/v1/integrations/[provider]/review-link`:**
 - Body: `{ asset_ids, name }`
-- Gets valid token, calls `provider.createReviewLink(token, assetIds, name)`
+- Gets valid token, calls `provider.createShare(token, assetIds, name)` (V4 Shares replace V2 review links)
 - Returns `{ data: { url, name } }`
 
 **UI:** "Create Review Link" button on episodes with linked Frame.io assets. Dialog to name the link and select assets. Result URL is copyable and optionally saved to episode's `frame_io_url`.
 
-**Commit:** `feat: add Frame.io review link creation`
+**Commit:** `feat: add Frame.io share (review link) creation`
 
 ---
 
@@ -583,16 +599,19 @@ Enhance linked file badges with live status:
 - Create: `src/app/api/v1/webhooks/[provider]/route.ts`
 
 **POST `/api/v1/webhooks/[provider]`:**
-- Public endpoint, signature-verified via HMAC-SHA256
+- Public endpoint, signature-verified via HMAC-SHA256 (`v0:{timestamp}:{body}` against `X-Frameio-Signature` header)
 - Inserts into `webhook_events` for audit
-- Processes events:
+- Processes V4 events:
   - `comment.created`: update file_reference comment count, log activity
-  - `asset.ready`: update thumbnail_url
-  - `asset.label.updated`: update label in provider_metadata, log activity
+  - `file.ready`: update thumbnail_url (V4 uses `file.ready` instead of V2 `asset.ready`)
+  - `file.updated`: check for label changes in provider_metadata, log activity
+  - `share.viewed`: log activity for review link views
 - Idempotency check via webhook_events
 - Returns 200 immediately
+- V4 webhook payload includes `resource.type`, `resource.id`, `account.id`, `workspace.id`, `project.id`
+- Webhook retries: 5 attempts with exponential backoff starting at 15s. Timeout threshold is 5s.
 
-**Commit:** `feat: add Frame.io webhook ingress with event processing`
+**Commit:** `feat: add Frame.io V4 webhook ingress with event processing`
 
 ---
 
@@ -626,18 +645,32 @@ Minimal stubs implementing the interface with "not yet available" errors. Includ
 ### Task 20: Polish + Test Full Flow
 
 **Steps:**
-1. Test OAuth flow: settings -> connect -> authorize -> callback -> success
-2. Test token refresh: expire token, verify auto-refresh
-3. Test file picker: browse teams -> projects -> folders -> select asset
-4. Test episode linking: link asset, verify badge with thumbnail + label
+1. Test OAuth flow: settings -> connect -> Adobe IMS authorize -> callback -> success
+2. Test token refresh: expire token, verify auto-refresh via Adobe IMS
+3. Test file picker: browse workspaces -> projects -> folders -> select file
+4. Test episode linking: link file, verify badge with thumbnail + label
 5. Test deliverable form: pick from Frame.io, verify URL populated
-6. Test review link creation: create link, verify URL returned
-7. Test webhook: simulate payload, verify activity log updated
+6. Test share creation: create share for linked files, verify URL returned
+7. Test webhook: simulate V4 webhook payload, verify activity log updated
 8. Test disconnect: verify graceful handling of unlinked provider
 9. Verify RLS: client portal can see file references but not browse API
-10. Error states: expired tokens, revoked access, rate limiting
+10. Error states: expired tokens, revoked access, rate limiting, Adobe IMS scope issues
 
 **Commit:** `fix: phase 3 polish and edge case handling`
+
+---
+
+## Frame.io V4 / Adobe IMS Gotchas
+
+Known issues from the Frame.io developer community that the implementation must handle:
+
+1. **All 5 scopes required:** `offline_access openid email profile additional_info.roles` — omitting any one (even `email`) causes silent 401/403 errors on V4 endpoints. The token will authenticate with Adobe but fail on Frame.io.
+2. **Adobe ID must be linked to Frame.io:** The user's Adobe ID must be connected to their Frame.io V4 account via Adobe Admin Console. If this linkage is missing, tokens return 401. Our error handling should surface a clear message for this case.
+3. **V2 tokens don't work on V4:** If a user previously connected via a V2 integration, those tokens are useless. The disconnect + reconnect flow must handle this cleanly.
+4. **Refresh tokens are single-use:** Each refresh returns a new refresh token. We must always store the latest one, never reuse an old one.
+5. **account_id required on all V4 paths:** Every V4 endpoint includes `account_id`. We store this on first connection and include it in browse path encoding.
+6. **OpenAPI spec:** Available at `https://api.frame.io/v4/openapi.json` — use as reference for exact request/response shapes.
+7. **TypeScript SDK:** `npm install frameio` — consider using for complex operations, but raw fetch is fine for our scope.
 
 ---
 
