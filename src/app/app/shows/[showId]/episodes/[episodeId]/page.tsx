@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
+import { EpisodeAssets } from '@/components/episodes/episode-assets'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -112,7 +113,7 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 space-y-6">
         <DeliveryPanel
           episodeId={episodeId}
           showId={showId}
@@ -127,6 +128,10 @@ export default async function EpisodeDetailPage({
             stage: stage ? { name: stage.name } : null,
           }}
         />
+
+        <div className="rounded-lg border border-border-subtle bg-surface-raised p-4">
+          <EpisodeAssets episodeId={episodeId} />
+        </div>
       </div>
     </div>
   )
