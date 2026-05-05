@@ -1,6 +1,7 @@
 import { registerProvider } from './registry'
 import { createFrameIoClient } from './providers/frame-io'
 import { createGoogleDriveClient } from './providers/google-drive'
+import { createVimeoClient } from './providers/vimeo'
 
 let initialized = false
 
@@ -25,8 +26,8 @@ export function ensureProvidersRegistered() {
   registerProvider({
     name: 'vimeo',
     displayName: 'Vimeo',
-    comingSoon: true,
-    getClient: () => { throw new Error('Vimeo integration is not yet available') },
+    comingSoon: false,
+    getClient: createVimeoClient,
   })
 
   registerProvider({
