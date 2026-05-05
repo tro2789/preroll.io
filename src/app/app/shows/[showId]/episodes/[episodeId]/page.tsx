@@ -129,7 +129,7 @@ export default async function EpisodeDetailPage({
           }}
         />
 
-        <div className="rounded-lg border border-border-subtle bg-surface-raised p-4">
+        <div className="max-w-sm rounded-lg border border-border-subtle bg-surface-raised p-4">
           <EpisodeAssets episodeId={episodeId} />
         </div>
       </div>
