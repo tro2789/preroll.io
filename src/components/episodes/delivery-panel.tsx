@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { DeliverableList } from '@/components/deliverables/deliverable-list'
 import { FileUploader } from './file-uploader'
 import { getGradient } from '@/lib/ui/gradient'
@@ -126,6 +127,7 @@ export function DeliveryPanel({
   const [manualFileUrl, setManualFileUrl] = useState('')
   const [manualLoading, setManualLoading] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
+  const [showConnectModal, setShowConnectModal] = useState(false)
 
   const hasProject = !!integration?.externalProjectId
   const hasProvider = connectedProviders.length > 0
@@ -434,7 +436,38 @@ export function DeliveryPanel({
 
   return (
     <>
-      <FileUploader episodeId={episodeId} enabled={isLive} onUploadComplete={fetchFiles} />
+      <FileUploader
+        episodeId={episodeId}
+        enabled={isLive}
+        listenForDrags
+        onUploadComplete={fetchFiles}
+        onUnavailableDrop={() => setShowConnectModal(true)}
+      />
+
+      {showConnectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-text-primary">Connect a delivery provider</h3>
+            <p className="mt-2 text-sm text-text-secondary">
+              To upload files, connect a provider like Frame.io, Google Drive, or Vimeo in your integration settings.
+            </p>
+            <div className="mt-5 flex items-center gap-3">
+              <Link
+                href="/app/settings/integrations"
+                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover transition-colors"
+              >
+                Go to Settings
+              </Link>
+              <button
+                onClick={() => setShowConnectModal(false)}
+                className="rounded-md px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]">
         {/* Main: files */}

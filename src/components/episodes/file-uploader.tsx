@@ -13,7 +13,9 @@ interface UploadingFile {
 interface FileUploaderProps {
   episodeId: string
   enabled: boolean
+  listenForDrags?: boolean
   onUploadComplete: () => void
+  onUnavailableDrop?: () => void
 }
 
 function formatFileSize(bytes: number): string {
@@ -26,7 +28,7 @@ function formatFileSize(bytes: number): string {
 
 const MAX_CONCURRENT = 3
 
-export function FileUploader({ episodeId, enabled, onUploadComplete }: FileUploaderProps) {
+export function FileUploader({ episodeId, enabled, listenForDrags = true, onUploadComplete, onUnavailableDrop }: FileUploaderProps) {
   const [uploads, setUploads] = useState<UploadingFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -183,7 +185,7 @@ export function FileUploader({ episodeId, enabled, onUploadComplete }: FileUploa
   )
 
   useEffect(() => {
-    if (!enabled) return
+    if (!listenForDrags) return
 
     function handleDragEnter(e: DragEvent) {
       e.preventDefault()
@@ -205,8 +207,12 @@ export function FileUploader({ episodeId, enabled, onUploadComplete }: FileUploa
       e.preventDefault()
       dragCountRef.current = 0
       setIsDragging(false)
-      const files = Array.from(e.dataTransfer?.files || [])
-      startUploads(files)
+      if (enabled) {
+        const files = Array.from(e.dataTransfer?.files || [])
+        startUploads(files)
+      } else if (onUnavailableDrop) {
+        onUnavailableDrop()
+      }
     }
 
     window.addEventListener('dragenter', handleDragEnter)
@@ -220,7 +226,7 @@ export function FileUploader({ episodeId, enabled, onUploadComplete }: FileUploa
       window.removeEventListener('dragover', handleDragOver)
       window.removeEventListener('drop', handleDrop)
     }
-  }, [enabled, startUploads])
+  }, [listenForDrags, enabled, startUploads, onUnavailableDrop])
 
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || [])
@@ -234,19 +240,35 @@ export function FileUploader({ episodeId, enabled, onUploadComplete }: FileUploa
     <>
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="rounded-2xl border-2 border-dashed border-accent bg-accent/10 px-16 py-12 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="mx-auto mb-3 h-8 w-8 text-accent"
-            >
-              <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
-              <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
-            </svg>
-            <p className="text-lg font-semibold text-text-primary">Drop files to upload</p>
-            <p className="mt-1 text-sm text-text-secondary">Files will be uploaded to your delivery project</p>
-          </div>
+          {enabled ? (
+            <div className="rounded-2xl border-2 border-dashed border-accent bg-accent/10 px-16 py-12 text-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="mx-auto mb-3 h-8 w-8 text-accent"
+              >
+                <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
+                <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+              </svg>
+              <p className="text-lg font-semibold text-text-primary">Drop files to upload</p>
+              <p className="mt-1 text-sm text-text-secondary">Files will be uploaded to your delivery project</p>
+            </div>
+          ) : (
+            <div className="rounded-2xl border-2 border-dashed border-border-subtle bg-surface-raised/90 px-16 py-12 text-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="mx-auto mb-3 h-8 w-8 text-text-tertiary"
+              >
+                <path d="M9.25 13.25a.75.75 0 0 0 1.5 0V4.636l2.955 3.129a.75.75 0 0 0 1.09-1.03l-4.25-4.5a.75.75 0 0 0-1.09 0l-4.25 4.5a.75.75 0 1 0 1.09 1.03L9.25 4.636v8.614Z" />
+                <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
+              </svg>
+              <p className="text-lg font-semibold text-text-primary">No delivery provider connected</p>
+              <p className="mt-1 text-sm text-text-secondary">Drop to connect a provider first</p>
+            </div>
+          )}
         </div>
       )}
 
