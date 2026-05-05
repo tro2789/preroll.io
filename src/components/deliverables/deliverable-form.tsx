@@ -145,7 +145,7 @@ export function DeliverableForm({ showId, episodeId, onClose }: DeliverableFormP
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}
         onSelect={(item) => {
-          setFileUrl(item.thumbnailUrl || `https://app.frame.io/player/${item.id}`)
+          setFileUrl(item.viewUrl || `https://app.frame.io/player/${item.id}`)
           if (!title) setTitle(item.name)
         }}
       />
