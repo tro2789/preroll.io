@@ -72,6 +72,8 @@ export async function GET(
       } catch {}
     } else if (providerName === 'google_drive') {
       workspaceId = 'root'
+    } else if (providerName === 'vimeo') {
+      workspaceId = result.account.id
     }
 
     await supabase.from('user_integrations').upsert({
