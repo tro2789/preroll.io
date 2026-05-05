@@ -91,50 +91,58 @@ export async function POST(
 
   if (dbError) return errorResponse(dbError.message, 500)
 
-  // Auto-create Frame.io project if user has integration connected
+  // Auto-create delivery project if user has an integration with createProject support
   try {
     const { data: { user } } = await supabase!.auth.getUser()
     if (user) {
-      const { data: integration } = await supabase!
+      // Find a connected integration that supports project creation
+      // Priority: frame_io > vimeo > google_drive
+      const { data: integrations } = await supabase!
         .from('user_integrations')
-        .select('account_id, workspace_id')
+        .select('provider, account_id, workspace_id')
         .eq('user_id', user.id)
-        .eq('provider', 'frame_io')
-        .single()
 
-      if (integration?.account_id && integration?.workspace_id) {
+      const priorityOrder = ['frame_io', 'vimeo', 'google_drive'] as const
+      const eligible = priorityOrder
+        .map(p => integrations?.find(i => i.provider === p))
+        .find(i => i?.account_id && i?.workspace_id)
+
+      if (eligible) {
         const { getValidToken } = await import('@/lib/integrations/token-refresh')
         const { getProvider } = await import('@/lib/integrations/registry')
         const { ensureProvidersRegistered } = await import('@/lib/integrations/init')
         ensureProvidersRegistered()
 
-        const token = await getValidToken(user.id, 'frame_io')
-        const provider = getProvider('frame_io')
+        const provider = getProvider(eligible.provider)
+        if (provider.createProject && provider.capabilities.canCreateProject) {
+          const token = await getValidToken(user.id, eligible.provider)
 
-        const { data: show } = await supabase!
-          .from('shows')
-          .select('name')
-          .eq('id', showId)
-          .single()
+          const { data: show } = await supabase!
+            .from('shows')
+            .select('name')
+            .eq('id', showId)
+            .single()
 
-        const date = new Date().toISOString().split('T')[0]
-        const epNum = body.episode_number ? ` - EP${String(body.episode_number).padStart(2, '0')}` : ''
-        const projectName = `${date} - ${show?.name || 'Show'}${epNum} - ${body.title}`
+          const date = new Date().toISOString().split('T')[0]
+          const epNum = body.episode_number ? ` - EP${String(body.episode_number).padStart(2, '0')}` : ''
+          const projectName = `${date} - ${show?.name || 'Show'}${epNum} - ${body.title}`
 
-        if (provider.createProject) {
-          const project = await provider.createProject(token, integration.account_id, integration.workspace_id, projectName)
+          const project = await provider.createProject(token, eligible.account_id!, eligible.workspace_id!, projectName)
+
           await supabase!
-            .from('episodes')
-            .update({ frameio_project_id: project.id, frameio_root_folder_id: project.rootFolderId })
-            .eq('id', data.id)
-
-          data.frameio_project_id = project.id
-          data.frameio_root_folder_id = project.rootFolderId
+            .from('episode_integrations')
+            .insert({
+              episode_id: data.id,
+              provider: eligible.provider,
+              external_project_id: project.id,
+              external_folder_id: project.rootFolderId,
+              external_view_url: project.viewUrl,
+            })
         }
       }
     }
   } catch (err) {
-    console.error('Auto-create Frame.io project failed:', err instanceof Error ? err.message : err)
+    console.error('Auto-create delivery project failed:', err instanceof Error ? err.message : err)
   }
 
   return jsonResponse(data, 201)

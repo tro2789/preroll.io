@@ -10,7 +10,7 @@ interface UploadingFile {
   error?: string
 }
 
-interface FrameIoUploaderProps {
+interface FileUploaderProps {
   episodeId: string
   enabled: boolean
   onUploadComplete: () => void
@@ -26,7 +26,7 @@ function formatFileSize(bytes: number): string {
 
 const MAX_CONCURRENT = 3
 
-export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameIoUploaderProps) {
+export function FileUploader({ episodeId, enabled, onUploadComplete }: FileUploaderProps) {
   const [uploads, setUploads] = useState<UploadingFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -44,7 +44,7 @@ export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameI
     async (file: File) => {
       activeCountRef.current++
       try {
-        const initRes = await fetch(`/api/v1/episodes/${episodeId}/frameio-upload`, {
+        const initRes = await fetch(`/api/v1/episodes/${episodeId}/delivery/upload`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: file.name, file_size: file.size }),
@@ -56,25 +56,22 @@ export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameI
         }
 
         const { data } = await initRes.json()
-        const { uploadUrls } = data as { fileId: string; uploadUrls: { url: string; size: number }[] }
+        const { uploadUrls, resumableUrl, tusUrl, uploadProtocol } = data as {
+          fileId: string
+          uploadUrls?: { url: string; size: number }[]
+          resumableUrl?: string
+          tusUrl?: string
+          uploadProtocol?: string
+        }
 
-        let offset = 0
-        for (const urlInfo of uploadUrls) {
-          const chunkSize = urlInfo.size
-          const chunk = file.slice(offset, offset + chunkSize)
-          offset += chunkSize
-
-          const putRes = await fetch(urlInfo.url, {
-            method: 'PUT',
-            headers: {
-              'x-amz-acl': 'private',
-              'Content-Type': file.type || 'application/octet-stream',
-            },
-            body: chunk,
-          })
-
-          if (!putRes.ok) throw new Error(`Chunk upload failed (${putRes.status})`)
-          updateUpload(file.name, { uploadedBytes: Math.min(offset, file.size) })
+        if (uploadProtocol === 'resumable' && resumableUrl) {
+          await uploadResumable(file, resumableUrl)
+        } else if (uploadProtocol === 'tus' && tusUrl) {
+          await uploadTus(file, tusUrl)
+        } else if (uploadUrls) {
+          await uploadPresignedChunks(file, uploadUrls)
+        } else {
+          throw new Error('No supported upload method returned')
         }
 
         updateUpload(file.name, { status: 'done', uploadedBytes: file.size })
@@ -93,6 +90,78 @@ export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameI
     },
     [episodeId, onUploadComplete, updateUpload]
   )
+
+  async function uploadPresignedChunks(file: File, uploadUrls: { url: string; size: number }[]) {
+    let offset = 0
+    for (const urlInfo of uploadUrls) {
+      const chunkSize = urlInfo.size
+      const chunk = file.slice(offset, offset + chunkSize)
+      offset += chunkSize
+
+      const putRes = await fetch(urlInfo.url, {
+        method: 'PUT',
+        headers: {
+          'x-amz-acl': 'private',
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: chunk,
+      })
+
+      if (!putRes.ok) throw new Error(`Chunk upload failed (${putRes.status})`)
+      updateUpload(file.name, { uploadedBytes: Math.min(offset, file.size) })
+    }
+  }
+
+  async function uploadResumable(file: File, resumableUrl: string) {
+    const CHUNK_SIZE = 5 * 1024 * 1024
+    let offset = 0
+
+    while (offset < file.size) {
+      const end = Math.min(offset + CHUNK_SIZE, file.size)
+      const chunk = file.slice(offset, end)
+
+      const putRes = await fetch(resumableUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Range': `bytes ${offset}-${end - 1}/${file.size}`,
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: chunk,
+      })
+
+      if (!putRes.ok && putRes.status !== 308) {
+        throw new Error(`Resumable upload failed (${putRes.status})`)
+      }
+
+      offset = end
+      updateUpload(file.name, { uploadedBytes: offset })
+    }
+  }
+
+  async function uploadTus(file: File, tusUrl: string) {
+    const CHUNK_SIZE = 5 * 1024 * 1024
+    let offset = 0
+
+    while (offset < file.size) {
+      const end = Math.min(offset + CHUNK_SIZE, file.size)
+      const chunk = file.slice(offset, end)
+
+      const patchRes = await fetch(tusUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/offset+octet-stream',
+          'Upload-Offset': String(offset),
+          'Tus-Resumable': '1.0.0',
+        },
+        body: chunk,
+      })
+
+      if (!patchRes.ok) throw new Error(`tus upload failed (${patchRes.status})`)
+
+      offset = end
+      updateUpload(file.name, { uploadedBytes: offset })
+    }
+  }
 
   const startUploads = useCallback(
     (files: File[]) => {
@@ -159,12 +228,10 @@ export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameI
     e.target.value = ''
   }
 
-  const activeUploads = uploads.filter((u) => u.status !== 'done' || Date.now() - Date.now() < 3000)
   const hasActiveUploads = uploads.some((u) => u.status === 'uploading')
 
   return (
     <>
-      {/* Full-window drag overlay */}
       {isDragging && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="rounded-2xl border-2 border-dashed border-accent bg-accent/10 px-16 py-12 text-center">
@@ -178,12 +245,11 @@ export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameI
               <path d="M3.5 12.75a.75.75 0 0 0-1.5 0v2.5A2.75 2.75 0 0 0 4.75 18h10.5A2.75 2.75 0 0 0 18 15.25v-2.5a.75.75 0 0 0-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5Z" />
             </svg>
             <p className="text-lg font-semibold text-text-primary">Drop files to upload</p>
-            <p className="mt-1 text-sm text-text-secondary">Files will be uploaded to Frame.io</p>
+            <p className="mt-1 text-sm text-text-secondary">Files will be uploaded to your delivery project</p>
           </div>
         </div>
       )}
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -192,7 +258,6 @@ export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameI
         className="hidden"
       />
 
-      {/* Upload progress (fixed bottom-right) */}
       {uploads.length > 0 && (
         <div className="fixed bottom-4 right-4 z-40 w-72 rounded-lg border border-border-subtle bg-surface-raised shadow-lg overflow-hidden">
           <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle">
@@ -240,16 +305,5 @@ export function FrameIoUploader({ episodeId, enabled, onUploadComplete }: FrameI
         </div>
       )}
     </>
-  )
-}
-
-export function UploadButton({ fileInputRef }: { fileInputRef: React.RefObject<HTMLInputElement | null> }) {
-  return (
-    <button
-      onClick={() => fileInputRef.current?.click()}
-      className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
-    >
-      Upload
-    </button>
   )
 }

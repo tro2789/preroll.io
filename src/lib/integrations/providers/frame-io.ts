@@ -1,4 +1,4 @@
-import type { IntegrationProviderClient, OAuthConfig, BrowseResult, BrowseItem, ShareLink, ProviderAccount } from '../types'
+import type { IntegrationProviderClient, OAuthConfig, BrowseResult, BrowseItem, ShareLink, ProviderAccount, ProviderCapabilities } from '../types'
 import { createHmac } from 'crypto'
 
 const FRAMEIO_API = 'https://api.frame.io/v4'
@@ -36,6 +36,14 @@ async function frameioFetch(path: string, token: string, options?: RequestInit) 
 class FrameIoClient implements IntegrationProviderClient {
   readonly providerName = 'frame_io' as const
   readonly displayName = 'Frame.io'
+  readonly capabilities: ProviderCapabilities = {
+    canCreateProject: true,
+    canUpload: true,
+    canBrowse: true,
+    canShare: true,
+    uploadProtocol: 'presigned-chunks',
+    projectLabel: 'Project',
+  }
 
   get oauthConfig(): OAuthConfig {
     return getOAuthConfig()
