@@ -58,6 +58,20 @@ export async function GET(
     const result = await provider.exchangeCode(code, redirectUri)
     const supabase = getServiceClient()
 
+    let workspaceId: string | null = null
+    if (providerName === 'frame_io' && result.account.id) {
+      try {
+        const wsRes = await fetch(`https://api.frame.io/v4/accounts/${result.account.id}/workspaces`, {
+          headers: { Authorization: `Bearer ${result.accessToken}` },
+        })
+        const wsJson = await wsRes.json()
+        const workspaces = wsJson.data || wsJson
+        if (Array.isArray(workspaces) && workspaces.length > 0) {
+          workspaceId = workspaces[0].id
+        }
+      } catch {}
+    }
+
     await supabase.from('user_integrations').upsert({
       user_id: state.userId,
       provider: providerName,
@@ -69,6 +83,7 @@ export async function GET(
       account_email: result.account.email || null,
       account_avatar_url: result.account.avatarUrl || null,
       scopes: provider.oauthConfig.scopes.join(' '),
+      workspace_id: workspaceId,
     }, { onConflict: 'user_id,provider' })
 
     return NextResponse.redirect(`${origin}/app/settings/integrations?connected=${providerName}`)
