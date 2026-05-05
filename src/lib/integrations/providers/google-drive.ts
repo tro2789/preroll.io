@@ -258,6 +258,11 @@ class GoogleDriveClient implements IntegrationProviderClient {
   }
 
   async listFolderContents(accessToken: string, _accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
+    const folderMeta = await driveJson(`/files/${folderId}?fields=trashed`, accessToken)
+    if (folderMeta.trashed) {
+      throw new Error('Folder has been trashed (404)')
+    }
+
     const q = `'${folderId}' in parents and trashed = false`
     let url = `/files?q=${encodeURIComponent(q)}&fields=nextPageToken,files(${FILE_FIELDS})&orderBy=createdTime desc&pageSize=50`
     if (cursor) url += `&pageToken=${cursor}`
