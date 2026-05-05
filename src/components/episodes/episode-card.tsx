@@ -21,9 +21,7 @@ interface EpisodeCardProps {
 export function EpisodeCard({ episode, showId }: EpisodeCardProps) {
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden transition-colors hover:border-border-hover">
-      {episode.image_url && (
-        <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9]" />
-      )}
+      <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9]" />
       <Link
         href={`/app/shows/${showId}/episodes/${episode.id}`}
         className="block p-2.5"
