@@ -37,6 +37,7 @@ export function FilePickerModal({ provider, open, onClose, onSelect }: FilePicke
   const [currentPath, setCurrentPath] = useState<string | undefined>(undefined)
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([{ id: 'root', name: 'Workspaces' }])
   const [cursor, setCursor] = useState<string | undefined>(undefined)
+  const [accountId, setAccountId] = useState<string>('')
 
   const fetchItems = useCallback(async (path?: string, nextCursor?: string) => {
     setLoading(true)
@@ -49,6 +50,7 @@ export function FilePickerModal({ provider, open, onClose, onSelect }: FilePicke
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to browse')
       const data = json.data
+      if (data.accountId) setAccountId(data.accountId)
       if (nextCursor) {
         setItems((prev) => [...prev, ...data.items])
       } else {
@@ -75,10 +77,9 @@ export function FilePickerModal({ provider, open, onClose, onSelect }: FilePicke
 
   function handleNavigate(item: BrowseItem) {
     let newPath: string
-    const accountId = currentPath?.split(':')[1] || ''
 
     if (item.type === 'workspace') {
-      newPath = `workspace:${accountId || item.id}:${item.id}`
+      newPath = `workspace:${accountId}:${item.id}`
     } else if (item.type === 'project') {
       newPath = `project:${accountId}:${item.id}`
     } else {
