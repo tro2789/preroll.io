@@ -63,13 +63,19 @@ export default function EditEpisodePage({
   }, [showId, episodeId])
 
   async function handleImageUploaded(fileKey: string) {
-    const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
-      method: 'PATCH',
+    const filename = fileKey.split('/').pop() || 'thumbnail'
+    const res = await fetch(`/api/v1/episodes/${episodeId}/assets`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image_url: fileKey }),
+      body: JSON.stringify({
+        name: filename,
+        file_key: fileKey,
+        asset_type: 'thumbnail',
+      }),
     })
     if (res.ok) {
-      setEpisode((prev) => prev ? { ...prev, image_url: fileKey } : prev)
+      const { data } = await res.json()
+      setEpisode((prev) => prev ? { ...prev, image_url: data.url ?? fileKey } : prev)
     }
   }
 
@@ -137,6 +143,7 @@ export default function EditEpisodePage({
           id={episodeId}
           imageUrl={episode.image_url}
           showId={showId}
+          episodeId={episodeId}
           onUploaded={handleImageUploaded}
           className="mb-6"
         />
