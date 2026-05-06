@@ -79,9 +79,6 @@ export default async function ShowDetailPage({
             </Link>
           </div>
         </div>
-        {show.description && (
-          <p className="mt-3 text-sm text-text-secondary leading-relaxed line-clamp-2">{show.description}</p>
-        )}
         <div className="mt-3 flex sm:hidden items-center gap-2">
           <Link
             href={`/app/shows/${showId}/assets`}
