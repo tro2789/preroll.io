@@ -175,8 +175,25 @@ export function DeliveryPanel({
   const handleUploadComplete = useCallback(() => {
     fetchFiles()
     if (thumbnailTimerRef.current) clearTimeout(thumbnailTimerRef.current)
-    thumbnailTimerRef.current = setTimeout(() => fetchFiles(), 5000)
-  }, [fetchFiles])
+    thumbnailTimerRef.current = setTimeout(async () => {
+      if (!isLive || projectMissing) return
+      try {
+        const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files`)
+        if (!res.ok) return
+        const json = await res.json()
+        const items = (json.data?.items || []) as BrowseItem[]
+        setFiles(items)
+        const thumb = items.find((f) => f.thumbnailUrl)?.thumbnailUrl
+        if (thumb) {
+          await fetch(`/api/v1/episodes/${episodeId}/auto-thumbnail`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ thumbnail_url: thumb }),
+          })
+        }
+      } catch { /* ignore */ }
+    }, 5000)
+  }, [fetchFiles, episodeId, isLive, projectMissing])
 
   useEffect(() => {
     if (isLive) fetchFiles()
