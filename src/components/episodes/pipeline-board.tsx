@@ -97,17 +97,34 @@ function DraggableEpisode({
   )
 }
 
+function MobileEpisodeCard({ episode, showId }: { episode: Episode; showId: string }) {
+  return (
+    <a
+      href={`/app/shows/${showId}/episodes/${episode.id}`}
+      className="block rounded-lg border border-border-subtle bg-surface-raised px-3 py-2.5 transition-colors hover:border-border-default"
+    >
+      <p className="text-sm font-medium text-text-primary leading-snug">{episode.title}</p>
+      <div className="mt-1 flex items-center gap-2 text-[11px] text-text-tertiary">
+        {episode.episode_number != null && <span>EP {String(episode.episode_number).padStart(2, '0')}</span>}
+        {episode.scheduled_publish_date && (
+          <span>{new Date(episode.scheduled_publish_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+        )}
+      </div>
+    </a>
+  )
+}
+
 export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: PipelineBoardProps) {
   const [episodes, setEpisodes] = useState<Episode[]>(initialEpisodes)
   const [activeEpisode, setActiveEpisode] = useState<Episode | null>(null)
+  const sortedStages = [...stages].sort((a, b) => a.position - b.position)
+  const [activeTab, setActiveTab] = useState(() => sortedStages[0]?.id || '')
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
     })
   )
-
-  const sortedStages = [...stages].sort((a, b) => a.position - b.position)
 
   function handleDragStart(event: DragStartEvent) {
     const episode = episodes.find((ep) => ep.id === event.active.id)
@@ -169,44 +186,84 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-        {sortedStages.map((stage) => {
-          const stageEpisodes = episodes.filter((ep) => ep.stage_id === stage.id)
-          return (
-            <DroppableColumn key={stage.id} stage={stage}>
-              {stageEpisodes.map((episode) => (
-                <DraggableEpisode
-                  key={episode.id}
-                  episode={episode}
-                  showId={showId}
-                />
-              ))}
-              {stageEpisodes.length === 0 && (
-                <p className="text-xs text-text-tertiary text-center py-4">
-                  No episodes
-                </p>
-              )}
-            </DroppableColumn>
-          )
-        })}
+    <>
+      {/* Mobile: stage tabs + single column */}
+      <div className="md:hidden">
+        <div className="flex border-b border-border-subtle mb-4 overflow-x-auto">
+          {sortedStages.map((stage) => {
+            const count = episodes.filter(ep => ep.stage_id === stage.id).length
+            const isActive = activeTab === stage.id
+            return (
+              <button
+                key={stage.id}
+                onClick={() => setActiveTab(stage.id)}
+                className={`shrink-0 px-3 py-2 text-xs font-semibold uppercase tracking-wider border-b-2 transition-colors ${
+                  isActive
+                    ? 'border-accent text-text-primary'
+                    : 'border-transparent text-text-tertiary'
+                }`}
+              >
+                {stage.name}
+                {count > 0 && <span className="ml-1.5 text-text-tertiary">{count}</span>}
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="space-y-2">
+          {episodes.filter(ep => ep.stage_id === activeTab).map((episode) => (
+            <MobileEpisodeCard key={episode.id} episode={episode} showId={showId} />
+          ))}
+          {episodes.filter(ep => ep.stage_id === activeTab).length === 0 && (
+            <div className="rounded-lg border border-dashed border-border-subtle px-3 py-8 text-center">
+              <p className="text-xs text-text-tertiary">No episodes in this stage</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <DragOverlay>
-        {activeEpisode ? (
-          <DraggableEpisode
-            episode={activeEpisode}
-            showId={showId}
-            isDragOverlay
-          />
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+      {/* Desktop: draggable kanban grid */}
+      <div className="hidden md:block">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${sortedStages.length}, minmax(0, 1fr))` }}>
+            {sortedStages.map((stage) => {
+              const stageEpisodes = episodes.filter((ep) => ep.stage_id === stage.id)
+              return (
+                <DroppableColumn key={stage.id} stage={stage}>
+                  {stageEpisodes.map((episode) => (
+                    <DraggableEpisode
+                      key={episode.id}
+                      episode={episode}
+                      showId={showId}
+                    />
+                  ))}
+                  {stageEpisodes.length === 0 && (
+                    <p className="text-xs text-text-tertiary text-center py-4">
+                      No episodes
+                    </p>
+                  )}
+                </DroppableColumn>
+              )
+            })}
+          </div>
+
+          <DragOverlay>
+            {activeEpisode ? (
+              <DraggableEpisode
+                episode={activeEpisode}
+                showId={showId}
+                isDragOverlay
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+    </>
   )
 }
