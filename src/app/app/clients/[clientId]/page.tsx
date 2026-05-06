@@ -46,20 +46,37 @@ export default async function ClientDetailPage({
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <Link
-            href="/app/clients"
-            className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
-          >
-            &larr; All Clients
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-text-primary">{client.name}</h1>
-          {client.company && (
-            <p className="mt-1 text-text-secondary">{client.company}</p>
-          )}
+      <div>
+        <Link
+          href="/app/clients"
+          className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+        >
+          &larr; All Clients
+        </Link>
+        <div className="mt-2 flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-text-primary leading-tight">{client.name}</h1>
+            {client.company && (
+              <p className="mt-0.5 text-sm text-text-secondary">{client.company}</p>
+            )}
+          </div>
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
+            <InviteButton
+              clientId={clientId}
+              inviteCode={client.invite_code}
+              clientUserId={client.client_user_id}
+              onboardedAt={client.onboarded_at}
+            />
+            <Link
+              href={`/app/clients/${clientId}/edit`}
+              className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
+            >
+              Edit
+            </Link>
+            <ClientDetailActions clientId={clientId} />
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="mt-3 flex sm:hidden items-center gap-2">
           <InviteButton
             clientId={clientId}
             inviteCode={client.invite_code}
@@ -68,7 +85,7 @@ export default async function ClientDetailPage({
           />
           <Link
             href={`/app/clients/${clientId}/edit`}
-            className="inline-flex items-center rounded-md bg-surface-overlay px-3 py-2 text-sm font-medium text-text-primary transition-colors hover:bg-surface-overlay/80"
+            className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
           >
             Edit
           </Link>
@@ -167,12 +184,8 @@ export default async function ClientDetailPage({
                 className="block rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-hover"
               >
                 <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/9]" />
-                <div className="p-4">
+                <div className="p-3">
                   <p className="text-sm font-medium text-text-primary">{show.name}</p>
-                  <div className="mt-1 flex items-center gap-3 text-xs text-text-tertiary">
-                    {show.format && <span>{show.format}</span>}
-                    {show.schedule && <span>{show.schedule}</span>}
-                  </div>
                 </div>
               </Link>
             ))}
