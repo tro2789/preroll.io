@@ -30,22 +30,11 @@ export default async function ShowsPage() {
                 className="block rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-hover"
               >
                 <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/9]" />
-                <div className="p-4">
+                <div className="p-3">
                   <h3 className="text-sm font-semibold text-text-primary">{show.name}</h3>
-                  {client && (
-                    <p className="mt-1 text-xs text-text-tertiary">{client.name}</p>
-                  )}
-                  <div className="mt-2 flex items-center gap-3 text-xs text-text-secondary">
-                    {show.format && (
-                      <span className="inline-flex items-center rounded-full bg-accent-muted px-2 py-0.5 text-xs text-accent">
-                        {show.format}
-                      </span>
-                    )}
-                    <span>{episodeCount} {episodeCount === 1 ? 'episode' : 'episodes'}</span>
-                  </div>
-                  {show.schedule && (
-                    <p className="mt-2 text-xs text-text-tertiary">{show.schedule}</p>
-                  )}
+                  <p className="mt-0.5 text-xs text-text-tertiary">
+                    {client && <>{client.name} &middot; </>}{episodeCount} {episodeCount === 1 ? 'episode' : 'episodes'}
+                  </p>
                 </div>
               </Link>
             )
