@@ -31,12 +31,25 @@ export async function GET(
       const provider = getProvider(data.provider as IntegrationProvider)
       const details = await provider.getFileDetails(token, accountId, data.external_id)
 
+      const newThumb = details.thumbnailUrl || data.thumbnail_url
       const updates: Record<string, unknown> = {
-        thumbnail_url: details.thumbnailUrl || data.thumbnail_url,
+        thumbnail_url: newThumb,
         provider_metadata: { ...data.provider_metadata, ...details.metadata },
       }
 
       await supabase!.from('file_references').update(updates).eq('id', referenceId)
+
+      if (newThumb && data.episode_id) {
+        const { data: ep } = await supabase!
+          .from('episodes')
+          .select('image_url')
+          .eq('id', data.episode_id)
+          .single()
+        if (ep && !ep.image_url) {
+          await supabase!.from('episodes').update({ image_url: newThumb }).eq('id', data.episode_id)
+        }
+      }
+
       return jsonResponse({ ...data, ...updates })
     } catch {
       return jsonResponse(data)
