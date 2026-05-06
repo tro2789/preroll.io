@@ -9,6 +9,7 @@ import { SortableColumn, CollapseToggle, ColumnCount } from '@/components/kanban
 import { SortableCard, DragOverlayCard } from '@/components/kanban/sortable-card'
 import { BoardToolbar, applyFilters, type BoardFilters, type GroupBy } from '@/components/kanban/board-toolbar'
 import { useCollapsedColumns } from '@/lib/kanban/use-collapsed-columns'
+import { useCompactView } from '@/lib/kanban/use-compact-view'
 import { Swimlane } from '@/components/kanban/swimlane'
 import { Thumbnail } from '@/components/ui/thumbnail'
 import { CardTagPills } from '@/components/kanban/card-tag-pills'
@@ -58,8 +59,31 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function EpisodeCardContent({ episode }: { episode: Episode }) {
+function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: boolean }) {
   const isOverdue = episode.scheduled_publish_date && episode.scheduled_publish_date < new Date().toISOString().split('T')[0]
+
+  if (compact) {
+    return (
+      <div className="rounded-md border border-border-subtle bg-surface-raised px-2.5 py-1.5 transition-colors hover:border-border-default group flex items-center gap-2 min-w-0">
+        <p className="text-xs font-medium text-text-primary group-hover:text-accent transition-colors truncate min-w-0">
+          {episode.title}
+        </p>
+        <span className="text-[10px] text-text-tertiary truncate shrink-0 max-w-[80px]">{episode.shows?.name}</span>
+        {episode.tags && episode.tags.length > 0 && (
+          <div className="flex gap-0.5 shrink-0">
+            {episode.tags.map((tag) => (
+              <span key={tag.id} className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} title={tag.name} />
+            ))}
+          </div>
+        )}
+        {episode.scheduled_publish_date && (
+          <span className={`shrink-0 text-[10px] tabular-nums ml-auto ${isOverdue ? 'text-red-400 font-medium' : 'text-text-tertiary'}`}>
+            {formatDate(episode.scheduled_publish_date)}
+          </span>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-default group">
@@ -88,6 +112,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
   const [filters, setFilters] = useState<BoardFilters>({ search: '', overdueOnly: false, showId: null, tagIds: [] })
   const [groupBy, setGroupBy] = useState<GroupBy>('none')
   const { isCollapsed, toggle, expand } = useCollapsedColumns('dashboard')
+  const { compact, toggle: toggleCompact } = useCompactView()
 
   const kanbanColumns: KanbanColumn[] = dashboardColumns.map((col) => ({
     id: `col-${col.position}`,
@@ -161,7 +186,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
           onClick={(e) => e.stopPropagation()}
           draggable={false}
         >
-          <EpisodeCardContent episode={episode} />
+          <EpisodeCardContent episode={episode} compact={compact} />
         </Link>
       </SortableCard>
     )
@@ -203,7 +228,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
   return (
     <>
       <div className="md:hidden">
-        <BoardToolbar shows={shows} onFilterChange={setFilters} />
+        <BoardToolbar shows={shows} onFilterChange={setFilters} compact={compact} onCompactChange={toggleCompact} />
 
         <div className="flex border-b border-border-subtle mb-4 overflow-x-auto">
           {kanbanColumns.map((col, i) => {
@@ -232,7 +257,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
             <div className="space-y-2">
               {activeEpisodes.map((episode) => (
                 <Link key={episode.id} href={`/app/shows/${episode.shows?.id}/episodes/${episode.id}`}>
-                  <EpisodeCardContent episode={episode} />
+                  <EpisodeCardContent episode={episode} compact={compact} />
                 </Link>
               ))}
               {activeEpisodes.length === 0 && (
@@ -253,6 +278,8 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
           groupBy={groupBy}
           onGroupByChange={setGroupBy}
           onFilterChange={setFilters}
+          compact={compact}
+          onCompactChange={toggleCompact}
         />
 
         <DndContext
@@ -321,7 +348,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
           <DragOverlay>
             {activeEpisode ? (
               <DragOverlayCard>
-                <EpisodeCardContent episode={activeEpisode} />
+                <EpisodeCardContent episode={activeEpisode} compact={compact} />
               </DragOverlayCard>
             ) : null}
           </DragOverlay>

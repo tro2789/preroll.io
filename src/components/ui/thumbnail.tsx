@@ -13,6 +13,8 @@ export function Thumbnail({ id, imageUrl, className = '' }: ThumbnailProps) {
         <img
           src={imageUrl}
           alt=""
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
         />
       </div>

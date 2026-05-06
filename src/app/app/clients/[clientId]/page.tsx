@@ -33,16 +33,17 @@ export default async function ClientDetailPage({
     )
   }
 
-  const { data: shows } = await supabase
-    .from('shows')
-    .select('id, name, format, schedule, cover_art_url')
-    .eq('client_id', clientId)
-    .order('name')
-
-  const { count: notesCount } = await supabase
-    .from('meeting_notes')
-    .select('*', { count: 'exact', head: true })
-    .eq('client_id', clientId)
+  const [{ data: shows }, { count: notesCount }] = await Promise.all([
+    supabase
+      .from('shows')
+      .select('id, name, format, schedule, cover_art_url')
+      .eq('client_id', clientId)
+      .order('name'),
+    supabase
+      .from('meeting_notes')
+      .select('*', { count: 'exact', head: true })
+      .eq('client_id', clientId),
+  ])
 
   return (
     <div>
