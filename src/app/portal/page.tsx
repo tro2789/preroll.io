@@ -54,10 +54,9 @@ export default async function PortalDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-lg font-semibold text-text-primary">My Shows</h1>
-        <p className="text-lg text-text-primary">Welcome back, <span className="font-semibold">{client.name.split(' ')[0]}</span></p>
-      </div>
+      <p className="text-lg text-text-primary">
+        Welcome back, <span className="font-semibold">{client.name.split(' ')[0]}</span>
+      </p>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {showsWithPending.map((show) => {
