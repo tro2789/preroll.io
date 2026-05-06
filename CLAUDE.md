@@ -45,7 +45,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Environment Constraints
 
-**Port 3000 is NOT available.** It's used by another Docker container on this network. Always use a non-standard port (e.g., 3001, 3002) to avoid conflicts.
+**Ports 3000-3002, 3005, 3010, 3020 are occupied** by Docker containers (n8n, Pingvin Share, Zipline, etc.). The dev server runs on **port 3003**.
 
 **Dev server binds to 0.0.0.0** for LAN access. The dev machine is at `192.168.0.83`, accessed via SSH.
 
