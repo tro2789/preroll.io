@@ -51,6 +51,15 @@ export async function POST(
       token, accountId, integration.external_folder_id, body.name, body.file_size
     )
 
+    await supabase!.from('file_references').insert({
+      user_id: user!.id,
+      provider: integration.provider,
+      external_id: result.fileId,
+      name: body.name,
+      file_size: body.file_size,
+      episode_id: episodeId,
+    })
+
     return jsonResponse({
       fileId: result.fileId,
       uploadUrls: result.uploadUrls,
