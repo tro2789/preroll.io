@@ -14,12 +14,21 @@ export default async function ShowDetailPage({
   const { showId } = await params
   const supabase = await createClient()
 
-  const { data: show, error } = await supabase
-    .from('shows')
-    .select('*, clients(id, name), pipeline_stages(*)')
-    .eq('id', showId)
-    .order('position', { referencedTable: 'pipeline_stages' })
-    .single()
+  const [{ data: show, error }, { data: episodes }] = await Promise.all([
+    supabase
+      .from('shows')
+      .select('*, clients(id, name), pipeline_stages(*)')
+      .eq('id', showId)
+      .order('position', { referencedTable: 'pipeline_stages' })
+      .single(),
+    supabase
+      .from('episodes')
+      .select('id, title, episode_number, stage_id, status, position, scheduled_publish_date, frame_io_url, image_url, show_id, episode_tags(tag_id, tags(id, name, color))')
+      .eq('show_id', showId)
+      .is('archived_at', null)
+      .order('position', { ascending: true })
+      .order('episode_number', { ascending: true }),
+  ])
 
   if (error || !show) {
     return (
@@ -34,14 +43,6 @@ export default async function ShowDetailPage({
       </div>
     )
   }
-
-  const { data: episodes } = await supabase
-    .from('episodes')
-    .select('id, title, episode_number, stage_id, status, position, scheduled_publish_date, frame_io_url, image_url, show_id, episode_tags(tag_id, tags(id, name, color))')
-    .eq('show_id', showId)
-    .is('archived_at', null)
-    .order('position', { ascending: true })
-    .order('episode_number', { ascending: true })
 
   const totalEpisodes = episodes?.length ?? 0
   const client = show.clients as { id: string; name: string } | null

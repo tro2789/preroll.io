@@ -10,6 +10,7 @@ import { SortableCard, DragOverlayCard } from '@/components/kanban/sortable-card
 import { BoardToolbar, applyFilters, type BoardFilters } from '@/components/kanban/board-toolbar'
 import { BulkActionBar } from '@/components/kanban/bulk-action-bar'
 import { useCollapsedColumns } from '@/lib/kanban/use-collapsed-columns'
+import { useCompactView } from '@/lib/kanban/use-compact-view'
 import { EpisodeCard } from './episode-card'
 
 interface Stage {
@@ -52,6 +53,7 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
   const sortedStages = [...stages].sort((a, b) => a.position - b.position)
   const [filters, setFilters] = useState<BoardFilters>({ search: '', overdueOnly: false, showId: null, tagIds: [] })
   const { isCollapsed, toggle, expand } = useCollapsedColumns(`pipeline-${showId}`)
+  const { compact, toggle: toggleCompact } = useCompactView()
   const [selectMode, setSelectMode] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
 
@@ -134,7 +136,7 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
       <div className="hidden md:block">
         <div className="flex items-start gap-2">
           <div className="flex-1">
-            <BoardToolbar onFilterChange={setFilters} />
+            <BoardToolbar onFilterChange={setFilters} compact={compact} onCompactChange={toggleCompact} />
           </div>
           <button
             onClick={() => { setSelectMode(!selectMode); setSelected(new Set()) }}
@@ -200,6 +202,7 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
                       <EpisodeCard
                         episode={episode}
                         showId={showId}
+                        compact={compact}
                         onArchive={col.id === lastColumnId ? handleArchive : undefined}
                       />
                     </SortableCard>
@@ -212,7 +215,7 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
           <DragOverlay>
             {activeEpisode ? (
               <DragOverlayCard>
-                <EpisodeCard episode={activeEpisode} showId={showId} />
+                <EpisodeCard episode={activeEpisode} showId={showId} compact={compact} />
               </DragOverlayCard>
             ) : null}
           </DragOverlay>

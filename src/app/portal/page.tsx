@@ -33,16 +33,22 @@ export default async function PortalDashboard() {
     redirect(`/portal/shows/${shows[0].id}`)
   }
 
-  const showsWithPending = await Promise.all(
-    shows.map(async (show) => {
-      const { count } = await supabase
-        .from('deliverables')
-        .select('*', { count: 'exact', head: true })
-        .eq('show_id', show.id)
-        .eq('status', 'pending')
-      return { ...show, pendingCount: count || 0 }
-    })
-  )
+  const showIds = shows.map((s) => s.id)
+  const { data: pendingRows } = await supabase
+    .from('deliverables')
+    .select('show_id')
+    .in('show_id', showIds)
+    .eq('status', 'pending')
+
+  const pendingByShow = new Map<string, number>()
+  for (const row of pendingRows ?? []) {
+    pendingByShow.set(row.show_id, (pendingByShow.get(row.show_id) ?? 0) + 1)
+  }
+
+  const showsWithPending = shows.map((show) => ({
+    ...show,
+    pendingCount: pendingByShow.get(show.id) ?? 0,
+  }))
 
   return (
     <div className="space-y-6">
