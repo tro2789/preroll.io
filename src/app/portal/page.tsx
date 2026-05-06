@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
+import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function PortalDashboard() {
   const supabase = await createClient()
@@ -9,7 +11,7 @@ export default async function PortalDashboard() {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('id')
+    .select('id, name')
     .eq('client_user_id', user.id)
     .single()
 
@@ -17,7 +19,7 @@ export default async function PortalDashboard() {
 
   const { data: shows } = await supabase
     .from('shows')
-    .select('id, name, format, description, episodes(id)')
+    .select('id, name, format, description, cover_art_url, episodes(id)')
     .eq('client_id', client.id)
     .order('name')
 
@@ -52,7 +54,10 @@ export default async function PortalDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold text-text-primary">My Shows</h1>
+      <div>
+        <h1 className="text-lg font-semibold text-text-primary">My Shows</h1>
+        <p className="text-lg text-text-primary">Welcome back, <span className="font-semibold">{client.name.split(' ')[0]}</span></p>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         {showsWithPending.map((show) => {
@@ -61,26 +66,33 @@ export default async function PortalDashboard() {
             <Link
               key={show.id}
               href={`/portal/shows/${show.id}`}
-              className="rounded-lg bg-surface-raised border border-border-subtle p-5 hover:border-border-default transition-colors group"
+              className="rounded-xl bg-surface-raised border border-border-subtle overflow-hidden hover:border-border-default transition-colors group"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="font-medium text-text-primary group-hover:text-accent transition-colors">
-                    {show.name}
-                  </h2>
-                  {show.format && (
-                    <p className="text-xs text-text-tertiary mt-1">{show.format}</p>
+              <Thumbnail
+                id={show.id}
+                imageUrl={resolveImageUrl(show.cover_art_url)}
+                className="aspect-[3/1]"
+              />
+              <div className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="font-medium text-text-primary group-hover:text-accent transition-colors">
+                      {show.name}
+                    </h2>
+                    {show.format && (
+                      <p className="text-xs text-text-tertiary mt-1">{show.format}</p>
+                    )}
+                  </div>
+                  {show.pendingCount > 0 && (
+                    <span className="rounded-full bg-accent/15 text-accent text-xs font-medium px-2 py-0.5">
+                      {show.pendingCount} pending
+                    </span>
                   )}
                 </div>
-                {show.pendingCount > 0 && (
-                  <span className="rounded-full bg-accent/15 text-accent text-xs font-medium px-2 py-0.5">
-                    {show.pendingCount} pending
-                  </span>
-                )}
+                <p className="text-sm text-text-secondary mt-3">
+                  {episodes.length} episode{episodes.length !== 1 ? 's' : ''}
+                </p>
               </div>
-              <p className="text-sm text-text-secondary mt-3">
-                {episodes.length} episode{episodes.length !== 1 ? 's' : ''}
-              </p>
             </Link>
           )
         })}
