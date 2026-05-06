@@ -170,8 +170,17 @@ export function DeliveryPanel({
     }
   }, [episodeId, isLive, projectMissing])
 
+  const thumbnailTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleUploadComplete = useCallback(() => {
+    fetchFiles()
+    if (thumbnailTimerRef.current) clearTimeout(thumbnailTimerRef.current)
+    thumbnailTimerRef.current = setTimeout(() => fetchFiles(), 5000)
+  }, [fetchFiles])
+
   useEffect(() => {
     if (isLive) fetchFiles()
+    return () => { if (thumbnailTimerRef.current) clearTimeout(thumbnailTimerRef.current) }
   }, [isLive, fetchFiles])
 
   function handleCreateProject() {
@@ -500,7 +509,7 @@ export function DeliveryPanel({
         enabled={isLive && !projectMissing}
         listenForDrags
         acceptedMimeTypes={integration?.acceptedMimeTypes}
-        onUploadComplete={fetchFiles}
+        onUploadComplete={handleUploadComplete}
         onUnavailableDrop={() => setShowConnectModal(true)}
         onProjectMissing={() => setProjectMissing(true)}
       />
