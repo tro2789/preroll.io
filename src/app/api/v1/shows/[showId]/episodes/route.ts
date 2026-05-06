@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getAuthenticatedClient, jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
 
 export async function GET(
   request: NextRequest,
@@ -16,6 +16,7 @@ export async function GET(
     .from('episodes')
     .select('*')
     .eq('show_id', showId)
+    .order('position', { ascending: true })
     .order('episode_number', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: true })
 
@@ -46,11 +47,10 @@ export async function POST(
   let stageId = body.stage_id || null
   let status = 'planning'
 
-  // If no stage_id provided, default to the first stage (lowest position) for the show
   if (!stageId) {
     const { data: firstStage } = await supabase!
       .from('pipeline_stages')
-      .select('id, name')
+      .select('id, name, status_override')
       .eq('show_id', showId)
       .order('position', { ascending: true })
       .limit(1)
@@ -58,20 +58,21 @@ export async function POST(
 
     if (firstStage) {
       stageId = firstStage.id
-      status = mapStageNameToStatus(firstStage.name)
+      status = firstStage.status_override || 'planning'
     }
   } else {
-    // Look up the stage name to derive status
     const { data: stage } = await supabase!
       .from('pipeline_stages')
-      .select('name')
+      .select('name, status_override')
       .eq('id', stageId)
       .single()
 
     if (stage) {
-      status = mapStageNameToStatus(stage.name)
+      status = stage.status_override || 'planning'
     }
   }
+
+  const position = await getNextPositionInStage(supabase!, stageId)
 
   const { data, error: dbError } = await supabase!
     .from('episodes')
@@ -82,6 +83,7 @@ export async function POST(
       description: body.description || null,
       stage_id: stageId,
       status,
+      position,
       scheduled_publish_date: body.scheduled_publish_date || null,
       frame_io_url: body.frame_io_url || null,
       notes: body.notes || null,
@@ -154,11 +156,3 @@ export async function POST(
   return jsonResponse(data, 201)
 }
 
-function mapStageNameToStatus(stageName: string): string {
-  const validStatuses = ['planning', 'recording', 'editing', 'review', 'approved', 'published']
-  const normalized = stageName.toLowerCase()
-  if (validStatuses.includes(normalized)) {
-    return normalized
-  }
-  return 'planning'
-}
