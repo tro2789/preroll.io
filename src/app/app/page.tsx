@@ -58,23 +58,13 @@ export default async function DashboardPage() {
     return <p className="text-text-tertiary">Loading...</p>
   }
 
-  const [episodesResult, recentResult] = await Promise.all([
-    supabase
-      .from('episodes')
-      .select('id, title, episode_number, status, scheduled_publish_date, updated_at, pipeline_stages(name), shows(id, name)')
-      .in('status', stages as unknown as string[])
-      .order('updated_at', { ascending: true }),
+  const { data: episodesData } = await supabase
+    .from('episodes')
+    .select('id, title, episode_number, status, scheduled_publish_date, updated_at, pipeline_stages(name), shows(id, name)')
+    .in('status', stages as unknown as string[])
+    .order('updated_at', { ascending: true })
 
-    supabase
-      .from('episodes')
-      .select('id, title, status, pipeline_stages(name), shows(id, name)')
-      .eq('status', 'published')
-      .order('updated_at', { ascending: false })
-      .limit(5),
-  ])
-
-  const allEpisodes = (episodesResult.data || []) as Episode[]
-  const recentPublished = (recentResult.data || []) as Episode[]
+  const allEpisodes = (episodesData || []) as Episode[]
 
   const columns: Record<string, Episode[]> = {}
   for (const s of stages) columns[s] = []
@@ -82,7 +72,7 @@ export default async function DashboardPage() {
     if (columns[ep.status]) columns[ep.status].push(ep)
   }
 
-  const hasAnyEpisodes = allEpisodes.length > 0 || recentPublished.length > 0
+  const hasAnyEpisodes = allEpisodes.length > 0
 
   return (
     <div>
@@ -96,11 +86,11 @@ export default async function DashboardPage() {
       )}
 
       {hasAnyEpisodes && (
-        <div className="mt-4 flex gap-3 overflow-x-auto pb-4" style={{ minHeight: 'calc(100vh - 160px)' }}>
+        <div className="mt-4 grid grid-cols-5 gap-3" style={{ minHeight: 'calc(100vh - 160px)' }}>
           {stages.map((stage) => {
             const episodes = columns[stage]
             return (
-              <div key={stage} className="shrink-0 w-56 flex flex-col">
+              <div key={stage} className="min-w-0 flex flex-col">
                 <div className="flex items-center gap-2 px-1 pb-3">
                   <span className={`h-2 w-2 rounded-full ${stageDotColors[stage]}`} />
                   <h3 className={`text-xs font-semibold uppercase tracking-wider ${stageHeaderColors[stage]}`}>
@@ -150,26 +140,6 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {recentPublished.length > 0 && (
-        <section className="mt-2">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">Recently Published</h2>
-          <div className="flex flex-wrap gap-x-6 gap-y-1">
-            {recentPublished.map((episode) => {
-              const showRaw = episode.shows as unknown
-              const show = (Array.isArray(showRaw) ? showRaw[0] : showRaw) as { id: string; name: string } | null
-              return (
-                <Link
-                  key={episode.id}
-                  href={`/app/shows/${show?.id}/episodes/${episode.id}`}
-                  className="text-xs text-text-tertiary hover:text-accent transition-colors py-1"
-                >
-                  {episode.title} <span className="text-text-tertiary/60">{show?.name}</span>
-                </Link>
-              )
-            })}
-          </div>
-        </section>
-      )}
     </div>
   )
 }
