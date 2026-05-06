@@ -55,9 +55,12 @@ export default async function ShowDetailPage({
           </Link>
         )}
         <div className="mt-2 flex items-start gap-4">
-          <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="w-14 h-14 shrink-0 rounded-lg" />
+          <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="w-20 h-20 sm:w-14 sm:h-14 shrink-0 rounded-lg" />
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold text-text-primary leading-tight">{show.name}</h1>
+            {show.description && (
+              <p className="mt-1 text-sm text-text-secondary leading-relaxed line-clamp-2">{show.description}</p>
+            )}
           </div>
           <div className="hidden sm:flex items-center gap-2 shrink-0">
             <Link
