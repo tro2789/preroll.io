@@ -17,6 +17,7 @@ interface Deliverable {
 
 interface DeliverableCardProps {
   deliverable: Deliverable
+  episodeContext?: string
 }
 
 const typeLabels: Record<string, string> = {
@@ -37,7 +38,7 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
   revision_requested: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Revision Requested' },
 }
 
-export function DeliverableCard({ deliverable }: DeliverableCardProps) {
+export function DeliverableCard({ deliverable, episodeContext }: DeliverableCardProps) {
   const router = useRouter()
   const [showRevisionForm, setShowRevisionForm] = useState(false)
   const [notes, setNotes] = useState('')
@@ -70,6 +71,9 @@ export function DeliverableCard({ deliverable }: DeliverableCardProps) {
               {style.label}
             </span>
           </div>
+          {episodeContext && (
+            <p className="text-[11px] text-text-tertiary mt-1">{episodeContext}</p>
+          )}
           <h3 className="text-sm font-medium text-text-primary mt-1">{deliverable.title}</h3>
           {deliverable.description && (
             <p className="text-xs text-text-secondary mt-1">{deliverable.description}</p>
