@@ -19,11 +19,12 @@ interface Episode {
 interface EpisodeCardProps {
   episode: Episode
   showId: string
+  onArchive?: (episodeId: string) => void
 }
 
-export function EpisodeCard({ episode, showId }: EpisodeCardProps) {
+export function EpisodeCard({ episode, showId, onArchive }: EpisodeCardProps) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden transition-colors hover:border-border-hover">
+    <div className="group/card rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden transition-colors hover:border-border-hover">
       <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9]" />
       <Link
         href={`/app/shows/${showId}/episodes/${episode.id}`}
@@ -65,6 +66,15 @@ export function EpisodeCard({ episode, showId }: EpisodeCardProps) {
           <CardTagPills tags={episode.tags} />
         )}
       </Link>
+      {onArchive && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onArchive(episode.id) }}
+          className="w-full border-t border-border-subtle px-2.5 py-1.5 text-xs text-text-tertiary hover:text-text-secondary hover:bg-surface-raised transition-colors opacity-0 group-hover/card:opacity-100"
+          title="Archive episode"
+        >
+          Archive
+        </button>
+      )}
     </div>
   )
 }

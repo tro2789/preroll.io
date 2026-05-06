@@ -20,6 +20,7 @@ export default async function DashboardPage() {
     .from('episodes')
     .select('id, title, episode_number, status, stage_id, position, scheduled_publish_date, updated_at, image_url, show_id, shows(id, name, clients(id, name, company)), episode_tags(tag_id, tags(id, name, color))')
     .not('status', 'eq', 'published')
+    .is('archived_at', null)
     .order('position', { ascending: true })
 
   const allStages = stagesData || []
