@@ -58,14 +58,6 @@ export default async function ShowDetailPage({
           <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="w-14 h-14 shrink-0 rounded-lg" />
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold text-text-primary leading-tight">{show.name}</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-text-tertiary">
-              {show.format && (
-                <span className="inline-flex items-center rounded-full bg-accent-muted px-2 py-0.5 font-medium text-accent">
-                  {show.format}
-                </span>
-              )}
-              {show.schedule && <span>{show.schedule}</span>}
-            </div>
           </div>
           <div className="hidden sm:flex items-center gap-2 shrink-0">
             <Link
