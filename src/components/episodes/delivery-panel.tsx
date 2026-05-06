@@ -170,34 +170,42 @@ export function DeliveryPanel({
     }
   }, [episodeId, isLive, projectMissing])
 
-  const thumbnailTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const thumbnailTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
   const handleUploadComplete = useCallback(() => {
     fetchFiles()
-    if (thumbnailTimerRef.current) clearTimeout(thumbnailTimerRef.current)
-    thumbnailTimerRef.current = setTimeout(async () => {
-      if (!isLive || projectMissing) return
-      try {
-        const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files`)
-        if (!res.ok) return
-        const json = await res.json()
-        const items = (json.data?.items || []) as BrowseItem[]
-        setFiles(items)
-        const thumb = items.find((f) => f.thumbnailUrl)?.thumbnailUrl
-        if (thumb) {
-          await fetch(`/api/v1/episodes/${episodeId}/auto-thumbnail`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ thumbnail_url: thumb }),
-          })
-        }
-      } catch { /* ignore */ }
-    }, 5000)
+    thumbnailTimersRef.current.forEach(clearTimeout)
+    thumbnailTimersRef.current = []
+
+    const pollDelays = [5000, 15000, 30000, 60000]
+    for (const delay of pollDelays) {
+      const timer = setTimeout(async () => {
+        if (!isLive || projectMissing) return
+        try {
+          const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files`)
+          if (!res.ok) return
+          const json = await res.json()
+          const items = (json.data?.items || []) as BrowseItem[]
+          setFiles(items)
+          const thumb = items.find((f) => f.thumbnailUrl)?.thumbnailUrl
+          if (thumb) {
+            await fetch(`/api/v1/episodes/${episodeId}/auto-thumbnail`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ thumbnail_url: thumb }),
+            })
+            thumbnailTimersRef.current.forEach(clearTimeout)
+            thumbnailTimersRef.current = []
+          }
+        } catch { /* ignore */ }
+      }, delay)
+      thumbnailTimersRef.current.push(timer)
+    }
   }, [fetchFiles, episodeId, isLive, projectMissing])
 
   useEffect(() => {
     if (isLive) fetchFiles()
-    return () => { if (thumbnailTimerRef.current) clearTimeout(thumbnailTimerRef.current) }
+    return () => { thumbnailTimersRef.current.forEach(clearTimeout) }
   }, [isLive, fetchFiles])
 
   function handleCreateProject() {
