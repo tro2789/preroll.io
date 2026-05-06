@@ -60,16 +60,20 @@ export async function POST(request: Request) {
   if (body.episode_id) {
     const { data: episode } = await supabase!
       .from('episodes')
-      .select('show_id, title')
+      .select('show_id, title, image_url')
       .eq('id', body.episode_id)
       .single()
 
     if (episode) {
+      if (body.thumbnail_url && !episode.image_url) {
+        await supabase!.from('episodes').update({ image_url: body.thumbnail_url }).eq('id', body.episode_id)
+      }
+
       await supabase!.from('activity_log').insert({
         show_id: episode.show_id,
         episode_id: body.episode_id,
         action: 'file_linked',
-        description: `Frame.io file linked: ${body.name}`,
+        description: `${body.provider} file linked: ${body.name}`,
         metadata: { file_reference_id: data.id, provider: body.provider },
       })
     }

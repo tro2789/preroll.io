@@ -125,6 +125,17 @@ export async function POST(
     const thumb = (fileData?.thumb_360 || fileData?.thumb || fileData?.thumbnail_url) as string | undefined
     if (thumb) {
       await supabase.from('file_references').update({ thumbnail_url: thumb }).eq('id', fileRef.id)
+
+      if (fileRef.episode_id) {
+        const { data: ep } = await supabase
+          .from('episodes')
+          .select('image_url')
+          .eq('id', fileRef.episode_id)
+          .single()
+        if (ep && !ep.image_url) {
+          await supabase.from('episodes').update({ image_url: thumb }).eq('id', fileRef.episode_id)
+        }
+      }
     }
   }
 
