@@ -7,7 +7,6 @@ import { useKanbanDrag } from '@/lib/kanban/use-kanban-drag'
 import type { KanbanColumn, KanbanEpisode } from '@/lib/kanban/types'
 import { SortableColumn, CollapseToggle, ColumnCount } from '@/components/kanban/sortable-column'
 import { SortableCard, DragOverlayCard } from '@/components/kanban/sortable-card'
-import { InlineCreateCard } from '@/components/kanban/inline-create-card'
 import { BoardToolbar, applyFilters, type BoardFilters } from '@/components/kanban/board-toolbar'
 import { BulkActionBar } from '@/components/kanban/bulk-action-bar'
 import { useCollapsedColumns } from '@/lib/kanban/use-collapsed-columns'
@@ -94,6 +93,17 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
       else next.add(id)
       return next
     })
+  }
+
+  const lastColumnId = sortedStages.length > 0 ? sortedStages[sortedStages.length - 1].id : null
+
+  async function handleArchive(episodeId: string) {
+    const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archived_at: new Date().toISOString() }),
+    })
+    if (res.ok) router.refresh()
   }
 
   async function handleBulkMove(stageId: string) {
@@ -187,14 +197,13 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
                       selected={selectMode ? selected.has(episode.id) : undefined}
                       onToggleSelect={selectMode ? toggleSelect : undefined}
                     >
-                      <EpisodeCard episode={episode} showId={showId} />
+                      <EpisodeCard
+                        episode={episode}
+                        showId={showId}
+                        onArchive={col.id === lastColumnId ? handleArchive : undefined}
+                      />
                     </SortableCard>
                   ))}
-                  <InlineCreateCard
-                    showId={showId}
-                    stageId={col.stageIds[0]}
-                    onCreated={() => router.refresh()}
-                  />
                 </SortableColumn>
               )
             })}

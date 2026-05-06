@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { PipelineBoard } from '@/components/episodes/pipeline-board'
 import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
+import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
 import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ShowDetailPage({
@@ -38,6 +39,7 @@ export default async function ShowDetailPage({
     .from('episodes')
     .select('id, title, episode_number, stage_id, status, position, scheduled_publish_date, frame_io_url, image_url, show_id, episode_tags(tag_id, tags(id, name, color))')
     .eq('show_id', showId)
+    .is('archived_at', null)
     .order('position', { ascending: true })
     .order('episode_number', { ascending: true })
 
@@ -103,12 +105,7 @@ export default async function ShowDetailPage({
           </h2>
           <div className="flex items-center gap-2">
             <StageManagerTrigger showId={showId} stages={stages} />
-            <Link
-              href={`/app/shows/${showId}/episodes/new`}
-              className="inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-            >
-              Add Episode
-            </Link>
+            <QuickCreateEpisode showId={showId} />
           </div>
         </div>
 
