@@ -14,13 +14,13 @@ export default async function DashboardPage() {
 
   const { data: episodesData } = await supabase
     .from('episodes')
-    .select('id, title, episode_number, status, scheduled_publish_date, updated_at, shows(id, name)')
+    .select('id, title, episode_number, status, scheduled_publish_date, updated_at, image_url, show_id, shows(id, name)')
     .in('status', stages as unknown as string[])
     .order('updated_at', { ascending: true })
 
   const allEpisodes = episodesData || []
 
-  const columns: Record<string, { id: string; title: string; episode_number: number | null; status: string; scheduled_publish_date: string | null; updated_at: string; shows: { id: string; name: string } | null }[]> = {}
+  const columns: Record<string, { id: string; title: string; episode_number: number | null; status: string; scheduled_publish_date: string | null; updated_at: string; image_url: string | null; show_id: string; shows: { id: string; name: string } | null }[]> = {}
   for (const s of stages) columns[s] = []
   for (const ep of allEpisodes) {
     const showRaw = ep.shows as unknown
@@ -33,6 +33,8 @@ export default async function DashboardPage() {
         status: ep.status,
         scheduled_publish_date: ep.scheduled_publish_date,
         updated_at: ep.updated_at,
+        image_url: ep.image_url ?? null,
+        show_id: ep.show_id,
         shows: show,
       })
     }
