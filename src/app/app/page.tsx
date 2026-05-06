@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
 import { QuickCreate } from '@/components/dashboard/quick-create'
 import { KanbanBoard } from '@/components/dashboard/kanban-board'
 
@@ -14,7 +15,7 @@ export default async function DashboardPage() {
 
   const { data: episodesData } = await supabase
     .from('episodes')
-    .select('id, title, episode_number, status, scheduled_publish_date, updated_at, show_id, shows(id, name)')
+    .select('id, title, episode_number, status, scheduled_publish_date, updated_at, image_url, show_id, shows(id, name)')
     .in('status', stages as unknown as string[])
     .order('updated_at', { ascending: true })
 
@@ -33,7 +34,7 @@ export default async function DashboardPage() {
         status: ep.status,
         scheduled_publish_date: ep.scheduled_publish_date,
         updated_at: ep.updated_at,
-        image_url: null,
+        image_url: resolveImageUrl(ep.image_url),
         show_id: ep.show_id,
         shows: show,
       })

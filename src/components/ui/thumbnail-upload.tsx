@@ -7,11 +7,12 @@ interface ThumbnailUploadProps {
   id: string
   imageUrl: string | null
   showId: string
+  episodeId?: string
   onUploaded: (fileKey: string) => void
   className?: string
 }
 
-export function ThumbnailUpload({ id, imageUrl, showId, onUploaded, className = '' }: ThumbnailUploadProps) {
+export function ThumbnailUpload({ id, imageUrl, showId, episodeId, onUploaded, className = '' }: ThumbnailUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -24,7 +25,10 @@ export function ThumbnailUpload({ id, imageUrl, showId, onUploaded, className = 
     setPreviewUrl(URL.createObjectURL(file))
 
     try {
-      const res = await fetch(`/api/v1/shows/${showId}/assets/upload-url`, {
+      const uploadUrlEndpoint = episodeId
+        ? `/api/v1/episodes/${episodeId}/assets/upload-url`
+        : `/api/v1/shows/${showId}/assets/upload-url`
+      const res = await fetch(uploadUrlEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
