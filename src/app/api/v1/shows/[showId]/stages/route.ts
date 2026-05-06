@@ -36,27 +36,71 @@ export async function PUT(
     }
   }
 
-  // Delete all existing stages for this show
-  const { error: deleteError } = await supabase!
+  const { data: existing } = await supabase!
     .from('pipeline_stages')
-    .delete()
+    .select('id')
     .eq('show_id', showId)
 
-  if (deleteError) return errorResponse(deleteError.message, 500)
+  const existingIds = new Set((existing || []).map((s) => s.id))
+  const incomingIds = new Set(body.filter((s: { id?: string }) => s.id).map((s: { id: string }) => s.id))
+  const toDelete = [...existingIds].filter((id) => !incomingIds.has(id))
 
-  // Insert the new stages
-  const newStages = body.map((stage: { name: string; position: number }) => ({
-    show_id: showId,
-    name: stage.name,
-    position: stage.position,
-  }))
+  if (toDelete.length > 0) {
+    const { data: orphaned } = await supabase!
+      .from('episodes')
+      .select('id')
+      .in('stage_id', toDelete)
+      .limit(1)
 
-  const { data, error: insertError } = await supabase!
+    if (orphaned && orphaned.length > 0) {
+      return errorResponse('Cannot delete stages that have episodes. Move episodes first.', 409)
+    }
+
+    await supabase!
+      .from('pipeline_stages')
+      .delete()
+      .in('id', toDelete)
+  }
+
+  const toUpdate = body.filter((s: { id?: string }) => s.id && existingIds.has(s.id))
+  const toInsert = body.filter((s: { id?: string }) => !s.id || !existingIds.has(s.id))
+
+  if (toUpdate.length > 0) {
+    await Promise.all(
+      toUpdate.map((stage: { id: string; name: string; position: number; status_override?: string; wip_limit?: number }) =>
+        supabase!
+          .from('pipeline_stages')
+          .update({
+            name: stage.name,
+            position: stage.position,
+            status_override: stage.status_override ?? null,
+            wip_limit: stage.wip_limit ?? null,
+          })
+          .eq('id', stage.id)
+      )
+    )
+  }
+
+  if (toInsert.length > 0) {
+    await supabase!
+      .from('pipeline_stages')
+      .insert(
+        toInsert.map((stage: { name: string; position: number; status_override?: string; wip_limit?: number }) => ({
+          show_id: showId,
+          name: stage.name,
+          position: stage.position,
+          status_override: stage.status_override ?? null,
+          wip_limit: stage.wip_limit ?? null,
+        }))
+      )
+  }
+
+  const { data, error: fetchError } = await supabase!
     .from('pipeline_stages')
-    .insert(newStages)
-    .select()
+    .select('*')
+    .eq('show_id', showId)
     .order('position')
 
-  if (insertError) return errorResponse(insertError.message, 500)
+  if (fetchError) return errorResponse(fetchError.message, 500)
   return jsonResponse(data)
 }

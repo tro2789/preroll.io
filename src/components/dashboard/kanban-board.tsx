@@ -1,71 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  closestCorners,
-  type DragStartEvent,
-  type DragEndEvent,
-  type DragOverEvent,
-} from '@dnd-kit/core'
-import { useDroppable } from '@dnd-kit/core'
-import { useDraggable } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core'
+import { useKanbanDrag } from '@/lib/kanban/use-kanban-drag'
+import type { KanbanColumn, KanbanEpisode } from '@/lib/kanban/types'
+import { SortableColumn, CollapseToggle, ColumnCount } from '@/components/kanban/sortable-column'
+import { SortableCard, DragOverlayCard } from '@/components/kanban/sortable-card'
+import { BoardToolbar, applyFilters, type BoardFilters, type GroupBy } from '@/components/kanban/board-toolbar'
+import { useCollapsedColumns } from '@/lib/kanban/use-collapsed-columns'
+import { Swimlane } from '@/components/kanban/swimlane'
 import { Thumbnail } from '@/components/ui/thumbnail'
+import { CardTagPills } from '@/components/kanban/card-tag-pills'
 
-const stages = ['planning', 'recording', 'editing', 'review', 'approved'] as const
-type Stage = (typeof stages)[number]
-
-const stageLabels: Record<Stage, string> = {
-  planning: 'Planning',
-  recording: 'Recording',
-  editing: 'Editing',
-  review: 'Review',
-  approved: 'Approved',
+interface DashboardColumn {
+  position: number
+  name: string
+  stageIds: string[]
+  wipLimit: number | null
 }
 
-const stageHeaderColors: Record<Stage, string> = {
-  planning: 'text-sky-400',
-  recording: 'text-violet-400',
-  editing: 'text-amber-400',
-  review: 'text-orange-400',
-  approved: 'text-emerald-400',
-}
-
-const stageDotColors: Record<Stage, string> = {
-  planning: 'bg-sky-400',
-  recording: 'bg-violet-400',
-  editing: 'bg-amber-400',
-  review: 'bg-orange-400',
-  approved: 'bg-emerald-400',
-}
-
-const stageTabColors: Record<Stage, string> = {
-  planning: 'border-sky-400 text-sky-400',
-  recording: 'border-violet-400 text-violet-400',
-  editing: 'border-amber-400 text-amber-400',
-  review: 'border-orange-400 text-orange-400',
-  approved: 'border-emerald-400 text-emerald-400',
-}
-
-interface Episode {
-  id: string
-  title: string
-  episode_number: number | null
-  status: string
-  scheduled_publish_date: string | null
+interface Episode extends KanbanEpisode {
   updated_at: string
   image_url: string | null
-  show_id: string
   shows: { id: string; name: string } | null
+  client: { id: string; name: string } | null
 }
 
 interface KanbanBoardProps {
-  columns: Record<string, Episode[]>
+  columns: DashboardColumn[]
+  episodes: Episode[]
+}
+
+const columnColors = [
+  { header: 'text-sky-400', dot: 'bg-sky-400', tab: 'border-sky-400 text-sky-400' },
+  { header: 'text-violet-400', dot: 'bg-violet-400', tab: 'border-violet-400 text-violet-400' },
+  { header: 'text-amber-400', dot: 'bg-amber-400', tab: 'border-amber-400 text-amber-400' },
+  { header: 'text-orange-400', dot: 'bg-orange-400', tab: 'border-orange-400 text-orange-400' },
+  { header: 'text-emerald-400', dot: 'bg-emerald-400', tab: 'border-emerald-400 text-emerald-400' },
+  { header: 'text-rose-400', dot: 'bg-rose-400', tab: 'border-rose-400 text-rose-400' },
+  { header: 'text-cyan-400', dot: 'bg-cyan-400', tab: 'border-cyan-400 text-cyan-400' },
+  { header: 'text-fuchsia-400', dot: 'bg-fuchsia-400', tab: 'border-fuchsia-400 text-fuchsia-400' },
+]
+
+function getColumnColor(index: number) {
+  return columnColors[index % columnColors.length]
 }
 
 function formatDate(dateStr: string): string {
@@ -97,197 +76,253 @@ function EpisodeCardContent({ episode }: { episode: Episode }) {
             </span>
           )}
         </div>
+        {episode.tags && episode.tags.length > 0 && (
+          <CardTagPills tags={episode.tags} />
+        )}
       </div>
     </div>
   )
 }
 
-function DraggableEpisode({ episode, isDragOverlay }: { episode: Episode; isDragOverlay?: boolean }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: episode.id,
-    data: { episode },
+export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisodes }: KanbanBoardProps) {
+  const [filters, setFilters] = useState<BoardFilters>({ search: '', overdueOnly: false, showId: null, tagIds: [] })
+  const [groupBy, setGroupBy] = useState<GroupBy>('none')
+  const { isCollapsed, toggle, expand } = useCollapsedColumns('dashboard')
+
+  const kanbanColumns: KanbanColumn[] = dashboardColumns.map((col) => ({
+    id: `col-${col.position}`,
+    name: col.name,
+    stageIds: col.stageIds,
+    wipLimit: col.wipLimit,
+  }))
+
+  const {
+    episodes,
+    activeEpisode,
+    sensors,
+    announcements,
+    getEpisodesForColumn,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useKanbanDrag<Episode>({
+    initialEpisodes,
+    columns: kanbanColumns,
+    getShowId: (ep) => ep.show_id,
   })
 
-  if (isDragOverlay) {
-    return (
-      <div className="rotate-2 scale-105">
-        <EpisodeCardContent episode={episode} />
-      </div>
-    )
-  }
+  const filteredEpisodes = applyFilters(episodes, filters)
 
-  return (
-    <a
-      ref={setNodeRef}
-      href={`/app/shows/${episode.shows?.id}/episodes/${episode.id}`}
-      onClick={(e) => { if (isDragging) e.preventDefault() }}
-      className={`block cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-0 h-0 overflow-hidden' : ''}`}
-      {...listeners}
-      {...attributes}
-    >
-      <EpisodeCardContent episode={episode} />
-    </a>
-  )
-}
-
-function DroppableColumn({ stage, count, children }: { stage: Stage; count: number; children: React.ReactNode }) {
-  const { isOver, setNodeRef } = useDroppable({ id: stage })
-
-  return (
-    <div ref={setNodeRef} className="min-w-0 flex flex-col">
-      <div className="flex items-center gap-2 px-1 pb-3">
-        <span className={`h-2 w-2 rounded-full ${stageDotColors[stage]}`} />
-        <h3 className={`text-xs font-semibold uppercase tracking-wider ${stageHeaderColors[stage]}`}>
-          {stageLabels[stage]}
-        </h3>
-        {count > 0 && <span className="text-xs text-text-tertiary">{count}</span>}
-      </div>
-      <div className={`flex-1 space-y-2 rounded-lg p-1 transition-colors ${isOver ? 'bg-accent-muted/20' : ''}`}>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-export function KanbanBoard({ columns: initialColumns }: KanbanBoardProps) {
-  const [episodes, setEpisodes] = useState<Episode[]>(() =>
-    Object.values(initialColumns).flat()
-  )
-  const [activeEpisode, setActiveEpisode] = useState<Episode | null>(null)
-  const [activeTab, setActiveTab] = useState<Stage>(() => {
-    const first = stages.find(s => episodes.some(ep => ep.status === s))
-    return first || 'planning'
-  })
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    })
-  )
-
-  function handleDragStart(event: DragStartEvent) {
-    const episode = episodes.find(ep => ep.id === event.active.id)
-    setActiveEpisode(episode ?? null)
-  }
-
-  function handleDragOver(event: DragOverEvent) {
-    const { active, over } = event
-    if (!over) return
-
-    const episodeId = active.id as string
-    const overId = over.id as string
-
-    const isOverStage = (stages as readonly string[]).includes(overId)
-    const newStatus = isOverStage
-      ? overId
-      : episodes.find(ep => ep.id === overId)?.status
-
-    if (!newStatus) return
-
-    const episode = episodes.find(ep => ep.id === episodeId)
-    if (!episode || episode.status === newStatus) return
-
-    setEpisodes(prev =>
-      prev.map(ep => ep.id === episodeId ? { ...ep, status: newStatus } : ep)
-    )
-  }
-
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active } = event
-    setActiveEpisode(null)
-
-    const episodeId = active.id as string
-    const episode = episodes.find(ep => ep.id === episodeId)
-    const originalEpisodes = Object.values(initialColumns).flat()
-    const originalEpisode = originalEpisodes.find(ep => ep.id === episodeId)
-
-    if (!episode || !originalEpisode) return
-    if (episode.status === originalEpisode.status) return
-
-    try {
-      const res = await fetch(`/api/v1/shows/${episode.show_id}/episodes/${episodeId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: episode.status }),
-      })
-
-      if (!res.ok) throw new Error('Failed to move episode')
-    } catch {
-      setEpisodes(prev =>
-        prev.map(ep => ep.id === episodeId ? { ...ep, status: originalEpisode.status } : ep)
-      )
+  const shows = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const ep of episodes) {
+      if (ep.shows) map.set(ep.shows.id, ep.shows.name)
     }
+    return [...map.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name))
+  }, [episodes])
+
+  const getFilteredEpisodesForColumn = useCallback((col: KanbanColumn, scopeEpisodes?: Episode[]) => {
+    const source = scopeEpisodes ?? filteredEpisodes
+    return source.filter((ep) => ep.stage_id && col.stageIds.includes(ep.stage_id))
+  }, [filteredEpisodes])
+
+  const swimlaneGroups = useMemo(() => {
+    if (groupBy === 'none') return null
+
+    const map = new Map<string, { label: string; episodes: Episode[] }>()
+    for (const ep of filteredEpisodes) {
+      let key: string
+      let label: string
+
+      if (groupBy === 'client') {
+        key = ep.client?.id ?? 'unknown'
+        label = ep.client?.name ?? 'Unknown Client'
+      } else {
+        key = ep.shows?.id ?? 'unknown'
+        label = ep.shows?.name ?? 'Unknown Show'
+      }
+
+      if (!map.has(key)) {
+        map.set(key, { label, episodes: [] })
+      }
+      map.get(key)!.episodes.push(ep)
+    }
+
+    return [...map.values()].sort((a, b) => a.label.localeCompare(b.label))
+  }, [filteredEpisodes, groupBy])
+
+  const [activeTab, setActiveTab] = useState(() => kanbanColumns[0]?.id ?? '')
+
+  function renderCard(episode: Episode) {
+    return (
+      <SortableCard key={episode.id} id={episode.id} label={episode.title}>
+        <Link
+          href={`/app/shows/${episode.shows?.id}/episodes/${episode.id}`}
+          onClick={(e) => e.stopPropagation()}
+          draggable={false}
+        >
+          <EpisodeCardContent episode={episode} />
+        </Link>
+      </SortableCard>
+    )
+  }
+
+  function renderColumn(col: KanbanColumn, i: number, scopeEpisodes?: Episode[]) {
+    const colEpisodes = getFilteredEpisodesForColumn(col, scopeEpisodes)
+    const totalCount = scopeEpisodes
+      ? scopeEpisodes.filter((ep) => ep.stage_id && col.stageIds.includes(ep.stage_id)).length
+      : getEpisodesForColumn(col).length
+    const colors = getColumnColor(i)
+    const collapsed = isCollapsed(col.id)
+
+    return (
+      <SortableColumn
+        key={col.id}
+        id={col.id}
+        name={col.name}
+        count={totalCount}
+        episodeIds={colEpisodes.map((ep) => ep.id)}
+        wipLimit={col.wipLimit}
+        collapsed={collapsed}
+        header={
+          <div className="flex items-center gap-2 px-1 pb-3">
+            <CollapseToggle collapsed={collapsed} onToggle={() => toggle(col.id)} />
+            <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
+            <h3 className={`text-xs font-semibold uppercase tracking-wider ${colors.header}`}>
+              {col.name}
+            </h3>
+            <ColumnCount count={totalCount} wipLimit={col.wipLimit} />
+          </div>
+        }
+      >
+        {colEpisodes.map(renderCard)}
+      </SortableColumn>
+    )
   }
 
   return (
     <>
-      {/* Mobile: tab bar + single column */}
       <div className="md:hidden">
+        <BoardToolbar shows={shows} onFilterChange={setFilters} />
+
         <div className="flex border-b border-border-subtle mb-4 overflow-x-auto">
-          {stages.map((stage) => {
-            const count = episodes.filter(ep => ep.status === stage).length
-            const isActive = activeTab === stage
+          {kanbanColumns.map((col, i) => {
+            const count = getFilteredEpisodesForColumn(col).length
+            const isActive = activeTab === col.id
+            const colors = getColumnColor(i)
             return (
               <button
-                key={stage}
-                onClick={() => setActiveTab(stage)}
+                key={col.id}
+                onClick={() => setActiveTab(col.id)}
                 className={`shrink-0 px-3 py-2 text-xs font-semibold uppercase tracking-wider border-b-2 transition-colors ${
-                  isActive
-                    ? stageTabColors[stage]
-                    : 'border-transparent text-text-tertiary'
+                  isActive ? colors.tab : 'border-transparent text-text-tertiary'
                 }`}
               >
-                {stageLabels[stage]}
+                {col.name}
                 {count > 0 && <span className="ml-1.5 text-text-tertiary">{count}</span>}
               </button>
             )
           })}
         </div>
 
-        <div className="space-y-2">
-          {episodes.filter(ep => ep.status === activeTab).map((episode) => (
-            <Link key={episode.id} href={`/app/shows/${episode.shows?.id}/episodes/${episode.id}`}>
-              <EpisodeCardContent episode={episode} />
-            </Link>
-          ))}
-          {episodes.filter(ep => ep.status === activeTab).length === 0 && (
-            <div className="rounded-lg border border-dashed border-border-subtle px-3 py-8 text-center">
-              <p className="text-xs text-text-tertiary">No episodes in {stageLabels[activeTab]}</p>
+        {(() => {
+          const activeColumn = kanbanColumns.find((c) => c.id === activeTab)
+          const activeEpisodes = activeColumn ? getFilteredEpisodesForColumn(activeColumn) : []
+          return (
+            <div className="space-y-2">
+              {activeEpisodes.map((episode) => (
+                <Link key={episode.id} href={`/app/shows/${episode.shows?.id}/episodes/${episode.id}`}>
+                  <EpisodeCardContent episode={episode} />
+                </Link>
+              ))}
+              {activeEpisodes.length === 0 && (
+                <div className="rounded-lg border border-dashed border-border-subtle px-3 py-8 text-center">
+                  <p className="text-xs text-text-tertiary">
+                    No episodes in {activeColumn?.name}
+              </p>
             </div>
           )}
         </div>
+          )
+        })()}
       </div>
 
-      {/* Desktop: draggable kanban grid */}
       <div className="hidden md:block">
+        <BoardToolbar
+          shows={shows}
+          groupBy={groupBy}
+          onGroupByChange={setGroupBy}
+          onFilterChange={setFilters}
+        />
+
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
+          onDragOver={(e) => {
+            const overId = e.over?.id as string | undefined
+            if (overId && isCollapsed(overId)) expand(overId)
+            handleDragOver(e)
+          }}
           onDragEnd={handleDragEnd}
+          accessibility={{ announcements }}
         >
-          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-3" style={{ minHeight: 'calc(100vh - 160px)' }}>
-            {stages.map((stage) => {
-              const stageEpisodes = episodes.filter(ep => ep.status === stage)
-              return (
-                <DroppableColumn key={stage} stage={stage} count={stageEpisodes.length}>
-                  {stageEpisodes.map((episode) => (
-                    <DraggableEpisode key={episode.id} episode={episode} />
-                  ))}
-                  {stageEpisodes.length === 0 && (
-                    <div className="rounded-lg border border-dashed border-border-subtle px-3 py-6 text-center">
-                      <p className="text-xs text-text-tertiary">No episodes</p>
+          {swimlaneGroups ? (
+            <div style={{ minHeight: 'calc(100vh - 200px)' }}>
+              {/* Column headers row */}
+              <div
+                className="grid gap-3 mb-2"
+                style={{ gridTemplateColumns: `repeat(${kanbanColumns.length}, minmax(0, 1fr))` }}
+              >
+                {kanbanColumns.map((col, i) => {
+                  const colors = getColumnColor(i)
+                  return (
+                    <div key={col.id} className="flex items-center gap-2 px-1">
+                      <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
+                      <h3 className={`text-xs font-semibold uppercase tracking-wider ${colors.header}`}>
+                        {col.name}
+                      </h3>
                     </div>
-                  )}
-                </DroppableColumn>
-              )
-            })}
-          </div>
+                  )
+                })}
+              </div>
+
+              {swimlaneGroups.map((group) => (
+                <Swimlane key={group.label} label={group.label} columnCount={kanbanColumns.length}>
+                  {kanbanColumns.map((col, i) => {
+                    const colEpisodes = getFilteredEpisodesForColumn(col, group.episodes)
+                    return (
+                      <SortableColumn
+                        key={col.id}
+                        id={col.id}
+                        name={col.name}
+                        count={colEpisodes.length}
+                        episodeIds={colEpisodes.map((ep) => ep.id)}
+                      >
+                        {colEpisodes.map(renderCard)}
+                      </SortableColumn>
+                    )
+                  })}
+                </Swimlane>
+              ))}
+            </div>
+          ) : (
+            <div
+              className="grid gap-3"
+              style={{
+                gridTemplateColumns: `repeat(${kanbanColumns.length}, minmax(0, 1fr))`,
+                minHeight: 'calc(100vh - 200px)',
+              }}
+            >
+              {kanbanColumns.map((col, i) => renderColumn(col, i))}
+            </div>
+          )}
 
           <DragOverlay>
             {activeEpisode ? (
-              <DraggableEpisode episode={activeEpisode} isDragOverlay />
+              <DragOverlayCard>
+                <EpisodeCardContent episode={activeEpisode} />
+              </DragOverlayCard>
             ) : null}
           </DragOverlay>
         </DndContext>

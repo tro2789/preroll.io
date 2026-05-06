@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { PipelineBoard } from '@/components/episodes/pipeline-board'
+import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
 import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ShowDetailPage({
@@ -35,13 +36,14 @@ export default async function ShowDetailPage({
 
   const { data: episodes } = await supabase
     .from('episodes')
-    .select('id, title, episode_number, stage_id, status, scheduled_publish_date, frame_io_url, image_url')
+    .select('id, title, episode_number, stage_id, status, position, scheduled_publish_date, frame_io_url, image_url, show_id, episode_tags(tag_id, tags(id, name, color))')
     .eq('show_id', showId)
+    .order('position', { ascending: true })
     .order('episode_number', { ascending: true })
 
   const totalEpisodes = episodes?.length ?? 0
   const client = show.clients as { id: string; name: string } | null
-  const stages = (show.pipeline_stages ?? []) as { id: string; name: string; position: number }[]
+  const stages = (show.pipeline_stages ?? []) as { id: string; name: string; position: number; wip_limit: number | null; status_override: string | null }[]
 
   return (
     <div>
@@ -102,12 +104,15 @@ export default async function ShowDetailPage({
             Episodes
             <span className="ml-2 text-sm font-normal">({totalEpisodes})</span>
           </h2>
-          <Link
-            href={`/app/shows/${showId}/episodes/new`}
-            className="inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
-          >
-            Add Episode
-          </Link>
+          <div className="flex items-center gap-2">
+            <StageManagerTrigger showId={showId} stages={stages} />
+            <Link
+              href={`/app/shows/${showId}/episodes/new`}
+              className="inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            >
+              Add Episode
+            </Link>
+          </div>
         </div>
 
         {totalEpisodes === 0 ? (
@@ -118,11 +123,15 @@ export default async function ShowDetailPage({
           <PipelineBoard
             showId={showId}
             stages={stages}
-            episodes={(episodes ?? []).map((ep) => ({
-              ...ep,
-              frame_io_url: ep.frame_io_url ?? null,
-              image_url: resolveImageUrl(ep.image_url),
-            }))}
+            episodes={(episodes ?? []).map((ep) => {
+              const episodeTags = (ep.episode_tags as unknown as { tags: { id: string; name: string; color: string } | null }[] | null) ?? []
+              return {
+                ...ep,
+                frame_io_url: ep.frame_io_url ?? null,
+                image_url: resolveImageUrl(ep.image_url),
+                tags: episodeTags.map((et) => et.tags).filter(Boolean) as { id: string; name: string; color: string }[],
+              }
+            })}
           />
         )}
       </section>

@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { Thumbnail } from '@/components/ui/thumbnail'
+import { CardTagPills } from '@/components/kanban/card-tag-pills'
+import type { EpisodeTag } from '@/lib/kanban/types'
 
 interface Episode {
   id: string
@@ -11,6 +13,7 @@ interface Episode {
   frame_io_url: string | null
   image_url?: string | null
   status: string
+  tags?: EpisodeTag[]
 }
 
 interface EpisodeCardProps {
@@ -58,6 +61,9 @@ export function EpisodeCard({ episode, showId }: EpisodeCardProps) {
             </span>
           )}
         </div>
+        {episode.tags && episode.tags.length > 0 && (
+          <CardTagPills tags={episode.tags} />
+        )}
       </Link>
     </div>
   )

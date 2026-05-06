@@ -17,3 +17,14 @@ export function jsonResponse(data: unknown, status = 200) {
 export function errorResponse(message: string, status = 400) {
   return NextResponse.json({ error: message }, { status })
 }
+
+export async function getNextPositionInStage(supabase: ReturnType<typeof createClient> extends Promise<infer U> ? U : never, stageId: string): Promise<number> {
+  const { data } = await supabase
+    .from('episodes')
+    .select('position')
+    .eq('stage_id', stageId)
+    .order('position', { ascending: false })
+    .limit(1)
+    .single()
+  return (data?.position ?? -1) + 1
+}

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getAuthenticatedClient, jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
 
 export async function GET(
   request: NextRequest,
@@ -33,6 +33,7 @@ export async function PATCH(
     'title', 'episode_number', 'description', 'stage_id',
     'status', 'scheduled_publish_date', 'frame_io_url',
     'transistor_episode_id', 'notes', 'published_at', 'image_url',
+    'position',
   ]
   const updateData: Record<string, unknown> = {}
   for (const field of allowedFields) {
@@ -41,20 +42,22 @@ export async function PATCH(
     }
   }
 
-  // If stage_id is changing, derive status from the new stage name
   let newStageName: string | null = null
   if ('stage_id' in body && body.stage_id) {
     const { data: stage } = await supabase!
       .from('pipeline_stages')
-      .select('name')
+      .select('name, status_override')
       .eq('id', body.stage_id)
       .single()
 
     if (stage) {
       newStageName = stage.name
-      const derivedStatus = mapStageNameToStatus(stage.name)
-      if (derivedStatus) {
-        updateData['status'] = derivedStatus
+      if (stage.status_override) {
+        updateData['status'] = stage.status_override
+      }
+
+      if (!('position' in body)) {
+        updateData['position'] = await getNextPositionInStage(supabase!, body.stage_id)
       }
     }
   }
@@ -100,11 +103,3 @@ export async function DELETE(
   return new Response(null, { status: 204 })
 }
 
-function mapStageNameToStatus(stageName: string): string | null {
-  const validStatuses = ['planning', 'recording', 'editing', 'review', 'approved', 'published']
-  const normalized = stageName.toLowerCase()
-  if (validStatuses.includes(normalized)) {
-    return normalized
-  }
-  return null
-}
