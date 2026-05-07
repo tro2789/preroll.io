@@ -65,17 +65,19 @@ export async function GET(
   const fileData = json.data || json
 
   // Check if the file is still processing
-  if (fileData.status && fileData.status !== 'ready') {
+  const notReady = ['uploading', 'processing', 'transcoding']
+  if (fileData.status && notReady.includes(fileData.status)) {
     return jsonResponse({
       status: 'processing',
       mime_type: fileRef.mime_type,
     })
   }
 
-  // Extract playback URL (prefer high quality, fall back to efficient)
+  const hq = fileData.media_links?.high_quality
+  const eff = fileData.media_links?.efficient
   const url =
-    fileData.media_links?.high_quality?.url ||
-    fileData.media_links?.efficient?.url ||
+    hq?.url || hq?.download_url ||
+    eff?.url || eff?.download_url ||
     null
 
   if (!url) {
