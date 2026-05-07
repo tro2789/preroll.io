@@ -193,6 +193,7 @@ export default function ProducerReviewPage() {
               mimeType={media.mime_type}
               duration={media.duration_seconds}
               seekToTime={seekToTime}
+              fillContainer
               onTimeUpdate={setCurrentTime}
               onRefreshNeeded={fetchMedia}
             />
