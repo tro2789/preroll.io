@@ -130,33 +130,27 @@ export function CalendarView() {
     ? getMonthDays(year, month)
     : getWeekDays(year, month, weekAnchor)
 
-  const fetchRange = useCallback(() => {
-    const first = cells[0]
-    const last = cells[cells.length - 1]
-    return {
-      from: toDateKey(first.year, first.month, first.date),
-      to: toDateKey(last.year, last.month, last.date),
-    }
-  }, [cells])
-
-  const fetchEpisodes = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false
     setEpisodes([])
     setLoading(true)
-    const { from, to } = fetchRange()
-    try {
-      const res = await fetch(`/api/v1/episodes?from=${from}&to=${to}`)
-      if (res.ok) {
-        const json = await res.json()
-        setEpisodes(json.data || [])
-      }
-    } catch {
-      setEpisodes([])
-    } finally {
-      setLoading(false)
-    }
-  }, [fetchRange])
 
-  useEffect(() => { fetchEpisodes() }, [fetchEpisodes])
+    const c = view === 'month'
+      ? getMonthDays(year, month)
+      : getWeekDays(year, month, weekAnchor)
+    const first = c[0]
+    const last = c[c.length - 1]
+    const from = toDateKey(first.year, first.month, first.date)
+    const to = toDateKey(last.year, last.month, last.date)
+
+    fetch(`/api/v1/episodes?from=${from}&to=${to}`)
+      .then((res) => res.ok ? res.json() : null)
+      .then((json) => { if (!cancelled) setEpisodes(json?.data || []) })
+      .catch(() => { if (!cancelled) setEpisodes([]) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+
+    return () => { cancelled = true }
+  }, [year, month, weekAnchor, view])
 
   useEffect(() => {
     if (showFilter !== 'all' && !showNames.has(showFilter)) {
