@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ProviderLogo } from './provider-logo'
 
 interface ConnectButtonProps {
   provider: string
@@ -27,9 +28,12 @@ export function ConnectButton({ provider, displayName, comingSoon, note }: Conne
     return (
       <div className="rounded-lg border border-border-subtle bg-surface-raised p-5 opacity-60">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
-            <p className="text-xs text-text-tertiary mt-1">Coming soon</p>
+          <div className="flex items-center gap-3">
+            <ProviderLogo provider={provider} />
+            <div>
+              <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
+              <p className="text-xs text-text-tertiary mt-1">Coming soon</p>
+            </div>
           </div>
           <span className="rounded-full bg-surface-overlay px-2.5 py-0.5 text-xs text-text-tertiary">
             Coming Soon
@@ -42,10 +46,13 @@ export function ConnectButton({ provider, displayName, comingSoon, note }: Conne
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-raised p-5">
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
-          <p className="text-xs text-text-tertiary mt-1">Not connected</p>
-          {note && <p className="text-xs text-text-tertiary mt-1">{note}</p>}
+        <div className="flex items-center gap-3">
+          <ProviderLogo provider={provider} />
+          <div>
+            <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
+            <p className="text-xs text-text-tertiary mt-1">Not connected</p>
+            {note && <p className="text-xs text-text-tertiary mt-1">{note}</p>}
+          </div>
         </div>
         <button
           onClick={handleConnect}
