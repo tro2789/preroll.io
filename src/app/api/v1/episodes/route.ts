@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   const showId = request.nextUrl.searchParams.get('show_id')
   const stageId = request.nextUrl.searchParams.get('stage_id')
   const upcoming = request.nextUrl.searchParams.get('upcoming')
+  const from = request.nextUrl.searchParams.get('from')
+  const to = request.nextUrl.searchParams.get('to')
 
   let query = supabase!
     .from('episodes')
@@ -24,6 +26,12 @@ export async function GET(request: NextRequest) {
   }
   if (stageId) {
     query = query.eq('stage_id', stageId)
+  }
+  if (from) {
+    query = query.gte('scheduled_publish_date', from)
+  }
+  if (to) {
+    query = query.lte('scheduled_publish_date', to)
   }
   if (upcoming === 'true') {
     const today = new Date().toISOString().split('T')[0]
