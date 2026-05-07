@@ -26,8 +26,7 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/app')
-    router.refresh()
+    window.location.href = '/app'
   }
 
   return (

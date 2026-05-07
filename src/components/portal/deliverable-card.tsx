@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Deliverable {
@@ -19,6 +19,7 @@ interface DeliverableCardProps {
   deliverable: Deliverable
   episodeContext?: string
   reviewUrl?: string
+  thumbnailUrl?: string
 }
 
 const typeLabels: Record<string, string> = {
@@ -33,28 +34,44 @@ const typeLabels: Record<string, string> = {
   other: 'Other',
 }
 
-const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
-  pending: { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Pending Review' },
-  approved: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Approved' },
-  revision_requested: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Revision Requested' },
+const statusConfig: Record<string, { dot: string; label: string; muted?: boolean }> = {
+  pending: { dot: 'bg-amber-400', label: 'Pending Review' },
+  approved: { dot: 'bg-emerald-400', label: 'Approved', muted: true },
+  revision_requested: { dot: 'bg-red-400', label: 'Revision Requested' },
 }
 
-export function DeliverableCard({ deliverable, episodeContext, reviewUrl }: DeliverableCardProps) {
+export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbnailUrl: initialThumb }: DeliverableCardProps) {
   const router = useRouter()
   const [showRevisionForm, setShowRevisionForm] = useState(false)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
+  const [thumb, setThumb] = useState(initialThumb)
+  const [thumbFailed, setThumbFailed] = useState(false)
 
-  const style = statusStyles[deliverable.status] || statusStyles.pending
+  useEffect(() => {
+    if (initialThumb || thumbFailed || !reviewUrl) return
+    let cancelled = false
+    fetch(`/api/v1/deliverables/${deliverable.id}/thumbnail`)
+      .then((r) => r.json())
+      .then((json) => {
+        const url = json.data?.url
+        if (!cancelled && url) setThumb(url)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [deliverable.id, initialThumb, reviewUrl, thumbFailed])
 
-  async function handleAction(status: 'approved' | 'revision_requested') {
+  const status = statusConfig[deliverable.status] || statusConfig.pending
+  const isPending = deliverable.status === 'pending'
+
+  async function handleAction(newStatus: 'approved' | 'revision_requested') {
     setLoading(true)
     await fetch(`/api/v1/deliverables/${deliverable.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        status,
-        reviewer_notes: status === 'revision_requested' ? notes : null,
+        status: newStatus,
+        reviewer_notes: newStatus === 'revision_requested' ? notes : null,
       }),
     })
     setLoading(false)
@@ -63,100 +80,141 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl }: Deli
   }
 
   return (
-    <div className="rounded-lg bg-surface-raised border border-border-subtle p-4 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-tertiary">{typeLabels[deliverable.type] || deliverable.type}</span>
-            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>
-              {style.label}
-            </span>
+    <div className="rounded-lg bg-surface-raised border border-border-subtle overflow-hidden">
+      <div className="flex">
+        {thumb && !thumbFailed && (
+          <div className="shrink-0 w-40 bg-black">
+            {reviewUrl ? (
+              <a href={reviewUrl} className="block relative group/thumb">
+                <img src={thumb} alt="" className="w-full h-full object-cover aspect-video" onError={() => setThumbFailed(true)} />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-white">
+                    <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </a>
+            ) : (
+              <img src={thumb} alt="" className="w-full h-full object-cover aspect-video" onError={() => setThumbFailed(true)} />
+            )}
           </div>
-          {episodeContext && (
-            <p className="text-[11px] text-text-tertiary mt-1">{episodeContext}</p>
+        )}
+
+        <div className="flex-1 min-w-0 p-4 space-y-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-tertiary">{typeLabels[deliverable.type] || deliverable.type}</span>
+              <span className="text-text-tertiary">·</span>
+              <span className={`inline-flex items-center gap-1.5 text-xs ${status.muted ? 'text-text-tertiary' : 'text-text-secondary'}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                {status.label}
+              </span>
+            </div>
+            {episodeContext && (
+              <p className="text-[11px] text-text-tertiary mt-1">{episodeContext}</p>
+            )}
+            <h3 className="text-sm font-medium text-text-primary mt-1">{deliverable.title}</h3>
+            {deliverable.description && (
+              <p className="text-xs text-text-secondary mt-1">{deliverable.description}</p>
+            )}
+          </div>
+
+          {deliverable.status === 'approved' && deliverable.reviewed_at && (
+            <p className="text-xs text-text-tertiary">
+              Approved {new Date(deliverable.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </p>
           )}
-          <h3 className="text-sm font-medium text-text-primary mt-1">{deliverable.title}</h3>
-          {deliverable.description && (
-            <p className="text-xs text-text-secondary mt-1">{deliverable.description}</p>
+
+          {deliverable.status === 'revision_requested' && deliverable.reviewer_notes && (
+            <div className="rounded-md bg-red-500/5 border border-red-500/20 px-3 py-2">
+              <p className="text-xs text-text-secondary">{deliverable.reviewer_notes}</p>
+            </div>
+          )}
+
+          {isPending && (
+            <div className="flex items-center gap-2 pt-1">
+              {reviewUrl && (
+                <a
+                  href={reviewUrl}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                    <path d="M3.05 3.05a7 7 0 1 1 9.9 9.9 7 7 0 0 1-9.9-9.9Zm1.627 8.273A5.5 5.5 0 1 0 12.323 4.677L4.677 12.323ZM6.75 6a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.105.66l2.255-1.25a.75.75 0 0 0 0-1.32l-2.255-1.25A.75.75 0 0 0 6.75 6Z" />
+                  </svg>
+                  Review
+                </a>
+              )}
+              <button
+                onClick={() => handleAction('approved')}
+                disabled={loading}
+                className="rounded-md border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => setShowRevisionForm(!showRevisionForm)}
+                disabled={loading}
+                className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+              >
+                Request Revision
+              </button>
+            </div>
+          )}
+
+          {!isPending && reviewUrl && (
+            <div className="pt-1">
+              <a
+                href={reviewUrl}
+                className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                  <path d="M3.05 3.05a7 7 0 1 1 9.9 9.9 7 7 0 0 1-9.9-9.9Zm1.627 8.273A5.5 5.5 0 1 0 12.323 4.677L4.677 12.323ZM6.75 6a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.105.66l2.255-1.25a.75.75 0 0 0 0-1.32l-2.255-1.25A.75.75 0 0 0 6.75 6Z" />
+                </svg>
+                Watch
+              </a>
+            </div>
+          )}
+
+          {!isPending && !reviewUrl && deliverable.file_url && (
+            <div className="pt-1">
+              <a
+                href={deliverable.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Download
+              </a>
+            </div>
+          )}
+
+          {showRevisionForm && (
+            <div className="space-y-2 pt-1">
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="What needs to change?"
+                rows={3}
+                className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none resize-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleAction('revision_requested')}
+                  disabled={loading || !notes.trim()}
+                  className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Sending...' : 'Submit'}
+                </button>
+                <button
+                  onClick={() => { setShowRevisionForm(false); setNotes('') }}
+                  className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           )}
         </div>
-
-        {reviewUrl ? (
-          <a
-            href={reviewUrl}
-            className="shrink-0 rounded-md bg-accent/10 text-accent hover:bg-accent/20 px-2.5 py-1 text-xs font-medium transition-colors"
-          >
-            Review
-          </a>
-        ) : deliverable.file_url ? (
-          <a
-            href={deliverable.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 text-xs text-accent hover:text-accent-hover transition-colors"
-          >
-            Download
-          </a>
-        ) : null}
       </div>
-
-      {deliverable.status === 'approved' && deliverable.reviewed_at && (
-        <p className="text-xs text-emerald-400">
-          Approved {new Date(deliverable.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </p>
-      )}
-
-      {deliverable.status === 'revision_requested' && deliverable.reviewer_notes && (
-        <div className="rounded-md bg-red-500/5 border border-red-500/20 px-3 py-2">
-          <p className="text-xs text-text-secondary">{deliverable.reviewer_notes}</p>
-        </div>
-      )}
-
-      {deliverable.status === 'pending' && (
-        <div className="flex items-center gap-2 pt-1">
-          <button
-            onClick={() => handleAction('approved')}
-            disabled={loading}
-            className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
-          >
-            Approve
-          </button>
-          <button
-            onClick={() => setShowRevisionForm(!showRevisionForm)}
-            disabled={loading}
-            className="rounded-md bg-surface-input border border-border-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors disabled:opacity-50"
-          >
-            Request Revision
-          </button>
-        </div>
-      )}
-
-      {showRevisionForm && (
-        <div className="space-y-2 pt-1">
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="What needs to change?"
-            rows={3}
-            className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none resize-none"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleAction('revision_requested')}
-              disabled={loading || !notes.trim()}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Sending...' : 'Submit revision request'}
-            </button>
-            <button
-              onClick={() => { setShowRevisionForm(false); setNotes('') }}
-              className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

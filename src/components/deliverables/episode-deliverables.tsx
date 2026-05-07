@@ -56,7 +56,7 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
     setShowManualForm(false)
   }
 
-  async function submitDeliverable(name: string, type: string, url: string, externalId?: string) {
+  async function submitDeliverable(name: string, type: string, url: string, externalId?: string, thumbnailUrl?: string, mimeType?: string) {
     setLoading(true)
     setError(null)
 
@@ -70,6 +70,7 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
           type,
           title: name,
           file_url: url || null,
+          mime_type: mimeType || null,
         }),
       })
 
@@ -77,6 +78,8 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
         const json = await res.json()
         throw new Error(json.error || 'Failed to create deliverable')
       }
+
+      const { data: deliverable } = await res.json()
 
       if (externalId) {
         await fetch('/api/v1/integrations/file-references', {
@@ -87,6 +90,9 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
             external_id: externalId,
             name,
             episode_id: episodeId,
+            deliverable_id: deliverable?.id || null,
+            thumbnail_url: thumbnailUrl || null,
+            mime_type: mimeType || null,
           }),
         })
       }
@@ -100,12 +106,14 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
     }
   }
 
-  async function handleFrameIoSelect(item: { id: string; name: string; viewUrl?: string; thumbnailUrl?: string }) {
+  async function handleFrameIoSelect(item: { id: string; name: string; viewUrl?: string; thumbnailUrl?: string; mimeType?: string }) {
     await submitDeliverable(
       item.name,
       selectedType,
       item.viewUrl || `https://app.frame.io/player/${item.id}`,
-      item.id
+      item.id,
+      item.thumbnailUrl,
+      item.mimeType,
     )
     setPickerOpen(false)
   }

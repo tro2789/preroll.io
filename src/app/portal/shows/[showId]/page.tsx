@@ -57,16 +57,17 @@ export default async function PortalShowPage({
       .limit(20),
     supabase
       .from('file_references')
-      .select('id, deliverable_id, mime_type, provider')
-      .eq('provider', 'frame_io')
+      .select('id, deliverable_id, mime_type, thumbnail_url, provider')
       .not('deliverable_id', 'is', null),
   ])
 
-  // Build map of deliverable_id → mime_type for video/audio file refs
   const deliverableIds = new Set((reviewDeliverables ?? []).map((d) => d.id))
   const fileRefMap = new Map<string, string>()
+  const thumbMap = new Map<string, string>()
   for (const fr of allFileRefs ?? []) {
-    if (fr.deliverable_id && deliverableIds.has(fr.deliverable_id) && fr.mime_type && (fr.mime_type.startsWith('video/') || fr.mime_type.startsWith('audio/'))) {
+    if (!fr.deliverable_id || !deliverableIds.has(fr.deliverable_id)) continue
+    if (fr.thumbnail_url) thumbMap.set(fr.deliverable_id, fr.thumbnail_url)
+    if (fr.mime_type && (fr.mime_type.startsWith('video/') || fr.mime_type.startsWith('audio/'))) {
       fileRefMap.set(fr.deliverable_id, fr.mime_type)
     }
   }
@@ -89,6 +90,7 @@ export default async function PortalShowPage({
       episode_title: ep?.title ?? null,
       episode_number: ep?.episode_number ?? null,
       reviewUrl: hasReviewableFile ? `/portal/shows/${showId}/episodes/${d.episode_id}/review/${d.id}` : undefined,
+      thumbnailUrl: thumbMap.get(d.id),
     }
   })
 
