@@ -12,6 +12,12 @@ const sections = [
       { label: 'MCP Server', href: '/docs/mcp' },
     ],
   },
+  {
+    title: 'Deployment',
+    items: [
+      { label: 'Self-Hosting', href: '/docs/self-hosting' },
+    ],
+  },
 ]
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
