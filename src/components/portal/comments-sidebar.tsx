@@ -79,6 +79,7 @@ export function CommentsSidebar({
 }: CommentsSidebarProps) {
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [clickedId, setClickedId] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   const generalComments = comments.filter((c) => c.timestamp_secs === null)
@@ -86,7 +87,7 @@ export function CommentsSidebar({
     .filter((c) => c.timestamp_secs !== null)
     .sort((a, b) => a.timestamp_secs! - b.timestamp_secs!)
 
-  const activeCommentId = useMemo(() => {
+  const autoActiveId = useMemo(() => {
     let closest: Comment | null = null
     let closestDist = Infinity
     for (const c of timedComments) {
@@ -99,6 +100,17 @@ export function CommentsSidebar({
     }
     return closest?.id ?? null
   }, [timedComments, currentTime])
+
+  // Clear clicked override when playback moves away from that comment's timestamp
+  useEffect(() => {
+    if (!clickedId) return
+    const clicked = timedComments.find((c) => c.id === clickedId)
+    if (clicked?.timestamp_secs != null && Math.abs(currentTime - clicked.timestamp_secs) >= 2) {
+      setClickedId(null)
+    }
+  }, [currentTime, clickedId, timedComments])
+
+  const activeCommentId = clickedId ?? autoActiveId
 
   useEffect(() => {
     if (!listRef.current || !activeCommentId) return
@@ -162,7 +174,7 @@ export function CommentsSidebar({
                   <CommentItem
                     comment={c}
                     isActive={active}
-                    onSeek={onSeek}
+                    onSeek={(secs) => { setClickedId(c.id); onSeek(secs) }}
                   />
                 </div>
               )
