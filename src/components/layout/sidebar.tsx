@@ -8,7 +8,7 @@ const navItems = [
   { label: 'Calendar', href: '/app/calendar', icon: CalendarIcon },
   { label: 'Shows', href: '/app/shows', icon: FilmIcon },
   { label: 'Clients', href: '/app/clients', icon: UsersIcon },
-  { label: 'Docs', href: '/app/docs', icon: BookIcon },
+  { label: 'Docs', href: '/docs', icon: BookIcon },
   { label: 'Settings', href: '/app/settings', icon: CogIcon },
 ]
 
