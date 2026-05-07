@@ -59,6 +59,7 @@ export async function POST(request: Request) {
       provider: fileProvider,
       external_id: externalFileId,
       name: body.title,
+      mime_type: body.mime_type || null,
       external_url: body.file_url || null,
       episode_id: body.episode_id,
       deliverable_id: data.id,
