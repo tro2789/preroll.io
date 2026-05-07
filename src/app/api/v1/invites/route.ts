@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   if (!linkError && linkData?.properties?.hashed_token) {
     const tokenHash = linkData.properties.hashed_token
     const verifyType = linkData.properties.verification_type || 'magiclink'
-    loginUrl = `${siteUrl}/auth/confirm?token_hash=${tokenHash}&type=${verifyType}&next=${encodeURIComponent(onboardingPath)}`
+    loginUrl = `${siteUrl}/auth/verify?token_hash=${tokenHash}&type=${verifyType}&next=${encodeURIComponent(onboardingPath)}`
   } else if (linkError) {
     console.error('generateLink failed:', linkError.message)
   }
