@@ -130,36 +130,42 @@ export default function EditShowPage({
         ))}
       </nav>
 
-      <div className="mt-6 max-w-lg">
+      <div className="mt-6">
         {activeTab === 'details' && (
-          <>
+          <div className="flex gap-6 items-start">
             <ThumbnailUpload
               id={showId}
               imageUrl={show.cover_art_url || null}
               showId={showId}
               onUploaded={handleImageUploaded}
-              className="mb-6"
+              className="w-32 shrink-0"
             />
-            <ShowForm
-              clientId={show.client_id || ''}
-              defaultValues={{
-                name: show.name || '',
-                description: show.description || '',
-                format: show.format || '',
-                schedule: show.schedule || '',
-              }}
-              onSubmit={handleSubmit}
-              submitLabel="Save Changes"
-            />
-          </>
+            <div className="flex-1 max-w-lg">
+              <ShowForm
+                clientId={show.client_id || ''}
+                defaultValues={{
+                  name: show.name || '',
+                  description: show.description || '',
+                  format: show.format || '',
+                  schedule: show.schedule || '',
+                }}
+                onSubmit={handleSubmit}
+                submitLabel="Save Changes"
+              />
+            </div>
+          </div>
         )}
 
         {activeTab === 'template' && (
-          <EpisodeTemplateEditor showId={showId} />
+          <div className="max-w-lg">
+            <EpisodeTemplateEditor showId={showId} />
+          </div>
         )}
 
         {activeTab === 'distribution' && (
-          <DistributionSettings showId={showId} />
+          <div className="max-w-lg">
+            <DistributionSettings showId={showId} />
+          </div>
         )}
       </div>
     </div>

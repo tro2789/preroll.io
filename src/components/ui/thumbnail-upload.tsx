@@ -62,7 +62,7 @@ export function ThumbnailUpload({ id, imageUrl, showId, episodeId, onUploaded, c
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="w-full aspect-[16/9] rounded-lg overflow-hidden border border-border-subtle hover:border-border-default transition-colors cursor-pointer"
+        className="w-full aspect-square rounded-lg overflow-hidden border border-border-subtle hover:border-border-default transition-colors cursor-pointer"
       >
         {previewUrl ? (
           <img
