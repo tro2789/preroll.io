@@ -41,7 +41,7 @@ async function getFrameIoContext(
 }
 
 // ---------------------------------------------------------------------------
-// GET — list comments with Frame.io sync
+// GET — list comments, sync from Frame.io if applicable
 // ---------------------------------------------------------------------------
 
 export async function GET(
@@ -52,7 +52,6 @@ export async function GET(
   const { supabase, error } = await getAuthenticatedClient()
   if (error) return error
 
-  // 1. Fetch local comments
   const { data: localComments, error: dbError } = await supabase!
     .from('review_comments')
     .select('*')
@@ -64,7 +63,7 @@ export async function GET(
 
   const comments = [...(localComments || [])]
 
-  // 2. Try to sync from Frame.io
+  // Sync from Frame.io only for Frame.io-backed deliverables
   const fio = await getFrameIoContext(supabase, deliverableId)
   if (fio) {
     try {
@@ -107,7 +106,6 @@ export async function GET(
     }
   }
 
-  // 3. Re-sort merged list
   comments.sort((a, b) => {
     const ta = a.timestamp_secs
     const tb = b.timestamp_secs
@@ -122,7 +120,7 @@ export async function GET(
 }
 
 // ---------------------------------------------------------------------------
-// POST — create comment and push to Frame.io
+// POST — create comment, push to Frame.io if applicable
 // ---------------------------------------------------------------------------
 
 export async function POST(
@@ -141,7 +139,6 @@ export async function POST(
     return errorResponse('text is required')
   }
 
-  // Get commenter name
   const { data: clientRecord } = await supabase!
     .from('clients')
     .select('name')
@@ -150,15 +147,15 @@ export async function POST(
 
   const authorName = clientRecord?.name || user!.email || 'Unknown'
 
-  // Get file reference for this deliverable
+  // Find any file reference for this deliverable (any provider)
   const { data: fileRef } = await supabase!
     .from('file_references')
     .select('id')
     .eq('deliverable_id', deliverableId)
-    .eq('provider', 'frame_io')
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle()
 
-  // Insert local comment
   const { data: comment, error: insertError } = await supabase!
     .from('review_comments')
     .insert({
@@ -176,7 +173,7 @@ export async function POST(
 
   if (insertError) return errorResponse(insertError.message, 500)
 
-  // Push to Frame.io if file reference exists
+  // Push to Frame.io if this deliverable has a Frame.io file reference
   const fio = await getFrameIoContext(supabase, deliverableId)
   if (fio) {
     try {
@@ -216,7 +213,6 @@ export async function POST(
       }
     } catch (err) {
       console.error('Frame.io comment push failed:', err)
-      // Comment exists locally, don't throw
     }
   }
 
