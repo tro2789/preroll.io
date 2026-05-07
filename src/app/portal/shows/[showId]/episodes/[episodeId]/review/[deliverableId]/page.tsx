@@ -135,9 +135,9 @@ export default function ReviewPage() {
   }, [])
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-[calc(100vh-5rem)]">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="shrink-0 flex items-center justify-between pb-3">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href={`/portal/shows/${showId}/episodes/${episodeId}`}
@@ -165,13 +165,15 @@ export default function ReviewPage() {
 
       {/* Error state */}
       {error ? (
-        <div className="rounded-lg border border-border-subtle bg-surface-raised px-6 py-12 text-center">
-          <p className="text-sm text-text-secondary">{error}</p>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="rounded-lg border border-border-subtle bg-surface-raised px-6 py-12 text-center">
+            <p className="text-sm text-text-secondary">{error}</p>
+          </div>
         </div>
       ) : media ? (
-        /* Two-panel layout */
-        <div className="flex flex-col lg:flex-row gap-6">
-          <div className="flex-1 lg:w-2/3">
+        /* Two-panel layout — fills remaining height */
+        <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
+          <div className="flex-1 lg:w-2/3 min-h-0 flex flex-col">
             <ReviewPlayer
               src={media.url}
               mimeType={media.mime_type}
@@ -181,7 +183,7 @@ export default function ReviewPage() {
               onRefreshNeeded={fetchMedia}
             />
           </div>
-          <div className="lg:w-1/3 lg:min-h-[400px]">
+          <div className="lg:w-1/3 min-h-0 rounded-lg border border-border-subtle bg-surface-raised overflow-hidden">
             <CommentsSidebar
               comments={comments}
               currentTime={currentTime}
@@ -194,7 +196,7 @@ export default function ReviewPage() {
 
       {/* Loading state */}
       {loading && (
-        <div className="flex items-center justify-center py-20">
+        <div className="flex-1 flex items-center justify-center">
           <p className="text-text-tertiary">Loading review...</p>
         </div>
       )}
