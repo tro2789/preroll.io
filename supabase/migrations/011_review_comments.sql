@@ -13,7 +13,7 @@ CREATE TABLE review_comments (
 );
 
 CREATE INDEX idx_review_comments_deliverable ON review_comments(deliverable_id);
-CREATE INDEX idx_review_comments_external ON review_comments(external_id) WHERE external_id IS NOT NULL;
+CREATE UNIQUE INDEX idx_review_comments_external ON review_comments(external_id) WHERE external_id IS NOT NULL;
 
 ALTER TABLE review_comments ENABLE ROW LEVEL SECURITY;
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { getProvider, isValidProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
+import { frameIoTimecodeToSecs } from '@/lib/format'
 
 function getServiceClient() {
   return createServerClient(
@@ -125,20 +126,7 @@ export async function POST(
           const owner = commentData.owner as Record<string, unknown> | undefined
           const authorName = (owner?.name as string) || (owner?.email as string) || 'Editor'
 
-          // Parse timestamp — Frame.io sends frames-based number or HH:MM:SS:FF string
-          let timestampSecs: number | null = null
-          const rawTs = commentData.timestamp
-          if (typeof rawTs === 'number') {
-            timestampSecs = rawTs / 24
-          } else if (typeof rawTs === 'string' && rawTs.includes(':')) {
-            const parts = rawTs.split(':').map(Number)
-            if (parts.length >= 3) {
-              timestampSecs = parts[0] * 3600 + parts[1] * 60 + parts[2]
-              if (parts.length === 4) {
-                timestampSecs += parts[3] / 24
-              }
-            }
-          }
+          const timestampSecs = frameIoTimecodeToSecs(commentData.timestamp as string | number | null)
 
           await supabase.from('review_comments').insert({
             deliverable_id: deliverableRef.deliverable_id,

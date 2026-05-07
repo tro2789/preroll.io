@@ -34,7 +34,6 @@ export function PipelineProgress({
       {sorted.map((stage, i) => {
         const isCompleted = currentIndex >= 0 && i < currentIndex
         const isCurrent = i === currentIndex
-        const isFuture = currentIndex < 0 || i > currentIndex
 
         return (
           <div key={stage.id} className="flex items-center" role="listitem">
