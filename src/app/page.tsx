@@ -449,7 +449,7 @@ function Pricing() {
         </div>
         <p className="mt-8 text-center text-sm text-text-tertiary">
           Want to run it yourself?{' '}
-          <Link href="/docs" className="text-accent hover:text-accent-hover transition-colors">
+          <Link href="/docs/self-hosting" className="text-accent hover:text-accent-hover transition-colors">
             PreRoll is open source and self-hostable.
           </Link>
         </p>
