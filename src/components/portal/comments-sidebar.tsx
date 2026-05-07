@@ -42,9 +42,11 @@ const CommentItem = memo(function CommentItem({
   isActive: boolean
   onSeek: (seconds: number) => void
 }) {
+  const hasTc = comment.timestamp_secs !== null
   return (
     <div
-      className={`px-3 py-2.5 rounded-md transition-colors ${isActive ? 'bg-accent/10' : ''}`}
+      className={`px-3 py-2.5 rounded-md transition-colors ${isActive ? 'bg-accent/10' : ''} ${hasTc ? 'cursor-pointer hover:bg-surface-overlay' : ''}`}
+      onClick={hasTc ? () => onSeek(comment.timestamp_secs!) : undefined}
     >
       <div className="flex items-center gap-1.5 flex-wrap">
         <span className="text-xs font-medium text-text-primary">
@@ -55,14 +57,10 @@ const CommentItem = memo(function CommentItem({
             Editor
           </span>
         )}
-        {comment.timestamp_secs !== null && (
-          <button
-            type="button"
-            onClick={() => onSeek(comment.timestamp_secs!)}
-            className="text-[11px] font-mono bg-surface-overlay border border-border-subtle rounded px-1.5 py-0.5 text-accent hover:bg-accent/10 transition-colors"
-          >
-            {formatTimecode(comment.timestamp_secs)}
-          </button>
+        {hasTc && (
+          <span className="text-[11px] font-mono bg-surface-overlay border border-border-subtle rounded px-1.5 py-0.5 text-accent">
+            {formatTimecode(comment.timestamp_secs!)}
+          </span>
         )}
         <span className="ml-auto text-[10px] text-text-tertiary">
           {timeAgo(comment.created_at)}
