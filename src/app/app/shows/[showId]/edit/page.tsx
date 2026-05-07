@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ShowForm } from '@/components/shows/show-form'
 import { DistributionSettings } from '@/components/shows/distribution-settings'
+import { EpisodeTemplateEditor } from '@/components/shows/episode-template-editor'
 import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 
 export default function EditShowPage({
@@ -112,7 +113,10 @@ export default function EditShowPage({
           onSubmit={handleSubmit}
           submitLabel="Save Changes"
         />
-        <div className="mt-8">
+        <div className="mt-8 border-t border-border-subtle pt-8">
+          <EpisodeTemplateEditor showId={showId} />
+        </div>
+        <div className="mt-8 border-t border-border-subtle pt-8">
           <DistributionSettings showId={showId} />
         </div>
       </div>
