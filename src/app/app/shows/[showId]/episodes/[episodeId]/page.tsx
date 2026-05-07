@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
+import { PublishButton } from './publish-button'
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
@@ -14,7 +15,7 @@ export default async function EpisodeDetailPage({
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }] = await Promise.all([
+  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnection }] = await Promise.all([
     supabase
       .from('episodes')
       .select('*, pipeline_stages(id, name, position)')
@@ -35,6 +36,11 @@ export default async function EpisodeDetailPage({
       .from('user_integrations')
       .select('provider')
       .eq('user_id', user!.id),
+    supabase
+      .from('distribution_connections')
+      .select('id, provider')
+      .eq('show_id', showId)
+      .maybeSingle(),
   ])
 
   if (error || !episode) {
@@ -99,9 +105,42 @@ export default async function EpisodeDetailPage({
             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[episode.status] || 'bg-surface-overlay text-text-secondary'}`}>
               {stage?.name || episode.status}
             </span>
+            {episode.distribution_status === 'published' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
+                Published
+              </span>
+            )}
+            {episode.distribution_status === 'scheduled' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
+                Scheduled
+              </span>
+            )}
           </div>
+          {(episode.distribution_metadata as any)?.share_url && (
+            <a
+              href={(episode.distribution_metadata as any).share_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-accent hover:text-accent-hover transition-colors"
+            >
+              View on Transistor &rarr;
+            </a>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {distributionConnection && (
+            <PublishButton
+              showId={showId}
+              episodeId={episodeId}
+              episode={{
+                title: episode.title,
+                episode_number: episode.episode_number,
+                description: episode.description,
+                scheduled_publish_date: episode.scheduled_publish_date,
+              }}
+              deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, type: d.type }))}
+            />
+          )}
           <Link
             href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
             className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"

@@ -23,7 +23,7 @@ export default async function ShowDetailPage({
       .single(),
     supabase
       .from('episodes')
-      .select('id, title, episode_number, stage_id, status, position, scheduled_publish_date, frame_io_url, image_url, show_id, episode_tags(tag_id, tags(id, name, color))')
+      .select('id, title, episode_number, stage_id, status, position, scheduled_publish_date, frame_io_url, image_url, show_id, distribution_status, episode_tags(tag_id, tags(id, name, color))')
       .eq('show_id', showId)
       .is('archived_at', null)
       .order('position', { ascending: true })
