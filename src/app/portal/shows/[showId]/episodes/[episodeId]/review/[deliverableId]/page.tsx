@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import { ReviewPlayer } from '@/components/portal/review-player'
 import { CommentsSidebar } from '@/components/portal/comments-sidebar'
 
@@ -134,35 +133,10 @@ export default function ReviewPage() {
     setTimeout(() => setSeekToTime(null), 100)
   }, [])
 
-  return (
-    <div className="flex flex-col h-[calc(100vh-5rem)]">
-      {/* Header */}
-      <div className="shrink-0 flex items-center justify-between py-2">
-        <div className="flex items-center gap-3 min-w-0">
-          <Link
-            href={`/portal/shows/${showId}/episodes/${episodeId}`}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors shrink-0"
-          >
-            &larr; Back
-          </Link>
-          {deliverable && (
-            <h1 className="text-sm font-medium text-text-primary truncate">
-              {deliverable.title}
-            </h1>
-          )}
-        </div>
-        {deliverable?.file_url && (
-          <a
-            href={deliverable.file_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="shrink-0 rounded-md border border-border-subtle bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
-          >
-            Download
-          </a>
-        )}
-      </div>
+  const backUrl = `/portal/shows/${showId}/episodes/${episodeId}`
 
+  return (
+    <div className="flex flex-col h-[calc(100vh-4.5rem)]">
       {/* Error state */}
       {error ? (
         <div className="flex-1 flex items-center justify-center">
@@ -171,7 +145,6 @@ export default function ReviewPage() {
           </div>
         </div>
       ) : media ? (
-        /* Two-panel layout — fills remaining height */
         <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
           <div className="flex-1 lg:w-2/3 min-h-0 flex flex-col">
             <ReviewPlayer
@@ -180,6 +153,9 @@ export default function ReviewPage() {
               duration={media.duration_seconds}
               seekToTime={seekToTime}
               fillContainer
+              title={deliverable?.title}
+              backUrl={backUrl}
+              downloadUrl={deliverable?.file_url}
               onTimeUpdate={setCurrentTime}
               onRefreshNeeded={fetchMedia}
             />
