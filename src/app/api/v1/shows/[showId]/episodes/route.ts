@@ -44,6 +44,14 @@ export async function POST(
   const body = await request.json()
   if (!body.title) return errorResponse('title is required')
 
+  const { data: show } = await supabase!
+    .from('shows')
+    .select('episode_template')
+    .eq('id', showId)
+    .single()
+
+  const template = (show?.episode_template as Record<string, unknown>) || {}
+
   let stageId = body.stage_id || null
   let status = 'planning'
 
@@ -80,13 +88,13 @@ export async function POST(
       show_id: showId,
       title: body.title,
       episode_number: body.episode_number ?? null,
-      description: body.description || null,
+      description: body.description || (template.description as string) || null,
       stage_id: stageId,
       status,
       position,
       scheduled_publish_date: body.scheduled_publish_date || null,
       frame_io_url: body.frame_io_url || null,
-      notes: body.notes || null,
+      notes: body.notes || (template.notes as string) || null,
     })
     .select()
     .single()

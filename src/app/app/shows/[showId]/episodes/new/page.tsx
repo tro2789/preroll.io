@@ -19,21 +19,35 @@ export default function NewEpisodePage({
   const { showId } = use(params)
   const router = useRouter()
   const [stages, setStages] = useState<Stage[]>([])
+  const [templateDefaults, setTemplateDefaults] = useState<{ description: string; notes: string }>({ description: '', notes: '' })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchStages() {
+    async function fetchData() {
       try {
-        const res = await fetch(`/api/v1/shows/${showId}/stages`)
-        if (res.ok) {
-          const result = await res.json()
+        const [stagesRes, showRes] = await Promise.all([
+          fetch(`/api/v1/shows/${showId}/stages`),
+          fetch(`/api/v1/shows/${showId}`),
+        ])
+        if (stagesRes.ok) {
+          const result = await stagesRes.json()
           setStages(result.data)
+        }
+        if (showRes.ok) {
+          const result = await showRes.json()
+          const t = result.data?.episode_template
+          if (t) {
+            setTemplateDefaults({
+              description: t.description || '',
+              notes: t.notes || '',
+            })
+          }
         }
       } finally {
         setLoading(false)
       }
     }
-    fetchStages()
+    fetchData()
   }, [showId])
 
   async function handleSubmit(data: {
@@ -85,6 +99,7 @@ export default function NewEpisodePage({
         <EpisodeForm
           showId={showId}
           stages={stages}
+          defaultValues={templateDefaults}
           onSubmit={handleSubmit}
           submitLabel="Create Episode"
         />
