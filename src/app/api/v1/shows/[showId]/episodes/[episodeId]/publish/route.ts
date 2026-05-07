@@ -33,7 +33,7 @@ export async function POST(
   }
 
   // Decrypt the Transistor API key
-  const apiKey = decrypt(connection.encrypted_api_key)
+  const apiKey = decrypt(connection.api_key_enc)
 
   // Resolve audio source
   let audioUrl: string
@@ -56,8 +56,10 @@ export async function POST(
 
     // Get a valid Frame.io token
     ensureProvidersRegistered()
-    const frameToken = await getValidToken(user!.id, 'frame_io')
-    const accountId = await getIntegrationAccountId(user!.id, 'frame_io')
+    const [frameToken, accountId] = await Promise.all([
+      getValidToken(user!.id, 'frame_io'),
+      getIntegrationAccountId(user!.id, 'frame_io'),
+    ])
 
     // Fetch file metadata with media links from Frame.io V4 API
     const fileRes = await fetch(
@@ -128,34 +130,33 @@ export async function POST(
   const mediaUrl = (publishResult as Record<string, unknown>).media_url as string | undefined
   const shareUrl = (publishResult as Record<string, unknown>).share_url as string | undefined
 
-  // Update the PreRoll episode record
-  await supabase!
-    .from('episodes')
-    .update({
-      distribution_status: scheduled_at ? 'scheduled' : 'published',
-      distribution_external_id: transistorEpisodeId,
-      distribution_published_at: scheduled_at || new Date().toISOString(),
-      distribution_metadata: {
+  await Promise.all([
+    supabase!
+      .from('episodes')
+      .update({
+        distribution_status: scheduled_at ? 'scheduled' : 'published',
+        distribution_external_id: transistorEpisodeId,
+        distribution_published_at: scheduled_at || new Date().toISOString(),
+        distribution_metadata: {
+          transistor_episode_id: transistorEpisodeId,
+          media_url: mediaUrl,
+          share_url: shareUrl,
+        },
+      })
+      .eq('id', episodeId),
+    supabase!.from('activity_log').insert({
+      show_id: showId,
+      episode_id: episodeId,
+      action: scheduled_at ? 'episode_scheduled' : 'episode_published',
+      description: scheduled_at
+        ? `Episode '${title}' scheduled for ${scheduled_at}`
+        : `Episode '${title}' published to Transistor`,
+      metadata: {
         transistor_episode_id: transistorEpisodeId,
-        media_url: mediaUrl,
-        share_url: shareUrl,
+        audio_source,
       },
-    })
-    .eq('id', episodeId)
-
-  // Log activity
-  await supabase!.from('activity_log').insert({
-    show_id: showId,
-    episode_id: episodeId,
-    action: scheduled_at ? 'episode_scheduled' : 'episode_published',
-    description: scheduled_at
-      ? `Episode '${title}' scheduled for ${scheduled_at}`
-      : `Episode '${title}' published to Transistor`,
-    metadata: {
-      transistor_episode_id: transistorEpisodeId,
-      audio_source,
-    },
-  })
+    }),
+  ])
 
   return jsonResponse(
     {
