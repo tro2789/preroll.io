@@ -140,6 +140,7 @@ export function CalendarView() {
   }, [cells])
 
   const fetchEpisodes = useCallback(async () => {
+    setEpisodes([])
     setLoading(true)
     const { from, to } = fetchRange()
     try {
