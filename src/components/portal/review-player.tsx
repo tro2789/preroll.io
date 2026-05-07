@@ -9,6 +9,7 @@ interface ReviewPlayerProps {
   duration?: number | null
   thumbnailUrl?: string | null
   seekToTime?: number | null
+  fillContainer?: boolean
   onTimeUpdate?: (seconds: number) => void
   onRefreshNeeded?: () => Promise<string | null>
 }
@@ -19,6 +20,7 @@ export function ReviewPlayer({
   duration: externalDuration,
   thumbnailUrl,
   seekToTime,
+  fillContainer,
   onTimeUpdate,
   onRefreshNeeded,
 }: ReviewPlayerProps) {
@@ -167,12 +169,12 @@ export function ReviewPlayer({
   }
 
   return (
-    <div ref={containerRef} className={`w-full space-y-0 ${isFullscreen ? 'flex flex-col h-full bg-black' : ''}`}>
+    <div ref={containerRef} className={`w-full ${isFullscreen ? 'flex flex-col h-full bg-black' : fillContainer ? 'flex flex-col h-full' : ''}`}>
       {/* Media area */}
       {isVideo ? (
         <video
           ref={mediaRef as React.RefObject<HTMLVideoElement>}
-          className={`w-full bg-black object-contain ${isFullscreen ? 'flex-1 min-h-0' : 'aspect-video rounded-t-lg'}`}
+          className={`w-full bg-black object-contain ${isFullscreen || fillContainer ? 'flex-1 min-h-0 rounded-t-lg' : 'aspect-video rounded-t-lg'}`}
           onDoubleClick={toggleFullscreen}
           {...mediaProps}
         />
