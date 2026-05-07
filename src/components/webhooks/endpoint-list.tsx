@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { EndpointForm } from './endpoint-form'
-import { DeliveryLog } from './delivery-log'
 
 interface Endpoint {
   id: string
@@ -19,7 +18,6 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
   const router = useRouter()
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [newSecret, setNewSecret] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -117,7 +115,7 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
         <div className="mt-4 rounded-lg border border-border-subtle bg-surface-raised p-8 text-center">
           <p className="text-sm text-text-secondary">No webhook endpoints configured.</p>
           <p className="mt-1 text-xs text-text-tertiary">
-            Add an endpoint to receive real-time notifications when episodes or deliverables change.
+            Add an endpoint to receive notifications when episodes or deliverables change.
           </p>
         </div>
       ) : (
@@ -134,88 +132,75 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
                   submitLabel="Save Changes"
                 />
               ) : (
-                <>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <code className="truncate font-mono text-sm text-text-primary">{ep.url}</code>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
-                          ep.is_active
-                            ? 'bg-success/10 text-success'
-                            : 'bg-surface-overlay text-text-tertiary'
-                        }`}>
-                          {ep.is_active ? 'Active' : 'Paused'}
-                        </span>
-                      </div>
-                      {ep.description && (
-                        <p className="mt-1 text-xs text-text-tertiary">{ep.description}</p>
-                      )}
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {ep.events.length === 0 ? (
-                          <span className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-tertiary">
-                            All events
-                          </span>
-                        ) : (
-                          ep.events.map((evt) => (
-                            <span key={evt} className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-tertiary">
-                              {evt}
-                            </span>
-                          ))
-                        )}
-                      </div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <code className="truncate font-mono text-sm text-text-primary">{ep.url}</code>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                        ep.is_active
+                          ? 'bg-success/10 text-success'
+                          : 'bg-surface-overlay text-text-tertiary'
+                      }`}>
+                        {ep.is_active ? 'Active' : 'Paused'}
+                      </span>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        onClick={() => handleToggle(ep.id, ep.is_active)}
-                        disabled={togglingId === ep.id}
-                        className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
-                      >
-                        {ep.is_active ? 'Pause' : 'Resume'}
-                      </button>
-                      <button
-                        onClick={() => setEditingId(ep.id)}
-                        className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setExpandedId(expandedId === ep.id ? null : ep.id)}
-                        className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
-                      >
-                        {expandedId === ep.id ? 'Hide Log' : 'Deliveries'}
-                      </button>
-                      {confirmDeleteId === ep.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => handleDelete(ep.id)}
-                            disabled={deletingId === ep.id}
-                            className="rounded-md bg-red-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
-                          >
-                            {deletingId === ep.id ? '...' : 'Confirm'}
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteId(null)}
-                            className="text-xs text-text-tertiary hover:text-text-secondary"
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                    {ep.description && (
+                      <p className="mt-1 text-xs text-text-tertiary">{ep.description}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {ep.events.length === 0 ? (
+                        <span className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-tertiary">
+                          All events
+                        </span>
                       ) : (
-                        <button
-                          onClick={() => setConfirmDeleteId(ep.id)}
-                          className="text-xs text-text-tertiary hover:text-red-400 transition-colors"
-                        >
-                          Delete
-                        </button>
+                        ep.events.map((evt) => (
+                          <span key={evt} className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-tertiary">
+                            {evt}
+                          </span>
+                        ))
                       )}
                     </div>
                   </div>
-                  {expandedId === ep.id && (
-                    <div className="mt-4 border-t border-border-subtle pt-4">
-                      <DeliveryLog endpointId={ep.id} />
-                    </div>
-                  )}
-                </>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      onClick={() => handleToggle(ep.id, ep.is_active)}
+                      disabled={togglingId === ep.id}
+                      className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                    >
+                      {ep.is_active ? 'Pause' : 'Resume'}
+                    </button>
+                    <button
+                      onClick={() => setEditingId(ep.id)}
+                      className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                    >
+                      Edit
+                    </button>
+                    {confirmDeleteId === ep.id ? (
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleDelete(ep.id)}
+                          disabled={deletingId === ep.id}
+                          className="rounded-md bg-red-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+                        >
+                          {deletingId === ep.id ? '...' : 'Confirm'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="text-xs text-text-tertiary hover:text-text-secondary"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteId(ep.id)}
+                        className="text-xs text-text-tertiary hover:text-red-400 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           ))}

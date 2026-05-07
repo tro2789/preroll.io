@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { WebhookEndpointList } from '@/components/webhooks/endpoint-list'
-import { WebhookGuide } from '@/components/webhooks/guide'
 
 export default async function WebhooksPage() {
   const supabase = await createClient()
@@ -13,10 +12,5 @@ export default async function WebhooksPage() {
     .select('id, url, events, is_active, description, created_at, updated_at')
     .order('created_at', { ascending: false })
 
-  return (
-    <div className="space-y-10">
-      <WebhookEndpointList endpoints={endpoints || []} />
-      <WebhookGuide />
-    </div>
-  )
+  return <WebhookEndpointList endpoints={endpoints || []} />
 }
