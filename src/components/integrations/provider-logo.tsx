@@ -1,7 +1,7 @@
 const logos: Record<string, string> = {
   frame_io: '/images/providers/frame-io.jpeg',
   google_drive: '/images/providers/google-drive.svg',
-  vimeo: '/images/providers/vimeo.svg',
+  vimeo: '/images/providers/vimeo.png',
   dropbox: '/images/providers/dropbox.svg',
 }
 
