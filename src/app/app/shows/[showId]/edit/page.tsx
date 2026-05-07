@@ -1,12 +1,20 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ShowForm } from '@/components/shows/show-form'
 import { DistributionSettings } from '@/components/shows/distribution-settings'
 import { EpisodeTemplateEditor } from '@/components/shows/episode-template-editor'
 import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
+
+const TABS = [
+  { key: 'details', label: 'Details' },
+  { key: 'template', label: 'Episode Template' },
+  { key: 'distribution', label: 'Distribution' },
+] as const
+
+type Tab = (typeof TABS)[number]['key']
 
 export default function EditShowPage({
   params,
@@ -15,6 +23,9 @@ export default function EditShowPage({
 }) {
   const { showId } = use(params)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialTab = TABS.find((t) => t.key === searchParams.get('tab'))?.key || 'details'
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
   const [show, setShow] = useState<Record<string, string> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -34,6 +45,14 @@ export default function EditShowPage({
     }
     fetchShow()
   }, [showId])
+
+  function switchTab(tab: Tab) {
+    setActiveTab(tab)
+    const url = new URL(window.location.href)
+    if (tab === 'details') url.searchParams.delete('tab')
+    else url.searchParams.set('tab', tab)
+    window.history.replaceState(null, '', url.toString())
+  }
 
   async function handleImageUploaded(fileKey: string) {
     const res = await fetch(`/api/v1/shows/${showId}`, {
@@ -94,31 +113,54 @@ export default function EditShowPage({
       <p className="mt-1 text-sm text-text-secondary">
         Update {show.name}&apos;s details.
       </p>
+
+      <nav className="mt-6 flex gap-1 border-b border-border-default">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => switchTab(tab.key)}
+            className={`px-4 py-2 text-sm font-medium transition-colors -mb-px ${
+              activeTab === tab.key
+                ? 'text-accent-hover border-b-2 border-accent'
+                : 'text-text-tertiary hover:text-text-secondary'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
       <div className="mt-6 max-w-lg">
-        <ThumbnailUpload
-          id={showId}
-          imageUrl={show.cover_art_url || null}
-          showId={showId}
-          onUploaded={handleImageUploaded}
-          className="mb-6"
-        />
-        <ShowForm
-          clientId={show.client_id || ''}
-          defaultValues={{
-            name: show.name || '',
-            description: show.description || '',
-            format: show.format || '',
-            schedule: show.schedule || '',
-          }}
-          onSubmit={handleSubmit}
-          submitLabel="Save Changes"
-        />
-        <div className="mt-8 border-t border-border-subtle pt-8">
+        {activeTab === 'details' && (
+          <>
+            <ThumbnailUpload
+              id={showId}
+              imageUrl={show.cover_art_url || null}
+              showId={showId}
+              onUploaded={handleImageUploaded}
+              className="mb-6"
+            />
+            <ShowForm
+              clientId={show.client_id || ''}
+              defaultValues={{
+                name: show.name || '',
+                description: show.description || '',
+                format: show.format || '',
+                schedule: show.schedule || '',
+              }}
+              onSubmit={handleSubmit}
+              submitLabel="Save Changes"
+            />
+          </>
+        )}
+
+        {activeTab === 'template' && (
           <EpisodeTemplateEditor showId={showId} />
-        </div>
-        <div className="mt-8 border-t border-border-subtle pt-8">
+        )}
+
+        {activeTab === 'distribution' && (
           <DistributionSettings showId={showId} />
-        </div>
+        )}
       </div>
     </div>
   )
