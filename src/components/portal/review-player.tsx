@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { formatTimecode } from '@/lib/format'
 
 interface ReviewPlayerProps {
   src: string
@@ -10,12 +11,6 @@ interface ReviewPlayerProps {
   seekToTime?: number | null
   onTimeUpdate?: (seconds: number) => void
   onRefreshNeeded?: () => Promise<string | null>
-}
-
-function formatTime(secs: number): string {
-  const m = Math.floor(secs / 60)
-  const s = Math.floor(secs % 60)
-  return `${m}:${String(s).padStart(2, '0')}`
 }
 
 export function ReviewPlayer({
@@ -218,7 +213,7 @@ export function ReviewPlayer({
 
           {/* Timecode */}
           <span className="text-xs text-text-secondary font-mono tabular-nums">
-            {formatTime(currentTime)} / {formatTime(duration)}
+            {formatTimecode(currentTime)} / {formatTimecode(duration)}
           </span>
 
           {/* Spacer */}

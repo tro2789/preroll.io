@@ -2,58 +2,33 @@ import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
+import { secsToFrameIoTimecode, frameIoTimecodeToSecs } from '@/lib/format'
 
 const FRAMEIO_API = 'https://api.frame.io/v4'
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function secsToTimecode(secs: number): string {
-  const h = Math.floor(secs / 3600)
-  const m = Math.floor((secs % 3600) / 60)
-  const s = Math.floor(secs % 60)
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}:00`
-}
-
-function timecodeToSecs(tc: string | number | null): number | null {
-  if (tc === null || tc === undefined) return null
-  if (typeof tc === 'number') return tc / 24
-  if (typeof tc === 'string' && tc.includes(':')) {
-    const parts = tc.split(':').map(Number)
-    if (parts.length < 3) return null
-    const [h, m, s, f] = parts
-    return h * 3600 + m * 60 + s + (f || 0) / 24
-  }
-  return null
-}
 
 async function getFrameIoContext(
   supabase: Awaited<ReturnType<typeof getAuthenticatedClient>>['supabase'],
   deliverableId: string
 ) {
-  // Resolve producer user_id via deliverable -> show -> client
-  const { data: deliverable } = await supabase!
-    .from('deliverables')
-    .select('id, shows(client_id, clients(user_id))')
-    .eq('id', deliverableId)
-    .single()
+  const [{ data: deliverable }, { data: fileRef }] = await Promise.all([
+    supabase!
+      .from('deliverables')
+      .select('id, shows(client_id, clients(user_id))')
+      .eq('id', deliverableId)
+      .single(),
+    supabase!
+      .from('file_references')
+      .select('id, external_id, provider, deliverable_id')
+      .eq('deliverable_id', deliverableId)
+      .eq('provider', 'frame_io')
+      .maybeSingle(),
+  ])
 
-  if (!deliverable) return null
+  if (!deliverable || !fileRef) return null
 
   const show = deliverable.shows as unknown as { clients: { user_id: string } | null } | null
   const producerUserId = show?.clients?.user_id
   if (!producerUserId) return null
-
-  // Get Frame.io file reference for this deliverable
-  const { data: fileRef } = await supabase!
-    .from('file_references')
-    .select('*')
-    .eq('deliverable_id', deliverableId)
-    .eq('provider', 'frame_io')
-    .maybeSingle()
-
-  if (!fileRef) return null
 
   try {
     ensureProvidersRegistered()
@@ -106,27 +81,25 @@ export async function GET(
           comments.filter((c) => c.external_id).map((c) => c.external_id)
         )
 
-        for (const fc of fioComments) {
-          if (existingExternalIds.has(fc.id)) continue
+        const newComments = fioComments
+          .filter((fc: Record<string, unknown>) => !existingExternalIds.has(fc.id as string))
+          .map((fc: Record<string, unknown>) => ({
+            deliverable_id: deliverableId,
+            file_reference_id: fio.fileRef.id,
+            author_name: (fc.owner as Record<string, string>)?.name || (fc.owner as Record<string, string>)?.email || 'Editor',
+            text: fc.text as string,
+            timestamp_secs: frameIoTimecodeToSecs(fc.timestamp as string | number | null),
+            external_id: fc.id as string,
+            synced_at: new Date().toISOString(),
+            is_external: true,
+          }))
 
-          const timestampSecs = timecodeToSecs(fc.timestamp)
-
+        if (newComments.length > 0) {
           const { data: inserted } = await supabase!
             .from('review_comments')
-            .insert({
-              deliverable_id: deliverableId,
-              file_reference_id: fio.fileRef.id,
-              author_name: fc.owner?.name || fc.owner?.email || 'Editor',
-              text: fc.text,
-              timestamp_secs: timestampSecs,
-              external_id: fc.id,
-              synced_at: new Date().toISOString(),
-              is_external: true,
-            })
+            .upsert(newComments, { onConflict: 'external_id', ignoreDuplicates: true })
             .select()
-            .single()
-
-          if (inserted) comments.push(inserted)
+          if (inserted) comments.push(...inserted)
         }
       }
     } catch (err) {
@@ -209,7 +182,7 @@ export async function POST(
     try {
       const fioBody: Record<string, unknown> = { text: text.trim() }
       if (timestampSecs !== null) {
-        fioBody.timestamp = secsToTimecode(timestampSecs)
+        fioBody.timestamp = secsToFrameIoTimecode(timestampSecs)
       }
 
       const res = await fetch(

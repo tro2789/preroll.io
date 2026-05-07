@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo, memo } from 'react'
+import { formatTimecode } from '@/lib/format'
 
 interface Comment {
   id: string
@@ -18,12 +19,6 @@ interface CommentsSidebarProps {
   onSubmit: (text: string, timestampSecs: number) => Promise<void>
 }
 
-function formatTimecode(secs: number): string {
-  const m = Math.floor(secs / 60)
-  const s = Math.floor(secs % 60)
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
 function timeAgo(dateStr: string): string {
   const now = Date.now()
   const then = new Date(dateStr).getTime()
@@ -38,19 +33,15 @@ function timeAgo(dateStr: string): string {
   return `${diffDays}d ago`
 }
 
-function CommentItem({
+const CommentItem = memo(function CommentItem({
   comment,
-  currentTime,
+  isActive,
   onSeek,
 }: {
   comment: Comment
-  currentTime: number
+  isActive: boolean
   onSeek: (seconds: number) => void
 }) {
-  const isActive =
-    comment.timestamp_secs !== null &&
-    Math.abs(currentTime - comment.timestamp_secs) < 2
-
   return (
     <div
       className={`px-3 py-2.5 rounded-md transition-colors ${isActive ? 'bg-accent/10' : ''}`}
@@ -80,7 +71,7 @@ function CommentItem({
       <p className="text-sm text-text-secondary mt-1">{comment.text}</p>
     </div>
   )
-}
+})
 
 export function CommentsSidebar({
   comments,
@@ -97,14 +88,17 @@ export function CommentsSidebar({
     .filter((c) => c.timestamp_secs !== null)
     .sort((a, b) => a.timestamp_secs! - b.timestamp_secs!)
 
-  // Auto-scroll to active comment
+  const activeCommentId = useMemo(() => {
+    return timedComments.find(
+      (c) => c.timestamp_secs !== null && Math.abs(currentTime - c.timestamp_secs) < 2
+    )?.id ?? null
+  }, [timedComments, currentTime])
+
   useEffect(() => {
-    if (!listRef.current) return
+    if (!listRef.current || !activeCommentId) return
     const activeEl = listRef.current.querySelector('[data-active="true"]')
-    if (activeEl) {
-      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }
-  }, [currentTime])
+    activeEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  }, [activeCommentId])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -144,7 +138,7 @@ export function CommentsSidebar({
                   <CommentItem
                     key={c.id}
                     comment={c}
-                    currentTime={currentTime}
+                    isActive={false}
                     onSeek={onSeek}
                   />
                 ))}
@@ -156,14 +150,12 @@ export function CommentsSidebar({
             )}
 
             {timedComments.map((c) => {
-              const isActive =
-                c.timestamp_secs !== null &&
-                Math.abs(currentTime - c.timestamp_secs) < 2
+              const active = c.id === activeCommentId
               return (
-                <div key={c.id} data-active={isActive ? 'true' : undefined}>
+                <div key={c.id} data-active={active ? 'true' : undefined}>
                   <CommentItem
                     comment={c}
-                    currentTime={currentTime}
+                    isActive={active}
                     onSeek={onSeek}
                   />
                 </div>

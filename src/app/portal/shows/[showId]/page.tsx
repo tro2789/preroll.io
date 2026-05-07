@@ -29,7 +29,6 @@ export default async function PortalShowPage({
     { data: stages },
     { data: episodes },
     { data: reviewDeliverables },
-    { data: allPendingRows },
     { data: activities },
     { data: allFileRefs },
   ] = await Promise.all([
@@ -50,11 +49,6 @@ export default async function PortalShowPage({
       .eq('show_id', showId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false }),
-    supabase
-      .from('deliverables')
-      .select('episode_id')
-      .eq('show_id', showId)
-      .eq('status', 'pending'),
     supabase
       .from('activity_log')
       .select('*')
@@ -98,11 +92,10 @@ export default async function PortalShowPage({
     }
   })
 
-  // Build per-episode pending counts
   const pendingByEpisode = new Map<string, number>()
-  for (const row of allPendingRows ?? []) {
-    if (row.episode_id) {
-      pendingByEpisode.set(row.episode_id, (pendingByEpisode.get(row.episode_id) ?? 0) + 1)
+  for (const d of reviewDeliverables ?? []) {
+    if (d.episode_id) {
+      pendingByEpisode.set(d.episode_id, (pendingByEpisode.get(d.episode_id) ?? 0) + 1)
     }
   }
 
