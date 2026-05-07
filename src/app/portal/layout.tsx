@@ -25,7 +25,7 @@ export default async function PortalLayout({
   }
 
   return (
-    <div className="min-h-screen bg-surface-base">
+    <div className="min-h-screen bg-surface-base overflow-x-hidden">
       <PortalHeader clientName={client.name} email={user.email ?? ''} />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         {children}

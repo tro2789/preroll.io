@@ -10,6 +10,9 @@ interface ReviewPlayerProps {
   thumbnailUrl?: string | null
   seekToTime?: number | null
   fillContainer?: boolean
+  title?: string
+  backUrl?: string
+  downloadUrl?: string | null
   onTimeUpdate?: (seconds: number) => void
   onRefreshNeeded?: () => Promise<string | null>
 }
@@ -21,6 +24,9 @@ export function ReviewPlayer({
   thumbnailUrl,
   seekToTime,
   fillContainer,
+  title,
+  backUrl,
+  downloadUrl,
   onTimeUpdate,
   onRefreshNeeded,
 }: ReviewPlayerProps) {
@@ -172,12 +178,28 @@ export function ReviewPlayer({
     <div ref={containerRef} className={`w-full ${isFullscreen ? 'flex flex-col h-full bg-black' : fillContainer ? 'flex flex-col h-full' : ''}`}>
       {/* Media area */}
       {isVideo ? (
-        <video
-          ref={mediaRef as React.RefObject<HTMLVideoElement>}
-          className={`w-full bg-black object-contain ${isFullscreen || fillContainer ? 'flex-1 min-h-0 rounded-t-lg' : 'aspect-video rounded-t-lg'}`}
-          onDoubleClick={toggleFullscreen}
-          {...mediaProps}
-        />
+        <div className={`relative ${isFullscreen || fillContainer ? 'flex-1 min-h-0' : ''}`}>
+          <video
+            ref={mediaRef as React.RefObject<HTMLVideoElement>}
+            className={`w-full h-full bg-black object-contain ${isFullscreen || fillContainer ? 'rounded-t-lg' : 'aspect-video rounded-t-lg'}`}
+            onDoubleClick={toggleFullscreen}
+            {...mediaProps}
+          />
+          {(backUrl || title) && !isFullscreen && (
+            <div className="absolute top-0 left-0 right-0 flex items-center gap-2 px-3 py-2 bg-gradient-to-b from-black/60 to-transparent rounded-t-lg">
+              {backUrl && (
+                <a href={backUrl} className="text-white/70 hover:text-white transition-colors shrink-0">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                  </svg>
+                </a>
+              )}
+              {title && (
+                <span className="text-xs text-white/80 truncate">{title}</span>
+              )}
+            </div>
+          )}
+        </div>
       ) : (
         <>
           <audio
@@ -296,6 +318,21 @@ export function ReviewPlayer({
               aria-label="Volume"
             />
           </div>
+
+          {/* Download */}
+          {downloadUrl && (
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-text-tertiary hover:text-text-primary transition-colors"
+              aria-label="Download"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+            </a>
+          )}
 
           {/* Fullscreen */}
           {isVideo && (
