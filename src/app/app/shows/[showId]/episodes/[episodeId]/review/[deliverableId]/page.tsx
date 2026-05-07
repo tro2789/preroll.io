@@ -1,0 +1,213 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useParams } from 'next/navigation'
+import Link from 'next/link'
+import { ReviewPlayer } from '@/components/portal/review-player'
+import { CommentsSidebar } from '@/components/portal/comments-sidebar'
+
+interface Media {
+  url: string
+  mime_type: string
+  duration_seconds: number | null
+  status: string
+  file_reference_id: string
+}
+
+interface Comment {
+  id: string
+  author_name: string
+  text: string
+  timestamp_secs: number | null
+  is_external: boolean
+  created_at: string
+}
+
+interface Deliverable {
+  title: string
+  type: string
+  file_url: string | null
+  status: string
+}
+
+export default function ProducerReviewPage() {
+  const { showId, episodeId, deliverableId } = useParams<{
+    showId: string
+    episodeId: string
+    deliverableId: string
+  }>()
+
+  const [media, setMedia] = useState<Media | null>(null)
+  const [comments, setComments] = useState<Comment[]>([])
+  const [deliverable, setDeliverable] = useState<Deliverable | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [seekToTime, setSeekToTime] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (!deliverableId) return
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const [delRes, mediaRes, commentsRes] = await Promise.all([
+          fetch(`/api/v1/deliverables/${deliverableId}`),
+          fetch(`/api/v1/deliverables/${deliverableId}/media`),
+          fetch(`/api/v1/deliverables/${deliverableId}/comments`),
+        ])
+
+        const delJson = await delRes.json()
+        if (delRes.ok && delJson.data) {
+          setDeliverable(delJson.data)
+        }
+
+        const mediaJson = await mediaRes.json()
+        if (mediaRes.ok && mediaJson.data) {
+          if (mediaJson.data.status === 'processing') {
+            setError('Media is still processing. Please check back shortly.')
+          } else {
+            setMedia(mediaJson.data)
+          }
+        } else {
+          setError('Media not found or unavailable for this deliverable.')
+        }
+
+        const commentsJson = await commentsRes.json()
+        if (commentsRes.ok) {
+          setComments(commentsJson.data || [])
+        }
+      } catch {
+        setError('Failed to load review data.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    load()
+  }, [deliverableId])
+
+  const fetchMedia = useCallback(async (): Promise<string | null> => {
+    try {
+      const res = await fetch(`/api/v1/deliverables/${deliverableId}/media`)
+      const json = await res.json()
+      if (res.ok && json.data?.url) {
+        setMedia(json.data)
+        return json.data.url
+      }
+    } catch {
+      // ignore
+    }
+    return null
+  }, [deliverableId])
+
+  const handleCommentSubmit = useCallback(
+    async (text: string, timestampSecs: number) => {
+      const res = await fetch(`/api/v1/deliverables/${deliverableId}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, timestamp_secs: timestampSecs }),
+      })
+
+      if (!res.ok) {
+        throw new Error('Failed to submit comment')
+      }
+
+      const json = await res.json()
+      if (json.data) {
+        setComments((prev) =>
+          [...prev, json.data].sort((a, b) => {
+            const tsA = a.timestamp_secs ?? -1
+            const tsB = b.timestamp_secs ?? -1
+            if (tsA !== tsB) return tsA - tsB
+            return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          }),
+        )
+      }
+    },
+    [deliverableId],
+  )
+
+  const handleSeek = useCallback((seconds: number) => {
+    setSeekToTime(seconds)
+    setTimeout(() => setSeekToTime(null), 100)
+  }, [])
+
+  const statusLabels: Record<string, string> = {
+    pending: 'Pending Review',
+    approved: 'Approved',
+    revision_requested: 'Needs Revision',
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href={`/app/shows/${showId}/episodes/${episodeId}`}
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors shrink-0"
+          >
+            &larr; Back to episode
+          </Link>
+          {deliverable && (
+            <>
+              <h1 className="text-sm font-medium text-text-primary truncate">
+                {deliverable.title}
+              </h1>
+              {deliverable.status && (
+                <span className="shrink-0 text-xs text-text-tertiary">
+                  {statusLabels[deliverable.status] || deliverable.status}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+        {deliverable?.file_url && (
+          <a
+            href={deliverable.file_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-md border border-border-subtle bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
+          >
+            Open in Frame.io
+          </a>
+        )}
+      </div>
+
+      {error ? (
+        <div className="rounded-lg border border-border-subtle bg-surface-raised px-6 py-12 text-center">
+          <p className="text-sm text-text-secondary">{error}</p>
+        </div>
+      ) : media ? (
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 lg:w-2/3">
+            <ReviewPlayer
+              src={media.url}
+              mimeType={media.mime_type}
+              duration={media.duration_seconds}
+              seekToTime={seekToTime}
+              onTimeUpdate={setCurrentTime}
+              onRefreshNeeded={fetchMedia}
+            />
+          </div>
+          <div className="lg:w-1/3 lg:min-h-[400px]">
+            <CommentsSidebar
+              comments={comments}
+              currentTime={currentTime}
+              onSeek={handleSeek}
+              onSubmit={handleCommentSubmit}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {loading && (
+        <div className="flex items-center justify-center py-20">
+          <p className="text-text-tertiary">Loading review...</p>
+        </div>
+      )}
+    </div>
+  )
+}
