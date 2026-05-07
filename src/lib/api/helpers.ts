@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
 import { createHash } from 'crypto'
-import { headers } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 function hashKey(key: string): string {
@@ -9,6 +8,7 @@ function hashKey(key: string): string {
 }
 
 export async function getAuthenticatedClient() {
+  const { headers } = await import('next/headers')
   const headerStore = await headers()
   const authHeader = headerStore.get('authorization')
 
