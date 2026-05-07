@@ -5,8 +5,6 @@ interface ShowHeroProps {
     id: string
     name: string
     description?: string | null
-    format?: string | null
-    schedule?: string | null
     coverArtUrl?: string | null
   }
 }
@@ -21,16 +19,6 @@ export function ShowHero({ show }: ShowHeroProps) {
       />
       <div className="min-w-0">
         <h1 className="text-xl font-bold text-text-primary">{show.name}</h1>
-        <div className="flex items-center gap-2 mt-1">
-          {show.format && (
-            <span className="text-xs font-medium bg-surface-overlay border border-border-subtle rounded-full px-2.5 py-0.5 text-text-secondary">
-              {show.format}
-            </span>
-          )}
-          {show.schedule && (
-            <span className="text-xs text-text-tertiary">{show.schedule}</span>
-          )}
-        </div>
         {show.description && (
           <p className="text-sm text-text-secondary leading-relaxed line-clamp-2 mt-2">
             {show.description}
