@@ -108,4 +108,4 @@ Self-hosting is free with all features included.
 
 ## License
 
-All rights reserved. Self-hosting is permitted for personal and internal business use. Redistribution and resale require a commercial license. Contact trevor@preroll.io.
+Source available. Free to use, self-host, and modify for personal or internal business use. You may not resell, redistribute, or offer it as a hosted service. See [LICENSE](LICENSE) for details.
