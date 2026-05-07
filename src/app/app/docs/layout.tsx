@@ -5,9 +5,11 @@ import { usePathname } from 'next/navigation'
 
 const sections = [
   {
-    title: 'Integrations',
+    title: 'API',
     items: [
+      { label: 'API Keys', href: '/app/docs/api-keys' },
       { label: 'Webhooks', href: '/app/docs/webhooks' },
+      { label: 'MCP Server', href: '/app/docs/mcp' },
     ],
   },
 ]
