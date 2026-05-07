@@ -407,7 +407,7 @@ function Pricing() {
         </div>
         <p className="mt-8 text-center text-sm text-text-tertiary">
           Want to run it yourself?{' '}
-          <Link href="/app/docs" className="text-accent hover:text-accent-hover transition-colors">
+          <Link href="/docs" className="text-accent hover:text-accent-hover transition-colors">
             PreRoll is open source and self-hostable.
           </Link>
         </p>
@@ -451,15 +451,15 @@ function Footer() {
             <ul className="mt-3 space-y-2">
               <li><a href="#features" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Features</a></li>
               <li><a href="#pricing" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Pricing</a></li>
-              <li><Link href="/app/docs" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Docs</Link></li>
+              <li><Link href="/docs" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Docs</Link></li>
             </ul>
           </div>
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Developers</p>
             <ul className="mt-3 space-y-2">
-              <li><Link href="/app/docs/api-keys" className="text-sm text-text-secondary hover:text-text-primary transition-colors">API</Link></li>
-              <li><Link href="/app/docs/mcp" className="text-sm text-text-secondary hover:text-text-primary transition-colors">MCP Server</Link></li>
-              <li><Link href="/app/docs/webhooks" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Webhooks</Link></li>
+              <li><Link href="/docs/api-keys" className="text-sm text-text-secondary hover:text-text-primary transition-colors">API</Link></li>
+              <li><Link href="/docs/mcp" className="text-sm text-text-secondary hover:text-text-primary transition-colors">MCP Server</Link></li>
+              <li><Link href="/docs/webhooks" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Webhooks</Link></li>
             </ul>
           </div>
           <div>

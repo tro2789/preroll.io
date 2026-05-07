@@ -7,7 +7,7 @@ export default function McpDocs() {
           The PreRoll MCP server lets AI assistants (Claude, etc.) interact with your
           PreRoll data — list episodes, create clients, check dashboard status, and more.
           It runs locally and authenticates with an{' '}
-          <a href="/app/docs/api-keys" className="text-accent hover:text-accent-hover underline">API key</a>.
+          <a href="/docs/api-keys" className="text-accent hover:text-accent-hover underline">API key</a>.
         </p>
       </div>
 
