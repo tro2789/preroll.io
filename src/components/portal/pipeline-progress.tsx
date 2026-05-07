@@ -24,59 +24,76 @@ export function PipelineProgress({
     ? sorted.findIndex((s) => s.id === currentStageId)
     : -1
 
-  const isCompact = size === 'compact'
-  const dotSize = isCompact ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5'
-  const currentDotSize = isCompact ? 'h-3 w-3' : 'h-4.5 w-4.5'
-  const connectorWidth = isCompact ? 'w-4' : 'w-8'
+  if (size === 'compact') {
+    return (
+      <div className="flex items-center" role="list" aria-label="Episode pipeline stages">
+        {sorted.map((stage, i) => {
+          const isCompleted = currentIndex >= 0 && i < currentIndex
+          const isCurrent = i === currentIndex
+
+          return (
+            <div key={stage.id} className="flex items-center" role="listitem">
+              {i > 0 && (
+                <div className={`w-4 h-px ${isCompleted || isCurrent ? 'bg-accent/50' : 'bg-border-subtle'}`} />
+              )}
+              <div
+                className={`rounded-full shrink-0 ${
+                  isCurrent
+                    ? 'h-3 w-3 bg-accent ring-2 ring-accent/25'
+                    : isCompleted
+                      ? 'h-2.5 w-2.5 bg-accent/50'
+                      : 'h-2.5 w-2.5 border border-border-subtle bg-transparent'
+                }`}
+                aria-current={isCurrent ? 'step' : undefined}
+              />
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
-    <div className="flex items-center" role="list" aria-label="Episode pipeline stages">
+    <div className="relative flex justify-between" role="list" aria-label="Episode pipeline stages">
       {sorted.map((stage, i) => {
         const isCompleted = currentIndex >= 0 && i < currentIndex
         const isCurrent = i === currentIndex
 
         return (
-          <div key={stage.id} className="flex items-center" role="listitem">
-            {/* Connector line before dot (skip first) */}
+          <div key={stage.id} className="relative flex flex-col items-center flex-1" role="listitem">
+            {/* Connector line — spans from previous dot center to this dot center */}
             {i > 0 && (
               <div
-                className={`${connectorWidth} h-px ${
-                  isCompleted || isCurrent
-                    ? 'bg-accent/50'
-                    : 'bg-border-subtle'
+                className={`absolute top-[7px] right-1/2 w-full h-px ${
+                  isCompleted || isCurrent ? 'bg-accent/50' : 'bg-border-subtle'
                 }`}
               />
             )}
 
-            {/* Dot + label group */}
-            <div className={`flex flex-col items-center ${isCompact ? '' : 'gap-1.5'}`}>
-              {/* Dot */}
-              <div
-                className={`rounded-full shrink-0 ${
-                  isCurrent
-                    ? `${currentDotSize} bg-accent ring-2 ring-accent/25`
-                    : isCompleted
-                      ? `${dotSize} bg-accent/50`
-                      : `${dotSize} border ${isCompact ? 'border-border-subtle' : 'border-border-default'} bg-transparent`
-                }`}
-                aria-current={isCurrent ? 'step' : undefined}
-              />
+            {/* Dot */}
+            <div
+              className={`relative z-10 rounded-full shrink-0 ${
+                isCurrent
+                  ? 'h-4 w-4 bg-accent ring-2 ring-accent/25'
+                  : isCompleted
+                    ? 'h-3.5 w-3.5 bg-accent/50'
+                    : 'h-3.5 w-3.5 border border-border-default bg-transparent'
+              }`}
+              aria-current={isCurrent ? 'step' : undefined}
+            />
 
-              {/* Label (default mode only) */}
-              {!isCompact && (
-                <span
-                  className={`text-[11px] leading-tight whitespace-nowrap ${
-                    isCurrent
-                      ? 'text-accent font-medium'
-                      : isCompleted
-                        ? 'text-text-secondary'
-                        : 'text-text-tertiary'
-                  }`}
-                >
-                  {stage.name}
-                </span>
-              )}
-            </div>
+            {/* Label */}
+            <span
+              className={`mt-1.5 text-[11px] leading-tight whitespace-nowrap ${
+                isCurrent
+                  ? 'text-accent font-medium'
+                  : isCompleted
+                    ? 'text-text-secondary'
+                    : 'text-text-tertiary'
+              }`}
+            >
+              {stage.name}
+            </span>
           </div>
         )
       })}
