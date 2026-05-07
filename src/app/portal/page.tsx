@@ -19,7 +19,7 @@ export default async function PortalDashboard() {
 
   const { data: shows } = await supabase
     .from('shows')
-    .select('id, name, format, description, cover_art_url, episodes(id)')
+    .select('id, name, cover_art_url, episodes(id)')
     .eq('client_id', client.id)
     .order('name')
 
@@ -78,9 +78,6 @@ export default async function PortalDashboard() {
                     <h2 className="font-medium text-text-primary group-hover:text-accent transition-colors">
                       {show.name}
                     </h2>
-                    {show.format && (
-                      <p className="text-xs text-text-tertiary mt-1">{show.format}</p>
-                    )}
                   </div>
                   {show.pendingCount > 0 && (
                     <span className="rounded-full bg-accent/15 text-accent text-xs font-medium px-2 py-0.5">

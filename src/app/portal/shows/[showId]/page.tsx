@@ -19,7 +19,7 @@ export default async function PortalShowPage({
 
   const { data: show } = await supabase
     .from('shows')
-    .select('id, name, description, format, schedule, cover_art_url')
+    .select('id, name, description, cover_art_url')
     .eq('id', showId)
     .single()
 
@@ -101,8 +101,6 @@ export default async function PortalShowPage({
           id: show.id,
           name: show.name,
           description: show.description,
-          format: show.format,
-          schedule: show.schedule,
           coverArtUrl: resolveImageUrl(show.cover_art_url),
         }}
       />
