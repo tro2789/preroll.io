@@ -87,9 +87,17 @@ export function CommentsSidebar({
     .sort((a, b) => a.timestamp_secs! - b.timestamp_secs!)
 
   const activeCommentId = useMemo(() => {
-    return timedComments.find(
-      (c) => c.timestamp_secs !== null && Math.abs(currentTime - c.timestamp_secs) < 2
-    )?.id ?? null
+    let closest: Comment | null = null
+    let closestDist = Infinity
+    for (const c of timedComments) {
+      if (c.timestamp_secs === null) continue
+      const dist = Math.abs(currentTime - c.timestamp_secs)
+      if (dist < 2 && dist < closestDist) {
+        closest = c
+        closestDist = dist
+      }
+    }
+    return closest?.id ?? null
   }, [timedComments, currentTime])
 
   useEffect(() => {
