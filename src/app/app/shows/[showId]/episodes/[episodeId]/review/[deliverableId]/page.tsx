@@ -137,7 +137,7 @@ export default function ProducerReviewPage() {
   const backUrl = `/app/shows/${showId}/episodes/${episodeId}`
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)]">
+    <div className="flex flex-col h-[calc(100vh-6.5rem)] overflow-hidden">
       {/* Error state */}
       {error ? (
         <div className="flex-1 flex items-center justify-center">
