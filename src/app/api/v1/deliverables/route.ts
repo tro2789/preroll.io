@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 
 export async function GET(request: NextRequest) {
   const { supabase, error } = await getAuthenticatedClient()
@@ -66,12 +67,22 @@ export async function POST(request: Request) {
     })
   }
 
+  const { data: { user: currentUser } } = await supabase!.auth.getUser()
+
   await supabase!.from('activity_log').insert({
     show_id: body.show_id,
     episode_id: body.episode_id || null,
     action: 'deliverable_submitted',
     description: `Deliverable submitted for review: ${body.title}`,
     metadata: { deliverable_id: data.id, type: body.type || 'other' },
+  })
+
+  dispatchWebhooks(currentUser!.id, 'deliverable.submitted', {
+    deliverable_id: data.id,
+    show_id: body.show_id,
+    episode_id: body.episode_id || null,
+    title: body.title,
+    type: body.type || 'other',
   })
 
   return jsonResponse(data, 201)

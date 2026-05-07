@@ -1,4 +1,5 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { dispatchWebhooks, WebhookEvent } from '@/lib/webhooks/dispatch'
 
 export async function GET(
   _request: Request,
@@ -92,6 +93,22 @@ export async function PATCH(
       action: actionMap[updates.status as string],
       description: descMap[updates.status as string],
       metadata: { deliverable_id: deliverableId },
+    })
+
+    const webhookEventMap: Record<string, WebhookEvent> = {
+      approved: 'deliverable.approved',
+      revision_requested: 'deliverable.revision_requested',
+      pending: 'deliverable.resubmitted',
+    }
+    const producerUserId = client!.user_id
+    dispatchWebhooks(producerUserId, webhookEventMap[updates.status as string], {
+      deliverable_id: deliverableId,
+      show_id: existing.show_id,
+      episode_id: existing.episode_id,
+      title: existing.title,
+      type: existing.type,
+      status: updates.status,
+      reviewer_notes: updates.reviewer_notes || null,
     })
   }
 

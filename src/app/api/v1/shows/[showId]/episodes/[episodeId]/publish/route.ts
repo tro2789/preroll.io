@@ -4,6 +4,7 @@ import { decrypt } from '@/lib/integrations/crypto'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { authorizeUpload, createEpisode, publishEpisode } from '@/lib/integrations/providers/transistor'
+import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 
 export async function POST(
   request: NextRequest,
@@ -157,6 +158,16 @@ export async function POST(
       },
     }),
   ])
+
+  dispatchWebhooks(user!.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
+    episode_id: episodeId,
+    show_id: showId,
+    title,
+    transistor_episode_id: transistorEpisodeId,
+    media_url: mediaUrl,
+    share_url: shareUrl,
+    scheduled_at: scheduled_at || null,
+  })
 
   return jsonResponse(
     {

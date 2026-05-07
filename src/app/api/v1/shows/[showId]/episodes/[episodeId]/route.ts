@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
+import { dispatchWebhooks, WebhookEvent } from '@/lib/webhooks/dispatch'
 
 export async function GET(
   request: NextRequest,
@@ -42,6 +43,13 @@ export async function PATCH(
     }
   }
 
+  const { data: oldEpisode } = await supabase!
+    .from('episodes')
+    .select('status, stage_id')
+    .eq('id', episodeId)
+    .eq('show_id', showId)
+    .single()
+
   let newStageName: string | null = null
   if ('stage_id' in body && body.stage_id) {
     const { data: stage } = await supabase!
@@ -79,6 +87,32 @@ export async function PATCH(
       action: 'episode_stage_changed',
       description: `Episode '${data.title}' moved to ${newStageName}`,
       metadata: { stage_id: body.stage_id, stage_name: newStageName },
+    })
+  }
+
+  const { data: { user: currentUser } } = await supabase!.auth.getUser()
+
+  if (newStageName && oldEpisode?.stage_id !== body.stage_id) {
+    dispatchWebhooks(currentUser!.id, 'episode.stage_changed', {
+      episode_id: episodeId,
+      show_id: showId,
+      title: data.title,
+      old_stage_id: oldEpisode?.stage_id,
+      new_stage_id: body.stage_id,
+      stage_name: newStageName,
+    })
+  }
+
+  if (oldEpisode && data.status !== oldEpisode.status) {
+    const events: Record<string, WebhookEvent> = {
+      published: 'episode.published',
+    }
+    dispatchWebhooks(currentUser!.id, events[data.status] || 'episode.status_changed', {
+      episode_id: episodeId,
+      show_id: showId,
+      title: data.title,
+      old_status: oldEpisode.status,
+      new_status: data.status,
     })
   }
 
