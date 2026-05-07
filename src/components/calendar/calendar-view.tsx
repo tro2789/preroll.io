@@ -109,6 +109,12 @@ export function CalendarView() {
 
   useEffect(() => { fetchEpisodes() }, [fetchEpisodes])
 
+  useEffect(() => {
+    if (showFilter !== 'all' && !showNames.has(showFilter)) {
+      setShowFilter('all')
+    }
+  })
+
   function prevMonth() {
     if (month === 0) { setMonth(11); setYear(y => y - 1) }
     else setMonth(m => m - 1)
