@@ -18,6 +18,7 @@ interface Deliverable {
 interface DeliverableCardProps {
   deliverable: Deliverable
   episodeContext?: string
+  reviewUrl?: string
 }
 
 const typeLabels: Record<string, string> = {
@@ -38,7 +39,7 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
   revision_requested: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Revision Requested' },
 }
 
-export function DeliverableCard({ deliverable, episodeContext }: DeliverableCardProps) {
+export function DeliverableCard({ deliverable, episodeContext, reviewUrl }: DeliverableCardProps) {
   const router = useRouter()
   const [showRevisionForm, setShowRevisionForm] = useState(false)
   const [notes, setNotes] = useState('')
@@ -80,16 +81,23 @@ export function DeliverableCard({ deliverable, episodeContext }: DeliverableCard
           )}
         </div>
 
-        {deliverable.file_url && (
+        {reviewUrl ? (
+          <a
+            href={reviewUrl}
+            className="shrink-0 rounded-md bg-accent/10 text-accent hover:bg-accent/20 px-2.5 py-1 text-xs font-medium transition-colors"
+          >
+            Review
+          </a>
+        ) : deliverable.file_url ? (
           <a
             href={deliverable.file_url}
             target="_blank"
             rel="noopener noreferrer"
             className="shrink-0 text-xs text-accent hover:text-accent-hover transition-colors"
           >
-            View file
+            Download
           </a>
-        )}
+        ) : null}
       </div>
 
       {deliverable.status === 'approved' && deliverable.reviewed_at && (
