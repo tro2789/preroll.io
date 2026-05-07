@@ -384,7 +384,7 @@ const TIERS: {
       'Priority support',
     ],
     cta: 'Contact Us',
-    href: 'mailto:trevor@preroll.io',
+    href: 'mailto:trevor@trevorohare.com',
     highlighted: false,
   },
 ]
