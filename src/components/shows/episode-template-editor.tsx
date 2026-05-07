@@ -28,6 +28,7 @@ export function EpisodeTemplateEditor({ showId }: { showId: string }) {
         setTemplate(loaded)
         setSaved(loaded)
       })
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [showId])
 
@@ -58,8 +59,6 @@ export function EpisodeTemplateEditor({ showId }: { showId: string }) {
   const inputClass =
     'w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent'
   const labelClass = 'block text-sm font-medium text-text-secondary mb-1'
-
-  if (loading) return null
 
   return (
     <div className="space-y-4">
@@ -98,7 +97,7 @@ export function EpisodeTemplateEditor({ showId }: { showId: string }) {
       <div className="flex items-center gap-3">
         <button
           onClick={handleSave}
-          disabled={saving || !isDirty}
+          disabled={saving || loading || !isDirty}
           className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {saving ? 'Saving...' : 'Save Template'}
