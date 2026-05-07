@@ -4,6 +4,7 @@ import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ShowForm } from '@/components/shows/show-form'
+import { DistributionSettings } from '@/components/shows/distribution-settings'
 import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 
 export default function EditShowPage({
@@ -111,6 +112,9 @@ export default function EditShowPage({
           onSubmit={handleSubmit}
           submitLabel="Save Changes"
         />
+        <div className="mt-8">
+          <DistributionSettings showId={showId} />
+        </div>
       </div>
     </div>
   )
