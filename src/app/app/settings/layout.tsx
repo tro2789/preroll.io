@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 const tabs = [
   { label: 'Integrations', href: '/app/settings/integrations' },
   { label: 'Webhooks', href: '/app/settings/webhooks' },
+  { label: 'API Keys', href: '/app/settings/api-keys' },
 ]
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
