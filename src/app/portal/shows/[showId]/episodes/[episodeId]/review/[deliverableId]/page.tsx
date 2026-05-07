@@ -136,7 +136,7 @@ export default function ReviewPage() {
   const backUrl = `/portal/shows/${showId}/episodes/${episodeId}`
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4.5rem)]">
+    <div className="flex flex-col h-[calc(100vh-6.25rem)] overflow-hidden">
       {/* Error state */}
       {error ? (
         <div className="flex-1 flex items-center justify-center">
