@@ -45,7 +45,8 @@
   --text-3xl: 2.074rem;
 
   /* Font */
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter, "Inter"), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora, "Sora"), ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   /* Spacing rhythm */
@@ -61,6 +62,10 @@
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
