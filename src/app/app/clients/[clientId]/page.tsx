@@ -36,7 +36,7 @@ export default async function ClientDetailPage({
   const [{ data: shows }, { count: notesCount }] = await Promise.all([
     supabase
       .from('shows')
-      .select('id, name, format, schedule, cover_art_url')
+      .select('id, name, cover_art_url')
       .eq('client_id', clientId)
       .order('name'),
     supabase
@@ -46,22 +46,21 @@ export default async function ClientDetailPage({
   ])
 
   return (
-    <div>
+    <div className="space-y-6">
+      {/* Header */}
       <div>
         <Link
           href="/app/clients"
-          className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+          className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
         >
           &larr; All Clients
         </Link>
-        <div className="mt-2 flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-xl font-bold text-text-primary leading-tight">{client.name}</h1>
+        <div className="mt-2 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <h1 className="text-lg font-bold text-text-primary leading-tight truncate">{client.name}</h1>
             {client.company && (
-              <p className="mt-0.5 text-sm text-text-secondary">{client.company}</p>
+              <span className="text-sm text-text-tertiary hidden sm:inline">{client.company}</span>
             )}
-          </div>
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
             <InviteButton
               clientId={clientId}
               clientEmail={client.email}
@@ -69,136 +68,94 @@ export default async function ClientDetailPage({
               clientUserId={client.client_user_id}
               onboardedAt={client.onboarded_at}
             />
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <Link
               href={`/app/clients/${clientId}/edit`}
-              className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
+              className="rounded-md border border-border-subtle bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
             >
               Edit
             </Link>
             <ClientDetailActions clientId={clientId} />
           </div>
         </div>
-        <div className="mt-3 flex sm:hidden items-center gap-2">
-          <InviteButton
-            clientId={clientId}
-            clientEmail={client.email}
-            inviteCode={client.invite_code}
-            clientUserId={client.client_user_id}
-            onboardedAt={client.onboarded_at}
-          />
-          <Link
-            href={`/app/clients/${clientId}/edit`}
-            className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
-          >
-            Edit
-          </Link>
-          <ClientDetailActions clientId={clientId} />
+
+        {/* Contact row */}
+        <div className="mt-1.5 flex items-center gap-4 text-sm">
+          {client.email && (
+            <a href={`mailto:${client.email}`} className="text-text-secondary hover:text-accent transition-colors">
+              {client.email}
+            </a>
+          )}
+          {client.phone && (
+            <span className="text-text-tertiary">{client.phone}</span>
+          )}
+          {client.company && (
+            <span className="text-text-tertiary sm:hidden">{client.company}</span>
+          )}
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        {/* Contact Info */}
-        <section className="rounded-lg border border-border-subtle bg-surface-raised p-5">
+      {/* Shows */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-            Contact Info
+            Shows
+            {shows && shows.length > 0 && <span className="ml-1.5 normal-case tracking-normal">({shows.length})</span>}
           </h2>
-          <div className="mt-3 space-y-2">
-            {client.email ? (
-              <p className="text-sm text-text-secondary">
-                <span className="text-text-tertiary">Email:</span>{' '}
-                <a
-                  href={`mailto:${client.email}`}
-                  className="text-accent hover:text-accent-hover"
-                >
-                  {client.email}
-                </a>
-              </p>
-            ) : (
-              <p className="text-sm text-text-tertiary">No email set</p>
-            )}
-            {client.phone ? (
-              <p className="text-sm text-text-secondary">
-                <span className="text-text-tertiary">Phone:</span> {client.phone}
-              </p>
-            ) : (
-              <p className="text-sm text-text-tertiary">No phone set</p>
-            )}
-          </div>
-        </section>
-
-        {/* Service Terms */}
-        {client.service_terms && (
-          <section className="rounded-lg border border-border-subtle bg-surface-raised p-5">
-            <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-              Service Terms
-            </h2>
-            <p className="mt-3 text-sm text-text-secondary whitespace-pre-wrap">
-              {client.service_terms}
-            </p>
-          </section>
-        )}
-
-        {/* Notes */}
-        {client.notes && (
-          <section className="rounded-lg border border-border-subtle bg-surface-raised p-5">
-            <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-              Notes
-            </h2>
-            <p className="mt-3 text-sm text-text-secondary whitespace-pre-wrap">
-              {client.notes}
-            </p>
-          </section>
-        )}
-
-        {/* Meeting Notes Link */}
-        <section className="rounded-lg border border-border-subtle bg-surface-raised p-5">
-          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-            Meeting Notes
-          </h2>
-          <div className="mt-3">
-            <Link
-              href={`/app/clients/${clientId}/notes`}
-              className="inline-flex items-center text-sm text-accent hover:text-accent-hover transition-colors"
-            >
-              View Notes ({notesCount ?? 0})
-              <span className="ml-1">&rarr;</span>
-            </Link>
-          </div>
-        </section>
-      </div>
-
-      {/* Shows Section */}
-      <section className="mt-8">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-text-primary">Shows</h2>
           <Link
             href={`/app/clients/${clientId}/shows/new`}
-            className="inline-flex items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            className="text-xs text-accent hover:text-accent-hover transition-colors font-medium"
           >
-            Add Show
+            + Add Show
           </Link>
         </div>
         {shows && shows.length > 0 ? (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {shows.map((show) => (
               <Link
                 key={show.id}
                 href={`/app/shows/${show.id}`}
-                className="block rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-hover"
+                className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-raised p-3 transition-colors hover:border-border-hover"
               >
-                <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/9]" />
-                <div className="p-3">
-                  <p className="text-sm font-medium text-text-primary">{show.name}</p>
+                <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden">
+                  <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="w-full h-full" />
                 </div>
+                <span className="text-sm font-medium text-text-primary truncate">{show.name}</span>
               </Link>
             ))}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-text-tertiary">
-            No shows yet for this client.
-          </p>
+          <p className="text-sm text-text-tertiary">No shows yet.</p>
         )}
       </section>
+
+      {/* Details grid — only render sections that have content */}
+      {(client.notes || client.service_terms || (notesCount ?? 0) > 0) && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {client.notes && (
+            <section className="rounded-lg border border-border-subtle bg-surface-raised p-4">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">Notes</h3>
+              <p className="text-sm text-text-secondary whitespace-pre-wrap line-clamp-4">{client.notes}</p>
+            </section>
+          )}
+          {client.service_terms && (
+            <section className="rounded-lg border border-border-subtle bg-surface-raised p-4">
+              <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">Service Terms</h3>
+              <p className="text-sm text-text-secondary whitespace-pre-wrap line-clamp-4">{client.service_terms}</p>
+            </section>
+          )}
+          <section className="rounded-lg border border-border-subtle bg-surface-raised p-4">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">Meeting Notes</h3>
+            <Link
+              href={`/app/clients/${clientId}/notes`}
+              className="text-sm text-accent hover:text-accent-hover transition-colors"
+            >
+              {notesCount ?? 0} note{(notesCount ?? 0) !== 1 ? 's' : ''} &rarr;
+            </Link>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
