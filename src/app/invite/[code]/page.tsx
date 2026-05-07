@@ -40,10 +40,11 @@ export default function InvitePage() {
     setLoading(true)
 
     const supabase = createClient()
+    const onboardingPath = `/portal/onboarding?invite=${code}`
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/portal/onboarding?invite=${code}`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(onboardingPath)}`,
       },
     })
 
