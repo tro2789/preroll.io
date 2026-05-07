@@ -229,33 +229,75 @@ function Features() {
           </div>
         </div>
 
-        {/* Secondary features grid */}
-        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border-subtle rounded-xl overflow-hidden">
+        {/* Hero feature: API & MCP */}
+        <div className="mt-20 grid lg:grid-cols-2 gap-10 items-center">
+          {/* API mockup */}
+          <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 order-2 lg:order-1" aria-hidden="true">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xs text-text-tertiary font-[family-name:var(--font-display)]">Terminal</span>
+            </div>
+            <div className="space-y-3 font-mono text-xs">
+              <div>
+                <span className="text-text-tertiary">$</span>{' '}
+                <span className="text-accent">curl</span>{' '}
+                <span className="text-text-secondary">api.preroll.io/api/v1/episodes?status=review</span>
+              </div>
+              <div className="rounded-lg bg-surface-overlay px-3 py-2.5 text-text-secondary leading-relaxed">
+                <span className="text-success">{'"data"'}</span>: [{'{'} <span className="text-accent">{'"title"'}</span>: {'"The Sleep Episode"'}, <span className="text-accent">{'"status"'}</span>: {'"review"'}, ... {'}'}]
+              </div>
+              <div className="mt-2 border-t border-border-subtle pt-3">
+                <span className="text-text-tertiary">{'>'}</span>{' '}
+                <span className="text-text-secondary">Ask Claude: &ldquo;What episodes need my attention?&rdquo;</span>
+              </div>
+              <div className="rounded-lg bg-surface-overlay px-3 py-2.5 text-text-secondary leading-relaxed">
+                <span className="text-accent">MCP</span> <span className="text-text-tertiary">get_dashboard</span> &rarr; 3 episodes in review, 2 deliverables pending approval
+              </div>
+            </div>
+          </div>
+          <div className="order-1 lg:order-2">
+            <h2 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+              API-first. AI-ready. Automate everything.
+            </h2>
+            <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
+              Every action in PreRoll is an API call. Build automations with n8n or Zapier
+              via signed webhooks. Or skip the GUI entirely and let Claude manage your
+              production pipeline through the MCP server.
+            </p>
+            <div className="mt-6 flex gap-4">
+              <Link
+                href="/docs/api-keys"
+                className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                API Docs &rarr;
+              </Link>
+              <Link
+                href="/docs/mcp"
+                className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                MCP Server &rarr;
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary features strip */}
+        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border-subtle rounded-xl overflow-hidden">
           {[
             {
               title: 'Integrations',
               desc: 'Frame.io, Google Drive, Vimeo, Transistor.fm. Review, deliver, and publish without switching tabs.',
-              icon: IntegrationsIcon,
             },
             {
               title: 'Calendar',
               desc: 'Every episode across every show on one calendar. Week and month views, per-show filtering.',
-              icon: CalendarIcon,
             },
             {
-              title: 'Webhooks & API',
-              desc: 'Signed payloads on every status change. Full REST API with key auth. Connect n8n, Zapier, or your own scripts.',
-              icon: ApiIcon,
-            },
-            {
-              title: 'AI-Ready',
-              desc: 'MCP server lets Claude or any AI assistant manage your episodes, check dashboards, and create clients.',
-              icon: McpIcon,
+              title: 'Episode Templates',
+              desc: 'Define default descriptions and show notes per show. New episodes start pre-filled, not blank.',
             },
           ].map((f) => (
             <div key={f.title} className="bg-surface-raised p-6">
-              <f.icon className="h-6 w-6 text-accent" />
-              <h3 className="mt-3 font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">{f.title}</h3>
+              <h3 className="font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">{f.title}</h3>
               <p className="mt-2 text-xs text-text-secondary leading-relaxed">{f.desc}</p>
             </div>
           ))}
