@@ -25,6 +25,7 @@ export function ReviewPlayer({
   const isVideo = mimeType.startsWith('video/')
   const mediaRef = useRef<HTMLVideoElement | HTMLAudioElement | null>(null)
   const progressRef = useRef<HTMLDivElement | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const [mediaSrc, setMediaSrc] = useState(src)
   const [playing, setPlaying] = useState(false)
@@ -32,6 +33,7 @@ export function ReviewPlayer({
   const [duration, setDuration] = useState(externalDuration ?? 0)
   const [volume, setVolume] = useState(1)
   const [hoveringProgress, setHoveringProgress] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   // Sync external src changes
   useEffect(() => {
@@ -115,6 +117,44 @@ export function ReviewPlayer({
     }
   }, [])
 
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current
+    if (!el) return
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      el.requestFullscreen()
+    }
+  }, [])
+
+  useEffect(() => {
+    function onFsChange() {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+    document.addEventListener('fullscreenchange', onFsChange)
+    return () => document.removeEventListener('fullscreenchange', onFsChange)
+  }, [])
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+      if (e.key === ' ' || e.key === 'k') {
+        e.preventDefault()
+        togglePlay()
+      } else if (e.key === 'f') {
+        toggleFullscreen()
+      } else if (e.key === 'ArrowLeft') {
+        if (mediaRef.current) mediaRef.current.currentTime = Math.max(0, mediaRef.current.currentTime - 5)
+      } else if (e.key === 'ArrowRight') {
+        if (mediaRef.current) mediaRef.current.currentTime = Math.min(duration, mediaRef.current.currentTime + 5)
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [togglePlay, toggleFullscreen, duration])
+
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0
 
   const mediaProps = {
@@ -127,12 +167,13 @@ export function ReviewPlayer({
   }
 
   return (
-    <div className="w-full space-y-0">
+    <div ref={containerRef} className={`w-full space-y-0 ${isFullscreen ? 'flex flex-col h-full bg-black' : ''}`}>
       {/* Media area */}
       {isVideo ? (
         <video
           ref={mediaRef as React.RefObject<HTMLVideoElement>}
-          className="w-full aspect-video rounded-t-lg bg-black object-contain"
+          className={`w-full bg-black object-contain ${isFullscreen ? 'flex-1 min-h-0' : 'aspect-video rounded-t-lg'}`}
+          onDoubleClick={toggleFullscreen}
           {...mediaProps}
         />
       ) : (
@@ -171,7 +212,7 @@ export function ReviewPlayer({
       )}
 
       {/* Controls bar */}
-      <div className="rounded-b-lg bg-surface-raised border border-t-0 border-border-subtle px-3 py-2 space-y-2">
+      <div className={`bg-surface-raised px-3 py-2 space-y-2 ${isFullscreen ? 'shrink-0' : 'rounded-b-lg border border-t-0 border-border-subtle'}`}>
         {/* Progress bar */}
         <div
           ref={progressRef}
@@ -253,6 +294,25 @@ export function ReviewPlayer({
               aria-label="Volume"
             />
           </div>
+
+          {/* Fullscreen */}
+          {isVideo && (
+            <button
+              onClick={toggleFullscreen}
+              className="shrink-0 text-text-tertiary hover:text-text-primary transition-colors"
+              aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+            >
+              {isFullscreen ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                </svg>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
