@@ -144,7 +144,7 @@ export default function ProducerReviewPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-5rem)]">
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between pb-3">
+      <div className="shrink-0 flex items-center justify-between py-2">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href={`/app/shows/${showId}/episodes/${episodeId}`}
