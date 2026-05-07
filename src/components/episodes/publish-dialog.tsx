@@ -75,8 +75,8 @@ export function PublishDialog({
         throw new Error(body.error || `Publish failed (${res.status})`)
       }
 
-      const data = await res.json()
-      setResult(data)
+      const json = await res.json()
+      setResult(json.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {

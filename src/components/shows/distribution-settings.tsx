@@ -52,8 +52,8 @@ export function DistributionSettings({ showId }: { showId: string }) {
       if (!res.ok) {
         throw new Error(json.error || 'Failed to connect')
       }
-      if (json.needs_selection) {
-        setShowPicker(json.shows)
+      if (json.data?.needs_selection) {
+        setShowPicker(json.data.shows)
       } else {
         setConnection(json.data)
         setApiKey('')

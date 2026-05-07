@@ -24,6 +24,14 @@ interface EpisodeCardProps {
   onArchive?: (episodeId: string) => void
 }
 
+function DistributionDot({ status }: { status?: string | null }) {
+  if (status === 'published')
+    return <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-400" title="Published to Transistor" />
+  if (status === 'scheduled')
+    return <span className="shrink-0 h-2 w-2 rounded-full bg-amber-400" title="Scheduled on Transistor" />
+  return null
+}
+
 export function EpisodeCard({ episode, showId, compact, onArchive }: EpisodeCardProps) {
   if (compact) {
     return (
@@ -46,12 +54,7 @@ export function EpisodeCard({ episode, showId, compact, onArchive }: EpisodeCard
             ))}
           </div>
         )}
-        {episode.distribution_status === 'published' && (
-          <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-400" title="Published to Transistor" />
-        )}
-        {episode.distribution_status === 'scheduled' && (
-          <span className="shrink-0 h-2 w-2 rounded-full bg-amber-400" title="Scheduled on Transistor" />
-        )}
+        <DistributionDot status={episode.distribution_status} />
         {episode.frame_io_url && (
           <span className="shrink-0 text-accent" title="Frame.io">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
