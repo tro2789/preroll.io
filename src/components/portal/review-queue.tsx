@@ -15,6 +15,7 @@ interface ReviewDeliverable {
   episode_title: string | null
   episode_number: number | null
   reviewUrl?: string
+  thumbnailUrl?: string
 }
 
 interface ReviewQueueProps {
@@ -44,6 +45,7 @@ export function ReviewQueue({ deliverables }: ReviewQueueProps) {
             deliverable={d}
             episodeContext={episodeContext}
             reviewUrl={d.reviewUrl}
+            thumbnailUrl={d.thumbnailUrl}
           />
         )
       })}

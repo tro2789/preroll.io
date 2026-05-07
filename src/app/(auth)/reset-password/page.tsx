@@ -36,8 +36,7 @@ export default function ResetPasswordPage() {
       return
     }
 
-    router.push('/app')
-    router.refresh()
+    window.location.href = '/app'
   }
 
   return (
