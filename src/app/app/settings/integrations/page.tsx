@@ -6,7 +6,7 @@ import { ConnectedAccountCard } from '@/components/integrations/connected-accoun
 const PROVIDERS = [
   { name: 'frame_io', displayName: 'Frame.io', comingSoon: false },
   { name: 'google_drive', displayName: 'Google Drive', comingSoon: false },
-  { name: 'vimeo', displayName: 'Vimeo', comingSoon: false },
+  { name: 'vimeo', displayName: 'Vimeo', comingSoon: false, note: 'In-app video playback requires a Vimeo Pro, Business, or Premium plan.' },
   { name: 'dropbox', displayName: 'Dropbox', comingSoon: true },
 ]
 
@@ -48,6 +48,7 @@ export default async function IntegrationsPage() {
                 accountEmail={connected.account_email}
                 accountAvatarUrl={connected.account_avatar_url}
                 connectedAt={connected.created_at}
+                note={provider.note}
               />
             )
           }
@@ -57,6 +58,7 @@ export default async function IntegrationsPage() {
               provider={provider.name}
               displayName={provider.displayName}
               comingSoon={provider.comingSoon}
+              note={provider.note}
             />
           )
         })}

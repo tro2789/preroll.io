@@ -10,6 +10,7 @@ interface ConnectedAccountCardProps {
   accountEmail: string | null
   accountAvatarUrl: string | null
   connectedAt: string
+  note?: string
 }
 
 export function ConnectedAccountCard({
@@ -19,10 +20,12 @@ export function ConnectedAccountCard({
   accountEmail,
   accountAvatarUrl,
   connectedAt,
+  note,
 }: ConnectedAccountCardProps) {
   const router = useRouter()
   const [disconnecting, setDisconnecting] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [avatarFailed, setAvatarFailed] = useState(false)
 
   async function handleDisconnect() {
     setDisconnecting(true)
@@ -36,8 +39,8 @@ export function ConnectedAccountCard({
     <div className="rounded-lg border border-emerald-500/20 bg-surface-raised p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {accountAvatarUrl ? (
-            <img src={accountAvatarUrl} alt="" className="w-8 h-8 rounded-full" />
+          {accountAvatarUrl && !avatarFailed ? (
+            <img src={accountAvatarUrl} alt="" className="w-8 h-8 rounded-full" onError={() => setAvatarFailed(true)} />
           ) : (
             <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center">
               <span className="text-xs font-bold text-accent">
@@ -86,6 +89,7 @@ export function ConnectedAccountCard({
       <p className="text-xs text-text-tertiary mt-2">
         Connected {new Date(connectedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
       </p>
+      {note && <p className="text-xs text-text-tertiary mt-1">{note}</p>}
     </div>
   )
 }
