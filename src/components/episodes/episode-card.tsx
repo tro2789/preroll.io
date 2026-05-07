@@ -13,6 +13,7 @@ interface Episode {
   frame_io_url: string | null
   image_url?: string | null
   status: string
+  distribution_status?: string | null
   tags?: EpisodeTag[]
 }
 
@@ -44,6 +45,12 @@ export function EpisodeCard({ episode, showId, compact, onArchive }: EpisodeCard
               <span key={tag.id} className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} title={tag.name} />
             ))}
           </div>
+        )}
+        {episode.distribution_status === 'published' && (
+          <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-400" title="Published to Transistor" />
+        )}
+        {episode.distribution_status === 'scheduled' && (
+          <span className="shrink-0 h-2 w-2 rounded-full bg-amber-400" title="Scheduled on Transistor" />
         )}
         {episode.frame_io_url && (
           <span className="shrink-0 text-accent" title="Frame.io">
@@ -98,6 +105,12 @@ export function EpisodeCard({ episode, showId, compact, onArchive }: EpisodeCard
             <span className="text-xs text-text-tertiary">
               {episode.scheduled_publish_date}
             </span>
+          )}
+          {episode.distribution_status === 'published' && (
+            <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-400" title="Published to Transistor" />
+          )}
+          {episode.distribution_status === 'scheduled' && (
+            <span className="shrink-0 h-2 w-2 rounded-full bg-amber-400" title="Scheduled on Transistor" />
           )}
         </div>
         {episode.tags && episode.tags.length > 0 && (
