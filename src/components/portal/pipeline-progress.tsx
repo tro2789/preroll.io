@@ -41,7 +41,7 @@ export function PipelineProgress({
                   isCurrent
                     ? 'h-3 w-3 bg-accent ring-2 ring-accent/25'
                     : isCompleted
-                      ? 'h-2.5 w-2.5 bg-accent/50'
+                      ? 'h-2.5 w-2.5 bg-accent'
                       : 'h-2.5 w-2.5 border border-border-subtle bg-transparent'
                 }`}
                 aria-current={isCurrent ? 'step' : undefined}
@@ -76,7 +76,7 @@ export function PipelineProgress({
                 isCurrent
                   ? 'h-4 w-4 bg-accent ring-2 ring-accent/25'
                   : isCompleted
-                    ? 'h-3.5 w-3.5 bg-accent/50'
+                    ? 'h-3.5 w-3.5 bg-accent'
                     : 'h-3.5 w-3.5 border border-border-default bg-transparent'
               }`}
               aria-current={isCurrent ? 'step' : undefined}
