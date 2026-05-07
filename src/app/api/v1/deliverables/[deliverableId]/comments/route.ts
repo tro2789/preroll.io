@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
-import { secsToFrameIoTimecode, frameIoTimecodeToSecs } from '@/lib/format'
 
 const FRAMEIO_API = 'https://api.frame.io/v4'
 
@@ -87,7 +86,7 @@ export async function GET(
             file_reference_id: fio.fileRef.id,
             author_name: (fc.owner as Record<string, string>)?.name || (fc.owner as Record<string, string>)?.email || 'Editor',
             text: fc.text as string,
-            timestamp_secs: frameIoTimecodeToSecs(fc.timestamp as string | number | null),
+            timestamp_secs: typeof fc.timestamp === 'number' ? fc.timestamp : null,
             external_id: fc.id as string,
             synced_at: new Date().toISOString(),
             is_external: true,
@@ -179,7 +178,7 @@ export async function POST(
     try {
       const fioBody: Record<string, unknown> = { text: text.trim() }
       if (timestampSecs !== null) {
-        fioBody.timestamp = secsToFrameIoTimecode(timestampSecs)
+        fioBody.timestamp = timestampSecs
       }
 
       const res = await fetch(
