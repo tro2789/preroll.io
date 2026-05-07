@@ -138,7 +138,7 @@ export default function EditShowPage({
               imageUrl={show.cover_art_url || null}
               showId={showId}
               onUploaded={handleImageUploaded}
-              className="w-32 shrink-0"
+              className="w-44 shrink-0"
             />
             <div className="flex-1 max-w-lg">
               <ShowForm
