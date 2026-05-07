@@ -17,6 +17,8 @@ interface Deliverable {
 
 interface DeliverableListProps {
   deliverables: Deliverable[]
+  reviewBaseUrl?: string
+  reviewableIds?: Set<string>
 }
 
 const typeLabels: Record<string, string> = {
@@ -37,7 +39,7 @@ const statusStyles: Record<string, { bg: string; text: string; label: string }> 
   revision_requested: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Needs Revision' },
 }
 
-export function DeliverableList({ deliverables }: DeliverableListProps) {
+export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: DeliverableListProps) {
   const router = useRouter()
   const [resubmitting, setResubmitting] = useState<string | null>(null)
 
@@ -70,7 +72,14 @@ export function DeliverableList({ deliverables }: DeliverableListProps) {
                 </div>
                 <p className="text-sm font-medium text-text-primary mt-0.5">{d.title}</p>
               </div>
-              {d.file_url && (
+              {reviewBaseUrl && reviewableIds?.has(d.id) ? (
+                <a
+                  href={`${reviewBaseUrl}/${d.id}`}
+                  className="shrink-0 text-xs text-accent hover:text-accent-hover transition-colors"
+                >
+                  Review
+                </a>
+              ) : d.file_url ? (
                 <a
                   href={d.file_url}
                   target="_blank"
@@ -79,7 +88,7 @@ export function DeliverableList({ deliverables }: DeliverableListProps) {
                 >
                   View
                 </a>
-              )}
+              ) : null}
             </div>
 
             {d.status === 'revision_requested' && d.reviewer_notes && (

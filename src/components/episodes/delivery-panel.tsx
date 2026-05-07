@@ -342,13 +342,23 @@ export function DeliveryPanel({
     }
   }
 
+  function getReviewUrl(file: BrowseItem, linked: Deliverable | null): string | null {
+    if (!linked) return null
+    const mime = file.mimeType || ''
+    if (mime.startsWith('video/') || mime.startsWith('audio/')) {
+      return `/app/shows/${showId}/episodes/${episodeId}/review/${linked.id}`
+    }
+    return null
+  }
+
   function renderFileCard(file: BrowseItem) {
     const linked = isFileLinkedAsDeliverable(file)
     const style = linked ? statusStyles[linked.status] || statusStyles.pending : null
+    const reviewUrl = getReviewUrl(file, linked)
 
     return (
       <div key={file.id} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden">
-        <a href={file.viewUrl || '#'} target="_blank" rel="noopener noreferrer" className="block relative aspect-video overflow-hidden">
+        <a href={reviewUrl || file.viewUrl || '#'} target={reviewUrl ? undefined : '_blank'} rel={reviewUrl ? undefined : 'noopener noreferrer'} className="block relative aspect-video overflow-hidden">
           {file.thumbnailUrl ? (
             <img src={file.thumbnailUrl} alt="" className="h-full w-full object-cover" />
           ) : (
@@ -474,7 +484,7 @@ export function DeliveryPanel({
               <tr key={file.id} className="group">
                 <td className="py-2 pr-3">
                   <div className="flex items-center gap-3">
-                    <a href={file.viewUrl || '#'} target="_blank" rel="noopener noreferrer" className="shrink-0 block w-14 aspect-video rounded overflow-hidden">
+                    <a href={getReviewUrl(file, linked) || file.viewUrl || '#'} target={getReviewUrl(file, linked) ? undefined : '_blank'} rel={getReviewUrl(file, linked) ? undefined : 'noopener noreferrer'} className="shrink-0 block w-14 aspect-video rounded overflow-hidden">
                       {file.thumbnailUrl ? (
                         <img src={file.thumbnailUrl} alt="" className="h-full w-full object-cover" />
                       ) : (
