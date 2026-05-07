@@ -19,6 +19,7 @@ export default async function PortalEpisodePage({
     { data: episode },
     { data: stages },
     { data: deliverables },
+    { data: allFileRefs },
   ] = await Promise.all([
     supabase
       .from('shows')
@@ -41,10 +42,25 @@ export default async function PortalEpisodePage({
       .select('*')
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('file_references')
+      .select('id, deliverable_id, mime_type, provider')
+      .eq('provider', 'frame_io')
+      .not('deliverable_id', 'is', null),
   ])
 
   if (!show) redirect('/portal')
   if (!episode) redirect(`/portal/shows/${showId}`)
+
+  // Build map of deliverable_id → review URL for video/audio files
+  const deliverableIds = new Set((deliverables ?? []).map((d) => d.id))
+  const fileRefs = (allFileRefs ?? []).filter((fr) => fr.deliverable_id && deliverableIds.has(fr.deliverable_id))
+  const reviewUrlMap = new Map<string, string>()
+  for (const fr of fileRefs) {
+    if (fr.deliverable_id && fr.mime_type && (fr.mime_type.startsWith('video/') || fr.mime_type.startsWith('audio/'))) {
+      reviewUrlMap.set(fr.deliverable_id, `/portal/shows/${showId}/episodes/${episodeId}/review/${fr.deliverable_id}`)
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -93,7 +109,7 @@ export default async function PortalEpisodePage({
         ) : (
           <div className="space-y-3">
             {deliverables.map((d) => (
-              <DeliverableCard key={d.id} deliverable={d} />
+              <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} />
             ))}
           </div>
         )}
