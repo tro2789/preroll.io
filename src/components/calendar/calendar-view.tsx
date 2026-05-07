@@ -24,7 +24,7 @@ const SHOW_COLORS = [
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const STATUS_ICONS: Record<string, string> = {
+const STATUS_LABELS: Record<string, string> = {
   published: 'Published',
   approved: 'Approved',
   review: 'In Review',
@@ -33,12 +33,20 @@ const STATUS_ICONS: Record<string, string> = {
   planning: 'Planning',
 }
 
-function getMonthDays(year: number, month: number) {
+type ViewMode = 'month' | 'week'
+
+interface DayCell {
+  date: number
+  month: number
+  year: number
+  isCurrentMonth: boolean
+}
+
+function getMonthDays(year: number, month: number): DayCell[] {
   const firstDay = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
   const prevMonthDays = new Date(year, month, 0).getDate()
-
-  const cells: { date: number; month: number; year: number; isCurrentMonth: boolean }[] = []
+  const cells: DayCell[] = []
 
   for (let i = firstDay - 1; i >= 0; i--) {
     const d = prevMonthDays - i
@@ -46,11 +54,9 @@ function getMonthDays(year: number, month: number) {
     const y = month === 0 ? year - 1 : year
     cells.push({ date: d, month: m, year: y, isCurrentMonth: false })
   }
-
   for (let d = 1; d <= daysInMonth; d++) {
     cells.push({ date: d, month, year, isCurrentMonth: true })
   }
-
   const remaining = 7 - (cells.length % 7)
   if (remaining < 7) {
     for (let d = 1; d <= remaining; d++) {
@@ -59,7 +65,22 @@ function getMonthDays(year: number, month: number) {
       cells.push({ date: d, month: m, year: y, isCurrentMonth: false })
     }
   }
+  return cells
+}
 
+function getWeekDays(year: number, month: number, date: number): DayCell[] {
+  const d = new Date(year, month, date)
+  const dayOfWeek = d.getDay()
+  const cells: DayCell[] = []
+  for (let i = 0; i < 7; i++) {
+    const current = new Date(year, month, date - dayOfWeek + i)
+    cells.push({
+      date: current.getDate(),
+      month: current.getMonth(),
+      year: current.getFullYear(),
+      isCurrentMonth: current.getMonth() === month,
+    })
+  }
   return cells
 }
 
@@ -71,17 +92,33 @@ function formatMonthYear(year: number, month: number) {
   return new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
 }
 
+function formatWeekRange(cells: DayCell[]) {
+  const first = cells[0]
+  const last = cells[6]
+  const f = new Date(first.year, first.month, first.date)
+  const l = new Date(last.year, last.month, last.date)
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' }
+  if (f.getFullYear() !== l.getFullYear()) {
+    return `${f.toLocaleDateString('en-US', { ...opts, year: 'numeric' })} – ${l.toLocaleDateString('en-US', { ...opts, year: 'numeric' })}`
+  }
+  if (f.getMonth() !== l.getMonth()) {
+    return `${f.toLocaleDateString('en-US', opts)} – ${l.toLocaleDateString('en-US', opts)}, ${f.getFullYear()}`
+  }
+  return `${f.toLocaleDateString('en-US', { month: 'long' })} ${f.getDate()}–${l.getDate()}, ${f.getFullYear()}`
+}
+
 export function CalendarView() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
+  const [weekAnchor, setWeekAnchor] = useState(now.getDate())
+  const [view, setView] = useState<ViewMode>('month')
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [loading, setLoading] = useState(true)
   const [showFilter, setShowFilter] = useState<string>('all')
 
   const showColorMap = new Map<string, string>()
   const showNames = new Map<string, string>()
-
   for (const ep of episodes) {
     if (ep.shows && !showColorMap.has(ep.show_id)) {
       showColorMap.set(ep.show_id, SHOW_COLORS[showColorMap.size % SHOW_COLORS.length])
@@ -89,11 +126,22 @@ export function CalendarView() {
     }
   }
 
+  const cells = view === 'month'
+    ? getMonthDays(year, month)
+    : getWeekDays(year, month, weekAnchor)
+
+  const fetchRange = useCallback(() => {
+    const first = cells[0]
+    const last = cells[cells.length - 1]
+    return {
+      from: toDateKey(first.year, first.month, first.date),
+      to: toDateKey(last.year, last.month, last.date),
+    }
+  }, [cells])
+
   const fetchEpisodes = useCallback(async () => {
     setLoading(true)
-    const from = toDateKey(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0).getDate()
-    const to = toDateKey(year, month, lastDay)
+    const { from, to } = fetchRange()
     try {
       const res = await fetch(`/api/v1/episodes?from=${from}&to=${to}`)
       if (res.ok) {
@@ -105,7 +153,7 @@ export function CalendarView() {
     } finally {
       setLoading(false)
     }
-  }, [year, month])
+  }, [fetchRange])
 
   useEffect(() => { fetchEpisodes() }, [fetchEpisodes])
 
@@ -115,22 +163,36 @@ export function CalendarView() {
     }
   })
 
-  function prevMonth() {
-    if (month === 0) { setMonth(11); setYear(y => y - 1) }
-    else setMonth(m => m - 1)
+  function prev() {
+    if (view === 'month') {
+      if (month === 0) { setMonth(11); setYear(y => y - 1) }
+      else setMonth(m => m - 1)
+    } else {
+      const d = new Date(year, month, weekAnchor - 7)
+      setYear(d.getFullYear())
+      setMonth(d.getMonth())
+      setWeekAnchor(d.getDate())
+    }
   }
 
-  function nextMonth() {
-    if (month === 11) { setMonth(0); setYear(y => y + 1) }
-    else setMonth(m => m + 1)
+  function next() {
+    if (view === 'month') {
+      if (month === 11) { setMonth(0); setYear(y => y + 1) }
+      else setMonth(m => m + 1)
+    } else {
+      const d = new Date(year, month, weekAnchor + 7)
+      setYear(d.getFullYear())
+      setMonth(d.getMonth())
+      setWeekAnchor(d.getDate())
+    }
   }
 
   function goToday() {
     setYear(now.getFullYear())
     setMonth(now.getMonth())
+    setWeekAnchor(now.getDate())
   }
 
-  const cells = getMonthDays(year, month)
   const todayKey = toDateKey(now.getFullYear(), now.getMonth(), now.getDate())
 
   const episodesByDate = new Map<string, Episode[]>()
@@ -142,50 +204,67 @@ export function CalendarView() {
     episodesByDate.get(key)!.push(ep)
   }
 
+  const heading = view === 'month'
+    ? formatMonthYear(year, month)
+    : formatWeekRange(cells)
+
+  const rowCount = cells.length / 7
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-text-primary">
-            {formatMonthYear(year, month)}
-          </h2>
+          <h2 className="text-lg font-semibold text-text-primary">{heading}</h2>
           <div className="flex items-center gap-1">
-            <button
-              onClick={prevMonth}
-              className="rounded-md p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors"
-            >
+            <button onClick={prev} className="rounded-md p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors">
               <ChevronLeftIcon />
             </button>
-            <button
-              onClick={goToday}
-              className="rounded-md px-2.5 py-1 text-xs font-medium text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors"
-            >
+            <button onClick={goToday} className="rounded-md px-2.5 py-1 text-xs font-medium text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors">
               Today
             </button>
-            <button
-              onClick={nextMonth}
-              className="rounded-md p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors"
-            >
+            <button onClick={next} className="rounded-md p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors">
               <ChevronRightIcon />
             </button>
           </div>
         </div>
 
-        {showNames.size > 1 && (
-          <select
-            value={showFilter}
-            onChange={(e) => setShowFilter(e.target.value)}
-            className="rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-xs text-text-secondary focus:border-accent focus:outline-none"
-          >
-            <option value="all">All shows</option>
-            {[...showNames.entries()].map(([id, name]) => (
-              <option key={id} value={id}>{name}</option>
-            ))}
-          </select>
-        )}
+        <div className="flex items-center gap-3">
+          {showNames.size > 1 && (
+            <select
+              value={showFilter}
+              onChange={(e) => setShowFilter(e.target.value)}
+              className="rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-xs text-text-secondary focus:border-accent focus:outline-none"
+            >
+              <option value="all">All shows</option>
+              {[...showNames.entries()].map(([id, name]) => (
+                <option key={id} value={id}>{name}</option>
+              ))}
+            </select>
+          )}
+          <div className="flex rounded-md border border-border-default overflow-hidden">
+            <button
+              onClick={() => setView('week')}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${
+                view === 'week' ? 'bg-accent text-white' : 'text-text-tertiary hover:text-text-secondary bg-surface-input'
+              }`}
+            >
+              Week
+            </button>
+            <button
+              onClick={() => setView('month')}
+              className={`px-3 py-1 text-xs font-medium transition-colors ${
+                view === 'month' ? 'bg-accent text-white' : 'text-text-tertiary hover:text-text-secondary bg-surface-input'
+              }`}
+            >
+              Month
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className={`grid grid-cols-7 ${loading ? 'opacity-50' : ''} transition-opacity`}>
+      <div className={`grid grid-cols-7 flex-1 min-h-0 ${loading ? 'opacity-50' : ''} transition-opacity`}
+        style={{ gridTemplateRows: `auto repeat(${rowCount}, 1fr)` }}
+      >
         {DAY_NAMES.map((day) => (
           <div key={day} className="py-2 text-center text-xs font-medium text-text-tertiary border-b border-border-subtle">
             {day}
@@ -200,11 +279,11 @@ export function CalendarView() {
           return (
             <div
               key={i}
-              className={`min-h-24 border-b border-r border-border-subtle p-1.5 ${
+              className={`border-b border-r border-border-subtle p-1.5 overflow-hidden flex flex-col ${
                 i % 7 === 0 ? 'border-l' : ''
               } ${cell.isCurrentMonth ? '' : 'bg-surface-base/50'}`}
             >
-              <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs ${
+              <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-xs shrink-0 ${
                 isToday
                   ? 'bg-accent text-white font-semibold'
                   : cell.isCurrentMonth
@@ -213,14 +292,14 @@ export function CalendarView() {
               }`}>
                 {cell.date}
               </span>
-              <div className="mt-0.5 space-y-0.5">
+              <div className="mt-0.5 space-y-0.5 overflow-y-auto min-h-0 flex-1">
                 {dayEpisodes.map((ep) => (
                   <Link
                     key={ep.id}
                     href={`/app/shows/${ep.show_id}/episodes/${ep.id}`}
                     className="group block rounded px-1.5 py-0.5 text-xs leading-tight truncate hover:bg-surface-overlay transition-colors"
                     style={{ borderLeft: `2px solid ${showColorMap.get(ep.show_id) || SHOW_COLORS[0]}` }}
-                    title={`${ep.shows?.name || 'Show'} — ${ep.title} (${STATUS_ICONS[ep.status] || ep.status})`}
+                    title={`${ep.shows?.name || 'Show'} — ${ep.title} (${STATUS_LABELS[ep.status] || ep.status})`}
                   >
                     <span className="text-text-primary group-hover:text-accent-hover transition-colors">
                       {ep.episode_number ? `${ep.episode_number}. ` : ''}{ep.title}
@@ -234,7 +313,7 @@ export function CalendarView() {
       </div>
 
       {showNames.size > 0 && (
-        <div className="mt-3 flex flex-wrap gap-3">
+        <div className="mt-3 flex flex-wrap gap-3 shrink-0">
           {[...showNames.entries()].map(([id, name]) => (
             <div key={id} className="flex items-center gap-1.5">
               <span
