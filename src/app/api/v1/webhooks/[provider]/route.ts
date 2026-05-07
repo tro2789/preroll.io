@@ -99,6 +99,60 @@ export async function POST(
       description: `New comment on '${fileRef.name}' in Frame.io`,
       metadata: { provider: providerName, file_reference_id: fileRef.id },
     })
+
+    // Sync comment into review_comments table
+    const commentData = payload.resource as Record<string, unknown>
+    const commentId = commentData?.id as string | undefined
+    const commentText = commentData?.text as string | undefined
+
+    if (commentId && commentText) {
+      const { data: existingComment } = await supabase
+        .from('review_comments')
+        .select('id')
+        .eq('external_id', commentId)
+        .limit(1)
+        .single()
+
+      if (!existingComment) {
+        const { data: deliverableRef } = await supabase
+          .from('file_references')
+          .select('deliverable_id')
+          .eq('id', fileRef.id)
+          .single()
+
+        if (deliverableRef?.deliverable_id) {
+          // Resolve author name from owner object
+          const owner = commentData.owner as Record<string, unknown> | undefined
+          const authorName = (owner?.name as string) || (owner?.email as string) || 'Editor'
+
+          // Parse timestamp — Frame.io sends frames-based number or HH:MM:SS:FF string
+          let timestampSecs: number | null = null
+          const rawTs = commentData.timestamp
+          if (typeof rawTs === 'number') {
+            timestampSecs = rawTs / 24
+          } else if (typeof rawTs === 'string' && rawTs.includes(':')) {
+            const parts = rawTs.split(':').map(Number)
+            if (parts.length >= 3) {
+              timestampSecs = parts[0] * 3600 + parts[1] * 60 + parts[2]
+              if (parts.length === 4) {
+                timestampSecs += parts[3] / 24
+              }
+            }
+          }
+
+          await supabase.from('review_comments').insert({
+            deliverable_id: deliverableRef.deliverable_id,
+            file_reference_id: fileRef.id,
+            author_name: authorName,
+            text: commentText,
+            timestamp_secs: timestampSecs,
+            external_id: commentId,
+            synced_at: new Date().toISOString(),
+            is_external: true,
+          })
+        }
+      }
+    }
   }
 
   if (eventType === 'file.updated' && episode) {
