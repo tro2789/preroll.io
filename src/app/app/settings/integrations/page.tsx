@@ -26,14 +26,9 @@ export default async function IntegrationsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        Manage your connected accounts and integrations.
-      </p>
-
-      <div className="mt-8 space-y-3">
+      <div className="space-y-3">
         <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-          Integrations
+          Connected Accounts
         </h2>
 
         {PROVIDERS.map((provider) => {
