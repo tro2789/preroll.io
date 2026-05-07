@@ -40,7 +40,7 @@ export default function InvitePage() {
     setLoading(true)
 
     const supabase = createClient()
-    const onboardingPath = `/portal/onboarding?invite=${code}`
+    const onboardingPath = `/onboarding?invite=${code}`
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
