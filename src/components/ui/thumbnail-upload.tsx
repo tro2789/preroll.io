@@ -9,10 +9,11 @@ interface ThumbnailUploadProps {
   showId: string
   episodeId?: string
   onUploaded: (fileKey: string) => void
+  aspect?: 'square' | '16/9' | '9/16'
   className?: string
 }
 
-export function ThumbnailUpload({ id, imageUrl, showId, episodeId, onUploaded, className = '' }: ThumbnailUploadProps) {
+export function ThumbnailUpload({ id, imageUrl, showId, episodeId, onUploaded, aspect = '16/9', className = '' }: ThumbnailUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(imageUrl)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -62,7 +63,9 @@ export function ThumbnailUpload({ id, imageUrl, showId, episodeId, onUploaded, c
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="w-full aspect-[16/9] rounded-lg overflow-hidden border border-border-subtle hover:border-border-default transition-colors cursor-pointer"
+        className={`w-full rounded-lg overflow-hidden border border-border-subtle hover:border-border-default transition-colors cursor-pointer ${
+          aspect === 'square' ? 'aspect-square' : aspect === '9/16' ? 'aspect-[9/16]' : 'aspect-[16/9]'
+        }`}
       >
         {previewUrl ? (
           <img
