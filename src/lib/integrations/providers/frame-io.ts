@@ -94,7 +94,7 @@ class FrameIoClient implements IntegrationProviderClient {
       id: primaryAccount?.id || me.id,
       name: me.name || me.email || 'Frame.io User',
       email: me.email,
-      avatarUrl: null,
+      avatarUrl: undefined,
     }
 
     return {

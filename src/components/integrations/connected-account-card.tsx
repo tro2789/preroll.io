@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { ProviderLogo } from './provider-logo'
 
 interface ConnectedAccountCardProps {
   provider: string
@@ -18,14 +19,12 @@ export function ConnectedAccountCard({
   displayName,
   accountName,
   accountEmail,
-  accountAvatarUrl,
   connectedAt,
   note,
 }: ConnectedAccountCardProps) {
   const router = useRouter()
   const [disconnecting, setDisconnecting] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
-  const [avatarFailed, setAvatarFailed] = useState(false)
 
   async function handleDisconnect() {
     setDisconnecting(true)
@@ -39,15 +38,7 @@ export function ConnectedAccountCard({
     <div className="rounded-lg border border-emerald-500/20 bg-surface-raised p-5">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {accountAvatarUrl && !avatarFailed ? (
-            <img src={accountAvatarUrl} alt="" className="w-8 h-8 rounded-full" onError={() => setAvatarFailed(true)} />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center">
-              <span className="text-xs font-bold text-accent">
-                {(accountName || displayName)[0]}
-              </span>
-            </div>
-          )}
+          <ProviderLogo provider={provider} />
           <div>
             <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
             <p className="text-xs text-text-secondary">
