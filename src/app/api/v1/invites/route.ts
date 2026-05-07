@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   const host = headersList.get('host') || 'dev.preroll.io'
   const protocol = host.includes('localhost') || host.includes('192.168') ? 'http' : 'https'
   const siteUrl = `${protocol}://${host}`
-  const onboardingPath = `/portal/onboarding?invite=${invite_code}`
+  const onboardingPath = `/onboarding?invite=${invite_code}`
   const fallbackUrl = `${siteUrl}/invite/${invite_code}`
 
   const admin = getAdminClient()
