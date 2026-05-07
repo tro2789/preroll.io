@@ -64,6 +64,7 @@ export default async function ClientDetailPage({
           <div className="hidden sm:flex items-center gap-2 shrink-0">
             <InviteButton
               clientId={clientId}
+              clientEmail={client.email}
               inviteCode={client.invite_code}
               clientUserId={client.client_user_id}
               onboardedAt={client.onboarded_at}
@@ -80,6 +81,7 @@ export default async function ClientDetailPage({
         <div className="mt-3 flex sm:hidden items-center gap-2">
           <InviteButton
             clientId={clientId}
+            clientEmail={client.email}
             inviteCode={client.invite_code}
             clientUserId={client.client_user_id}
             onboardedAt={client.onboarded_at}
