@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import type { EmailOtpType } from '@supabase/supabase-js'
 
 export async function GET(request: Request) {
@@ -9,28 +10,43 @@ export async function GET(request: Request) {
   const next = searchParams.get('next') ?? '/portal'
 
   if (tokenHash && type) {
-    const supabase = await createClient()
-    const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+    const cookieStore = await cookies()
+    const redirectUrl = `${origin}${next}`
+    const response = NextResponse.redirect(redirectUrl)
 
-    if (!error && data?.session) {
-      if (type === 'recovery') {
-        return NextResponse.redirect(`${origin}/reset-password`)
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              response.cookies.set(name, value, options)
+            })
+          },
+        },
       }
-      return NextResponse.redirect(`${origin}${next}`)
+    )
+
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+
+    if (!error) {
+      return response
     }
 
-    // If magiclink type fails, try email type (generateLink may use different type)
-    if (error && type === 'magiclink') {
-      const { data: retryData, error: retryError } = await supabase.auth.verifyOtp({
+    // Fallback: try email type if magiclink fails
+    if (type === 'magiclink') {
+      const { error: retryError } = await supabase.auth.verifyOtp({
         token_hash: tokenHash,
         type: 'email',
       })
-      if (!retryError && retryData?.session) {
-        return NextResponse.redirect(`${origin}${next}`)
+      if (!retryError) {
+        return response
       }
     }
-
-    console.error('OTP verification failed:', { error: error?.message, type, hasToken: !!tokenHash })
   }
 
   return NextResponse.redirect(`${origin}/login?error=auth`)
