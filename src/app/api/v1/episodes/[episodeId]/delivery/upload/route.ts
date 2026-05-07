@@ -57,6 +57,7 @@ export async function POST(
       external_id: result.fileId,
       name: body.name,
       file_size: body.file_size,
+      mime_type: body.mime_type || null,
       episode_id: episodeId,
     })
 

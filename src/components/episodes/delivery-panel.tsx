@@ -291,6 +291,7 @@ export function DeliveryPanel({
         body: JSON.stringify({
           show_id: showId, episode_id: episodeId, type,
           title: file.name, file_url: file.viewUrl || null,
+          mime_type: file.mimeType || null,
           external_file_id: file.id,
           provider: integration?.provider,
         }),

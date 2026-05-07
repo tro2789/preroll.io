@@ -64,7 +64,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         const initRes = await fetch(`/api/v1/episodes/${episodeId}/delivery/upload`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: file.name, file_size: file.size }),
+          body: JSON.stringify({ name: file.name, file_size: file.size, mime_type: file.type || null }),
         })
 
         if (!initRes.ok) {
