@@ -6,9 +6,10 @@ interface ConnectButtonProps {
   provider: string
   displayName: string
   comingSoon?: boolean
+  note?: string
 }
 
-export function ConnectButton({ provider, displayName, comingSoon }: ConnectButtonProps) {
+export function ConnectButton({ provider, displayName, comingSoon, note }: ConnectButtonProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleConnect() {
@@ -44,6 +45,7 @@ export function ConnectButton({ provider, displayName, comingSoon }: ConnectButt
         <div>
           <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
           <p className="text-xs text-text-tertiary mt-1">Not connected</p>
+          {note && <p className="text-xs text-text-tertiary mt-1">{note}</p>}
         </div>
         <button
           onClick={handleConnect}
