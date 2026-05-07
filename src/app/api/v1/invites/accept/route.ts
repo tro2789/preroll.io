@@ -1,13 +1,23 @@
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 
+function getAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+}
+
 export async function POST(request: Request) {
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { user, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
   if (!body.invite_code) return errorResponse('invite_code is required')
 
-  const { data: client, error: fetchError } = await supabase!
+  const admin = getAdminClient()
+
+  const { data: client, error: fetchError } = await admin
     .from('clients')
     .select('*')
     .eq('invite_code', body.invite_code)
@@ -24,7 +34,7 @@ export async function POST(request: Request) {
     updates.onboarded_at = new Date().toISOString()
   }
 
-  const { data, error: updateError } = await supabase!
+  const { data, error: updateError } = await admin
     .from('clients')
     .update(updates)
     .eq('id', client.id)
