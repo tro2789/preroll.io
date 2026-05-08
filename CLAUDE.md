@@ -41,7 +41,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Database + Auth | Supabase (Postgres + Auth + RLS + Realtime) |
 | Storage | Cloudflare R2 (branding, thumbnails, intros, light assets) |
 | Deployment | Vercel |
-| Payments (future) | Stripe |
+| Payments | Stripe (subscriptions, checkout, customer portal) |
 
 ## Environment Constraints
 
@@ -51,68 +51,135 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Prefer HTTPS over SSH** for git pushes (SSH may be blocked in Claude Code's sandbox).
 
+## Multi-Tenancy & Billing
+
+All data is scoped to **organizations** (not individual users). Every user belongs to an org via the `memberships` table. Solo producers have a 1-person org auto-created at signup.
+
+### Key concepts:
+- **`organizations`** — workspace with `plan_id`, `stripe_customer_id`, billing state
+- **`memberships`** — links users to orgs with roles (`owner`, `admin`, `member`)
+- **`org_id`** — present on `clients`, `tags`, `user_integrations`, `file_references`, `webhook_endpoints`, `api_keys`
+- **RLS** — all producer-side policies use `user_org_ids()` helper function, not `auth.uid()` directly
+- **`plan_entitlements`** — database-driven feature flags per plan (free/pro/studio)
+- **`PREROLL_SELF_HOSTED=true`** — env var that bypasses all plan checks
+
+### Entitlements enforcement:
+- API-layer enforcement via `getOrgEntitlements(orgId)` in `src/lib/entitlements.ts`
+- Checked at resource-creation boundaries (POST /clients, /shows, /webhook-endpoints, /api-keys, /integrations auth-url)
+- Feature type union (`Feature`) ensures compile-time safety
+
+### Stripe integration:
+- `src/app/api/stripe/webhook/route.ts` — handles checkout, subscription updates, cancellation, payment failures
+- `src/app/api/stripe/checkout/route.ts` — creates Stripe Checkout sessions
+- `src/app/api/stripe/portal/route.ts` — creates Stripe Customer Portal sessions
+- `src/lib/stripe/client.ts` — Stripe SDK singleton
+- Setup guide: `docs/stripe-setup.md`
+
+### Pricing tiers:
+| Tier | Price | Limits |
+|------|-------|--------|
+| Free | $0 | 1 client, 1 show, no integrations/webhooks/API keys |
+| Pro | $29/mo or $289/yr | Unlimited everything, all integrations |
+| Studio | $79/mo or $789/yr | Pro + multi-user, white-label (future) |
+
 ## Data Model
 
 ```
-Clients
-├── Profile (contact, company, notes, service terms)
-├── Meeting notes
-└── Shows
-    ├── Show profile (name, description, format, schedule, branding)
-    ├── Hosting connection (Transistor.fm)
-    ├── Assets (cover art, intros, outros, music beds, templates)
-    ├── Launch checklist (for new shows)
-    └── Episodes
-        ├── Pipeline status (customizable stages)
-        ├── Assets (thumbnails, show notes, clips)
-        ├── Approvals (client sign-off on deliverables)
-        ├── External links (Frame.io review, raw file locations)
-        └── Publish details (date, links, Transistor episode ID)
+Organizations
+├── Memberships (user ↔ org, with roles)
+├── Subscriptions (Stripe billing state)
+└── Clients (org_id)
+    ├── Profile (contact, company, notes, service terms)
+    ├── Meeting notes
+    └── Shows
+        ├── Show profile (name, description, format, schedule, branding)
+        ├── Distribution connection (Transistor.fm)
+        ├── Episode template (default description, notes)
+        ├── Assets (cover art, intros, outros, music beds)
+        └── Episodes
+            ├── Pipeline stage (customizable per show, with position)
+            ├── Episode assets (thumbnails, show notes, clips — R2)
+            ├── Deliverables (approval workflow)
+            ├── Episode integrations (Frame.io / Google Drive / Vimeo)
+            ├── File references (external files linked to episodes/deliverables)
+            ├── Review comments (timecoded, synced to Frame.io)
+            └── Distribution (Transistor publish state)
 ```
 
-## Core Features
+## Auth Model
 
-### Phase 1 — Internal Ops (MVP)
-- Client profiles (contact, show details, service terms, notes)
-- Show management (one client can have multiple shows)
-- Episode pipeline with customizable stages
-- Dashboard: "what needs my attention today" across all shows
-- Meeting notes per client
-- Basic asset library per show (R2-backed)
-- REST API for all operations
+Two distinct auth paths:
 
-### Phase 2 — Client Portal
-- Magic-link auth (no passwords)
-- Client sees: their show(s), current episode status, pending approvals
-- Approval workflow: deliverables pushed for approve/revise with notes
-- Frame.io links embedded in episode cards
-- Activity feed for episode status changes
+1. **Producer auth** — Supabase session (magic link or OAuth) → `memberships` table → org context. Used for `/app/*` routes.
+2. **Client auth** — Supabase session → `clients.client_user_id` match. Used for `/portal/*` routes. Clients do NOT have org memberships.
+3. **API key auth** — Bearer token (`pr_` prefix) → SHA-256 hash lookup in `api_keys` table → resolves `org_id` directly. Used for external consumers (MCP, scripts).
 
-### Phase 3 — Automation + Integrations
-- Transistor.fm integration: publish episodes directly
-- Webhook ingress (Frame.io approval → status update, etc.)
-- Webhook egress (status changes → n8n, notifications)
-- Episode templates: recurring checklist auto-created per schedule
-- Launch checklist templates for new shows
-- Calendar view across all shows
-- MCP server package (local, wraps the REST API)
+The central auth helper is `getAuthenticatedClient()` in `src/lib/api/helpers.ts`, which returns `{ supabase, user, org, error }`.
 
-### Phase 4 — Growth
-- Client onboarding intake form
-- Reporting (episodes delivered, on-time rate, approval turnaround)
-- Multi-user support (VAs, subcontractors with scoped access)
-- White-label client portal
-- Stripe billing (productize for other producers)
+## Key Shared Utilities
+
+| File | Purpose |
+|------|---------|
+| `src/lib/supabase/server.ts` | `createClient()` (session-aware) and `createServiceClient()` (service role, no cookies) |
+| `src/lib/api/helpers.ts` | `getAuthenticatedClient()`, `jsonResponse()`, `errorResponse()` |
+| `src/lib/org/resolve.ts` | `resolveUserOrg()`, `resolveOrgFromApiKey()` |
+| `src/lib/entitlements.ts` | `getOrgEntitlements()`, `isSelfHosted()`, `Feature` type |
+| `src/lib/webhooks/dispatch.ts` | `dispatchWebhooks(orgId, event, data)` — fire-and-forget webhook delivery |
+| `src/lib/integrations/token-refresh.ts` | `getValidToken(orgId, provider)`, `getIntegrationAccountId(orgId, provider)` |
+| `src/lib/stripe/client.ts` | `getStripe()` — Stripe SDK singleton |
+| `src/lib/r2/client.ts` | R2 upload URLs, image URL resolution |
+| `src/lib/org/roles.ts` | `requireRole(org, minRole)` — role-based access control |
+| `src/lib/email/send.ts` | `sendEmail()`, `generateMagicLinkUrl()`, `getSiteUrl()` — shared email helpers |
 
 ## Integrations
 
 | Service | Role | Integration Type |
 |---------|------|-----------------|
-| Frame.io | Video review/approval | Link embedding + webhook status sync |
-| Transistor.fm | Episode publishing/distribution | REST API (upload + publish) |
+| Frame.io (V4) | Video review/approval | OAuth (Adobe IMS), project creation, file upload, comment sync |
+| Google Drive | File delivery/review | OAuth2, folder hierarchy, resumable uploads |
+| Vimeo | Video delivery | OAuth2, project creation, tus uploads |
+| Transistor.fm | Episode publishing/distribution | API key per show, upload + publish |
 | Cloudflare R2 | Asset storage (branding, thumbnails, intros) | S3-compatible API, signed URLs |
+| Stripe | Subscription billing | Checkout, webhooks, customer portal |
 | n8n | Workflow automation | Webhooks (send + receive) |
 | MCP | AI assistant interaction | Local MCP server wrapping REST API |
+
+## Feature Status
+
+### Complete (Phases 1-3)
+- Client/show/episode management with customizable pipeline stages
+- Kanban board with drag-and-drop, bulk actions, swimlanes
+- Dashboard with attention list, activity feed, stats, quick-create
+- Calendar view across all shows
+- Client portal with magic-link auth, deliverable approval, activity feed
+- Review player with timecoded comments (synced to Frame.io)
+- Multi-provider delivery (Frame.io, Google Drive, Vimeo)
+- Transistor.fm publishing
+- R2 asset management per show/episode
+- Episode templates per show
+- Tags system
+- Webhook egress (signed payloads, delivery log)
+- Webhook ingress (provider status sync)
+- API key authentication
+- MCP server
+- Landing page with pricing
+
+### Complete (Billing + Growth)
+- Organizations/workspaces (multi-tenant foundation)
+- Stripe integration (checkout, portal, webhooks)
+- Plan entitlements system (database-driven feature flags)
+- Billing settings page (upgrade, manage subscription)
+- Self-hosted mode bypass
+- Multi-user support (team invites, role-based access: owner/admin/member)
+- Reporting and analytics (episodes, on-time rate, approval turnaround, by-show/by-month)
+- Shared email helpers (`src/lib/email/send.ts`)
+- White-label client portal (custom branding per org: logo, accent color, display name)
+- License key system for self-hosted (soft gate, contact capture)
+
+### Not Yet Built
+- Custom domain support for white-label portal
+- SSO / SAML
+- Stripe Connect (producer invoicing their clients)
 
 ## Default Episode Pipeline Stages
 
@@ -120,23 +187,26 @@ Clients
 Planning → Recording → Editing → Review → Approved → Published
 ```
 
-Stages are customizable per show.
-
-## Client Portal Design
-
-- Lightweight — more like a status page than a full app
-- Magic-link auth (client receives email link, no password)
-- Client sees only their show(s), scoped via Supabase RLS
-- Approve/revise workflow for deliverables (not Frame.io-level annotation — simple yes/no + notes)
-- Activity feed showing episode progress without client needing to ask
+Stages are customizable per show. Each stage has an optional `status_override` mapping to the `episode_status` enum.
 
 ## API Design Principles
 
 - Every UI action maps to a documented API endpoint
-- Token-based auth for external consumers (API keys)
+- Token-based auth for external consumers (API keys with `pr_` prefix)
 - Supabase auth (magic link, OAuth) for web UI and client portal
 - Webhooks follow standard patterns (signed payloads, retry logic)
 - MCP server is a thin wrapper over the REST API, not a separate system
+- All inserts include both `user_id` (attribution) and `org_id` (ownership)
+- Ownership checks use `org_id`, not `user_id`
+
+## Supabase Projects
+
+| Environment | Project ID | Name |
+|------------|------------|------|
+| Dev | `pvcrgllkcvznpxsxlehm` | Preroll.io-v2-dev |
+| Prod | `bjslxxufxvzssgrcmuzs` | Preroll.io-v2 |
+
+Old projects (`muooiflyyjrtueabmzwy`, `fvbpmpfatzcrwpmmkqdn`) are inactive.
 
 ## Git & Deployment
 
