@@ -34,3 +34,27 @@ export function resolveImageUrl(keyOrUrl: string | null | undefined): string | n
   if (publicBase) return `${publicBase}/${keyOrUrl}`
   return null
 }
+
+export async function persistExternalThumbnail(
+  externalUrl: string,
+  entityType: 'episodes' | 'shows',
+  entityId: string,
+): Promise<string | null> {
+  try {
+    const res = await fetch(externalUrl, { signal: AbortSignal.timeout(10000) })
+    if (!res.ok) return null
+    const contentType = res.headers.get('content-type') || 'image/jpeg'
+    const ext = contentType.includes('png') ? 'png' : 'jpg'
+    const buffer = Buffer.from(await res.arrayBuffer())
+    const key = `thumbnails/${entityType}/${entityId}.${ext}`
+    await r2.send(new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME!,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    }))
+    return resolveImageUrl(key)
+  } catch {
+    return null
+  }
+}

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { persistExternalThumbnail } from '@/lib/r2/client'
 
 export async function GET(request: NextRequest) {
   const { supabase, error } = await getAuthenticatedClient()
@@ -67,7 +68,8 @@ export async function POST(request: Request) {
 
     if (episode) {
       if (body.thumbnail_url && !episode.image_url) {
-        await supabase!.from('episodes').update({ image_url: body.thumbnail_url }).eq('id', body.episode_id)
+        const r2Url = await persistExternalThumbnail(body.thumbnail_url, 'episodes', body.episode_id)
+        await supabase!.from('episodes').update({ image_url: r2Url || body.thumbnail_url }).eq('id', body.episode_id)
       }
 
       await supabase!.from('activity_log').insert({
