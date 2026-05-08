@@ -1,4 +1,6 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getOrgEntitlements } from '@/lib/entitlements'
+import { requireRole } from '@/lib/org/roles'
 import { encrypt } from '@/lib/integrations/crypto'
 import { randomBytes } from 'crypto'
 
@@ -27,8 +29,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const roleError = requireRole(org!, 'admin')
+  if (roleError) return roleError
+
+  const entitlements = await getOrgEntitlements(org!.id)
+  if (!entitlements.can('webhooks')) {
+    return errorResponse('Upgrade to Pro to use webhooks.', 403)
+  }
 
   const body = await request.json()
   if (!body.url) return errorResponse('url is required')
@@ -51,6 +61,7 @@ export async function POST(request: Request) {
     .from('webhook_endpoints')
     .insert({
       user_id: user!.id,
+      org_id: org!.id,
       url: body.url,
       secret_enc: secretEnc,
       events: body.events || [],

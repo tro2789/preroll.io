@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { requireRole } from '@/lib/org/roles'
 
 export async function GET(
   request: NextRequest,
@@ -75,8 +76,11 @@ export async function DELETE(
   { params }: { params: Promise<{ showId: string }> }
 ) {
   const { showId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const roleError = requireRole(org!, 'admin')
+  if (roleError) return roleError
 
   const { error: dbError } = await supabase!
     .from('shows')

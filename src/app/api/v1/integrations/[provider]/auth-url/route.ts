@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getOrgEntitlements } from '@/lib/entitlements'
+import { requireRole } from '@/lib/org/roles'
 import { getProvider, isValidProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 
@@ -9,8 +11,16 @@ export async function GET(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider: providerName } = await params
-  const { user, error } = await getAuthenticatedClient()
+  const { user, org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const roleError = requireRole(org!, 'admin')
+  if (roleError) return roleError
+
+  const entitlements = await getOrgEntitlements(org!.id)
+  if (!entitlements.can('integrations')) {
+    return errorResponse('Upgrade to Pro to connect integrations.', 403)
+  }
 
   ensureProvidersRegistered()
 

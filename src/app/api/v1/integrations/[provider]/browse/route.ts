@@ -9,15 +9,15 @@ export async function GET(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider: providerName } = await params
-  const { user, error } = await getAuthenticatedClient()
+  const { org, error } = await getAuthenticatedClient()
   if (error) return error
 
   ensureProvidersRegistered()
   if (!isValidProvider(providerName)) return errorResponse(`Unknown provider: ${providerName}`, 400)
 
   try {
-    const token = await getValidToken(user!.id, providerName)
-    const accountId = await getIntegrationAccountId(user!.id, providerName)
+    const token = await getValidToken(org!.id, providerName)
+    const accountId = await getIntegrationAccountId(org!.id, providerName)
     const provider = getProvider(providerName)
 
     const path = request.nextUrl.searchParams.get('path') || undefined

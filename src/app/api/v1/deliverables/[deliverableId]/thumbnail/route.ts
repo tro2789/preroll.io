@@ -12,15 +12,15 @@ export async function GET(
 
   const { data: deliverable } = await supabase!
     .from('deliverables')
-    .select('id, shows(client_id, clients(user_id))')
+    .select('id, shows(client_id, clients(org_id))')
     .eq('id', deliverableId)
     .single()
 
   if (!deliverable) return errorResponse('Deliverable not found', 404)
 
-  const show = (deliverable as unknown as { shows: { clients: { user_id: string } } }).shows
-  const producerUserId = show?.clients?.user_id
-  if (!producerUserId) return errorResponse('Not found', 404)
+  const show = (deliverable as unknown as { shows: { clients: { org_id: string } } }).shows
+  const producerOrgId = show?.clients?.org_id
+  if (!producerOrgId) return errorResponse('Not found', 404)
 
   const { data: fileRef } = await supabase!
     .from('file_references')
@@ -43,8 +43,8 @@ export async function GET(
   ensureProvidersRegistered()
   try {
     const [token, accountId] = await Promise.all([
-      getValidToken(producerUserId, 'frame_io'),
-      getIntegrationAccountId(producerUserId, 'frame_io'),
+      getValidToken(producerOrgId, 'frame_io'),
+      getIntegrationAccountId(producerOrgId, 'frame_io'),
     ])
 
     const frameRes = await fetch(

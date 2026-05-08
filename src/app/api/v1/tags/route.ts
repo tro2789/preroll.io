@@ -2,13 +2,13 @@ import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 
 export async function GET() {
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
     .from('tags')
     .select('*')
-    .eq('user_id', user!.id)
+    .eq('org_id', org!.id)
     .order('name')
 
   if (dbError) return errorResponse(dbError.message, 500)
@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
     .from('tags')
     .insert({
       user_id: user!.id,
+      org_id: org!.id,
       name: body.name.trim(),
       color: body.color || '#6366f1',
     })

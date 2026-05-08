@@ -18,15 +18,15 @@ export async function GET(
 
   const { data: deliverable, error: dbError } = await supabase!
     .from('deliverables')
-    .select('*, shows(client_id, clients(user_id))')
+    .select('*, shows(client_id, clients(org_id))')
     .eq('id', deliverableId)
     .single()
 
   if (dbError || !deliverable) return errorResponse('Deliverable not found', 404)
 
-  const show = (deliverable as unknown as { shows: { clients: { user_id: string } } }).shows
-  const producerUserId = show?.clients?.user_id
-  if (!producerUserId) return errorResponse('Could not resolve producer for this deliverable', 404)
+  const show = (deliverable as unknown as { shows: { clients: { org_id: string } } }).shows
+  const producerOrgId = show?.clients?.org_id
+  if (!producerOrgId) return errorResponse('Could not resolve producer for this deliverable', 404)
 
   const { data: fileRef, error: refError } = await supabase!
     .from('file_references')
@@ -41,13 +41,13 @@ export async function GET(
   ensureProvidersRegistered()
 
   if (fileRef.provider === 'frame_io') {
-    return resolveFrameIo(producerUserId, fileRef)
+    return resolveFrameIo(producerOrgId, fileRef)
   }
   if (fileRef.provider === 'google_drive') {
     return resolveGoogleDrive(deliverableId, fileRef)
   }
   if (fileRef.provider === 'vimeo') {
-    return resolveVimeo(producerUserId, fileRef)
+    return resolveVimeo(producerOrgId, fileRef)
   }
 
   return errorResponse(`Playback not supported for provider: ${fileRef.provider}`, 400)
@@ -61,13 +61,13 @@ interface FileRef {
   provider: string
 }
 
-async function resolveFrameIo(producerUserId: string, fileRef: FileRef) {
+async function resolveFrameIo(producerOrgId: string, fileRef: FileRef) {
   let token: string
   let accountId: string
   try {
     ;[token, accountId] = await Promise.all([
-      getValidToken(producerUserId, 'frame_io'),
-      getIntegrationAccountId(producerUserId, 'frame_io'),
+      getValidToken(producerOrgId, 'frame_io'),
+      getIntegrationAccountId(producerOrgId, 'frame_io'),
     ])
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to get Frame.io credentials'
@@ -120,15 +120,15 @@ async function streamGoogleDrive(
 ) {
   const { data: deliverable } = await supabase
     .from('deliverables')
-    .select('id, shows(client_id, clients(user_id))')
+    .select('id, shows(client_id, clients(org_id))')
     .eq('id', deliverableId)
     .single()
 
   if (!deliverable) return errorResponse('Not found', 404)
 
-  const show = (deliverable as unknown as { shows: { clients: { user_id: string } } }).shows
-  const producerUserId = show?.clients?.user_id
-  if (!producerUserId) return errorResponse('Not found', 404)
+  const show = (deliverable as unknown as { shows: { clients: { org_id: string } } }).shows
+  const producerOrgId = show?.clients?.org_id
+  if (!producerOrgId) return errorResponse('Not found', 404)
 
   const { data: fileRef } = await supabase
     .from('file_references')
@@ -142,7 +142,7 @@ async function streamGoogleDrive(
   if (!fileRef) return errorResponse('No Google Drive file linked', 404)
 
   ensureProvidersRegistered()
-  const token = await getValidToken(producerUserId, 'google_drive')
+  const token = await getValidToken(producerOrgId, 'google_drive')
 
   const driveRes = await fetch(
     `https://www.googleapis.com/drive/v3/files/${fileRef.external_id}?alt=media`,
@@ -161,10 +161,10 @@ async function streamGoogleDrive(
   })
 }
 
-async function resolveVimeo(producerUserId: string, fileRef: FileRef) {
+async function resolveVimeo(producerOrgId: string, fileRef: FileRef) {
   let token: string
   try {
-    token = await getValidToken(producerUserId, 'vimeo')
+    token = await getValidToken(producerOrgId, 'vimeo')
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to get Vimeo credentials'
     return errorResponse(message, 502)

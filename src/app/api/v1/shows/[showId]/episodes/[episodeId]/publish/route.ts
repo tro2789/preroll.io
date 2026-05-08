@@ -11,7 +11,7 @@ export async function POST(
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
 ) {
   const { showId, episodeId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -58,8 +58,8 @@ export async function POST(
     // Get a valid Frame.io token
     ensureProvidersRegistered()
     const [frameToken, accountId] = await Promise.all([
-      getValidToken(user!.id, 'frame_io'),
-      getIntegrationAccountId(user!.id, 'frame_io'),
+      getValidToken(org!.id, 'frame_io'),
+      getIntegrationAccountId(org!.id, 'frame_io'),
     ])
 
     // Fetch file metadata with media links from Frame.io V4 API
@@ -159,7 +159,7 @@ export async function POST(
     }),
   ])
 
-  dispatchWebhooks(user!.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
+  dispatchWebhooks(org!.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
     episode_id: episodeId,
     show_id: showId,
     title,

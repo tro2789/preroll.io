@@ -10,19 +10,19 @@ export async function GET(
   { params }: { params: Promise<{ episodeId: string }> }
 ) {
   const { episodeId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data: episode, error: dbError } = await supabase!
     .from('episodes')
-    .select('id, shows(id, client_id, clients(user_id))')
+    .select('id, shows(id, client_id, clients(org_id))')
     .eq('id', episodeId)
     .single()
 
   if (dbError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { clients: { user_id: string } | null } | null
-  if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
+  const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
+  if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
   const { data: integration } = await supabase!
     .from('episode_integrations')
@@ -55,21 +55,21 @@ export async function POST(
   { params }: { params: Promise<{ episodeId: string }> }
 ) {
   const { episodeId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json().catch(() => ({}))
 
   const { data: episode, error: dbError } = await supabase!
     .from('episodes')
-    .select('id, title, episode_number, shows(id, name, client_id, clients(user_id, name, company))')
+    .select('id, title, episode_number, shows(id, name, client_id, clients(org_id, name, company))')
     .eq('id', episodeId)
     .single()
 
   if (dbError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { name: string; clients: { user_id: string; name: string; company: string | null } } | null
-  if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
+  const show = episode.shows as unknown as { name: string; clients: { org_id: string; name: string; company: string | null } } | null
+  if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
   const { data: existing } = await supabase!
     .from('episode_integrations')
@@ -96,7 +96,7 @@ export async function POST(
     const { data: integrations } = await supabase!
       .from('user_integrations')
       .select('provider')
-      .eq('user_id', user!.id)
+      .eq('org_id', org!.id)
 
     const connected = integrations?.map(i => i.provider as IntegrationProvider) || []
     if (connected.length === 0) {
@@ -114,7 +114,7 @@ export async function POST(
     const { data: userIntegration, error: integrationError } = await supabase!
       .from('user_integrations')
       .select('account_id, workspace_id')
-      .eq('user_id', user!.id)
+      .eq('org_id', org!.id)
       .eq('provider', providerName)
       .single()
 
@@ -136,7 +136,7 @@ export async function POST(
         return errorResponse(`${providerName} integration is missing workspace_id. Reconnect in Settings.`, 400)
       }
 
-      const token = await getValidToken(user!.id, providerName)
+      const token = await getValidToken(org!.id, providerName)
       const showName = show.name || 'Untitled Show'
       let projectName: string
       if (episode.episode_number) {

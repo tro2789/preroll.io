@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ episodeId: string }> }
 ) {
   const { episodeId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -17,14 +17,14 @@ export async function POST(
 
   const { data: episode, error: dbError } = await supabase!
     .from('episodes')
-    .select('id, shows(id, client_id, clients(user_id))')
+    .select('id, shows(id, client_id, clients(org_id))')
     .eq('id', episodeId)
     .single()
 
   if (dbError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { clients: { user_id: string } | null } | null
-  if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
+  const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
+  if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
   const { data: integration } = await supabase!
     .from('episode_integrations')
@@ -39,8 +39,8 @@ export async function POST(
   ensureProvidersRegistered()
 
   try {
-    const token = await getValidToken(user!.id, integration.provider)
-    const accountId = await getIntegrationAccountId(user!.id, integration.provider)
+    const token = await getValidToken(org!.id, integration.provider)
+    const accountId = await getIntegrationAccountId(org!.id, integration.provider)
     const provider = getProvider(integration.provider)
 
     if (!provider.createFileUpload) {
@@ -53,6 +53,7 @@ export async function POST(
 
     await supabase!.from('file_references').insert({
       user_id: user!.id,
+      org_id: org!.id,
       provider: integration.provider,
       external_id: result.fileId,
       name: body.name,

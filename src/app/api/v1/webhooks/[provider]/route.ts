@@ -1,16 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServiceClient } from '@/lib/supabase/server'
 import { getProvider, isValidProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { frameIoTimecodeToSecs } from '@/lib/format'
-
-function getServiceClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  )
-}
 
 export async function POST(
   request: NextRequest,
@@ -43,7 +35,7 @@ export async function POST(
   const resourceId = (payload.resource as Record<string, unknown>)?.id as string | undefined
   const eventId = (payload.id as string) || undefined
 
-  const supabase = getServiceClient()
+  const supabase = createServiceClient()
 
   if (eventId) {
     const { data: existing } = await supabase

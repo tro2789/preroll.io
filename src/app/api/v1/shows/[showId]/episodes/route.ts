@@ -38,7 +38,7 @@ export async function POST(
   { params }: { params: Promise<{ showId: string }> }
 ) {
   const { showId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -103,14 +103,11 @@ export async function POST(
 
   // Auto-create delivery project if user has an integration with createProject support
   try {
-    const { data: { user } } = await supabase!.auth.getUser()
-    if (user) {
-      // Find a connected integration that supports project creation
-      // Priority: frame_io > vimeo > google_drive
+    if (org) {
       const { data: integrations } = await supabase!
         .from('user_integrations')
         .select('provider, account_id, workspace_id')
-        .eq('user_id', user.id)
+        .eq('org_id', org.id)
 
       const priorityOrder = ['frame_io', 'vimeo', 'google_drive'] as const
       const eligible = priorityOrder
@@ -125,7 +122,7 @@ export async function POST(
 
         const provider = getProvider(eligible.provider)
         if (provider.createProject && provider.capabilities.canCreateProject) {
-          const token = await getValidToken(user.id, eligible.provider)
+          const token = await getValidToken(org.id, eligible.provider)
 
           const { data: show } = await supabase!
             .from('shows')
