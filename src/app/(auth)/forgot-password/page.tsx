@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { PrerollLogo } from '@/components/ui/preroll-logo'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -34,8 +33,10 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-base px-4">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center flex flex-col items-center">
-          <PrerollLogo size={48} className="text-text-primary" />
+        <div className="text-center">
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">
+            PreRoll
+          </h1>
           <p className="mt-3 text-sm text-text-secondary">
             Reset your password
           </p>
