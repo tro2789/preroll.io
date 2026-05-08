@@ -91,11 +91,9 @@ export default function PricingSection() {
           <span className={`text-sm ${annual ? 'text-text-primary font-medium' : 'text-text-tertiary'}`}>
             Annual
           </span>
-          {annual && (
-            <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-              Save 17%
-            </span>
-          )}
+          <span className={`rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success transition-opacity ${annual ? 'opacity-100' : 'opacity-0'}`}>
+            Save 17%
+          </span>
         </div>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
