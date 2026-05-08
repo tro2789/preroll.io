@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
     .from('file_references')
     .insert({
       user_id: user!.id,
+      org_id: org!.id,
       provider: body.provider,
       external_id: body.external_id,
       external_url: body.external_url || null,

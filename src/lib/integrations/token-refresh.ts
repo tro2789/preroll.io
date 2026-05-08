@@ -1,27 +1,19 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServiceClient } from '@/lib/supabase/server'
 import { encrypt, decrypt } from './crypto'
 import { getProvider } from './registry'
 import { ensureProvidersRegistered } from './init'
 import type { IntegrationProvider } from './types'
 
-const REFRESH_BUFFER_MS = 30 * 60 * 1000 // 30 minutes before expiry
+const REFRESH_BUFFER_MS = 30 * 60 * 1000
 
-function getServiceClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  )
-}
-
-export async function getValidToken(userId: string, providerName: IntegrationProvider): Promise<string> {
+export async function getValidToken(orgId: string, providerName: IntegrationProvider): Promise<string> {
   ensureProvidersRegistered()
-  const supabase = getServiceClient()
+  const supabase = createServiceClient()
 
   const { data: integration, error } = await supabase
     .from('user_integrations')
     .select('*')
-    .eq('user_id', userId)
+    .eq('org_id', orgId)
     .eq('provider', providerName)
     .single()
 
@@ -61,12 +53,12 @@ export async function getValidToken(userId: string, providerName: IntegrationPro
   return result.accessToken
 }
 
-export async function getIntegrationAccountId(userId: string, providerName: IntegrationProvider): Promise<string> {
-  const supabase = getServiceClient()
+export async function getIntegrationAccountId(orgId: string, providerName: IntegrationProvider): Promise<string> {
+  const supabase = createServiceClient()
   const { data } = await supabase
     .from('user_integrations')
     .select('account_id')
-    .eq('user_id', userId)
+    .eq('org_id', orgId)
     .eq('provider', providerName)
     .single()
 

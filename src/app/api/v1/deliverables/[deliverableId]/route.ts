@@ -24,21 +24,21 @@ export async function PATCH(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
 
   const { data: existing, error: fetchError } = await supabase!
     .from('deliverables')
-    .select('*, shows(client_id, clients(user_id, client_user_id))')
+    .select('*, shows(client_id, clients(org_id, client_user_id))')
     .eq('id', deliverableId)
     .single()
 
   if (fetchError || !existing) return errorResponse('Deliverable not found', 404)
 
-  const client = (existing.shows as Record<string, unknown>)?.clients as { user_id: string; client_user_id: string | null } | null
-  const isProducer = client?.user_id === user!.id
+  const client = (existing.shows as Record<string, unknown>)?.clients as { org_id: string; client_user_id: string | null } | null
+  const isProducer = client?.org_id === org!.id
   const isClient = client?.client_user_id === user!.id
 
   if (!isProducer && !isClient) return errorResponse('Forbidden', 403)
@@ -100,8 +100,7 @@ export async function PATCH(
       revision_requested: 'deliverable.revision_requested',
       pending: 'deliverable.resubmitted',
     }
-    const producerUserId = client!.user_id
-    dispatchWebhooks(producerUserId, webhookEventMap[updates.status as string], {
+    dispatchWebhooks(client!.org_id, webhookEventMap[updates.status as string], {
       deliverable_id: deliverableId,
       show_id: existing.show_id,
       episode_id: existing.episode_id,

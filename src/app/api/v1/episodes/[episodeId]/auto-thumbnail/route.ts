@@ -5,7 +5,7 @@ export async function POST(
   { params }: { params: Promise<{ episodeId: string }> }
 ) {
   const { episodeId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -15,14 +15,14 @@ export async function POST(
 
   const { data: episode, error: dbError } = await supabase!
     .from('episodes')
-    .select('id, image_url, shows(client_id, clients(user_id))')
+    .select('id, image_url, shows(client_id, clients(org_id))')
     .eq('id', episodeId)
     .single()
 
   if (dbError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { clients: { user_id: string } | null } | null
-  if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
+  const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
+  if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
   if (episode.image_url) {
     return jsonResponse({ updated: false, reason: 'episode already has a thumbnail' })

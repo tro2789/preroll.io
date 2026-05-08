@@ -26,7 +26,7 @@ export async function PATCH(
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
 ) {
   const { showId, episodeId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -90,10 +90,8 @@ export async function PATCH(
     })
   }
 
-  const { data: { user: currentUser } } = await supabase!.auth.getUser()
-
   if (newStageName && oldEpisode?.stage_id !== body.stage_id) {
-    dispatchWebhooks(currentUser!.id, 'episode.stage_changed', {
+    dispatchWebhooks(org!.id, 'episode.stage_changed', {
       episode_id: episodeId,
       show_id: showId,
       title: data.title,
@@ -107,7 +105,7 @@ export async function PATCH(
     const events: Record<string, WebhookEvent> = {
       published: 'episode.published',
     }
-    dispatchWebhooks(currentUser!.id, events[data.status] || 'episode.status_changed', {
+    dispatchWebhooks(org!.id, events[data.status] || 'episode.status_changed', {
       episode_id: episodeId,
       show_id: showId,
       title: data.title,

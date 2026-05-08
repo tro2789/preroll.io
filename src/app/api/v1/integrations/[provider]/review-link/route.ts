@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ provider: string }> }
 ) {
   const { provider: providerName } = await params
-  const { user, error } = await getAuthenticatedClient()
+  const { org, error } = await getAuthenticatedClient()
   if (error) return error
 
   ensureProvidersRegistered()
@@ -19,8 +19,8 @@ export async function POST(
   if (!body.name) return errorResponse('name is required')
 
   try {
-    const token = await getValidToken(user!.id, providerName)
-    const accountId = await getIntegrationAccountId(user!.id, providerName)
+    const token = await getValidToken(org!.id, providerName)
+    const accountId = await getIntegrationAccountId(org!.id, providerName)
     const provider = getProvider(providerName)
 
     if (!provider.createShare) {

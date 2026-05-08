@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getOrgEntitlements } from '@/lib/entitlements'
+import { requireRole } from '@/lib/org/roles'
 
 export async function GET(request: NextRequest) {
   const { supabase, error } = await getAuthenticatedClient()
@@ -23,8 +25,20 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: Request) {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const roleError = requireRole(org!, 'admin')
+  if (roleError) return roleError
+
+  const entitlements = await getOrgEntitlements(org!.id)
+  const max = entitlements.limit('max_shows')
+  if (max !== null) {
+    const { count } = await supabase!.from('shows').select('id, clients!inner(org_id)', { count: 'exact', head: true }).eq('clients.org_id', org!.id)
+    if ((count ?? 0) >= max) {
+      return errorResponse(`Your plan allows ${max} show. Upgrade to Pro for unlimited shows.`, 403)
+    }
+  }
 
   const body = await request.json()
   if (!body.client_id) return errorResponse('client_id is required')

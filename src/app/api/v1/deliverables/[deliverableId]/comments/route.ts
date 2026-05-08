@@ -12,7 +12,7 @@ async function getFrameIoContext(
   const [{ data: deliverable }, { data: fileRef }] = await Promise.all([
     supabase!
       .from('deliverables')
-      .select('id, shows(client_id, clients(user_id))')
+      .select('id, shows(client_id, clients(org_id))')
       .eq('id', deliverableId)
       .single(),
     supabase!
@@ -25,14 +25,14 @@ async function getFrameIoContext(
 
   if (!deliverable || !fileRef) return null
 
-  const show = deliverable.shows as unknown as { clients: { user_id: string } | null } | null
-  const producerUserId = show?.clients?.user_id
-  if (!producerUserId) return null
+  const show = deliverable.shows as unknown as { clients: { org_id: string } | null } | null
+  const producerOrgId = show?.clients?.org_id
+  if (!producerOrgId) return null
 
   try {
     ensureProvidersRegistered()
-    const accessToken = await getValidToken(producerUserId, 'frame_io')
-    const accountId = await getIntegrationAccountId(producerUserId, 'frame_io')
+    const accessToken = await getValidToken(producerOrgId, 'frame_io')
+    const accountId = await getIntegrationAccountId(producerOrgId, 'frame_io')
     return { fileRef, accessToken, accountId }
   } catch {
     return null

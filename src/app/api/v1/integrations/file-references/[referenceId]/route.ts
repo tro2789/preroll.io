@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ referenceId: string }> }
 ) {
   const { referenceId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
@@ -26,8 +26,8 @@ export async function GET(
   if (refresh && isValidProvider(data.provider)) {
     ensureProvidersRegistered()
     try {
-      const token = await getValidToken(user!.id, data.provider as IntegrationProvider)
-      const accountId = await getIntegrationAccountId(user!.id, data.provider as IntegrationProvider)
+      const token = await getValidToken(org!.id, data.provider as IntegrationProvider)
+      const accountId = await getIntegrationAccountId(org!.id, data.provider as IntegrationProvider)
       const provider = getProvider(data.provider as IntegrationProvider)
       const details = await provider.getFileDetails(token, accountId, data.external_id)
 

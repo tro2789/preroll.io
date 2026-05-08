@@ -1,4 +1,6 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getOrgEntitlements } from '@/lib/entitlements'
+import { requireRole } from '@/lib/org/roles'
 import { createHash, randomBytes } from 'crypto'
 
 export async function GET() {
@@ -15,8 +17,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const roleError = requireRole(org!, 'admin')
+  if (roleError) return roleError
+
+  const entitlements = await getOrgEntitlements(org!.id)
+  if (!entitlements.can('api_keys')) {
+    return errorResponse('Upgrade to Pro to create API keys.', 403)
+  }
 
   const body = await request.json()
   if (!body.name) return errorResponse('name is required')
@@ -28,6 +38,7 @@ export async function POST(request: Request) {
     .from('api_keys')
     .insert({
       user_id: user!.id,
+      org_id: org!.id,
       key_hash: keyHash,
       name: body.name,
     })

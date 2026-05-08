@@ -7,19 +7,19 @@ export async function GET(
   { params }: { params: Promise<{ episodeId: string }> }
 ) {
   const { episodeId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data: episode, error: epError } = await supabase!
     .from('episodes')
-    .select('id, show_id, shows(client_id, clients(user_id))')
+    .select('id, show_id, shows(client_id, clients(org_id))')
     .eq('id', episodeId)
     .single()
 
   if (epError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { clients: { user_id: string } | null } | null
-  if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
+  const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
+  if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
   const type = request.nextUrl.searchParams.get('type')
 
@@ -48,19 +48,19 @@ export async function POST(
   { params }: { params: Promise<{ episodeId: string }> }
 ) {
   const { episodeId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data: episode, error: epError } = await supabase!
     .from('episodes')
-    .select('id, show_id, shows(client_id, clients(user_id))')
+    .select('id, show_id, shows(client_id, clients(org_id))')
     .eq('id', episodeId)
     .single()
 
   if (epError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { clients: { user_id: string } | null } | null
-  if (!show?.clients || show.clients.user_id !== user!.id) return errorResponse('Forbidden', 403)
+  const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
+  if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
   const body = await request.json()
   const { name, file_key, asset_type, file_size, mime_type } = body

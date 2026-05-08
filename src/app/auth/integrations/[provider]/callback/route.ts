@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
-import { createServerClient } from '@supabase/ssr'
+import { createServiceClient } from '@/lib/supabase/server'
 import { getProvider, isValidProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { encrypt } from '@/lib/integrations/crypto'
-
-function getServiceClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  )
-}
+import { resolveUserOrg } from '@/lib/org/resolve'
 
 export async function GET(
   request: NextRequest,
@@ -56,7 +49,7 @@ export async function GET(
 
   try {
     const result = await provider.exchangeCode(code, redirectUri)
-    const supabase = getServiceClient()
+    const supabase = createServiceClient()
 
     let workspaceId: string | null = null
     if (providerName === 'frame_io' && result.account.id) {
@@ -76,8 +69,14 @@ export async function GET(
       workspaceId = result.account.id
     }
 
+    const userOrg = await resolveUserOrg(state.userId)
+    if (!userOrg) {
+      return NextResponse.redirect(`${origin}/app/settings/integrations?error=no_organization`)
+    }
+
     await supabase.from('user_integrations').upsert({
       user_id: state.userId,
+      org_id: userOrg.id,
       provider: providerName,
       access_token_enc: encrypt(result.accessToken),
       refresh_token_enc: result.refreshToken ? encrypt(result.refreshToken) : null,
@@ -88,7 +87,7 @@ export async function GET(
       account_avatar_url: result.account.avatarUrl || null,
       scopes: provider.oauthConfig.scopes.join(' '),
       workspace_id: workspaceId,
-    }, { onConflict: 'user_id,provider' })
+    }, { onConflict: 'org_id,provider' })
 
     return NextResponse.redirect(`${origin}/app/settings/integrations?connected=${providerName}`)
   } catch (err) {

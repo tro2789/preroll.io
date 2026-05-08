@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getOrgEntitlements } from '@/lib/entitlements'
+import { requireRole } from '@/lib/org/roles'
 
 export async function GET() {
   const { supabase, error } = await getAuthenticatedClient()
@@ -15,8 +17,20 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const roleError = requireRole(org!, 'admin')
+  if (roleError) return roleError
+
+  const entitlements = await getOrgEntitlements(org!.id)
+  const max = entitlements.limit('max_clients')
+  if (max !== null) {
+    const { count } = await supabase!.from('clients').select('id', { count: 'exact', head: true }).eq('org_id', org!.id)
+    if ((count ?? 0) >= max) {
+      return errorResponse(`Your plan allows ${max} client. Upgrade to Pro for unlimited clients.`, 403)
+    }
+  }
 
   const body = await request.json()
   if (!body.name) return errorResponse('name is required')
@@ -25,6 +39,7 @@ export async function POST(request: Request) {
     .from('clients')
     .insert({
       user_id: user!.id,
+      org_id: org!.id,
       name: body.name,
       company: body.company || null,
       email: body.email || null,

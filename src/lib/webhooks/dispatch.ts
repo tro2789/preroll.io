@@ -1,5 +1,5 @@
 import { createHmac, randomUUID } from 'crypto'
-import { createServerClient } from '@supabase/ssr'
+import { createServiceClient } from '@/lib/supabase/server'
 import { decrypt } from '@/lib/integrations/crypto'
 
 export type WebhookEvent =
@@ -19,13 +19,6 @@ interface WebhookPayload {
   data: Record<string, unknown>
 }
 
-function getServiceClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  )
-}
 
 function sign(payload: string, secret: string, timestamp: number): string {
   const message = `${timestamp}.${payload}`
@@ -33,25 +26,25 @@ function sign(payload: string, secret: string, timestamp: number): string {
 }
 
 export function dispatchWebhooks(
-  userId: string,
+  orgId: string,
   event: WebhookEvent,
   data: Record<string, unknown>
 ): void {
   // Fire-and-forget — don't block the API response
-  doDispatch(userId, event, data).catch(() => {})
+  doDispatch(orgId, event, data).catch(() => {})
 }
 
 async function doDispatch(
-  userId: string,
+  orgId: string,
   event: WebhookEvent,
   data: Record<string, unknown>
 ) {
-  const supabase = getServiceClient()
+  const supabase = createServiceClient()
 
   const { data: endpoints } = await supabase
     .from('webhook_endpoints')
     .select('id, url, secret_enc, events')
-    .eq('user_id', userId)
+    .eq('org_id', orgId)
     .eq('is_active', true)
 
   if (!endpoints?.length) return
