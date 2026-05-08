@@ -4,10 +4,39 @@ export default function SelfHostingDocs() {
       <div>
         <h1 className="text-2xl font-bold text-text-primary">Self-Hosting</h1>
         <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-          PreRoll can be fully self-hosted. You get the same features as the hosted
-          version. You handle infrastructure, OAuth app registrations, and updates.
+          PreRoll can be fully self-hosted. Set <Mono>PREROLL_SELF_HOSTED=true</Mono> and
+          you get every feature with no plan limits and no billing integration required.
+          You handle infrastructure, OAuth app registrations, and updates.
         </p>
       </div>
+
+      <Section title="What you get">
+        <p>
+          Self-hosted PreRoll has <strong>no plan restrictions</strong>. All features are
+          unlocked: unlimited clients, shows, integrations, webhooks, API keys, MCP access,
+          templates, and client portal. The <Mono>PREROLL_SELF_HOSTED=true</Mono> flag
+          bypasses all entitlement checks entirely.
+        </p>
+        <H3>Organization auto-creation</H3>
+        <p>
+          When the first user signs up on a self-hosted instance, an organization is
+          automatically created and the user is assigned as owner. All data (clients,
+          shows, episodes) is scoped to this organization. No manual setup required.
+        </p>
+        <H3>What&apos;s NOT needed</H3>
+        <Table
+          headers={['Variable', "Why it's optional"]}
+          rows={[
+            ['STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_*_PRICE_ID', 'Billing is bypassed in self-hosted mode'],
+            ['RESEND_API_KEY', 'Only needed if you want email notifications. Magic-link auth is handled by Supabase SMTP, not Resend'],
+          ]}
+        />
+        <p>
+          You <em>do</em> still need Supabase, R2 (or S3-compatible storage), and
+          an <Mono>INTEGRATION_ENCRYPTION_KEY</Mono>. OAuth app credentials are only
+          needed for integrations you actually use.
+        </p>
+      </Section>
 
       <Section title="What you need">
         <Table
@@ -82,7 +111,10 @@ supabase db push --db-url "postgresql://postgres:YOUR_PASSWORD@localhost:5432/po
         <p>
           Create a <Mono>.env.local</Mono> file with these variables:
         </p>
-        <Code>{`# Supabase
+        <Code>{`# Self-hosted mode — bypasses all plan/billing checks
+PREROLL_SELF_HOSTED=true
+
+# Supabase
 NEXT_PUBLIC_SUPABASE_URL=http://localhost:8000      # or your Supabase project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...                # from generate-keys.sh or dashboard
 SUPABASE_SERVICE_ROLE_KEY=eyJ...                    # from generate-keys.sh or dashboard
@@ -98,8 +130,17 @@ R2_PUBLIC_URL=                                       # public bucket URL for ser
 # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 INTEGRATION_ENCRYPTION_KEY=
 
-# Email (for client portal magic links and invites)
-RESEND_API_KEY=
+# Stripe (not needed for self-hosted — billing is bypassed)
+# STRIPE_SECRET_KEY=
+# STRIPE_WEBHOOK_SECRET=
+# STRIPE_PRO_MONTHLY_PRICE_ID=
+# STRIPE_PRO_ANNUAL_PRICE_ID=
+# STRIPE_STUDIO_MONTHLY_PRICE_ID=
+# STRIPE_STUDIO_ANNUAL_PRICE_ID=
+
+# Email (optional — only needed for email notifications)
+# Magic-link auth uses Supabase SMTP, not this key
+# RESEND_API_KEY=
 
 # Optional: integrations (register your own OAuth apps)
 FRAMEIO_CLIENT_ID=
@@ -108,6 +149,11 @@ GOOGLE_DRIVE_CLIENT_ID=
 GOOGLE_DRIVE_CLIENT_SECRET=
 VIMEO_CLIENT_ID=
 VIMEO_CLIENT_SECRET=`}</Code>
+        <p>
+          The only variable unique to self-hosted is <Mono>PREROLL_SELF_HOSTED=true</Mono>.
+          When set, all entitlement checks return unlimited, and the Stripe/billing
+          code paths are skipped entirely.
+        </p>
       </Section>
 
       <Section title="4. Deploy the app">
