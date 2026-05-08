@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { PrerollLogo } from '@/components/ui/preroll-logo'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -32,10 +33,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-base px-4">
       <div className="w-full max-w-sm space-y-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">
-            PreRoll
-          </h1>
+        <div className="text-center flex flex-col items-center">
+          <PrerollLogo size={48} className="text-text-primary" />
           <p className="mt-3 text-sm text-text-secondary">
             Sign in to your account
           </p>

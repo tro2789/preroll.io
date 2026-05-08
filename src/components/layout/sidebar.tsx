@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { PrerollLogo } from '@/components/ui/preroll-logo'
 
 const navItems = [
   { label: 'Dashboard', href: '/app', icon: GridIcon },
@@ -22,9 +23,7 @@ export function Sidebar() {
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
         <div className="flex flex-col flex-grow bg-surface-base border-r border-border-default pt-8 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-6">
-            <span className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
-              PreRoll
-            </span>
+            <PrerollLogo size={28} className="text-text-secondary" />
           </div>
           <nav className="mt-10 flex-1 px-3 space-y-0.5">
             {navItems.map((item) => {
