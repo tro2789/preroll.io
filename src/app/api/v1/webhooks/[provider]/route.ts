@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getProvider, isValidProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { frameIoTimecodeToSecs } from '@/lib/format'
+import { persistExternalThumbnail } from '@/lib/r2/client'
 
 export async function POST(
   request: NextRequest,
@@ -167,7 +168,8 @@ export async function POST(
           .eq('id', fileRef.episode_id)
           .single()
         if (ep && !ep.image_url) {
-          await supabase.from('episodes').update({ image_url: thumb }).eq('id', fileRef.episode_id)
+          const r2Url = await persistExternalThumbnail(thumb, 'episodes', fileRef.episode_id)
+          await supabase.from('episodes').update({ image_url: r2Url || thumb }).eq('id', fileRef.episode_id)
         }
       }
     }

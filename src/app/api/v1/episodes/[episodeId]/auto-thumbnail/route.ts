@@ -1,4 +1,5 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { persistExternalThumbnail } from '@/lib/r2/client'
 
 export async function POST(
   request: Request,
@@ -28,7 +29,8 @@ export async function POST(
     return jsonResponse({ updated: false, reason: 'episode already has a thumbnail' })
   }
 
-  await supabase!.from('episodes').update({ image_url: thumbnail_url }).eq('id', episodeId)
+  const r2Url = await persistExternalThumbnail(thumbnail_url, 'episodes', episodeId)
+  await supabase!.from('episodes').update({ image_url: r2Url || thumbnail_url }).eq('id', episodeId)
 
   return jsonResponse({ updated: true })
 }

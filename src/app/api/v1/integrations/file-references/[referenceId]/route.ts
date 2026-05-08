@@ -2,6 +2,7 @@ import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/h
 import { getProvider, isValidProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
+import { persistExternalThumbnail } from '@/lib/r2/client'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export async function GET(
@@ -46,7 +47,8 @@ export async function GET(
           .eq('id', data.episode_id)
           .single()
         if (ep && !ep.image_url) {
-          await supabase!.from('episodes').update({ image_url: newThumb }).eq('id', data.episode_id)
+          const r2Url = await persistExternalThumbnail(newThumb, 'episodes', data.episode_id)
+          await supabase!.from('episodes').update({ image_url: r2Url || newThumb }).eq('id', data.episode_id)
         }
       }
 
