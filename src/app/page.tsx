@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import PricingSection from '@/components/landing/pricing-section'
+import { PrerollLogo } from '@/components/ui/preroll-logo'
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -28,8 +29,8 @@ function Nav() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border-subtle/50 bg-surface-base/80 backdrop-blur-lg">
       <div className="mx-auto max-w-7xl flex items-center justify-between px-6 py-4">
-        <Link href="/" className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-widest text-text-primary">
-          PreRoll
+        <Link href="/" className="text-text-primary">
+          <PrerollLogo size={28} />
         </Link>
         <nav className="hidden sm:flex items-center gap-6">
           <a href="#pipeline" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">How It Works</a>

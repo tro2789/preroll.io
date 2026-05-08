@@ -1,6 +1,7 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
+import { PrerollLogo } from '@/components/ui/preroll-logo'
 
 interface HeaderProps {
   email: string
@@ -34,9 +35,7 @@ export function Header({ email }: HeaderProps) {
     <header className="sticky top-0 z-30 bg-surface-base/80 backdrop-blur-sm border-b border-border-subtle">
       <div className="flex items-center justify-between h-14 px-4 sm:px-6">
         {/* Mobile logo */}
-        <span className="md:hidden text-sm font-semibold text-text-secondary uppercase tracking-widest">
-          PreRoll
-        </span>
+        <PrerollLogo size={28} className="md:hidden text-text-secondary" />
 
         {/* Desktop: page context */}
         <span className="hidden md:block text-sm font-medium text-text-secondary">
