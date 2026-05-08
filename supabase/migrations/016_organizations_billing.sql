@@ -343,16 +343,16 @@ BEGIN
   user_name := COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1));
   user_slug := REPLACE(NEW.id::text, '-', '');
 
-  INSERT INTO organizations (name, slug)
+  INSERT INTO public.organizations (name, slug)
   VALUES (user_name || '''s Workspace', user_slug)
   RETURNING id INTO new_org_id;
 
-  INSERT INTO memberships (org_id, user_id, role)
+  INSERT INTO public.memberships (org_id, user_id, role)
   VALUES (new_org_id, NEW.id, 'owner');
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
