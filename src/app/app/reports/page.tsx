@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 
 interface ReportData {
   period: string
@@ -43,6 +44,7 @@ const PERIODS = [
 export default function ReportsPage() {
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [gated, setGated] = useState(false)
   const [period, setPeriod] = useState('90d')
   const [showId, setShowId] = useState('')
   const [shows, setShows] = useState<ShowOption[]>([])
@@ -59,8 +61,11 @@ export default function ReportsPage() {
     const params = new URLSearchParams({ period })
     if (showId) params.set('show_id', showId)
     fetch(`/api/v1/reports?${params}`)
-      .then((r) => r.json())
-      .then((r) => setData(r.data || null))
+      .then((r) => {
+        if (r.status === 403) { setGated(true); return null }
+        return r.json()
+      })
+      .then((r) => { if (r) setData(r.data || null) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [period, showId])
@@ -104,7 +109,20 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {loading ? (
+      {gated ? (
+        <div className="rounded-xl border border-border-default bg-surface-raised p-12 text-center">
+          <h2 className="text-lg font-semibold text-text-primary">Reporting & Analytics</h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            Detailed reporting and analytics are available on the Studio plan.
+          </p>
+          <Link
+            href="/app/settings/billing"
+            className="mt-4 inline-block rounded-lg bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
+          >
+            Upgrade to Studio
+          </Link>
+        </div>
+      ) : loading ? (
         <div className="text-sm text-text-tertiary py-12 text-center">Loading reports...</div>
       ) : !data ? (
         <div className="text-sm text-text-tertiary py-12 text-center">Failed to load reports.</div>

@@ -15,6 +15,7 @@ export type Feature =
   | 'client_portal'
   | 'multi_user'
   | 'white_label'
+  | 'reporting'
 
 export interface Entitlements {
   planId: string

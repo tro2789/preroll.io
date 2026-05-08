@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getOrgEntitlements } from '@/lib/entitlements'
 
 function periodToDate(period: string): Date | null {
   const now = new Date()
@@ -21,6 +22,9 @@ function periodToDate(period: string): Date | null {
 export async function GET(request: NextRequest) {
   const { org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const ent = await getOrgEntitlements(org!.id)
+  if (!ent.can('reporting')) return errorResponse('Upgrade to Studio for reporting and analytics', 403)
 
   const searchParams = request.nextUrl.searchParams
   const period = searchParams.get('period') || '90d'
