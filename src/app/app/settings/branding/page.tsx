@@ -1,0 +1,263 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+
+interface Branding {
+  display_name: string | null
+  logo_url: string | null
+  accent_color: string | null
+}
+
+export default function BrandingPage() {
+  const [branding, setBranding] = useState<Branding | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [entitled, setEntitled] = useState(true)
+
+  const [displayName, setDisplayName] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [accentColor, setAccentColor] = useState('#7c5cbf')
+
+  useEffect(() => {
+    fetch('/api/v1/org/branding')
+      .then(async (r) => {
+        const json = await r.json()
+        const data = json.data
+        if (data.entitled === false) {
+          setEntitled(false)
+          return
+        }
+        setBranding(data as Branding)
+        setDisplayName(data.display_name || '')
+        setLogoUrl(data.logo_url || '')
+        setAccentColor(data.accent_color || '#7c5cbf')
+      })
+      .catch(() => setError('Failed to load branding'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function handleSave() {
+    setSaving(true)
+    setSaved(false)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/v1/org/branding', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          display_name: displayName.trim(),
+          logo_url: logoUrl.trim(),
+          accent_color: accentColor.trim(),
+        }),
+      })
+
+      if (!res.ok) {
+        const json = await res.json()
+        if (res.status === 403 && json.error?.includes('White-label')) {
+          setEntitled(false)
+          return
+        }
+        setError(json.error || 'Failed to save')
+        return
+      }
+
+      const json = await res.json()
+      setBranding(json.data)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch {
+      setError('Failed to save branding')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="text-sm text-text-tertiary">Loading branding...</div>
+  }
+
+  if (!entitled) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-text-primary">Portal Branding</h2>
+        <div className="rounded-xl border border-border-default bg-surface-raised p-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-muted">
+            <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-text-primary">White-Label Branding</h3>
+          <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
+            Customize the client portal with your own logo, brand name, and accent color.
+            This feature is available on the Studio plan.
+          </p>
+          <a
+            href="/app/settings/billing"
+            className="mt-6 inline-block rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
+          >
+            Upgrade to Studio
+          </a>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-lg font-semibold text-text-primary">Portal Branding</h2>
+        <p className="mt-1 text-sm text-text-secondary">
+          Customize what your clients see in the portal.
+        </p>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
+          {error}
+        </div>
+      )}
+
+      {saved && (
+        <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
+          Branding saved successfully.
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border-default bg-surface-raised p-6 space-y-6">
+        <div>
+          <label htmlFor="display-name" className="block text-sm font-medium text-text-primary">
+            Display Name
+          </label>
+          <p className="mt-1 text-xs text-text-tertiary">
+            Replaces &quot;PreRoll&quot; in the portal header.
+          </p>
+          <input
+            id="display-name"
+            type="text"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder="Your Studio Name"
+            className="mt-2 w-full max-w-md rounded-lg border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="logo-url" className="block text-sm font-medium text-text-primary">
+            Logo URL
+          </label>
+          <p className="mt-1 text-xs text-text-tertiary">
+            URL to your logo image. Displayed at 24px height in the portal header.
+          </p>
+          <input
+            id="logo-url"
+            type="url"
+            value={logoUrl}
+            onChange={(e) => setLogoUrl(e.target.value)}
+            placeholder="https://example.com/logo.svg"
+            className="mt-2 w-full max-w-md rounded-lg border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          />
+          {logoUrl && (
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-base p-3">
+              <img
+                src={logoUrl}
+                alt="Logo preview"
+                className="h-6 w-auto"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none'
+                }}
+              />
+              <span className="text-xs text-text-tertiary">Preview</span>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="accent-color" className="block text-sm font-medium text-text-primary">
+            Accent Color
+          </label>
+          <p className="mt-1 text-xs text-text-tertiary">
+            Primary brand color used for links, buttons, and highlights in the portal.
+          </p>
+          <div className="mt-2 flex items-center gap-3">
+            <input
+              id="accent-color"
+              type="color"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              className="h-10 w-10 cursor-pointer rounded-lg border border-border-default bg-transparent p-0.5"
+            />
+            <input
+              type="text"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+              placeholder="#7c5cbf"
+              className="w-32 rounded-lg border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary font-mono placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+            <div
+              className="h-10 w-10 rounded-lg border border-border-default"
+              style={{ backgroundColor: accentColor }}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border-default bg-surface-raised p-6">
+        <h3 className="text-sm font-semibold text-text-primary">Portal Header Preview</h3>
+        <div className="mt-4 rounded-lg border border-border-subtle bg-surface-base overflow-hidden">
+          <div className="border-b border-border-subtle bg-surface-raised/50 px-4 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="Logo"
+                  className="h-6 w-auto"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none'
+                  }}
+                />
+              ) : (
+                <span
+                  className="text-sm font-bold tracking-widest uppercase"
+                  style={{ color: accentColor || undefined }}
+                >
+                  {displayName || 'PreRoll'}
+                </span>
+              )}
+              <span className="text-border-default">/</span>
+              <span className="text-sm text-text-secondary">Client Name</span>
+            </div>
+            <span className="text-xs text-text-tertiary">client@example.com</span>
+          </div>
+          <div className="px-4 py-6 text-xs text-text-tertiary text-center">
+            Portal content area
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+        >
+          {saving ? 'Saving...' : 'Save Branding'}
+        </button>
+        {branding && (branding.display_name || branding.logo_url || branding.accent_color) && (
+          <button
+            onClick={() => {
+              setDisplayName('')
+              setLogoUrl('')
+              setAccentColor('#7c5cbf')
+            }}
+            className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"
+          >
+            Reset to Defaults
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
