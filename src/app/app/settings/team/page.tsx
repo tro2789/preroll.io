@@ -1,0 +1,293 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+
+interface Member {
+  id: string
+  user_id: string
+  email: string | null
+  name: string | null
+  role: string
+  created_at: string
+}
+
+interface Invite {
+  id: string
+  email: string
+  role: string
+  expires_at: string
+  created_at: string
+}
+
+const ROLE_COLORS: Record<string, string> = {
+  owner: 'bg-purple-500/15 text-purple-400',
+  admin: 'bg-blue-500/15 text-blue-400',
+  member: 'bg-surface-overlay text-text-secondary',
+}
+
+export default function TeamPage() {
+  const [members, setMembers] = useState<Member[]>([])
+  const [invites, setInvites] = useState<Invite[]>([])
+  const [loading, setLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState('member')
+  const [inviting, setInviting] = useState(false)
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
+  const [inviteError, setInviteError] = useState<string | null>(null)
+
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
+  const [cancelingId, setCancelingId] = useState<string | null>(null)
+
+  async function refreshTeam() {
+    const res = await fetch('/api/v1/team')
+    const json = await res.json()
+    if (json.data) {
+      setMembers(json.data.members || [])
+      setInvites(json.data.invites || [])
+      return json.data.members as Member[]
+    }
+    return []
+  }
+
+  useEffect(() => {
+    async function init() {
+      try {
+        const supabase = createClient()
+        const [, { data: { user } }] = await Promise.all([
+          refreshTeam().then((m) => {
+            setLoading(false)
+            return m
+          }),
+          supabase.auth.getUser(),
+        ])
+        if (user) {
+          setCurrentUserId(user.id)
+        }
+      } catch {
+        setLoading(false)
+      }
+    }
+    init()
+  }, [])
+
+  const currentUserRole = useMemo(() => {
+    if (!currentUserId) return 'member'
+    return members.find((m) => m.user_id === currentUserId)?.role ?? 'member'
+  }, [currentUserId, members])
+
+  const isAdmin = currentUserRole === 'admin' || currentUserRole === 'owner'
+
+  async function handleInvite(e: React.FormEvent) {
+    e.preventDefault()
+    if (!inviteEmail.trim()) return
+    setInviting(true)
+    setInviteError(null)
+    setInviteSuccess(null)
+    try {
+      const res = await fetch('/api/v1/team/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
+      })
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || 'Failed to send invite')
+      }
+      setInviteSuccess(`Invite sent to ${inviteEmail.trim()}`)
+      setInviteEmail('')
+      setInviteRole('member')
+      await refreshTeam()
+    } catch (err) {
+      setInviteError(err instanceof Error ? err.message : 'Something went wrong')
+    } finally {
+      setInviting(false)
+    }
+  }
+
+  async function handleRemove(memberId: string) {
+    setRemovingId(memberId)
+    try {
+      await fetch(`/api/v1/team/${memberId}`, { method: 'DELETE' })
+      await refreshTeam()
+    } catch {}
+    setRemovingId(null)
+    setConfirmRemoveId(null)
+  }
+
+  async function handleCancelInvite(inviteId: string) {
+    setCancelingId(inviteId)
+    try {
+      await fetch(`/api/v1/team/invite/${inviteId}`, { method: 'DELETE' })
+      await refreshTeam()
+    } catch {}
+    setCancelingId(null)
+  }
+
+  function formatDate(d: string) {
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  if (loading) {
+    return <div className="text-sm text-text-tertiary">Loading team...</div>
+  }
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+          Team Members
+        </h2>
+        <p className="mt-1 text-xs text-text-tertiary">
+          Manage who has access to your organization.
+        </p>
+
+        {members.length === 0 ? (
+          <div className="mt-4 rounded-lg border border-border-subtle bg-surface-raised p-8 text-center">
+            <p className="text-sm text-text-secondary">No team members found.</p>
+          </div>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {members.map((m) => (
+              <div key={m.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-raised px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-text-primary">
+                      {m.name || m.email || 'Unknown'}
+                      {m.user_id === currentUserId && (
+                        <span className="ml-1.5 text-xs text-text-tertiary">(you)</span>
+                      )}
+                    </p>
+                    {m.name && m.email && (
+                      <p className="text-xs text-text-tertiary">{m.email}</p>
+                    )}
+                  </div>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[m.role] || ROLE_COLORS.member}`}>
+                    {m.role}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-text-tertiary">
+                    Joined {formatDate(m.created_at)}
+                  </span>
+                  {isAdmin && m.role !== 'owner' && m.user_id !== currentUserId && (
+                    <>
+                      {confirmRemoveId === m.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleRemove(m.id)}
+                            disabled={removingId === m.id}
+                            className="rounded-md bg-red-600 px-2 py-0.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+                          >
+                            {removingId === m.id ? '...' : 'Confirm'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmRemoveId(null)}
+                            className="text-xs text-text-tertiary hover:text-text-secondary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmRemoveId(m.id)}
+                          className="text-xs text-text-tertiary hover:text-red-400 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {isAdmin && (
+        <div>
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+            Invite Team Member
+          </h2>
+          <p className="mt-1 text-xs text-text-tertiary">
+            Send an email invitation to add someone to your organization.
+          </p>
+
+          {inviteSuccess && (
+            <div className="mt-4 rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
+              {inviteSuccess}
+            </div>
+          )}
+
+          {inviteError && (
+            <p className="mt-2 text-xs text-error">{inviteError}</p>
+          )}
+
+          <form onSubmit={handleInvite} className="mt-4 flex gap-2">
+            <input
+              type="email"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              placeholder="teammate@example.com"
+              required
+              className="flex-1 max-w-xs rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            />
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value)}
+              className="rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              <option value="member">Member</option>
+              <option value="admin">Admin</option>
+            </select>
+            <button
+              type="submit"
+              disabled={!inviteEmail.trim() || inviting}
+              className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+            >
+              {inviting ? 'Sending...' : 'Send Invite'}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {invites.length > 0 && (
+        <div>
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+            Pending Invites
+          </h2>
+          <div className="mt-4 space-y-2">
+            {invites.map((inv) => (
+              <div key={inv.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-raised px-5 py-3">
+                <div className="flex items-center gap-3">
+                  <div>
+                    <p className="text-sm font-medium text-text-primary">{inv.email}</p>
+                    <p className="text-xs text-text-tertiary">
+                      Expires {formatDate(inv.expires_at)}
+                    </p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[inv.role] || ROLE_COLORS.member}`}>
+                    {inv.role}
+                  </span>
+                </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => handleCancelInvite(inv.id)}
+                    disabled={cancelingId === inv.id}
+                    className="text-xs text-text-tertiary hover:text-red-400 transition-colors disabled:opacity-50"
+                  >
+                    {cancelingId === inv.id ? 'Canceling...' : 'Cancel'}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
