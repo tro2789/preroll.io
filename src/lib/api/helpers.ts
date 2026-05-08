@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
-import { createServerClient } from '@supabase/ssr'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
 import { NextResponse } from 'next/server'
+import { resolveUserOrg, resolveOrgFromApiKey, type OrgContext } from '@/lib/org/resolve'
 
 function hashKey(key: string): string {
   return createHash('sha256').update(key).digest('hex')
@@ -16,38 +16,45 @@ export async function getAuthenticatedClient() {
     const token = authHeader.slice(7)
     const hash = hashKey(token)
 
-    const serviceClient = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { cookies: { getAll: () => [], setAll: () => {} } }
-    )
+    const serviceClient = createServiceClient()
 
     const { data: apiKey } = await serviceClient
       .from('api_keys')
-      .select('id, user_id')
+      .select('id, user_id, org_id')
       .eq('key_hash', hash)
       .single()
 
     if (!apiKey) {
-      return { supabase: null, user: null, error: NextResponse.json({ error: 'Invalid API key' }, { status: 401 }) }
+      return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'Invalid API key' }, { status: 401 }) }
     }
 
     const { data: { user } } = await serviceClient.auth.admin.getUserById(apiKey.user_id)
     if (!user) {
-      return { supabase: null, user: null, error: NextResponse.json({ error: 'User not found' }, { status: 401 }) }
+      return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'User not found' }, { status: 401 }) }
+    }
+
+    const org = await resolveOrgFromApiKey(apiKey.org_id)
+    if (!org) {
+      return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'Organization not found' }, { status: 401 }) }
     }
 
     serviceClient.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', apiKey.id).then(() => {})
 
-    return { supabase: serviceClient, user, error: null }
+    return { supabase: serviceClient, user, org, error: null }
   }
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    return { supabase: null, user: null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
+    return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   }
-  return { supabase, user, error: null }
+
+  const org = await resolveUserOrg(user.id)
+  if (!org) {
+    return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'No organization found' }, { status: 401 }) }
+  }
+
+  return { supabase, user, org, error: null }
 }
 
 export function jsonResponse(data: unknown, status = 200) {
