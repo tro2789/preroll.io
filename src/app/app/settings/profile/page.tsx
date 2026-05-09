@@ -67,33 +67,18 @@ export default function ProfilePage() {
     setUploading(true)
     setError(null)
     try {
+      const formData = new FormData()
+      formData.append('file', file)
       const res = await fetch('/api/v1/profile/avatar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contentType: file.type, fileSize: file.size }),
+        body: formData,
       })
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error || 'Failed to get upload URL')
+        throw new Error(json.error || 'Upload failed')
       }
       const { data } = await res.json()
-
-      const uploadRes = await fetch(data.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      })
-      if (!uploadRes.ok) throw new Error('Upload failed')
-
-      const keyWithCacheBust = `${data.key}?v=${Date.now()}`
-      const saveRes = await fetch('/api/v1/profile', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ avatar_url: keyWithCacheBust }),
-      })
-      if (!saveRes.ok) throw new Error('Failed to save avatar')
-      const { data: updated } = await saveRes.json()
-      setProfile((prev) => prev ? { ...prev, ...updated } : prev)
+      setProfile((prev) => prev ? { ...prev, avatar_url: data.avatar_url } : prev)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
