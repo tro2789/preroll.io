@@ -343,8 +343,8 @@ BEGIN
   user_name := COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1));
   user_slug := REPLACE(NEW.id::text, '-', '');
 
-  INSERT INTO public.organizations (name, slug)
-  VALUES (user_name || '''s Workspace', user_slug)
+  INSERT INTO public.organizations (name, slug, trial_ends_at)
+  VALUES (user_name || '''s Workspace', user_slug, NOW() + INTERVAL '7 days')
   RETURNING id INTO new_org_id;
 
   INSERT INTO public.memberships (org_id, user_id, role)
