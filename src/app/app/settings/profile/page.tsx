@@ -45,11 +45,11 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ display_name: displayName }),
       })
+      const json = await res.json()
       if (!res.ok) {
-        const json = await res.json()
         throw new Error(json.error || 'Failed to update profile')
       }
-      const { data } = await res.json()
+      const { data } = json
       setProfile((prev) => prev ? { ...prev, ...data } : prev)
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
