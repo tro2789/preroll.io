@@ -134,46 +134,6 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-8">
-      {success && isPaid && (
-        <div className="relative overflow-hidden rounded-xl border border-success/40 bg-gradient-to-br from-success/15 via-success/5 to-transparent p-6">
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-success/10 blur-3xl" />
-          <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-success/10 blur-2xl" />
-          <div className="relative">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/15">
-                <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-text-primary">
-                  Welcome to {PLAN_LABELS[currentPlan]}
-                </h3>
-                <p className="text-sm text-text-secondary">
-                  Your subscription is active — you&apos;re all set.
-                </p>
-              </div>
-            </div>
-            {planFeatures[currentPlan] && (
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                {planFeatures[currentPlan].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
-                    <svg className="h-3.5 w-3.5 shrink-0 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
-                    {f}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {success && !isPaid && (
-        <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
-          Your subscription is now active.
-        </div>
-      )}
       {canceled && (
         <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">
           Checkout was canceled. No changes were made.
@@ -215,80 +175,104 @@ export default function BillingPage() {
 
       <div>
         <h2 className="text-lg font-semibold text-text-primary">Current Plan</h2>
-        <div className={`mt-3 rounded-xl border p-6 ${
-          isPaid
-            ? 'border-accent/30 bg-gradient-to-br from-surface-raised to-surface-raised/80'
-            : 'border-border-default bg-surface-raised'
+        <div className={`relative mt-3 overflow-hidden rounded-xl border p-6 ${
+          success && isPaid
+            ? 'border-success/40 bg-gradient-to-br from-success/15 via-success/5 to-transparent'
+            : isPaid
+              ? 'border-accent/30 bg-gradient-to-br from-accent/10 via-surface-raised to-surface-raised'
+              : 'border-border-default bg-surface-raised'
         }`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {isPaid && (
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
-                  <svg className="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
-                  </svg>
-                </div>
-              )}
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-text-primary">
-                    {PLAN_LABELS[currentPlan] || currentPlan}
-                  </span>
-                  {isPaid && !isCanceling && billing?.plan_status === 'active' && (
-                    <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
-                      Active
-                    </span>
-                  )}
-                  {billing?.plan_status && billing.plan_status !== 'active' && (
-                    <span className="rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
-                      {billing.plan_status}
-                    </span>
-                  )}
-                  {isCanceling && (
-                    <span className="rounded-full bg-error/10 px-2.5 py-0.5 text-xs font-medium text-error">
-                      Cancels at period end
-                    </span>
-                  )}
-                </div>
-                {isPaid && planPrice[currentPlan] && (
-                  <p className="mt-0.5 text-sm text-text-tertiary">
-                    {planPrice[currentPlan]}
-                    {billing?.subscription?.current_period_end && (
-                      <> &middot; Renews {new Date(billing.subscription.current_period_end).toLocaleDateString()}</>
+          {isPaid && (
+            <>
+              <div className={`absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl ${success ? 'bg-success/10' : 'bg-accent/10'}`} />
+              <div className={`absolute -bottom-6 -left-6 h-20 w-20 rounded-full blur-2xl ${success ? 'bg-success/10' : 'bg-accent/10'}`} />
+            </>
+          )}
+          <div className="relative">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isPaid && (
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${success ? 'bg-success/15' : 'bg-accent/15'}`}>
+                    {success ? (
+                      <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                      </svg>
+                    ) : (
+                      <svg className="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+                      </svg>
                     )}
-                  </p>
+                  </div>
                 )}
-                {!isPaid && (
-                  <p className="mt-0.5 text-sm text-text-tertiary">
-                    1 client, 1 show — upgrade below to unlock more.
-                  </p>
-                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-text-primary">
+                      {success && isPaid
+                        ? `Welcome to ${PLAN_LABELS[currentPlan]}`
+                        : PLAN_LABELS[currentPlan] || currentPlan}
+                    </span>
+                    {isPaid && !isCanceling && billing?.plan_status === 'active' && (
+                      <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
+                        Active
+                      </span>
+                    )}
+                    {billing?.plan_status && billing.plan_status !== 'active' && (
+                      <span className="rounded-full bg-warning/10 px-2.5 py-0.5 text-xs font-medium text-warning">
+                        {billing.plan_status}
+                      </span>
+                    )}
+                    {isCanceling && (
+                      <span className="rounded-full bg-error/10 px-2.5 py-0.5 text-xs font-medium text-error">
+                        Cancels at period end
+                      </span>
+                    )}
+                  </div>
+                  {isPaid && (
+                    <p className="mt-0.5 text-sm text-text-tertiary">
+                      {success
+                        ? "Your subscription is active — you’re all set."
+                        : planPrice[currentPlan] && (
+                            <>
+                              {planPrice[currentPlan]}
+                              {billing?.subscription?.current_period_end && (
+                                <> &middot; Renews {new Date(billing.subscription.current_period_end).toLocaleDateString()}</>
+                              )}
+                            </>
+                          )}
+                    </p>
+                  )}
+                  {!isPaid && (
+                    <p className="mt-0.5 text-sm text-text-tertiary">
+                      1 client, 1 show — upgrade below to unlock more.
+                    </p>
+                  )}
+                </div>
               </div>
+              {isPaid && (
+                <button
+                  onClick={handleManage}
+                  className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"
+                >
+                  Manage Subscription
+                </button>
+              )}
             </div>
-            {isPaid && (
-              <button
-                onClick={handleManage}
-                className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"
-              >
-                Manage Subscription
-              </button>
+            {isPaid && planFeatures[currentPlan] && (
+              <div className="mt-5 border-t border-border-default/50 pt-5">
+                <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">What&apos;s included</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {planFeatures[currentPlan].map((f) => (
+                    <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
+                      <svg className={`h-3.5 w-3.5 shrink-0 ${success ? 'text-success' : 'text-accent'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                      </svg>
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-          {isPaid && planFeatures[currentPlan] && !success && (
-            <div className="mt-5 border-t border-border-default pt-5">
-              <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">What&apos;s included</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {planFeatures[currentPlan].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
-                    <svg className="h-3.5 w-3.5 shrink-0 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
