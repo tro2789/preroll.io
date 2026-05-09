@@ -21,7 +21,7 @@ export default async function ApiKeysPage() {
   const org = await resolveUserOrg(user.id)
   if (!org) redirect('/login')
 
-  const entitlements = await getOrgEntitlements(org.id, org.planId)
+  const entitlements = await getOrgEntitlements(org.id, org.planId, org.trialEndsAt)
 
   if (!entitlements.can('api_keys')) {
     return (

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const roleError = requireRole(org!, 'admin')
   if (roleError) return roleError
 
-  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId, org!.trialEndsAt)
   if (!entitlements.can('multi_user')) {
     return errorResponse('Upgrade to Studio to invite team members.', 403)
   }

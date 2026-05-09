@@ -39,7 +39,7 @@ export default function TeamPage() {
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
 
-  const [canInvite, setCanInvite] = useState(true)
+  const [canInvite, setCanInvite] = useState(false)
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
   const [cancelingId, setCancelingId] = useState<string | null>(null)
