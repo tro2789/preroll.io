@@ -177,7 +177,8 @@ function JoinContent() {
 
       {!passwordSet ? (
         <form onSubmit={handleSetPassword} className="rounded-lg bg-surface-raised p-6 border border-border-subtle space-y-4 text-left">
-          <p className="text-sm font-medium text-text-primary">Set a password to sign in later</p>
+          <p className="text-sm font-medium text-text-primary">Set a password to continue</p>
+          <p className="text-xs text-text-tertiary">You&apos;ll use this to sign in next time.</p>
           {passwordError && (
             <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2 text-sm text-error">
               {passwordError}
@@ -217,21 +218,17 @@ function JoinContent() {
             disabled={settingPassword}
             className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
           >
-            {settingPassword ? 'Setting password...' : 'Set Password'}
+            {settingPassword ? 'Setting password...' : 'Set Password & Continue'}
           </button>
         </form>
       ) : (
-        <div className="rounded-lg bg-success/10 border border-success/30 px-4 py-3 text-sm text-success">
-          Password set. You can now sign in with your email and password.
-        </div>
+        <Link
+          href="/app"
+          className="inline-block w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
+        >
+          Go to Dashboard
+        </Link>
       )}
-
-      <Link
-        href="/app"
-        className="inline-block w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
-      >
-        Go to Dashboard
-      </Link>
     </div>
   )
 }
