@@ -25,23 +25,25 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         Manage your integrations, webhooks, and API access.
       </p>
 
-      <nav className="mt-6 flex gap-1 border-b border-border-default">
-        {tabs.map((tab) => {
-          const isActive = pathname.startsWith(tab.href)
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`px-4 py-2 text-sm font-medium transition-colors -mb-px ${
-                isActive
-                  ? 'text-accent-hover border-b-2 border-accent'
-                  : 'text-text-tertiary hover:text-text-secondary'
-              }`}
-            >
-              {tab.label}
-            </Link>
-          )
-        })}
+      <nav className="mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto border-b border-border-default">
+        <div className="flex gap-1 min-w-max">
+          {tabs.map((tab) => {
+            const isActive = pathname.startsWith(tab.href)
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors -mb-px ${
+                  isActive
+                    ? 'text-accent-hover border-b-2 border-accent'
+                    : 'text-text-tertiary hover:text-text-secondary'
+                }`}
+              >
+                {tab.label}
+              </Link>
+            )
+          })}
+        </div>
       </nav>
 
       <div className="mt-8">{children}</div>

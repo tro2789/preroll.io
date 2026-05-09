@@ -240,7 +240,7 @@ export function ReviewPlayer({
         {/* Progress bar */}
         <div
           ref={progressRef}
-          className="group relative h-1.5 cursor-pointer rounded-full bg-surface-overlay"
+          className="group relative h-2.5 sm:h-1.5 cursor-pointer rounded-full bg-surface-overlay"
           onClick={handleProgressClick}
           onMouseEnter={() => setHoveringProgress(true)}
           onMouseLeave={() => setHoveringProgress(false)}

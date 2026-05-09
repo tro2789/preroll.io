@@ -69,7 +69,7 @@ export function QuickCreateEpisode({ showId }: QuickCreateEpisodeProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised shadow-xl">
         <div className="border-b border-border-subtle px-5 py-3">
           <h3 className="text-sm font-medium text-text-primary">New Episode</h3>

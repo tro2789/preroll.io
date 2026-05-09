@@ -115,7 +115,7 @@ export function FilePickerModal({ provider, open, onClose, onSelect }: FilePicke
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-surface-base border border-border-subtle rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         <div className="px-5 py-4 border-b border-border-subtle flex items-center justify-between">
           <h2 className="text-sm font-semibold text-text-primary">Browse Frame.io</h2>

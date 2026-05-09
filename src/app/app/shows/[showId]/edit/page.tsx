@@ -132,7 +132,7 @@ export default function EditShowPage({
 
       <div className="mt-6">
         {activeTab === 'details' && (
-          <div className="flex gap-6 items-start">
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
             <ThumbnailUpload
               id={showId}
               imageUrl={show.cover_art_url || null}
@@ -141,7 +141,7 @@ export default function EditShowPage({
               aspect="square"
               className="w-32 shrink-0"
             />
-            <div className="flex-1 max-w-lg">
+            <div className="flex-1 w-full max-w-lg">
               <ShowForm
                 clientId={show.client_id || ''}
                 defaultValues={{

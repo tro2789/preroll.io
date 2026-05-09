@@ -93,7 +93,7 @@ export default async function EpisodeDetailPage({
         &larr; Back to Show
       </Link>
 
-      <div className="mt-4 flex items-start justify-between gap-4">
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="min-w-0">
           <h1 className="text-xl font-bold text-text-primary leading-tight">{episode.title}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -127,7 +127,7 @@ export default async function EpisodeDetailPage({
             </a>
           )}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2 flex-wrap">
           {distributionConnection && (
             <PublishButton
               showId={showId}

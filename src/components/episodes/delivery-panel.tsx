@@ -515,7 +515,8 @@ export function DeliveryPanel({
     const sorted = getSortedFiles()
 
     return (
-      <table className="w-full text-left">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left min-w-[600px]">
         <thead>
           <tr className="text-xs font-medium border-b border-border-subtle">
             <SortHeader label="Name" column="name" width="" />
@@ -584,7 +585,8 @@ export function DeliveryPanel({
             )
           })}
         </tbody>
-      </table>
+        </table>
+      </div>
     )
   }
 
@@ -601,8 +603,8 @@ export function DeliveryPanel({
       />
 
       {showConnectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setShowConnectModal(false) }}>
-          <div className="w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) setShowConnectModal(false) }}>
+          <div className="w-full max-w-sm rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
             <h3 className="text-base font-semibold text-text-primary">Connect a delivery provider</h3>
             <p className="mt-2 text-sm text-text-secondary">
               Pick a provider to start uploading and managing files for this episode.
@@ -639,7 +641,7 @@ export function DeliveryPanel({
       )}
 
       {showProviderPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-sm rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
             <h3 className="text-base font-semibold text-text-primary">Choose a delivery provider</h3>
             <p className="mt-2 text-sm text-text-secondary">
@@ -689,7 +691,7 @@ export function DeliveryPanel({
         <div className="min-w-0 space-y-4">
           {/* Header bar */}
           {hasProvider && (
-            <div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
               {!hasProject ? (
                 <div className="rounded-xl border border-border-subtle bg-surface-raised p-5">
                   <div className="flex items-center gap-3">
@@ -800,7 +802,7 @@ export function DeliveryPanel({
           {/* File grid or list */}
           {isLive && !projectMissing && !filesLoading && files.length > 0 && (
             viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xl:grid-cols-3">
                 {files.map(renderFileCard)}
               </div>
             ) : (
@@ -810,7 +812,7 @@ export function DeliveryPanel({
 
           {/* Loading skeleton */}
           {isLive && filesLoading && files.length === 0 && (
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 xl:grid-cols-3">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden animate-pulse">
                   <div className="aspect-video bg-surface-raised" />

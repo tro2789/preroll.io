@@ -121,7 +121,7 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
       ) : (
         <div className="mt-4 space-y-3">
           {endpoints.map((ep) => (
-            <div key={ep.id} className={`rounded-lg border bg-surface-raised p-5 transition-colors ${
+            <div key={ep.id} className={`rounded-lg border bg-surface-raised p-4 sm:p-5 transition-colors ${
               ep.is_active ? 'border-border-subtle' : 'border-border-subtle opacity-60'
             }`}>
               {editingId === ep.id ? (
@@ -132,7 +132,7 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
                   submitLabel="Save Changes"
                 />
               ) : (
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <code className="truncate font-mono text-sm text-text-primary">{ep.url}</code>

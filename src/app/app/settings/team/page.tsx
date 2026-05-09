@@ -160,35 +160,35 @@ export default function TeamPage() {
             {members.map((m) => {
               const avatarSrc = resolveAssetUrl(m.avatar_url)
               return (
-              <div key={m.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-raised px-5 py-3">
-                <div className="flex items-center gap-3">
+              <div key={m.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-border-subtle bg-surface-raised px-4 sm:px-5 py-3">
+                <div className="flex items-center gap-3 min-w-0">
                   {avatarSrc ? (
                     <img
                       src={avatarSrc}
                       alt={m.name || ''}
-                      className="h-8 w-8 rounded-full object-cover"
+                      className="h-8 w-8 rounded-full object-cover shrink-0"
                     />
                   ) : (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-accent text-xs font-bold">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent text-xs font-bold">
                       {(m.name || m.email || '?').charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm font-medium text-text-primary">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-text-primary truncate">
                       {m.name || m.email || 'Unknown'}
                       {m.user_id === currentUserId && (
                         <span className="ml-1.5 text-xs text-text-tertiary">(you)</span>
                       )}
                     </p>
                     {m.name && m.email && (
-                      <p className="text-xs text-text-tertiary">{m.email}</p>
+                      <p className="text-xs text-text-tertiary truncate">{m.email}</p>
                     )}
                   </div>
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[m.role] || ROLE_COLORS.member}`}>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[m.role] || ROLE_COLORS.member}`}>
                     {m.role}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs text-text-tertiary">
                     Joined {formatDate(m.created_at)}
                   </span>
@@ -261,30 +261,32 @@ export default function TeamPage() {
             </div>
           )}
 
-          <form onSubmit={handleInvite} className="mt-4 flex gap-2">
+          <form onSubmit={handleInvite} className="mt-4 flex flex-col sm:flex-row gap-2">
             <input
               type="email"
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="teammate@example.com"
               required
-              className="flex-1 max-w-xs rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              className="flex-1 sm:max-w-xs rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             />
-            <select
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value)}
-              className="rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="member">Member</option>
-              <option value="admin">Admin</option>
-            </select>
-            <button
-              type="submit"
-              disabled={!inviteEmail.trim() || inviting}
-              className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-            >
-              {inviting ? 'Sending...' : 'Send Invite'}
-            </button>
+            <div className="flex gap-2">
+              <select
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+                className="rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+              >
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button
+                type="submit"
+                disabled={!inviteEmail.trim() || inviting}
+                className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+              >
+                {inviting ? 'Sending...' : 'Send Invite'}
+              </button>
+            </div>
           </form>
         </div>
       )}
@@ -296,15 +298,15 @@ export default function TeamPage() {
           </h2>
           <div className="mt-4 space-y-2">
             {invites.map((inv) => (
-              <div key={inv.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-raised px-5 py-3">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-text-primary">{inv.email}</p>
+              <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-border-subtle bg-surface-raised px-4 sm:px-5 py-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-text-primary truncate">{inv.email}</p>
                     <p className="text-xs text-text-tertiary">
                       Expires {formatDate(inv.expires_at)}
                     </p>
                   </div>
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[inv.role] || ROLE_COLORS.member}`}>
+                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[inv.role] || ROLE_COLORS.member}`}>
                     {inv.role}
                   </span>
                 </div>

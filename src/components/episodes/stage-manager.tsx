@@ -225,7 +225,7 @@ export function StageManager({ showId, stages: initialStages, open, onClose }: S
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 bg-black/60 backdrop-blur-sm">
       <div className="w-full max-w-lg rounded-xl border border-border-subtle bg-surface-raised shadow-xl">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
           <h2 className="text-sm font-semibold text-text-primary">Manage Pipeline Stages</h2>

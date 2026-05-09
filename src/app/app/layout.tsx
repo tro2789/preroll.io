@@ -41,7 +41,7 @@ export default async function AppLayout({
   const activeOrg = orgs.find((o) => o.id === activeOrgId) || orgs[0]
 
   return (
-    <div className="min-h-screen bg-surface-base">
+    <div className="min-h-screen bg-surface-base overflow-x-hidden">
       <Sidebar orgs={orgs} activeOrgId={activeOrg?.id} />
       <div className="md:pl-64 flex flex-col min-h-screen">
         <Header
