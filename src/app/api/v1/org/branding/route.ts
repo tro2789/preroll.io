@@ -68,5 +68,9 @@ export async function PATCH(request: NextRequest) {
     .single()
 
   if (dbError) return errorResponse(dbError.message, 500)
-  return jsonResponse(data)
+  return jsonResponse({
+    display_name: data?.display_name || null,
+    logo_url: resolveImageUrl(data?.logo_url) || null,
+    accent_color: data?.accent_color || null,
+  })
 }
