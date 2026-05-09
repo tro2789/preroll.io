@@ -14,11 +14,18 @@ export async function POST(request: Request) {
 
   const service = createServiceClient()
 
-  const { data: ownedOrgs } = await service
-    .from('memberships')
-    .select('org_id, organizations(plan_id)')
-    .eq('user_id', user.id)
-    .eq('role', 'owner')
+  const [{ data: ownedOrgs }, { data: profile }] = await Promise.all([
+    service
+      .from('memberships')
+      .select('org_id, organizations(plan_id)')
+      .eq('user_id', user.id)
+      .eq('role', 'owner'),
+    service
+      .from('user_profiles')
+      .select('trial_granted_at')
+      .eq('user_id', user.id)
+      .single(),
+  ])
 
   const ownedCount = ownedOrgs?.length ?? 0
   const hasPaidOrg = ownedOrgs?.some((m) => {
@@ -30,7 +37,7 @@ export async function POST(request: Request) {
     return errorResponse('Free plan is limited to 1 organization. Upgrade to create more.', 403)
   }
 
-  const isFirstOrg = ownedCount === 0
+  const trialAlreadyUsed = !!profile?.trial_granted_at
   const slug = crypto.randomUUID().replace(/-/g, '')
 
   const { data: org, error: orgError } = await service
@@ -38,9 +45,9 @@ export async function POST(request: Request) {
     .insert({
       name,
       slug,
-      trial_ends_at: isFirstOrg
-        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        : null,
+      trial_ends_at: trialAlreadyUsed
+        ? null
+        : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     })
     .select('id, name, slug, plan_id')
     .single()
@@ -52,6 +59,13 @@ export async function POST(request: Request) {
     .insert({ org_id: org.id, user_id: user.id, role: 'owner' })
 
   if (memError) return errorResponse(memError.message, 500)
+
+  if (!trialAlreadyUsed) {
+    await service
+      .from('user_profiles')
+      .update({ trial_granted_at: new Date().toISOString() })
+      .eq('user_id', user.id)
+  }
 
   await setOrgCookie(org.id)
 
