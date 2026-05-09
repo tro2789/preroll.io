@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { QuickCreate } from '@/components/dashboard/quick-create'
 import { KanbanBoard } from '@/components/dashboard/kanban-board'
+import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -83,6 +84,8 @@ export default async function DashboardPage() {
         <div />
         <QuickCreate />
       </div>
+
+      <OnboardingChecklist />
 
       {!hasAnyEpisodes ? (
         <p className="text-sm text-text-tertiary py-12 text-center">No episodes yet. Create a show and add your first episode to get started.</p>
