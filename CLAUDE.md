@@ -63,9 +63,17 @@ All data is scoped to **organizations** (not individual users). Every user belon
 - **`plan_entitlements`** — database-driven feature flags per plan (free/pro/studio)
 - **`PREROLL_SELF_HOSTED=true`** — env var that bypasses all plan checks
 
+### Free trial:
+- New signups get a **7-day Studio trial** (`trial_ends_at` on `organizations`, set by the `create_default_org` trigger)
+- During trial, free-plan users get Studio-level entitlements
+- `computeTrialInfo()` in `src/lib/entitlements.ts` computes trial state
+- Billing page shows trial countdown banner; upgrade gates show normally after trial expires
+
 ### Entitlements enforcement:
-- API-layer enforcement via `getOrgEntitlements(orgId)` in `src/lib/entitlements.ts`
-- Checked at resource-creation boundaries (POST /clients, /shows, /webhook-endpoints, /api-keys, /integrations auth-url)
+- API-layer enforcement via `getOrgEntitlements(orgId, planId?, trialEndsAt?)` in `src/lib/entitlements.ts`
+- Accepts optional `planId` and `trialEndsAt` from `OrgContext` to skip redundant DB queries
+- Checked at resource-creation boundaries AND page-level (server components gate before rendering)
+- UI gates use shared `<UpgradeGate>` component (`src/components/ui/upgrade-gate.tsx`)
 - Feature type union (`Feature`) ensures compile-time safety
 
 ### Stripe integration:
@@ -79,8 +87,10 @@ All data is scoped to **organizations** (not individual users). Every user belon
 | Tier | Price | Limits |
 |------|-------|--------|
 | Free | $0 | 1 client, 1 show, no integrations/webhooks/API keys |
-| Pro | $29/mo or $289/yr | Unlimited everything, all integrations |
-| Studio | $79/mo or $789/yr | Pro + multi-user, white-label (future) |
+| Pro | $29/mo or $289/yr | Unlimited clients/shows, all integrations, webhooks, API keys, MCP, templates |
+| Studio | $79/mo or $789/yr | Pro + multi-user, white-label branding, reporting/analytics |
+
+All new signups get a 7-day Studio trial.
 
 ## Data Model
 
@@ -122,8 +132,9 @@ The central auth helper is `getAuthenticatedClient()` in `src/lib/api/helpers.ts
 |------|---------|
 | `src/lib/supabase/server.ts` | `createClient()` (session-aware) and `createServiceClient()` (service role, no cookies) |
 | `src/lib/api/helpers.ts` | `getAuthenticatedClient()`, `jsonResponse()`, `errorResponse()` |
-| `src/lib/org/resolve.ts` | `resolveUserOrg()`, `resolveOrgFromApiKey()` |
-| `src/lib/entitlements.ts` | `getOrgEntitlements()`, `isSelfHosted()`, `Feature` type |
+| `src/lib/org/resolve.ts` | `resolveUserOrg()`, `resolveOrgFromApiKey()` → returns `OrgContext` (id, planId, trialEndsAt, role) |
+| `src/lib/entitlements.ts` | `getOrgEntitlements()`, `computeTrialInfo()`, `isSelfHosted()`, `Feature` type |
+| `src/components/ui/upgrade-gate.tsx` | `<UpgradeGate>` — shared upgrade prompt for gated features |
 | `src/lib/webhooks/dispatch.ts` | `dispatchWebhooks(orgId, event, data)` — fire-and-forget webhook delivery |
 | `src/lib/integrations/token-refresh.ts` | `getValidToken(orgId, provider)`, `getIntegrationAccountId(orgId, provider)` |
 | `src/lib/stripe/client.ts` | `getStripe()` — Stripe SDK singleton |
@@ -166,20 +177,23 @@ The central auth helper is `getAuthenticatedClient()` in `src/lib/api/helpers.ts
 
 ### Complete (Billing + Growth)
 - Organizations/workspaces (multi-tenant foundation)
-- Stripe integration (checkout, portal, webhooks)
+- Stripe integration (checkout, portal, webhooks) — configured in dev, needs live keys for prod
 - Plan entitlements system (database-driven feature flags)
-- Billing settings page (upgrade, manage subscription)
+- Billing settings page (upgrade, manage subscription, trial countdown)
 - Self-hosted mode bypass
 - Multi-user support (team invites, role-based access: owner/admin/member)
 - Reporting and analytics (episodes, on-time rate, approval turnaround, by-show/by-month)
 - Shared email helpers (`src/lib/email/send.ts`)
 - White-label client portal (custom branding per org: logo, accent color, display name)
 - License key system for self-hosted (soft gate, contact capture)
+- 7-day Studio trial for new signups
+- Standardized upgrade gates across all gated features (shared `<UpgradeGate>` component)
 
 ### Not Yet Built
 - Custom domain support for white-label portal
 - SSO / SAML
 - Stripe Connect (producer invoicing their clients)
+- Onboarding tour for new users
 
 ## Default Episode Pipeline Stages
 

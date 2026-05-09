@@ -77,16 +77,20 @@ RESEND_API_KEY=...
 
 ## 3. Test in Stripe Test Mode First
 
-Before going live, set up a parallel test configuration:
+**Dev environment status:** Test-mode Stripe is configured. Products, prices, and webhook endpoint are set up. Env vars are in `.env.local` and Vercel preview. Webhook destination: `we_1Stq1kC49HaM72BGjlsKLG1x` → `https://dev.preroll.io/api/stripe/webhook`.
 
-1. Create test-mode products/prices in Stripe (they're separate from live)
-2. Create a test-mode webhook endpoint pointing to your dev URL (e.g., `https://dev.preroll.io/api/stripe/webhook`)
-3. Set `sk_test_...` keys in your dev environment (Vercel preview or local `.env.local`)
+### Trial Checklist
+
+- [ ] Sign up a new user — confirm org auto-created with `trial_ends_at` = 7 days from now
+- [ ] Go to Settings > Billing — see "Studio Trial — 7 days left" banner
+- [ ] During trial: verify all features accessible (Integrations, Webhooks, API Keys, Team, Branding, Reports)
+- [ ] Set `trial_ends_at` to a past date in Supabase — verify trial banner changes to "Your free trial has ended"
+- [ ] After trial: verify upgrade gates appear on all gated settings pages and Reports
 
 ### Billing Flow Checklist
 
 - [ ] Sign up a new user — confirm org auto-created in Supabase (`organizations` + `memberships` tables)
-- [ ] Go to Settings > Billing — see Free plan, upgrade cards for Pro and Studio
+- [ ] Go to Settings > Billing — see Free plan (or trial), upgrade cards for Pro and Studio
 - [ ] Click Monthly under Pro
 - [ ] Complete checkout with test card `4242 4242 4242 4242` (any future expiry, any CVC)
 - [ ] Verify redirect to `/app/settings/billing?success=true`
@@ -94,16 +98,18 @@ Before going live, set up a parallel test configuration:
 - [ ] Click "Manage Subscription" — verify Stripe Customer Portal loads
 - [ ] In portal, cancel subscription — verify `plan_id` reverts to `free`
 
-### Entitlements Checklist
+### Entitlements Checklist (test with trial expired)
 
 - [ ] On **free plan**: create 1 client (should work), try creating a 2nd (should get 403)
 - [ ] On **free plan**: create 1 show (should work), try creating a 2nd (should get 403)
-- [ ] On **free plan**: try creating a webhook endpoint (should get 403 "Upgrade to Pro")
-- [ ] On **free plan**: try creating an API key (should get 403)
-- [ ] On **free plan**: try connecting an integration (should get 403)
-- [ ] Upgrade to **Pro**: all of the above should now work without limits
-- [ ] On **Pro plan**: try inviting a team member (should get 403 "Upgrade to Studio")
-- [ ] Upgrade to **Studio**: team invite should work
+- [ ] On **free plan**: Integrations page should show upgrade gate (not the connect buttons)
+- [ ] On **free plan**: Webhooks page should show upgrade gate
+- [ ] On **free plan**: API Keys page should show upgrade gate
+- [ ] Upgrade to **Pro**: all of the above pages should show their normal UI
+- [ ] On **Pro plan**: Team page invite section should show upgrade gate
+- [ ] On **Pro plan**: Branding page should show upgrade gate
+- [ ] On **Pro plan**: Reports page should show upgrade gate
+- [ ] Upgrade to **Studio**: team invite, branding, and reports should all work
 
 ### Team / Multi-User Checklist
 

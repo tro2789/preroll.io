@@ -65,7 +65,11 @@ STRIPE_STUDIO_ANNUAL_PRICE_ID=price_...
 
 Use Stripe test mode first (`sk_test_` keys):
 
-- [ ] Sign up a new user, confirm org was auto-created in Supabase
+**Dev environment status:** Test-mode products, prices, and webhook endpoint are configured. Env vars are set in both `.env.local` and Vercel preview (scoped to Preview environment). Webhook endpoint: `https://dev.preroll.io/api/stripe/webhook`.
+
+- [ ] Sign up a new user, confirm org was auto-created with 7-day trial in Supabase
+- [ ] Verify trial banner shows on Settings > Billing ("Studio Trial — 7 days left")
+- [ ] Verify all features are accessible during trial (integrations, webhooks, API keys, team, branding, reports)
 - [ ] Go to Settings > Billing, click Monthly under Pro
 - [ ] Complete checkout with test card `4242 4242 4242 4242`
 - [ ] Verify redirect back to `/app/settings/billing?success=true`
@@ -74,8 +78,9 @@ Use Stripe test mode first (`sk_test_` keys):
 - [ ] Click "Manage Subscription" and confirm portal loads
 - [ ] Create a second client — should be allowed on Pro
 - [ ] Cancel subscription in portal, verify plan reverts to `free`
-- [ ] On free plan, try creating a webhook endpoint — should get 403
-- [ ] Try connecting an integration — should get 403
+- [ ] After trial expires (set `trial_ends_at` to past date), verify upgrade gates show on gated pages
+- [ ] On free plan (no trial), verify upgrade gate appears on Integrations, Webhooks, API Keys pages
+- [ ] On free plan, verify upgrade gate appears on Team (invite section), Branding, Reports pages
 
 ## 6. Go Live
 
