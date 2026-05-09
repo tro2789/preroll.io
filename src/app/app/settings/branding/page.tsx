@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { UpgradeGate } from '@/components/ui/upgrade-gate'
 
 interface Branding {
@@ -13,13 +13,14 @@ export default function BrandingPage() {
   const [branding, setBranding] = useState<Branding | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [entitled, setEntitled] = useState(true)
 
   const [displayName, setDisplayName] = useState('')
-  const [logoUrl, setLogoUrl] = useState('')
   const [accentColor, setAccentColor] = useState('#7c5cbf')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/v1/org/branding')
@@ -32,7 +33,6 @@ export default function BrandingPage() {
         }
         setBranding(data as Branding)
         setDisplayName(data.display_name || '')
-        setLogoUrl(data.logo_url || '')
         setAccentColor(data.accent_color || '#7c5cbf')
       })
       .catch(() => setError('Failed to load branding'))
@@ -50,7 +50,6 @@ export default function BrandingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           display_name: displayName.trim(),
-          logo_url: logoUrl.trim(),
           accent_color: accentColor.trim(),
         }),
       })
@@ -73,6 +72,30 @@ export default function BrandingPage() {
       setError('Failed to save branding')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    setError(null)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await fetch('/api/v1/org/logo', {
+        method: 'POST',
+        body: formData,
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Upload failed')
+      setBranding((prev) => prev ? { ...prev, logo_url: json.data.logo_url } : prev)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -135,33 +158,44 @@ export default function BrandingPage() {
         </div>
 
         <div>
-          <label htmlFor="logo-url" className="block text-sm font-medium text-text-primary">
-            Logo URL
+          <label className="block text-sm font-medium text-text-primary">
+            Portal Logo
           </label>
           <p className="mt-1 text-xs text-text-tertiary">
-            URL to your logo image. Displayed at 24px height in the portal header.
+            Displayed at 24px height in the portal header. Uses your workspace logo by default.
           </p>
-          <input
-            id="logo-url"
-            type="url"
-            value={logoUrl}
-            onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="https://example.com/logo.svg"
-            className="mt-2 w-full max-w-md rounded-lg border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
-          />
-          {logoUrl && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-base p-3">
-              <img
-                src={logoUrl}
-                alt="Logo preview"
-                className="h-6 w-auto"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none'
-                }}
+          <div className="mt-3 flex items-center gap-4">
+            {branding?.logo_url ? (
+              <div className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-base px-4 py-3">
+                <img
+                  src={branding.logo_url}
+                  alt="Current logo"
+                  className="h-8 w-auto"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-lg border border-border-subtle border-dashed bg-surface-base px-4 py-3">
+                <span className="text-xs text-text-tertiary">No logo set</span>
+              </div>
+            )}
+            <div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
+              >
+                {uploading ? 'Uploading...' : branding?.logo_url ? 'Change Logo' : 'Upload Logo'}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                onChange={handleLogoUpload}
+                className="hidden"
               />
-              <span className="text-xs text-text-tertiary">Preview</span>
             </div>
-          )}
+          </div>
         </div>
 
         <div>
@@ -199,14 +233,11 @@ export default function BrandingPage() {
         <div className="mt-4 rounded-lg border border-border-subtle bg-surface-base overflow-hidden">
           <div className="border-b border-border-subtle bg-surface-raised/50 px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {logoUrl ? (
+              {branding?.logo_url ? (
                 <img
-                  src={logoUrl}
+                  src={branding.logo_url}
                   alt="Logo"
                   className="h-6 w-auto"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none'
-                  }}
                 />
               ) : (
                 <span
@@ -239,7 +270,6 @@ export default function BrandingPage() {
           <button
             onClick={() => {
               setDisplayName('')
-              setLogoUrl('')
               setAccentColor('#7c5cbf')
             }}
             className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"

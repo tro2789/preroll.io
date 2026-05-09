@@ -3,6 +3,7 @@ import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/h
 import { requireRole } from '@/lib/org/roles'
 import { getOrgEntitlements } from '@/lib/entitlements'
 import { createServiceClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
 
 export async function GET() {
   const { org, error } = await getAuthenticatedClient()
@@ -20,7 +21,12 @@ export async function GET() {
   ])
 
   if (dbError) return errorResponse(dbError.message, 500)
-  return jsonResponse({ ...data, entitled: entitlements.can('white_label') })
+  return jsonResponse({
+    display_name: data?.display_name || null,
+    logo_url: resolveImageUrl(data?.logo_url) || null,
+    accent_color: data?.accent_color || null,
+    entitled: entitlements.can('white_label'),
+  })
 }
 
 export async function PATCH(request: NextRequest) {
