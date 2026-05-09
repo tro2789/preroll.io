@@ -17,6 +17,19 @@ interface OrgBilling {
     days_left: number
     ends_at: string
   }
+  self_hosted?: boolean
+}
+
+interface LicenseInfo {
+  email: string
+  orgName: string
+  issuedAt: string
+}
+
+interface LicenseStatus {
+  self_hosted: boolean
+  registered: boolean
+  info: LicenseInfo | null
 }
 
 const UPGRADE_TIERS = [
@@ -61,13 +74,28 @@ export default function BillingPage() {
   const [upgrading, setUpgrading] = useState<string | null>(null)
   const [annual, setAnnual] = useState(false)
   const searchParams = useSearchParams()
+
+  const [licenseStatus, setLicenseStatus] = useState<LicenseStatus | null>(null)
+  const [licenseEmail, setLicenseEmail] = useState('')
+  const [licenseOrgName, setLicenseOrgName] = useState('')
+  const [licenseSubmitting, setLicenseSubmitting] = useState(false)
+  const [licenseError, setLicenseError] = useState<string | null>(null)
+  const [licenseKey, setLicenseKey] = useState<string | null>(null)
   const success = searchParams.get('success')
   const canceled = searchParams.get('canceled')
 
   useEffect(() => {
     fetch('/api/v1/billing')
       .then((r) => r.json())
-      .then((r) => setBilling(r.data))
+      .then((r) => {
+        setBilling(r.data)
+        if (r.data?.self_hosted) {
+          fetch('/api/v1/license')
+            .then((lr) => lr.json())
+            .then((lr) => setLicenseStatus(lr.data))
+            .catch(() => {})
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -97,6 +125,34 @@ export default function BillingPage() {
       const { data } = await res.json()
       if (data?.url) window.location.href = data.url
     } catch {}
+  }
+
+  async function handleLicenseRegister(e: React.FormEvent) {
+    e.preventDefault()
+    setLicenseError(null)
+    setLicenseSubmitting(true)
+    try {
+      const res = await fetch('/api/v1/license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: licenseEmail, org_name: licenseOrgName }),
+      })
+      const result = await res.json()
+      if (!res.ok) {
+        setLicenseError(result.error || 'Registration failed')
+        return
+      }
+      setLicenseKey(result.data.key)
+      setLicenseStatus({
+        self_hosted: true,
+        registered: true,
+        info: result.data.info,
+      })
+    } catch {
+      setLicenseError('Registration failed')
+    } finally {
+      setLicenseSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -253,6 +309,100 @@ export default function BillingPage() {
           </div>
         </div>
       </div>
+
+      {billing?.self_hosted && licenseStatus && (
+        <div>
+          <h2 className="text-lg font-semibold text-text-primary">License</h2>
+          <div className="mt-3 rounded-xl border border-border-default bg-surface-raised p-6">
+            {licenseStatus.registered && licenseStatus.info ? (
+              <>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success/10">
+                    <svg className="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-text-primary">Registered</p>
+                    <p className="text-xs text-text-tertiary">All features unlocked</p>
+                  </div>
+                </div>
+                <div className="mt-5 space-y-3">
+                  <div>
+                    <p className="text-xs font-medium text-text-tertiary">Email</p>
+                    <p className="text-sm text-text-secondary">{licenseStatus.info.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-text-tertiary">Organization</p>
+                    <p className="text-sm text-text-secondary">{licenseStatus.info.orgName}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-text-tertiary">Registered</p>
+                    <p className="text-sm text-text-secondary">
+                      {new Date(licenseStatus.info.issuedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                {licenseKey && (
+                  <div className="mt-5 rounded-lg border border-border-default bg-surface-overlay p-3">
+                    <p className="text-xs font-medium text-text-tertiary">License Key</p>
+                    <p className="mt-1 break-all font-mono text-xs text-text-secondary">{licenseKey}</p>
+                    <p className="mt-2 text-xs text-text-tertiary">
+                      Save this key. You can set it as <code className="text-text-secondary">PREROLL_LICENSE_KEY</code> in your environment for validation at startup.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-text-secondary">
+                  Register your self-hosted installation. All features work without a license key — registration enables update notifications and helps us understand how PreRoll is being used.
+                </p>
+                <form onSubmit={handleLicenseRegister} className="mt-5 space-y-4">
+                  <div>
+                    <label htmlFor="license-email" className="block text-xs font-medium text-text-tertiary">
+                      Email
+                    </label>
+                    <input
+                      id="license-email"
+                      type="email"
+                      required
+                      value={licenseEmail}
+                      onChange={(e) => setLicenseEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="mt-1 block w-full rounded-lg border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="license-org" className="block text-xs font-medium text-text-tertiary">
+                      Organization Name
+                    </label>
+                    <input
+                      id="license-org"
+                      type="text"
+                      required
+                      value={licenseOrgName}
+                      onChange={(e) => setLicenseOrgName(e.target.value)}
+                      placeholder="Your Company"
+                      className="mt-1 block w-full rounded-lg border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  {licenseError && (
+                    <p className="text-sm text-error">{licenseError}</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={licenseSubmitting}
+                    className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+                  >
+                    {licenseSubmitting ? 'Registering...' : 'Register'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {!isPaid && (
         <div>

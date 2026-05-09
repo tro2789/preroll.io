@@ -7,8 +7,8 @@ export default function WebhooksDocs() {
           PreRoll fires signed HTTP POST requests to your configured endpoints when events
           occur — episode status changes, deliverables approved, episodes published, and more.
           Configure endpoints in{' '}
-          <a href="/app/settings/webhooks" className="text-accent hover:text-accent-hover underline">
-            Settings &rarr; Webhooks
+          <a href="/app/settings/developer?tab=webhooks" className="text-accent hover:text-accent-hover underline">
+            Settings &rarr; Developer &rarr; Webhooks
           </a>.
         </p>
       </div>

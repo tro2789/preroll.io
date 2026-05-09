@@ -6,8 +6,8 @@ export default function ApiKeysDocs() {
         <p className="mt-2 text-sm text-text-secondary leading-relaxed">
           API keys let you authenticate with the PreRoll API from scripts, the MCP server,
           or any external tool. Create and manage keys in{' '}
-          <a href="/app/settings/api-keys" className="text-accent hover:text-accent-hover underline">
-            Settings &rarr; API Keys
+          <a href="/app/settings/developer?tab=api-keys" className="text-accent hover:text-accent-hover underline">
+            Settings &rarr; Developer &rarr; API Keys
           </a>.
         </p>
       </div>

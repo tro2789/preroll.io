@@ -4,15 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const tabs = [
-  { label: 'Profile', href: '/app/settings/profile' },
-  { label: 'Workspace', href: '/app/settings/workspace' },
+  { label: 'Account', href: '/app/settings/account' },
   { label: 'Billing', href: '/app/settings/billing' },
-  { label: 'Integrations', href: '/app/settings/integrations' },
-  { label: 'Webhooks', href: '/app/settings/webhooks' },
-  { label: 'API Keys', href: '/app/settings/api-keys' },
+  { label: 'Developer', href: '/app/settings/developer' },
   { label: 'Team', href: '/app/settings/team' },
   { label: 'Branding', href: '/app/settings/branding' },
-  { label: 'License', href: '/app/settings/license' },
 ]
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
@@ -22,7 +18,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
     <div>
       <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
       <p className="mt-1 text-sm text-text-secondary">
-        Manage your integrations, webhooks, and API access.
+        Manage your account, billing, and integrations.
       </p>
 
       <nav className="mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto border-b border-border-default">
