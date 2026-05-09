@@ -1,5 +1,7 @@
 import { headers } from 'next/headers'
+import nodemailer from 'nodemailer'
 import { createServiceClient } from '@/lib/supabase/server'
+import { isSelfHosted } from '@/lib/entitlements'
 
 export async function getSiteUrl(): Promise<string> {
   const headersList = await headers()
@@ -36,11 +38,51 @@ export async function generateMagicLinkUrl(
   return fallbackUrl
 }
 
+const smtpConfig = {
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '587', 10) || 587,
+  user: process.env.SMTP_USER,
+  pass: process.env.SMTP_PASS,
+  from: process.env.SMTP_FROM,
+}
+
+async function sendViaSmtp(
+  to: string,
+  subject: string,
+  html: string,
+): Promise<boolean> {
+  if (!smtpConfig.host || !smtpConfig.from) {
+    console.warn(
+      'SMTP not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM to enable email in self-hosted mode.',
+    )
+    return false
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.port === 465,
+      auth: smtpConfig.user && smtpConfig.pass ? { user: smtpConfig.user, pass: smtpConfig.pass } : undefined,
+    })
+
+    await transporter.sendMail({ from: smtpConfig.from, to, subject, html })
+    return true
+  } catch (err) {
+    console.error('Failed to send email via SMTP:', err)
+    return false
+  }
+}
+
 export async function sendEmail(
   to: string,
   subject: string,
   html: string,
 ): Promise<boolean> {
+  if (isSelfHosted()) {
+    return sendViaSmtp(to, subject, html)
+  }
+
   const resendKey = process.env.RESEND_API_KEY
   if (!resendKey) return false
 

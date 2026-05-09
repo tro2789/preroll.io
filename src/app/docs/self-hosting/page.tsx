@@ -28,7 +28,7 @@ export default function SelfHostingDocs() {
           headers={['Variable', "Why it's optional"]}
           rows={[
             ['STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_*_PRICE_ID', 'Billing is bypassed in self-hosted mode'],
-            ['RESEND_API_KEY', 'Only needed if you want email notifications. Magic-link auth is handled by Supabase SMTP, not Resend'],
+            ['RESEND_API_KEY', 'Self-hosted uses SMTP directly (see SMTP_* variables). Resend is only used by the hosted platform'],
           ]}
         />
         <p>
@@ -45,7 +45,7 @@ export default function SelfHostingDocs() {
             ['Supabase', 'Database, auth, RLS', 'Self-hosted (Docker) or Supabase cloud (free tier)'],
             ['Cloudflare R2', 'Asset storage (thumbnails, intros, cover art)', 'Any S3-compatible storage works'],
             ['Node.js host', 'Runs the Next.js app', 'Vercel, Docker, VPS, etc.'],
-            ['SMTP provider', 'Magic-link emails for client portal', 'Resend, Postmark, SES, any SMTP'],
+            ['SMTP provider', 'Invite emails (team + client portal)', 'Resend, Postmark, SES, any SMTP'],
           ]}
         />
         <p>
@@ -138,9 +138,13 @@ INTEGRATION_ENCRYPTION_KEY=
 # STRIPE_STUDIO_MONTHLY_PRICE_ID=
 # STRIPE_STUDIO_ANNUAL_PRICE_ID=
 
-# Email (optional — only needed for email notifications)
-# Magic-link auth uses Supabase SMTP, not this key
-# RESEND_API_KEY=
+# Email notifications (optional — self-hosted uses SMTP, not Resend)
+# Magic-link auth uses Supabase SMTP separately
+# SMTP_HOST=smtp.example.com
+# SMTP_PORT=587
+# SMTP_USER=
+# SMTP_PASS=
+# SMTP_FROM=PreRoll <noreply@your-domain.com>
 
 # Optional: integrations (register your own OAuth apps)
 FRAMEIO_CLIENT_ID=
@@ -205,6 +209,40 @@ npm start`}</Code>
         </ul>
         <p>
           Resend, Postmark, and Amazon SES all work. You need a verified sending domain.
+        </p>
+      </Section>
+
+      <Section title="7. Configure email notifications (optional)">
+        <p>
+          Team invite and client portal invite emails are sent via SMTP in self-hosted
+          mode. This is separate from Supabase&apos;s SMTP configuration, which handles
+          magic-link authentication emails.
+        </p>
+        <Code>{`# Add to your .env.local
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-smtp-username
+SMTP_PASS=your-smtp-password
+SMTP_FROM=PreRoll <noreply@your-domain.com>`}</Code>
+        <Table
+          headers={['Variable', 'Required', 'Description']}
+          rows={[
+            ['SMTP_HOST', 'Yes', 'SMTP server hostname (e.g. smtp.gmail.com, email-smtp.us-east-1.amazonaws.com)'],
+            ['SMTP_PORT', 'No', 'Port number. Defaults to 587 (STARTTLS). Use 465 for implicit TLS'],
+            ['SMTP_USER', 'No*', 'SMTP username for authentication'],
+            ['SMTP_PASS', 'No*', 'SMTP password or app-specific password'],
+            ['SMTP_FROM', 'Yes', 'Sender address with display name (e.g. PreRoll <noreply@your-domain.com>)'],
+          ]}
+        />
+        <p>
+          * <Mono>SMTP_USER</Mono> and <Mono>SMTP_PASS</Mono> can be omitted for
+          unauthenticated relay (e.g. an internal mail server on a private network).
+          Most external SMTP providers require them.
+        </p>
+        <p>
+          If SMTP is not configured, invite emails are silently skipped. The invite
+          still gets created — users just won&apos;t receive an email notification and will
+          need the invite link shared manually.
         </p>
       </Section>
 
