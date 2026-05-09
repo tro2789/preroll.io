@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core'
 import { useKanbanDrag } from '@/lib/kanban/use-kanban-drag'
@@ -113,6 +113,19 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
   const [groupBy, setGroupBy] = useState<GroupBy>('none')
   const { isCollapsed, toggle, expand } = useCollapsedColumns('dashboard')
   const { compact, toggle: toggleCompact } = useCompactView()
+  const [showDragCoachmark, setShowDragCoachmark] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/v1/onboarding')
+      .then((r) => r.json())
+      .then((json) => {
+        const d = json.data
+        if (d && !d.dismissed && !d.steps.episode_moved && d.steps.episode_created) {
+          setShowDragCoachmark(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const kanbanColumns: KanbanColumn[] = dashboardColumns.map((col) => ({
     id: `col-${col.position}`,
@@ -120,6 +133,11 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
     stageIds: col.stageIds,
     wipLimit: col.wipLimit,
   }))
+
+  const handleStageChanged = useCallback(() => {
+    setShowDragCoachmark(false)
+    window.dispatchEvent(new Event('preroll:episode-moved'))
+  }, [])
 
   const {
     episodes,
@@ -134,6 +152,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
     initialEpisodes,
     columns: kanbanColumns,
     getShowId: (ep) => ep.show_id,
+    onStageChanged: handleStageChanged,
   })
 
   const filteredEpisodes = applyFilters(episodes, filters)
@@ -178,9 +197,20 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
 
   const [activeTab, setActiveTab] = useState(() => kanbanColumns[0]?.id ?? '')
 
+  const coachmarkTargetId = useMemo(() => {
+    if (!showDragCoachmark) return null
+    for (const col of kanbanColumns) {
+      const eps = getFilteredEpisodesForColumn(col)
+      if (eps.length > 0) return eps[0].id
+    }
+    return null
+  }, [showDragCoachmark, kanbanColumns, getFilteredEpisodesForColumn])
+
   function renderCard(episode: Episode) {
-    return (
-      <SortableCard key={episode.id} id={episode.id} label={episode.title}>
+    const isCoachmarkTarget = episode.id === coachmarkTargetId
+
+    const card = (
+      <SortableCard id={episode.id} label={episode.title}>
         <Link
           href={`/app/shows/${episode.shows?.id}/episodes/${episode.id}`}
           onClick={(e) => e.stopPropagation()}
@@ -190,6 +220,33 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
         </Link>
       </SortableCard>
     )
+
+    if (isCoachmarkTarget) {
+      return (
+        <div key={episode.id}>
+          <div className="rounded-lg outline outline-2 outline-accent/50 outline-offset-2">
+            {card}
+          </div>
+          <div className="mt-2 flex items-center gap-1.5 px-0.5">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-accent shrink-0">
+              <path d="M2 7h10M9 4l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-[11px] font-medium text-accent">Drag to the next column</span>
+            <button
+              onClick={() => setShowDragCoachmark(false)}
+              className="ml-auto text-text-tertiary hover:text-text-secondary transition-colors"
+              aria-label="Dismiss hint"
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M7.5 2.5L2.5 7.5M2.5 2.5L7.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return <div key={episode.id}>{card}</div>
   }
 
   function renderColumn(col: KanbanColumn, i: number, scopeEpisodes?: Episode[]) {

@@ -17,6 +17,7 @@ interface UseKanbanDragOptions<T extends KanbanEpisode> {
   columns: KanbanColumn[]
   getShowId: (episode: T) => string
   realtimeShowId?: string
+  onStageChanged?: () => void
 }
 
 export function useKanbanDrag<T extends KanbanEpisode>({
@@ -24,6 +25,7 @@ export function useKanbanDrag<T extends KanbanEpisode>({
   columns,
   getShowId,
   realtimeShowId,
+  onStageChanged,
 }: UseKanbanDragOptions<T>) {
   const [episodes, setEpisodes] = useState<T[]>(initialEpisodes)
   const lastConfirmedRef = useRef(episodes)
@@ -193,6 +195,7 @@ export function useKanbanDrag<T extends KanbanEpisode>({
 
       if (!res.ok) throw new Error('Failed to move episode')
       lastConfirmedRef.current = episodes
+      onStageChanged?.()
     } catch {
       setEpisodes((prev) =>
         prev.map((ep) =>

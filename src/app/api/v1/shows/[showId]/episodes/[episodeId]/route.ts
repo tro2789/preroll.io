@@ -67,6 +67,12 @@ export async function PATCH(
       if (!('position' in body)) {
         updateData['position'] = await getNextPositionInStage(supabase!, body.stage_id)
       }
+
+      updateData['stage_entered_at'] = new Date().toISOString()
+
+      if (!('archived_at' in body)) {
+        updateData['archived_at'] = null
+      }
     }
   }
 

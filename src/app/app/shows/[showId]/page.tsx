@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
+import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
 import { PipelineBoard } from '@/components/episodes/pipeline-board'
 import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
 import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
@@ -13,6 +14,8 @@ export default async function ShowDetailPage({
 }) {
   const { showId } = await params
   const supabase = await createClient()
+
+  await autoArchiveApprovedEpisodes(supabase)
 
   const [{ data: show, error }, { data: episodes }] = await Promise.all([
     supabase
