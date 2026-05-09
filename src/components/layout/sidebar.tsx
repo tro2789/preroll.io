@@ -1,7 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
+
+export interface OrgMembership {
+  id: string
+  name: string
+  planId: string
+  role: string
+}
 
 const navItems = [
   { label: 'Dashboard', href: '/app', icon: GridIcon },
@@ -13,20 +21,118 @@ const navItems = [
   { label: 'Settings', href: '/app/settings', icon: CogIcon },
 ]
 
-export function Sidebar() {
+const PLAN_LABELS: Record<string, string> = {
+  free: 'Free',
+  pro: 'Pro',
+  studio: 'Studio',
+}
+
+function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId?: string }) {
+  const [open, setOpen] = useState(false)
+  const [switching, setSwitching] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+
+  const activeOrg = orgs.find((o) => o.id === activeOrgId) || orgs[0]
+  const otherOrgs = orgs.filter((o) => o.id !== activeOrg?.id)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  async function switchOrg(orgId: string) {
+    setSwitching(true)
+    await fetch('/api/v1/org/switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orgId }),
+    })
+    setOpen(false)
+    router.refresh()
+    setSwitching(false)
+  }
+
+  if (!activeOrg) return null
+
+  return (
+    <div ref={ref} className="relative px-3">
+      <button
+        onClick={() => otherOrgs.length > 0 && setOpen(!open)}
+        className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+          otherOrgs.length > 0
+            ? 'hover:bg-surface-raised cursor-pointer'
+            : 'cursor-default'
+        }`}
+      >
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent text-sm font-bold shrink-0">
+          {activeOrg.name.charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-text-primary truncate">{activeOrg.name}</p>
+          <p className="text-xs text-text-tertiary">
+            {PLAN_LABELS[activeOrg.planId] || activeOrg.planId} &middot; {activeOrg.role}
+          </p>
+        </div>
+        {otherOrgs.length > 0 && (
+          <ChevronIcon className={`h-4 w-4 text-text-tertiary shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        )}
+      </button>
+
+      {open && otherOrgs.length > 0 && (
+        <div className="absolute left-3 right-3 top-full mt-1 z-50 rounded-lg border border-border-default bg-surface-overlay shadow-lg py-1">
+          {otherOrgs.map((org) => (
+            <button
+              key={org.id}
+              onClick={() => switchOrg(org.id)}
+              disabled={switching}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-raised transition-colors disabled:opacity-50"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-input text-text-secondary text-sm font-bold shrink-0">
+                {org.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-text-primary truncate">{org.name}</p>
+                <p className="text-xs text-text-tertiary">
+                  {PLAN_LABELS[org.planId] || org.planId} &middot; {org.role}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface SidebarProps {
+  orgs: OrgMembership[]
+  activeOrgId?: string
+}
+
+export function Sidebar({ orgs, activeOrgId }: SidebarProps) {
   const pathname = usePathname()
+  const showSwitcher = orgs.length > 0
 
   return (
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-        <div className="flex flex-col flex-grow bg-surface-base border-r border-border-default pt-8 pb-4 overflow-y-auto">
-          <div className="flex items-center flex-shrink-0 px-6">
+        <div className="flex flex-col flex-grow bg-surface-base border-r border-border-default pt-6 pb-4 overflow-y-auto">
+          <div className="flex items-center flex-shrink-0 px-6 mb-2">
             <span className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
               PreRoll
             </span>
           </div>
-          <nav className="mt-10 flex-1 px-3 space-y-0.5">
+          {showSwitcher && (
+            <div className="mb-4">
+              <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId} />
+            </div>
+          )}
+          <nav className="flex-1 px-3 space-y-0.5">
             {navItems.map((item) => {
               const isActive =
                 item.href === '/app'
@@ -130,6 +236,14 @@ function ChartIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+    </svg>
+  )
+}
+
+function ChevronIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
     </svg>
   )
 }
