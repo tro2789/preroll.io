@@ -2,7 +2,7 @@ import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/h
 import { createServiceClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/org/roles'
 import { resolveImageUrl } from '@/lib/r2/client'
-import { setOrgCookie, clearOrgCookie } from '@/lib/constants/plans'
+import { setOrgCookie, clearOrgCookie } from '@/lib/org/cookie'
 
 export async function GET() {
   const { org, error } = await getAuthenticatedClient()
