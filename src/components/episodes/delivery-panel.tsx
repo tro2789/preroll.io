@@ -8,6 +8,7 @@ import { FileUploader } from './file-uploader'
 import { EpisodeAssets } from './episode-assets'
 import { getGradient } from '@/lib/ui/gradient'
 import { ProviderLogo } from '@/components/integrations/provider-logo'
+import { ProjectPickerModal } from '@/components/integrations/project-picker-modal'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 interface Deliverable {
@@ -134,6 +135,9 @@ export function DeliveryPanel({
   const [showProviderPicker, setShowProviderPicker] = useState(false)
   const [projectMissing, setProjectMissing] = useState(false)
   const [recreating, setRecreating] = useState(false)
+  const [linkProvider, setLinkProvider] = useState<IntegrationProvider | null>(null)
+  const [linking, setLinking] = useState(false)
+  const [pickerIntent, setPickerIntent] = useState<'create' | 'link'>('create')
 
   const providerDisplayNames: Record<string, string> = {
     frame_io: 'Frame.io',
@@ -211,6 +215,7 @@ export function DeliveryPanel({
 
   function handleCreateProject() {
     if (connectedProviders.length > 1) {
+      setPickerIntent('create')
       setShowProviderPicker(true)
     } else {
       createProjectWithProvider(connectedProviders[0])
@@ -272,6 +277,50 @@ export function DeliveryPanel({
       setCreateError(err instanceof Error ? err.message : 'Failed to recreate project')
     } finally {
       setRecreating(false)
+    }
+  }
+
+  function handleLinkExisting() {
+    if (connectedProviders.length === 1) {
+      setLinkProvider(connectedProviders[0])
+    } else {
+      setPickerIntent('link')
+      setShowProviderPicker(true)
+    }
+  }
+
+  async function handleLinkProject(item: { id: string; name: string; type: string; viewUrl?: string }) {
+    if (!linkProvider) return
+    setLinking(true)
+    setCreateError(null)
+    try {
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          link: true,
+          provider: linkProvider,
+          external_project_id: item.id,
+          external_folder_id: item.id,
+          external_view_url: item.viewUrl || null,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to link project')
+      const data = json.data?.integration || json.data
+      setIntegration({
+        provider: data.provider,
+        externalProjectId: data.external_project_id,
+        externalFolderId: data.external_folder_id,
+        externalViewUrl: data.external_view_url,
+        displayName: data.display_name || data.provider,
+      })
+      setLinkProvider(null)
+      router.refresh()
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Failed to link project')
+    } finally {
+      setLinking(false)
     }
   }
 
@@ -600,7 +649,14 @@ export function DeliveryPanel({
               {connectedProviders.map((p) => (
                 <button
                   key={p}
-                  onClick={() => createProjectWithProvider(p)}
+                  onClick={() => {
+                    if (pickerIntent === 'link') {
+                      setShowProviderPicker(false)
+                      setLinkProvider(p)
+                    } else {
+                      createProjectWithProvider(p)
+                    }
+                  }}
                   disabled={creatingProject}
                   className="w-full rounded-lg border border-border-subtle bg-surface-overlay px-4 py-3 text-left text-sm font-medium text-text-primary transition-colors hover:border-accent hover:bg-accent/5 disabled:opacity-50"
                 >
@@ -618,23 +674,55 @@ export function DeliveryPanel({
         </div>
       )}
 
+      {linkProvider && (
+        <ProjectPickerModal
+          provider={linkProvider}
+          providerDisplayName={providerDisplayNames[linkProvider] || linkProvider}
+          open
+          onClose={() => setLinkProvider(null)}
+          onSelect={handleLinkProject}
+        />
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]">
         {/* Main: files */}
         <div className="min-w-0 space-y-4">
           {/* Header bar */}
           {hasProvider && (
-            <div className="flex items-center justify-between">
+            <div>
               {!hasProject ? (
-                <>
-                  <p className="text-sm text-text-secondary">No delivery project linked.</p>
-                  <button
-                    onClick={handleCreateProject}
-                    disabled={creatingProject}
-                    className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-                  >
-                    {creatingProject ? 'Creating...' : 'Create Project'}
-                  </button>
-                </>
+                <div className="rounded-xl border border-border-subtle bg-surface-raised p-5">
+                  <div className="flex items-center gap-3">
+                    <ProviderLogo provider={connectedProviders[0]} className="w-8 h-8" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text-primary">
+                        Set up delivery
+                      </p>
+                      <p className="mt-0.5 text-xs text-text-tertiary">
+                        Create a new {connectedProviders[0] === 'google_drive' ? 'folder' : 'project'} for this episode, or link one you already have.
+                      </p>
+                    </div>
+                  </div>
+                  {createError && (
+                    <div className="mt-3 rounded-md bg-error/10 border border-error/30 px-3 py-2 text-xs text-error">{createError}</div>
+                  )}
+                  <div className="mt-4 flex items-center gap-2">
+                    <button
+                      onClick={handleCreateProject}
+                      disabled={creatingProject || linking}
+                      className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                    >
+                      {creatingProject ? 'Creating...' : `Create ${connectedProviders[0] === 'google_drive' ? 'Folder' : 'Project'}`}
+                    </button>
+                    <button
+                      onClick={handleLinkExisting}
+                      disabled={creatingProject || linking}
+                      className="rounded-md border border-border-default bg-surface-overlay px-4 py-2 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
+                    >
+                      {linking ? 'Linking...' : 'Link Existing'}
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="flex items-center gap-3">
