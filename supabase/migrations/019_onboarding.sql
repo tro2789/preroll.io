@@ -11,28 +11,17 @@ ALTER TABLE organizations ADD COLUMN onboarding_dismissed_at timestamptz;
 -- 2. RPC helpers for onboarding step detection
 -- ============================================================
 
-CREATE OR REPLACE FUNCTION count_real_shows(p_org_id uuid)
-RETURNS integer AS $$
-  SELECT count(*)::integer FROM shows s
-    JOIN clients c ON s.client_id = c.id
-    WHERE c.org_id = p_org_id AND c.is_sample = false;
-$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
-
-CREATE OR REPLACE FUNCTION count_real_episodes(p_org_id uuid)
-RETURNS integer AS $$
-  SELECT count(*)::integer FROM episodes e
-    JOIN shows s ON e.show_id = s.id
-    JOIN clients c ON s.client_id = c.id
-    WHERE c.org_id = p_org_id AND c.is_sample = false AND e.archived_at IS NULL;
-$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
-
-CREATE OR REPLACE FUNCTION count_moved_episodes(p_org_id uuid)
-RETURNS integer AS $$
-  SELECT count(*)::integer FROM episodes e
-    JOIN shows s ON e.show_id = s.id
-    JOIN clients c ON s.client_id = c.id
-    JOIN pipeline_stages ps ON e.stage_id = ps.id
-    WHERE c.org_id = p_org_id AND c.is_sample = false AND ps.position > 1 AND e.archived_at IS NULL;
+CREATE OR REPLACE FUNCTION onboarding_counts(p_org_id uuid)
+RETURNS TABLE(real_shows int, real_episodes int, moved_episodes int) AS $$
+  SELECT
+    (SELECT count(*)::int FROM shows s JOIN clients c ON s.client_id = c.id
+     WHERE c.org_id = p_org_id AND c.is_sample = false),
+    (SELECT count(*)::int FROM episodes e JOIN shows s ON e.show_id = s.id
+     JOIN clients c ON s.client_id = c.id
+     WHERE c.org_id = p_org_id AND c.is_sample = false AND e.archived_at IS NULL),
+    (SELECT count(*)::int FROM episodes e JOIN shows s ON e.show_id = s.id
+     JOIN clients c ON s.client_id = c.id JOIN pipeline_stages ps ON e.stage_id = ps.id
+     WHERE c.org_id = p_org_id AND c.is_sample = false AND ps.position > 1 AND e.archived_at IS NULL);
 $$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 
 -- ============================================================
