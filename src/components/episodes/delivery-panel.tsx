@@ -7,6 +7,7 @@ import { DeliverableList } from '@/components/deliverables/deliverable-list'
 import { FileUploader } from './file-uploader'
 import { EpisodeAssets } from './episode-assets'
 import { getGradient } from '@/lib/ui/gradient'
+import { ProviderLogo } from '@/components/integrations/provider-logo'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 interface Deliverable {
@@ -551,26 +552,39 @@ export function DeliveryPanel({
       />
 
       {showConnectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) setShowConnectModal(false) }}>
+          <div className="w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
             <h3 className="text-base font-semibold text-text-primary">Connect a delivery provider</h3>
             <p className="mt-2 text-sm text-text-secondary">
-              To upload files, connect a provider like Frame.io, Google Drive, or Vimeo in your integration settings.
+              Pick a provider to start uploading and managing files for this episode.
             </p>
-            <div className="mt-5 flex items-center gap-3">
-              <Link
-                href="/app/settings/integrations"
-                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover transition-colors"
-              >
-                Go to Settings
-              </Link>
-              <button
-                onClick={() => setShowConnectModal(false)}
-                className="rounded-md px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
-              >
-                Cancel
-              </button>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {([
+                { provider: 'frame_io' as IntegrationProvider, name: 'Frame.io', desc: 'Video review & approval' },
+                { provider: 'google_drive' as IntegrationProvider, name: 'Google Drive', desc: 'File storage & sharing' },
+                { provider: 'vimeo' as IntegrationProvider, name: 'Vimeo', desc: 'Video hosting & delivery' },
+              ]).map((p) => (
+                <Link
+                  key={p.provider}
+                  href={`/app/settings/integrations?connect=${p.provider}`}
+                  className="group flex flex-col items-center gap-2.5 rounded-lg border border-border-default bg-surface-base p-4 text-center transition-all hover:border-accent hover:bg-accent/5 hover:shadow-sm"
+                >
+                  <ProviderLogo provider={p.provider} className="w-10 h-10" />
+                  <div>
+                    <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">
+                      {p.name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-text-tertiary">{p.desc}</p>
+                  </div>
+                </Link>
+              ))}
             </div>
+            <button
+              onClick={() => setShowConnectModal(false)}
+              className="mt-4 w-full text-center text-sm text-text-tertiary hover:text-text-primary transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -739,17 +753,50 @@ export function DeliveryPanel({
 
           {/* No provider connected at all */}
           {!hasProvider && !hasProject && (
-            <div className="py-12 text-center">
-              <p className="text-sm text-text-tertiary">No delivery provider connected.</p>
-              <p className="mt-1 text-xs text-text-tertiary">Connect one in Settings to upload and manage files, or add deliverables manually below.</p>
-              {!showManualForm && (
-                <button
-                  onClick={() => setShowManualForm(true)}
-                  className="mt-4 rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors"
-                >
-                  Add Deliverable
-                </button>
-              )}
+            <div className="relative overflow-hidden rounded-xl border border-border-subtle bg-surface-raised p-6">
+              <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-accent/8 blur-2xl" />
+              <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-accent/8 blur-xl" />
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">&#x1F680;</span>
+                  <h3 className="text-base font-semibold text-text-primary">
+                    Connect a delivery provider
+                  </h3>
+                </div>
+                <p className="mt-2 text-sm text-text-secondary leading-relaxed">
+                  Upload files, manage reviews, and deliver to clients — all from this page.
+                  Pick a provider to get started.
+                </p>
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  {([
+                    { provider: 'frame_io' as IntegrationProvider, name: 'Frame.io', desc: 'Video review & approval' },
+                    { provider: 'google_drive' as IntegrationProvider, name: 'Google Drive', desc: 'File storage & sharing' },
+                    { provider: 'vimeo' as IntegrationProvider, name: 'Vimeo', desc: 'Video hosting & delivery' },
+                  ]).map((p) => (
+                    <Link
+                      key={p.provider}
+                      href={`/app/settings/integrations?connect=${p.provider}`}
+                      className="group flex flex-col items-center gap-2.5 rounded-lg border border-border-default bg-surface-base p-4 text-center transition-all hover:border-accent hover:bg-accent/5 hover:shadow-sm"
+                    >
+                      <ProviderLogo provider={p.provider} className="w-10 h-10" />
+                      <div>
+                        <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">
+                          {p.name}
+                        </p>
+                        <p className="mt-0.5 text-xs text-text-tertiary">{p.desc}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                {!showManualForm && (
+                  <button
+                    onClick={() => setShowManualForm(true)}
+                    className="mt-4 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                  >
+                    or add deliverables manually
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>

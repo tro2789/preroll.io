@@ -21,7 +21,8 @@ function IntegrationsIcon() {
   )
 }
 
-export default async function IntegrationsPage() {
+export default async function IntegrationsPage({ searchParams }: { searchParams: Promise<{ connect?: string }> }) {
+  const { connect: autoConnectProvider } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -81,6 +82,7 @@ export default async function IntegrationsPage() {
               displayName={provider.displayName}
               comingSoon={provider.comingSoon}
               note={provider.note}
+              autoConnect={autoConnectProvider === provider.name}
             />
           )
         })}
