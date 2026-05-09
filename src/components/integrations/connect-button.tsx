@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ProviderLogo } from './provider-logo'
 
 interface ConnectButtonProps {
@@ -8,9 +8,10 @@ interface ConnectButtonProps {
   displayName: string
   comingSoon?: boolean
   note?: string
+  autoConnect?: boolean
 }
 
-export function ConnectButton({ provider, displayName, comingSoon, note }: ConnectButtonProps) {
+export function ConnectButton({ provider, displayName, comingSoon, note, autoConnect }: ConnectButtonProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleConnect() {
@@ -23,6 +24,10 @@ export function ConnectButton({ provider, displayName, comingSoon, note }: Conne
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (autoConnect && !comingSoon) handleConnect()
+  }, [])
 
   if (comingSoon) {
     return (
