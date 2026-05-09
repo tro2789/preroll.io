@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 
 interface HeaderProps {
   email: string
+  displayName?: string | null
 }
 
 const routeLabels: Record<string, string> = {
@@ -26,7 +27,7 @@ function getPageLabel(pathname: string): string {
   return 'Dashboard'
 }
 
-export function Header({ email }: HeaderProps) {
+export function Header({ email, displayName }: HeaderProps) {
   const pathname = usePathname()
   const pageLabel = getPageLabel(pathname)
 
@@ -44,7 +45,7 @@ export function Header({ email }: HeaderProps) {
         </span>
 
         <div className="flex items-center gap-4">
-          <span className="text-sm text-text-tertiary hidden sm:inline">{email}</span>
+          <span className="text-sm text-text-tertiary hidden sm:inline">{displayName || email}</span>
           <form action="/auth/signout" method="POST">
             <button
               type="submit"

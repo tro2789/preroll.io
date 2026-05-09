@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const tabs = [
+  { label: 'Profile', href: '/app/settings/profile' },
   { label: 'Billing', href: '/app/settings/billing' },
   { label: 'Integrations', href: '/app/settings/integrations' },
   { label: 'Webhooks', href: '/app/settings/webhooks' },

@@ -19,11 +19,16 @@ export default async function AppLayout({
   }
 
   const [service, cookieStore] = [createServiceClient(), await cookies()]
-  const [{ data: memberships }, activeOrgId] = await Promise.all([
+  const [{ data: memberships }, { data: profile }, activeOrgId] = await Promise.all([
     service
       .from('memberships')
       .select('org_id, role, organizations(id, name, plan_id)')
       .eq('user_id', user.id),
+    service
+      .from('user_profiles')
+      .select('display_name, avatar_url')
+      .eq('user_id', user.id)
+      .single(),
     Promise.resolve(cookieStore.get(ORG_COOKIE_NAME)?.value),
   ])
 
@@ -38,7 +43,10 @@ export default async function AppLayout({
     <div className="min-h-screen bg-surface-base">
       <Sidebar orgs={orgs} activeOrgId={activeOrg?.id} />
       <div className="md:pl-64 flex flex-col min-h-screen">
-        <Header email={user.email ?? ''} />
+        <Header
+          email={user.email ?? ''}
+          displayName={profile?.display_name || null}
+        />
         <main className="flex-1 p-4 sm:p-6 pb-20 md:pb-6">
           {children}
         </main>
