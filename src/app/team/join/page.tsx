@@ -9,7 +9,7 @@ function JoinContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
-  const [joining, setJoining] = useState(true)
+  const [phase, setPhase] = useState<'checking' | 'needsAuth' | 'joining' | 'joined' | 'error'>('checking')
   const [orgName, setOrgName] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -19,14 +19,25 @@ function JoinContent() {
   const [passwordSet, setPasswordSet] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
 
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [sendingLink, setSendingLink] = useState(false)
+
   useEffect(() => {
     if (!token) {
       setError('No invite token provided.')
-      setJoining(false)
+      setPhase('error')
       return
     }
 
-    async function join() {
+    async function tryJoin() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setPhase('needsAuth')
+        return
+      }
+
       try {
         const res = await fetch('/api/v1/team/join', {
           method: 'POST',
@@ -38,14 +49,37 @@ function JoinContent() {
           throw new Error(json.error || 'Failed to join team')
         }
         setOrgName(json.data?.organization?.name || 'the team')
+        setPhase('joined')
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
-      } finally {
-        setJoining(false)
+        setPhase('error')
       }
     }
-    join()
+    tryJoin()
   }, [token])
+
+  async function handleSendLink() {
+    setSendingLink(true)
+    try {
+      const res = await fetch('/api/v1/team/join/send-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      })
+      if (res.ok) {
+        setMagicLinkSent(true)
+      } else {
+        const json = await res.json()
+        setError(json.error || 'Failed to send login link')
+        setPhase('error')
+      }
+    } catch {
+      setError('Failed to send login link')
+      setPhase('error')
+    } finally {
+      setSendingLink(false)
+    }
+  }
 
   async function handleSetPassword(e: React.FormEvent) {
     e.preventDefault()
@@ -70,11 +104,46 @@ function JoinContent() {
     setSettingPassword(false)
   }
 
-  if (joining) {
-    return <p className="text-text-secondary">Joining team...</p>
+  if (phase === 'checking') {
+    return <p className="text-text-secondary">Loading...</p>
   }
 
-  if (error) {
+  if (phase === 'needsAuth') {
+    if (magicLinkSent) {
+      return (
+        <div className="w-full max-w-sm text-center space-y-4">
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+          <div className="rounded-lg bg-surface-raised p-6 border border-border-subtle space-y-3">
+            <p className="text-sm font-medium text-text-primary">Check your email</p>
+            <p className="text-sm text-text-secondary">
+              We sent a sign-in link. Click it to join the team.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="w-full max-w-sm text-center space-y-4">
+        <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+        <div className="rounded-lg bg-surface-raised p-6 border border-border-subtle space-y-3">
+          <p className="text-sm font-medium text-text-primary">Sign in to accept this invite</p>
+          <p className="text-sm text-text-secondary">
+            We&apos;ll send a login link to the email this invite was sent to.
+          </p>
+          <button
+            onClick={handleSendLink}
+            disabled={sendingLink}
+            className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+          >
+            {sendingLink ? 'Sending...' : 'Send me a sign-in link'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'error') {
     return (
       <div className="w-full max-w-sm text-center space-y-4">
         <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
