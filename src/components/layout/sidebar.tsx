@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
+import { CreateOrgModal } from './create-org-modal'
 import { PLAN_LABELS } from '@/lib/constants/plans'
 
 export interface OrgMembership {
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
 function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId?: string }) {
   const [open, setOpen] = useState(false)
   const [switching, setSwitching] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
@@ -113,20 +115,8 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
           ))}
           <div className="border-t border-border-default mt-1 pt-1">
             <button
-              onClick={async () => {
-                setSwitching(true)
-                try {
-                  const res = await fetch('/api/v1/org/create', { method: 'POST' })
-                  if (res.ok) {
-                    setOpen(false)
-                    router.refresh()
-                  }
-                } finally {
-                  setSwitching(false)
-                }
-              }}
-              disabled={switching}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-raised transition-colors disabled:opacity-50"
+              onClick={() => { setOpen(false); setCreateOpen(true) }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-raised transition-colors"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-border-default text-text-tertiary shrink-0">
                 <PlusIcon className="h-4 w-4" />
@@ -136,6 +126,7 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
           </div>
         </div>
       )}
+      <CreateOrgModal open={createOpen} onClose={() => setCreateOpen(false)} />
     </div>
   )
 }

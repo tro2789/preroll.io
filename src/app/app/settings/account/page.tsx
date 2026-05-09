@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { resolveAssetUrl } from '@/lib/r2/resolve'
 import { ImageUploadField } from '@/components/settings/image-upload-field'
+import { DeleteOrgSection } from '@/components/settings/delete-org-section'
 
 interface Profile {
   id: string
@@ -16,6 +17,7 @@ interface OrgSettings {
   name: string
   slug: string
   logo_url: string | null
+  role?: string
 }
 
 export default function AccountPage() {
@@ -243,6 +245,12 @@ export default function AccountPage() {
               {orgSaved && <span className="text-sm text-success">Saved</span>}
             </div>
           </form>
+        </section>
+      )}
+
+      {org && org.role === 'owner' && (
+        <section>
+          <DeleteOrgSection orgName={org.name} />
         </section>
       )}
     </div>

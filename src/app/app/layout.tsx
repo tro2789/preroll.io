@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { Sidebar } from '@/components/layout/sidebar'
+import { NoOrgsPrompt } from '@/components/layout/no-orgs-prompt'
 import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 import type { OrgMembership } from '@/components/layout/sidebar'
 
@@ -38,6 +39,10 @@ export default async function AppLayout({
   })
 
   const activeOrg = orgs.find((o) => o.id === activeOrgId) || orgs[0]
+
+  if (orgs.length === 0) {
+    return <NoOrgsPrompt />
+  }
 
   return (
     <div className="min-h-screen bg-surface-base overflow-x-hidden">

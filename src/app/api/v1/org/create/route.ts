@@ -9,7 +9,9 @@ export async function POST(request: Request) {
   if (!user) return errorResponse('Unauthorized', 401)
 
   const body = await request.json().catch(() => ({}))
-  const name = (body.name?.trim()) || `${user.user_metadata?.full_name || user.email?.split('@')[0]}'s Workspace`
+  const name = body.name?.trim()
+  if (!name) return errorResponse('Organization name is required')
+  if (name.length > 100) return errorResponse('Organization name too long (max 100 characters)')
   const slug = crypto.randomUUID().replace(/-/g, '')
 
   const service = createServiceClient()
