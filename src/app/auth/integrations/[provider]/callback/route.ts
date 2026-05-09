@@ -25,7 +25,7 @@ export async function GET(
     return NextResponse.redirect(`${origin}/app/settings/integrations?error=unknown_provider`)
   }
 
-  let state: { userId: string; provider: string; nonce: string }
+  let state: { userId: string; provider: string; nonce: string; returnTo?: string }
   try {
     state = JSON.parse(Buffer.from(stateParam, 'base64url').toString())
   } catch {
@@ -89,7 +89,10 @@ export async function GET(
       workspace_id: workspaceId,
     }, { onConflict: 'org_id,provider' })
 
-    return NextResponse.redirect(`${origin}/app/settings/integrations?connected=${providerName}`)
+    const successUrl = state.returnTo?.startsWith('/app/')
+      ? `${origin}${state.returnTo}`
+      : `${origin}/app/settings/integrations?connected=${providerName}`
+    return NextResponse.redirect(successUrl)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error(`OAuth callback error for ${providerName}:`, message)

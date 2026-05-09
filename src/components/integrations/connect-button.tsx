@@ -9,14 +9,16 @@ interface ConnectButtonProps {
   comingSoon?: boolean
   note?: string
   autoConnect?: boolean
+  returnTo?: string
 }
 
-export function ConnectButton({ provider, displayName, comingSoon, note, autoConnect }: ConnectButtonProps) {
+export function ConnectButton({ provider, displayName, comingSoon, note, autoConnect, returnTo }: ConnectButtonProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleConnect() {
     setLoading(true)
-    const res = await fetch(`/api/v1/integrations/${provider}/auth-url`)
+    const params = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''
+    const res = await fetch(`/api/v1/integrations/${provider}/auth-url${params}`)
     const json = await res.json()
     if (json.data?.url) {
       window.location.href = json.data.url

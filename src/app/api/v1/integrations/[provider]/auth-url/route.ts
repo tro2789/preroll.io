@@ -30,11 +30,13 @@ export async function GET(
 
   const provider = getProvider(providerName)
   const nonce = crypto.randomUUID()
+  const returnTo = request.nextUrl.searchParams.get('returnTo')
 
   const state = Buffer.from(JSON.stringify({
     userId: user!.id,
     provider: providerName,
     nonce,
+    ...(returnTo && { returnTo }),
   })).toString('base64url')
 
   const origin = request.nextUrl.origin
