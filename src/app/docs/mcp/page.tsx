@@ -15,8 +15,8 @@ export default function McpDocs() {
         <H3>1. Create an API key</H3>
         <p>
           Go to{' '}
-          <a href="/app/settings/api-keys" className="text-accent hover:text-accent-hover underline">
-            Settings &rarr; API Keys
+          <a href="/app/settings/developer?tab=api-keys" className="text-accent hover:text-accent-hover underline">
+            Settings &rarr; Developer &rarr; API Keys
           </a>{' '}
           and create a key. Copy it — you&apos;ll need it in the next step.
         </p>

@@ -1,6 +1,6 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
-import { computeTrialInfo } from '@/lib/entitlements'
+import { computeTrialInfo, isSelfHosted } from '@/lib/entitlements'
 
 export async function GET() {
   const { org, error } = await getAuthenticatedClient()
@@ -33,5 +33,6 @@ export async function GET() {
       days_left: trial.daysLeft,
       ends_at: trial.endsAt,
     } : undefined,
+    self_hosted: isSelfHosted(),
   })
 }

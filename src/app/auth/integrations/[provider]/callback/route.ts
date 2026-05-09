@@ -16,32 +16,32 @@ export async function GET(
   const stateParam = request.nextUrl.searchParams.get('state')
 
   if (!code || !stateParam) {
-    return NextResponse.redirect(`${origin}/app/settings/integrations?error=missing_params`)
+    return NextResponse.redirect(`${origin}/app/settings/developer?error=missing_params`)
   }
 
   ensureProvidersRegistered()
 
   if (!isValidProvider(providerName)) {
-    return NextResponse.redirect(`${origin}/app/settings/integrations?error=unknown_provider`)
+    return NextResponse.redirect(`${origin}/app/settings/developer?error=unknown_provider`)
   }
 
   let state: { userId: string; provider: string; nonce: string; returnTo?: string }
   try {
     state = JSON.parse(Buffer.from(stateParam, 'base64url').toString())
   } catch {
-    return NextResponse.redirect(`${origin}/app/settings/integrations?error=invalid_state`)
+    return NextResponse.redirect(`${origin}/app/settings/developer?error=invalid_state`)
   }
 
   const cookieStore = await cookies()
   const storedNonce = cookieStore.get('oauth_nonce')?.value
   if (!storedNonce || storedNonce !== state.nonce) {
-    return NextResponse.redirect(`${origin}/app/settings/integrations?error=csrf_mismatch`)
+    return NextResponse.redirect(`${origin}/app/settings/developer?error=csrf_mismatch`)
   }
 
   cookieStore.delete('oauth_nonce')
 
   if (state.provider !== providerName) {
-    return NextResponse.redirect(`${origin}/app/settings/integrations?error=provider_mismatch`)
+    return NextResponse.redirect(`${origin}/app/settings/developer?error=provider_mismatch`)
   }
 
   const provider = getProvider(providerName)
@@ -71,7 +71,7 @@ export async function GET(
 
     const userOrg = await resolveUserOrg(state.userId)
     if (!userOrg) {
-      return NextResponse.redirect(`${origin}/app/settings/integrations?error=no_organization`)
+      return NextResponse.redirect(`${origin}/app/settings/developer?error=no_organization`)
     }
 
     await supabase.from('user_integrations').upsert({
@@ -91,12 +91,12 @@ export async function GET(
 
     const successUrl = state.returnTo?.startsWith('/app/')
       ? `${origin}${state.returnTo}`
-      : `${origin}/app/settings/integrations?connected=${providerName}`
+      : `${origin}/app/settings/developer?connected=${providerName}`
     return NextResponse.redirect(successUrl)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error(`OAuth callback error for ${providerName}:`, message)
     const detail = encodeURIComponent(message.slice(0, 200))
-    return NextResponse.redirect(`${origin}/app/settings/integrations?error=exchange_failed&detail=${detail}`)
+    return NextResponse.redirect(`${origin}/app/settings/developer?error=exchange_failed&detail=${detail}`)
   }
 }

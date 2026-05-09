@@ -617,7 +617,7 @@ export function DeliveryPanel({
               ]).map((p) => (
                 <Link
                   key={p.provider}
-                  href={`/app/settings/integrations?connect=${p.provider}&returnTo=/app/shows/${showId}/episodes/${episodeId}`}
+                  href={`/app/settings/developer?connect=${p.provider}&returnTo=/app/shows/${showId}/episodes/${episodeId}`}
                   className="group flex flex-col items-center gap-2.5 rounded-lg border border-border-default bg-surface-base p-4 text-center transition-all hover:border-accent hover:bg-accent/5 hover:shadow-sm"
                 >
                   <ProviderLogo provider={p.provider} className="w-10 h-10" />
@@ -865,7 +865,7 @@ export function DeliveryPanel({
                   ]).map((p) => (
                     <Link
                       key={p.provider}
-                      href={`/app/settings/integrations?connect=${p.provider}&returnTo=/app/shows/${showId}/episodes/${episodeId}`}
+                      href={`/app/settings/developer?connect=${p.provider}&returnTo=/app/shows/${showId}/episodes/${episodeId}`}
                       className="group flex flex-col items-center gap-2.5 rounded-lg border border-border-default bg-surface-base p-4 text-center transition-all hover:border-accent hover:bg-accent/5 hover:shadow-sm"
                     >
                       <ProviderLogo provider={p.provider} className="w-10 h-10" />
