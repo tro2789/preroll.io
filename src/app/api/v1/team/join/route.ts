@@ -1,9 +1,10 @@
-import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
-import { createServiceClient } from '@/lib/supabase/server'
+import { jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function POST(request: Request) {
-  const { user, error } = await getAuthenticatedClient()
-  if (error) return error
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return errorResponse('Unauthorized', 401)
 
   const body = await request.json()
   const token = body.token?.trim()
