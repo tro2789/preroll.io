@@ -38,7 +38,7 @@ function Nav() {
           <Link href="/docs/api-keys" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">API Docs</Link>
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
+          <Link href="/login" className="text-sm text-text-tertiary hover:text-text-primary transition-colors hidden sm:block">
             Sign in
           </Link>
           <Link
@@ -65,7 +65,7 @@ const MOCK_EPISODES = [
 
 function Hero() {
   return (
-    <section className="relative pt-28 pb-20 px-6 overflow-hidden">
+    <section className="relative pt-32 pb-24 px-6 overflow-hidden">
       <div className="mx-auto max-w-7xl grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-text-primary leading-[1.08]">
@@ -73,7 +73,7 @@ function Hero() {
           </h1>
           <p className="mt-6 text-lg text-text-secondary leading-relaxed max-w-xl">
             API-first episode management for producers and agencies.
-            Track, review, approve, and publish — from the UI, the API,
+            Track, review, approve, and publish from the UI, the API,
             or your AI assistant.
           </p>
           <div className="mt-8 flex items-center gap-4">
@@ -92,8 +92,7 @@ function Hero() {
           </div>
         </div>
 
-        {/* Stylized pipeline mockup */}
-        <div className="relative" aria-hidden="true">
+        <div className="relative hidden lg:block" aria-hidden="true">
           <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-2xl shadow-black/30">
             <div className="flex items-center gap-2 mb-4">
               <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
@@ -149,22 +148,18 @@ function Hero() {
 
 function ApiFirst() {
   return (
-    <section id="features" className="px-6 py-24 scroll-mt-20">
-      <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
+    <section id="features" className="px-6 py-20 scroll-mt-20 bg-surface-raised/40">
+      <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
         <div>
-          <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
-            API-first architecture
-          </p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+          <h2 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
             Every action is an API call.
           </h2>
           <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
             The UI is a client. So is your script. So is your AI assistant.
-            PreRoll exposes a complete REST API — episodes, clients, approvals,
-            publishing — everything you can do in the dashboard, you can do in code.
+            PreRoll exposes a complete REST API: episodes, clients, approvals,
+            publishing. Everything you can do in the dashboard, you can do in code.
           </p>
 
-          {/* Endpoint grid */}
           <div className="mt-8 grid grid-cols-2 gap-3">
             {[
               { name: 'Episodes', desc: 'Create, update, move through pipeline' },
@@ -172,7 +167,7 @@ function ApiFirst() {
               { name: 'Shows', desc: 'Configure stages and templates' },
               { name: 'Webhooks', desc: 'Subscribe to pipeline events' },
             ].map((ep) => (
-              <div key={ep.name} className="rounded-lg border border-border-subtle bg-surface-raised px-4 py-3">
+              <div key={ep.name} className="rounded-lg border border-border-subtle bg-surface-base px-4 py-3">
                 <span className="font-mono text-xs text-accent">/api/v1/{ep.name.toLowerCase()}</span>
                 <p className="mt-1 text-xs text-text-tertiary">{ep.desc}</p>
               </div>
@@ -180,8 +175,7 @@ function ApiFirst() {
           </div>
         </div>
 
-        {/* Code example */}
-        <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-2xl shadow-black/30">
+        <div className="rounded-xl border border-border-subtle bg-surface-base p-5 shadow-xl shadow-black/20" aria-hidden="true">
           <div className="flex items-center gap-2 mb-4">
             <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
             <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
@@ -207,11 +201,9 @@ function ApiFirst() {
               <span className="text-success">{'{ "ok": true }'}</span>
             </div>
           </div>
-          <div className="mt-4 border-t border-border-subtle pt-4">
-            <p className="text-sm text-text-secondary">
-              Three lines. Episode created. Pipeline updated. Clients notified.
-            </p>
-          </div>
+          <p className="mt-4 border-t border-border-subtle pt-4 text-sm text-text-secondary">
+            Three lines. Episode created. Pipeline updated. Clients notified.
+          </p>
         </div>
       </div>
     </section>
@@ -222,39 +214,36 @@ function ApiFirst() {
 
 function McpSection() {
   return (
-    <section className="px-6 py-24">
-      <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
-        {/* Chat mockup */}
-        <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-2xl shadow-black/30 order-2 lg:order-1">
+    <section className="px-6 py-28">
+      <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="rounded-xl border border-accent/10 bg-surface-raised p-6 shadow-xl shadow-black/20 order-2 lg:order-1" aria-hidden="true">
           <div className="flex items-center gap-2 mb-5">
-            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
-            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
-            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
-            <span className="ml-3 text-xs text-text-tertiary font-[family-name:var(--font-display)]">Claude — PreRoll MCP</span>
+            <div className="h-5 w-5 rounded bg-accent/15 flex items-center justify-center">
+              <svg className="h-3 w-3 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
+              </svg>
+            </div>
+            <span className="text-xs text-text-tertiary font-[family-name:var(--font-display)]">Claude &middot; PreRoll MCP</span>
           </div>
-          <div className="space-y-4">
-            {/* User message 1 */}
+          <div className="space-y-3">
             <div className="flex justify-end">
-              <div className="rounded-lg bg-accent/15 px-4 py-2.5 max-w-[80%]">
+              <div className="rounded-lg bg-accent/10 px-4 py-2.5 max-w-[80%]">
                 <p className="text-sm text-text-primary">What episodes are in review for the Basecamp show?</p>
               </div>
             </div>
-            {/* Assistant message 1 */}
             <div className="flex justify-start">
               <div className="rounded-lg bg-surface-overlay px-4 py-2.5 max-w-[85%]">
                 <p className="text-sm text-text-secondary leading-relaxed">
-                  Two episodes in review — Ep 14 &ldquo;Scaling Teams&rdquo; (waiting on client approval since Tuesday)
+                  Two episodes in review: Ep 14 &ldquo;Scaling Teams&rdquo; (waiting on client approval since Tuesday)
                   and Ep 15 &ldquo;Hiring Right&rdquo; (uploaded today).
                 </p>
               </div>
             </div>
-            {/* User message 2 */}
             <div className="flex justify-end">
-              <div className="rounded-lg bg-accent/15 px-4 py-2.5 max-w-[80%]">
+              <div className="rounded-lg bg-accent/10 px-4 py-2.5 max-w-[80%]">
                 <p className="text-sm text-text-primary">Move Ep 14 to approved and notify the client.</p>
               </div>
             </div>
-            {/* Assistant message 2 */}
             <div className="flex justify-start">
               <div className="rounded-lg bg-surface-overlay px-4 py-2.5 max-w-[85%]">
                 <p className="text-sm text-text-secondary leading-relaxed">
@@ -266,18 +255,15 @@ function McpSection() {
         </div>
 
         <div className="order-1 lg:order-2">
-          <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
-            MCP Server
-          </p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+          <h2 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
             Your AI assistant runs the pipeline.
           </h2>
           <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
             PreRoll ships an MCP server. Connect it to Claude, ChatGPT, or any AI
-            assistant — and manage your production pipeline in natural language.
+            assistant and manage your production pipeline in natural language.
           </p>
           <p className="mt-6 text-sm text-text-tertiary max-w-lg">
-            No dashboard tab-switching. No Slack thread searching. Just ask.
+            No tab-switching. No searching Slack threads. Just ask.
           </p>
           <div className="mt-6">
             <Link
@@ -297,13 +283,10 @@ function McpSection() {
 
 function Integrations() {
   return (
-    <section className="px-6 py-24">
+    <section className="px-6 py-20 bg-surface-raised/40">
       <div className="mx-auto max-w-7xl">
         <div className="max-w-2xl">
-          <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
-            Integrations
-          </p>
-          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+          <h2 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
             Webhooks in. Webhooks out.
           </h2>
           <p className="mt-4 text-base text-text-secondary leading-relaxed">
@@ -312,8 +295,8 @@ function Integrations() {
           </p>
         </div>
 
-        <div className="mt-12 grid sm:grid-cols-2 gap-5 max-w-2xl">
-          <div className="rounded-xl border border-border-subtle bg-surface-raised p-6">
+        <div className="mt-10 grid sm:grid-cols-2 gap-5 max-w-2xl">
+          <div className="rounded-xl border border-border-subtle bg-surface-base p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
                 <svg className="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -326,7 +309,7 @@ function Integrations() {
               Sync review comments and approval status. Timecoded feedback flows directly into your episode timeline.
             </p>
           </div>
-          <div className="rounded-xl border border-border-subtle bg-surface-raised p-6">
+          <div className="rounded-xl border border-border-subtle bg-surface-base p-6">
             <div className="flex items-center gap-3 mb-3">
               <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
                 <svg className="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -341,16 +324,14 @@ function Integrations() {
           </div>
         </div>
 
-        <p className="mt-6 text-sm text-text-tertiary">
-          Also: Google Drive, Vimeo, n8n, Zapier.{' '}
-          <Link href="/docs" className="text-accent hover:text-accent-hover transition-colors">
+        <div className="mt-6 flex items-center gap-6">
+          <p className="text-sm text-text-tertiary">
+            Also: Google Drive, Vimeo, n8n, Zapier.
+          </p>
+          <Link href="/docs" className="text-sm text-accent hover:text-accent-hover transition-colors">
             See all integrations &rarr;
           </Link>
-        </p>
-
-        <p className="mt-10 font-[family-name:var(--font-display)] text-base font-medium text-text-secondary">
-          Your tools stay. The duct tape goes.
-        </p>
+        </div>
       </div>
     </section>
   )
@@ -360,17 +341,14 @@ function Integrations() {
 
 function BuiltBy() {
   return (
-    <section className="px-6 py-20">
-      <div className="mx-auto max-w-3xl text-center">
-        <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
-          Built by a producer
-        </p>
-        <h2 className="mt-3 font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-bold text-text-primary leading-tight">
+    <section className="px-6 py-16">
+      <div className="mx-auto max-w-2xl text-center">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-bold text-text-primary leading-tight">
           Built by a producer, for producers.
         </h2>
-        <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-xl mx-auto">
+        <p className="mt-4 text-base text-text-secondary leading-relaxed">
           PreRoll isn&apos;t a project management tool with podcast features bolted on.
-          It&apos;s built by someone who manages client shows every week — and got tired
+          It&apos;s built by someone who manages client shows every week and got tired
           of the spreadsheet.
         </p>
       </div>
@@ -389,17 +367,17 @@ function Pricing() {
 function FinalCta() {
   return (
     <section className="px-6 py-20">
-      <div className="mx-auto max-w-7xl rounded-2xl bg-accent/5 border border-accent/10 p-12 sm:p-16 text-center">
+      <div className="mx-auto max-w-3xl rounded-2xl bg-accent/5 border border-accent/10 px-8 py-14 sm:px-16 text-center">
         <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-bold text-text-primary">
           Your pipeline should be programmable.
         </h2>
         <p className="mt-3 text-base text-text-secondary">
           Start free. No credit card required.
         </p>
-        <div className="mt-8 flex items-center justify-center gap-4">
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             href="/signup"
-            className="inline-block rounded-lg bg-accent px-8 py-3.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
+            className="rounded-lg bg-accent px-8 py-3.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
           >
             Start Free
           </Link>
@@ -421,7 +399,7 @@ function Footer() {
   return (
     <footer className="border-t border-border-subtle px-6 py-12">
       <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-start justify-between gap-8">
-        <div className="flex gap-12">
+        <div className="grid grid-cols-3 gap-8 sm:gap-12">
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Product</p>
             <ul className="mt-3 space-y-2">

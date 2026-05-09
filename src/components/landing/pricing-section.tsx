@@ -69,10 +69,7 @@ export default function PricingSection() {
   return (
     <section id="pricing" className="px-6 py-24 scroll-mt-20">
       <div className="mx-auto max-w-5xl">
-        <p className="text-center font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
-          Pricing
-        </p>
-        <h2 className="mt-3 text-center font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary">
+        <h2 className="text-center font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary">
           Simple, honest pricing.
         </h2>
 
