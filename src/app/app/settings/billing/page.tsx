@@ -109,16 +109,12 @@ export default function BillingPage() {
 
       {trial?.active && !isPaid && (
         <div className="rounded-xl border border-accent/30 bg-accent/5 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-accent">
-                Studio Trial — {trial.days_left} {trial.days_left === 1 ? 'day' : 'days'} left
-              </p>
-              <p className="mt-1 text-sm text-text-secondary">
-                You have full access to all Studio features. Upgrade before your trial ends to keep them.
-              </p>
-            </div>
-          </div>
+          <p className="text-sm font-semibold text-accent">
+            Studio Trial — {trial.days_left} {trial.days_left === 1 ? 'day' : 'days'} left
+          </p>
+          <p className="mt-1 text-sm text-text-secondary">
+            You have full access to all Studio features. Upgrade before your trial ends to keep them.
+          </p>
         </div>
       )}
 

@@ -23,6 +23,16 @@ export interface TrialInfo {
   endsAt: string
 }
 
+export function computeTrialInfo(trialEndsAt: string | null): TrialInfo | null {
+  if (!trialEndsAt) return null
+  const active = new Date(trialEndsAt) > new Date()
+  return {
+    active,
+    daysLeft: active ? Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0,
+    endsAt: trialEndsAt,
+  }
+}
+
 export interface Entitlements {
   planId: string
   trial: TrialInfo | null
@@ -37,42 +47,29 @@ const UNLIMITED: Entitlements = {
   limit: () => null,
 }
 
-export async function getOrgEntitlements(orgId: string, knownPlanId?: string): Promise<Entitlements> {
+export async function getOrgEntitlements(orgId: string, knownPlanId?: string, knownTrialEndsAt?: string | null): Promise<Entitlements> {
   if (isSelfHosted()) return UNLIMITED
 
   const supabase = createServiceClient()
 
   let planId: string
-  let trialEndsAt: string | null = null
+  let trialEndsAt: string | null
 
-  if (knownPlanId) {
+  if (knownPlanId && knownTrialEndsAt !== undefined) {
     planId = knownPlanId
-    const { data: org } = await supabase
-      .from('organizations')
-      .select('trial_ends_at')
-      .eq('id', orgId)
-      .single()
-    trialEndsAt = org?.trial_ends_at ?? null
+    trialEndsAt = knownTrialEndsAt
   } else {
     const { data: org } = await supabase
       .from('organizations')
       .select('plan_id, trial_ends_at')
       .eq('id', orgId)
       .single()
-    planId = org?.plan_id || 'free'
+    planId = knownPlanId || org?.plan_id || 'free'
     trialEndsAt = org?.trial_ends_at ?? null
   }
 
-  const trialActive = trialEndsAt ? new Date(trialEndsAt) > new Date() : false
-  const trial: TrialInfo | null = trialEndsAt
-    ? {
-        active: trialActive,
-        daysLeft: trialActive ? Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0,
-        endsAt: trialEndsAt,
-      }
-    : null
-
-  const effectivePlan = trialActive && planId === 'free' ? 'studio' : planId
+  const trial = computeTrialInfo(trialEndsAt)
+  const effectivePlan = trial?.active && planId === 'free' ? 'studio' : planId
 
   const { data: entitlements } = await supabase
     .from('plan_entitlements')

@@ -1,5 +1,6 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
+import { computeTrialInfo } from '@/lib/entitlements'
 
 export async function GET() {
   const { org, error } = await getAuthenticatedClient()
@@ -21,17 +22,16 @@ export async function GET() {
     .eq('org_id', org!.id)
     .maybeSingle()
 
-  const trialEndsAt = orgData.trial_ends_at
-  const trialActive = trialEndsAt ? new Date(trialEndsAt) > new Date() : false
+  const trial = computeTrialInfo(orgData.trial_ends_at)
 
   return jsonResponse({
     plan_id: orgData.plan_id,
     plan_status: orgData.plan_status,
     subscription: subscription || undefined,
-    trial: trialEndsAt ? {
-      active: trialActive,
-      days_left: trialActive ? Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0,
-      ends_at: trialEndsAt,
+    trial: trial ? {
+      active: trial.active,
+      days_left: trial.daysLeft,
+      ends_at: trial.endsAt,
     } : undefined,
   })
 }

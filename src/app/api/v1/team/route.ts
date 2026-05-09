@@ -16,6 +16,9 @@ export async function GET() {
 
   if (memError) return errorResponse(memError.message, 500)
 
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId, org!.trialEndsAt)
+  const canInvite = entitlements.can('multi_user')
+
   const members = await Promise.all(
     (memberships ?? []).map(async (m) => {
       const { data: { user: u } } = await service.auth.admin.getUserById(m.user_id)
@@ -30,17 +33,19 @@ export async function GET() {
     })
   )
 
-  const { data: invites, error: invError } = await service
-    .from('team_invites')
-    .select('id, email, role, invited_by, expires_at, created_at')
-    .eq('org_id', org!.id)
-    .is('accepted_at', null)
-    .gt('expires_at', new Date().toISOString())
-    .order('created_at', { ascending: false })
+  let invites: Record<string, unknown>[] = []
+  if (canInvite) {
+    const { data, error: invError } = await service
+      .from('team_invites')
+      .select('id, email, role, invited_by, expires_at, created_at')
+      .eq('org_id', org!.id)
+      .is('accepted_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
 
-  if (invError) return errorResponse(invError.message, 500)
+    if (invError) return errorResponse(invError.message, 500)
+    invites = data ?? []
+  }
 
-  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
-
-  return jsonResponse({ members, invites: invites ?? [], canInvite: entitlements.can('multi_user') })
+  return jsonResponse({ members, invites, canInvite })
 }

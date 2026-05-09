@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   const { org, error } = await getAuthenticatedClient()
   if (error) return error
 
-  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId, org!.trialEndsAt)
   if (!entitlements.can('reporting')) return errorResponse('Upgrade to Studio for reporting and analytics', 403)
 
   const searchParams = request.nextUrl.searchParams
