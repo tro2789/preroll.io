@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
@@ -22,7 +23,7 @@ export default async function AppLayout({
   const [{ data: memberships }, { data: profile }, activeOrgId] = await Promise.all([
     service
       .from('memberships')
-      .select('org_id, role, organizations(id, name, plan_id)')
+      .select('org_id, role, organizations(id, name, plan_id, logo_url)')
       .eq('user_id', user.id),
     service
       .from('user_profiles')
@@ -33,8 +34,8 @@ export default async function AppLayout({
   ])
 
   const orgs: OrgMembership[] = (memberships || []).map((m) => {
-    const org = m.organizations as unknown as { id: string; name: string; plan_id: string }
-    return { id: org.id, name: org.name, planId: org.plan_id, role: m.role }
+    const org = m.organizations as unknown as { id: string; name: string; plan_id: string; logo_url: string | null }
+    return { id: org.id, name: org.name, planId: org.plan_id, role: m.role, logoUrl: resolveImageUrl(org.logo_url) || undefined }
   })
 
   const activeOrg = orgs.find((o) => o.id === activeOrgId) || orgs[0]

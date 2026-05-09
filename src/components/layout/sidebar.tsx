@@ -10,6 +10,7 @@ export interface OrgMembership {
   name: string
   planId: string
   role: string
+  logoUrl?: string
 }
 
 const navItems = [
@@ -67,9 +68,13 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
             : 'cursor-default'
         }`}
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent text-sm font-bold shrink-0">
-          {activeOrg.name.charAt(0).toUpperCase()}
-        </div>
+        {activeOrg.logoUrl ? (
+          <img src={activeOrg.logoUrl} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent text-sm font-bold shrink-0">
+            {activeOrg.name.charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-text-primary truncate">{activeOrg.name}</p>
           <p className="text-xs text-text-tertiary">
@@ -90,9 +95,13 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
               disabled={switching}
               className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-raised transition-colors disabled:opacity-50"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-input text-text-secondary text-sm font-bold shrink-0">
-                {org.name.charAt(0).toUpperCase()}
-              </div>
+              {org.logoUrl ? (
+                <img src={org.logoUrl} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-input text-text-secondary text-sm font-bold shrink-0">
+                  {org.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-text-primary truncate">{org.name}</p>
                 <p className="text-xs text-text-tertiary">
