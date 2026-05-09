@@ -1,12 +1,10 @@
-import { NextResponse } from 'next/server'
+import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!user) return errorResponse('Unauthorized', 401)
 
   const service = createServiceClient()
   const { data: memberships } = await service
@@ -15,7 +13,7 @@ export async function GET() {
     .eq('user_id', user.id)
 
   if (!memberships || memberships.length === 0) {
-    return NextResponse.json({ data: [] })
+    return jsonResponse([])
   }
 
   const orgs = memberships.map((m) => {
@@ -32,5 +30,5 @@ export async function GET() {
     }
   })
 
-  return NextResponse.json({ data: orgs })
+  return jsonResponse(orgs)
 }

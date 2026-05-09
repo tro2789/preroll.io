@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { PLAN_LABELS } from '@/lib/constants/plans'
 
 interface OrgBilling {
   plan_id: string
@@ -51,11 +52,8 @@ const UPGRADE_TIERS = [
   },
 ]
 
-const PLAN_LABELS: Record<string, string> = {
-  free: 'Free',
-  pro: 'Pro',
-  studio: 'Studio',
-}
+const PLAN_FEATURES = Object.fromEntries(UPGRADE_TIERS.map((t) => [t.plan, t.features]))
+const PLAN_PRICE = Object.fromEntries(UPGRADE_TIERS.map((t) => [t.plan, `$${t.monthly}/mo`]))
 
 export default function BillingPage() {
   const [billing, setBilling] = useState<OrgBilling | null>(null)
@@ -110,27 +108,7 @@ export default function BillingPage() {
   const isCanceling = billing?.subscription?.cancel_at_period_end
   const trial = billing?.trial
 
-  const planFeatures: Record<string, string[]> = {
-    pro: [
-      'Unlimited clients and shows',
-      'All integrations (Frame.io, Transistor, Drive, Vimeo)',
-      'Webhook egress and API keys',
-      'MCP server access',
-      'Episode templates',
-    ],
-    studio: [
-      'Everything in Pro',
-      'Multi-user access with roles',
-      'White-label client portal',
-      'Reporting and analytics',
-      'Priority support',
-    ],
-  }
-
-  const planPrice: Record<string, string> = {
-    pro: '$29/mo',
-    studio: '$79/mo',
-  }
+  const cardVariant = success && isPaid ? 'success' : isPaid ? 'active' : 'default'
 
   return (
     <div className="space-y-8">
@@ -176,24 +154,24 @@ export default function BillingPage() {
       <div>
         <h2 className="text-lg font-semibold text-text-primary">Current Plan</h2>
         <div className={`relative mt-3 overflow-hidden rounded-xl border p-6 ${
-          success && isPaid
+          cardVariant === 'success'
             ? 'border-success/40 bg-gradient-to-br from-success/15 via-success/5 to-transparent'
-            : isPaid
+            : cardVariant === 'active'
               ? 'border-accent/30 bg-gradient-to-br from-accent/10 via-surface-raised to-surface-raised'
               : 'border-border-default bg-surface-raised'
         }`}>
           {isPaid && (
             <>
-              <div className={`absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl ${success ? 'bg-success/10' : 'bg-accent/10'}`} />
-              <div className={`absolute -bottom-6 -left-6 h-20 w-20 rounded-full blur-2xl ${success ? 'bg-success/10' : 'bg-accent/10'}`} />
+              <div className={`absolute -right-8 -top-8 h-32 w-32 rounded-full blur-3xl ${cardVariant === 'success' ? 'bg-success/10' : 'bg-accent/10'}`} />
+              <div className={`absolute -bottom-6 -left-6 h-20 w-20 rounded-full blur-2xl ${cardVariant === 'success' ? 'bg-success/10' : 'bg-accent/10'}`} />
             </>
           )}
           <div className="relative">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {isPaid && (
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${success ? 'bg-success/15' : 'bg-accent/15'}`}>
-                    {success ? (
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${cardVariant === 'success' ? 'bg-success/15' : 'bg-accent/15'}`}>
+                    {cardVariant === 'success' ? (
                       <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                       </svg>
@@ -207,7 +185,7 @@ export default function BillingPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl font-bold text-text-primary">
-                      {success && isPaid
+                      {cardVariant === 'success'
                         ? `Welcome to ${PLAN_LABELS[currentPlan]}`
                         : PLAN_LABELS[currentPlan] || currentPlan}
                     </span>
@@ -229,11 +207,11 @@ export default function BillingPage() {
                   </div>
                   {isPaid && (
                     <p className="mt-0.5 text-sm text-text-tertiary">
-                      {success
-                        ? "Your subscription is active — you’re all set."
-                        : planPrice[currentPlan] && (
+                      {cardVariant === 'success'
+                        ? "Your subscription is active — you're all set."
+                        : PLAN_PRICE[currentPlan] && (
                             <>
-                              {planPrice[currentPlan]}
+                              {PLAN_PRICE[currentPlan]}
                               {billing?.subscription?.current_period_end && (
                                 <> &middot; Renews {new Date(billing.subscription.current_period_end).toLocaleDateString()}</>
                               )}
@@ -257,13 +235,13 @@ export default function BillingPage() {
                 </button>
               )}
             </div>
-            {isPaid && planFeatures[currentPlan] && (
+            {isPaid && PLAN_FEATURES[currentPlan] && (
               <div className="mt-5 border-t border-border-default/50 pt-5">
                 <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">What&apos;s included</p>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {planFeatures[currentPlan].map((f) => (
+                  {PLAN_FEATURES[currentPlan].map((f) => (
                     <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
-                      <svg className={`h-3.5 w-3.5 shrink-0 ${success ? 'text-success' : 'text-accent'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <svg className={`h-3.5 w-3.5 shrink-0 ${cardVariant === 'success' ? 'text-success' : 'text-accent'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
                       </svg>
                       {f}

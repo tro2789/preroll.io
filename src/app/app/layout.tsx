@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
+import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 import type { OrgMembership } from '@/components/layout/sidebar'
 
 export default async function AppLayout({
@@ -17,14 +18,14 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  const service = createServiceClient()
-  const { data: memberships } = await service
-    .from('memberships')
-    .select('org_id, role, organizations(id, name, plan_id)')
-    .eq('user_id', user.id)
-
-  const cookieStore = await cookies()
-  const activeOrgId = cookieStore.get('preroll_org')?.value
+  const [service, cookieStore] = [createServiceClient(), await cookies()]
+  const [{ data: memberships }, activeOrgId] = await Promise.all([
+    service
+      .from('memberships')
+      .select('org_id, role, organizations(id, name, plan_id)')
+      .eq('user_id', user.id),
+    Promise.resolve(cookieStore.get(ORG_COOKIE_NAME)?.value),
+  ])
 
   const orgs: OrgMembership[] = (memberships || []).map((m) => {
     const org = m.organizations as unknown as { id: string; name: string; plan_id: string }

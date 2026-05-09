@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers'
+import { cache } from 'react'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export interface OrgContext {
@@ -8,7 +8,7 @@ export interface OrgContext {
   role: string
 }
 
-export async function resolveUserOrg(userId: string): Promise<OrgContext | null> {
+export const resolveUserOrg = cache(async (userId: string, preferredOrgId?: string): Promise<OrgContext | null> => {
   const supabase = createServiceClient()
 
   const { data: memberships } = await supabase
@@ -18,17 +18,12 @@ export async function resolveUserOrg(userId: string): Promise<OrgContext | null>
 
   if (!memberships || memberships.length === 0) return null
 
-  // Check cookie for explicit org selection
-  const cookieStore = await cookies()
-  const preferredOrg = cookieStore.get('preroll_org')?.value
-
   let membership = memberships[0]
 
-  if (preferredOrg) {
-    const match = memberships.find((m) => m.org_id === preferredOrg)
+  if (preferredOrgId) {
+    const match = memberships.find((m) => m.org_id === preferredOrgId)
     if (match) membership = match
   } else if (memberships.length > 1) {
-    // No cookie set — prefer non-owner membership (invited org over auto-created)
     membership = memberships.find((m) => m.role !== 'owner') || memberships[0]
   }
 
@@ -40,7 +35,7 @@ export async function resolveUserOrg(userId: string): Promise<OrgContext | null>
     trialEndsAt: org?.trial_ends_at ?? null,
     role: membership.role,
   }
-}
+})
 
 export async function resolveOrgFromApiKey(orgId: string): Promise<OrgContext | null> {
   const supabase = createServiceClient()
