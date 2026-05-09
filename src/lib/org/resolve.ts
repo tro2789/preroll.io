@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export interface OrgContext {
@@ -17,12 +18,19 @@ export async function resolveUserOrg(userId: string): Promise<OrgContext | null>
 
   if (!memberships || memberships.length === 0) return null
 
-  // If user has multiple memberships (e.g. auto-created org + invited org),
-  // prefer the one where they're NOT owner (the invited org).
-  // For single-org users this is a no-op.
-  const membership = memberships.length > 1
-    ? memberships.find((m) => m.role !== 'owner') || memberships[0]
-    : memberships[0]
+  // Check cookie for explicit org selection
+  const cookieStore = await cookies()
+  const preferredOrg = cookieStore.get('preroll_org')?.value
+
+  let membership = memberships[0]
+
+  if (preferredOrg) {
+    const match = memberships.find((m) => m.org_id === preferredOrg)
+    if (match) membership = match
+  } else if (memberships.length > 1) {
+    // No cookie set — prefer non-owner membership (invited org over auto-created)
+    membership = memberships.find((m) => m.role !== 'owner') || memberships[0]
+  }
 
   const org = membership.organizations as unknown as { plan_id: string; trial_ends_at: string | null } | null
 
