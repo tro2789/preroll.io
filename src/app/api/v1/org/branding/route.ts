@@ -16,7 +16,7 @@ export async function GET() {
       .select('display_name, logo_url, accent_color')
       .eq('id', org!.id)
       .single(),
-    getOrgEntitlements(org!.id),
+    getOrgEntitlements(org!.id, org!.planId),
   ])
 
   if (dbError) return errorResponse(dbError.message, 500)
@@ -30,7 +30,7 @@ export async function PATCH(request: NextRequest) {
   const roleError = requireRole(org!, 'owner')
   if (roleError) return roleError
 
-  const entitlements = await getOrgEntitlements(org!.id)
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
   if (!entitlements.can('white_label')) {
     return errorResponse('White-label branding requires Studio plan or higher.', 403)
   }

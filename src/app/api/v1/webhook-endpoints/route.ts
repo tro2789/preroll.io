@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const roleError = requireRole(org!, 'admin')
   if (roleError) return roleError
 
-  const entitlements = await getOrgEntitlements(org!.id)
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
   if (!entitlements.can('webhooks')) {
     return errorResponse('Upgrade to Pro to use webhooks.', 403)
   }

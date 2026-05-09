@@ -81,6 +81,9 @@ export default function PricingSection() {
             Monthly
           </span>
           <button
+            role="switch"
+            aria-checked={annual}
+            aria-label="Toggle annual billing"
             onClick={() => setAnnual(!annual)}
             className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${annual ? 'bg-accent' : 'bg-border-default'}`}
           >
@@ -91,7 +94,7 @@ export default function PricingSection() {
           <span className={`text-sm ${annual ? 'text-text-primary font-medium' : 'text-text-tertiary'}`}>
             Annual
           </span>
-          <span className={`rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success transition-opacity ${annual ? 'opacity-100' : 'opacity-0'}`}>
+          <span aria-hidden={!annual} className={`rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success transition-opacity ${annual ? 'opacity-100' : 'opacity-0'}`}>
             Save 17%
           </span>
         </div>

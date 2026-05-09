@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
   const { org, error } = await getAuthenticatedClient()
   if (error) return error
 
-  const ent = await getOrgEntitlements(org!.id)
-  if (!ent.can('reporting')) return errorResponse('Upgrade to Studio for reporting and analytics', 403)
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
+  if (!entitlements.can('reporting')) return errorResponse('Upgrade to Studio for reporting and analytics', 403)
 
   const searchParams = request.nextUrl.searchParams
   const period = searchParams.get('period') || '90d'
