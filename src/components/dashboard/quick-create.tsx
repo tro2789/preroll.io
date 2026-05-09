@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface Client {
@@ -17,6 +17,7 @@ interface Show {
 
 type Step = 'client' | 'show' | 'episode'
 const STEPS: Step[] = ['client', 'show', 'episode']
+const SEARCH_THRESHOLD = 7
 
 export function QuickCreate() {
   const router = useRouter()
@@ -43,11 +44,30 @@ export function QuickCreate() {
   const [creatingShow, setCreatingShow] = useState(false)
   const [newShowName, setNewShowName] = useState('')
 
+  // Search filters
+  const [clientSearch, setClientSearch] = useState('')
+  const [showSearch, setShowSearch] = useState('')
+
   // Episode fields
   const [episodeTitle, setEpisodeTitle] = useState('')
   const [episodeNumber, setEpisodeNumber] = useState('')
 
   const selectedClient = clients.find(c => c.id === selectedClientId) ?? null
+
+  const filteredClients = useMemo(() => {
+    if (!clientSearch.trim()) return clients
+    const q = clientSearch.toLowerCase()
+    return clients.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      (c.company && c.company.toLowerCase().includes(q))
+    )
+  }, [clients, clientSearch])
+
+  const filteredShows = useMemo(() => {
+    if (!showSearch.trim()) return shows
+    const q = showSearch.toLowerCase()
+    return shows.filter(s => s.name.toLowerCase().includes(q))
+  }, [shows, showSearch])
 
   const fetchClients = useCallback(async () => {
     setClientsLoading(true)
@@ -110,12 +130,15 @@ export function QuickCreate() {
     setNewShowName('')
     setEpisodeTitle('')
     setEpisodeNumber('')
+    setClientSearch('')
+    setShowSearch('')
     setClients([])
     setShows([])
   }
 
   function goBack() {
     setError(null)
+    setShowSearch('')
     const idx = STEPS.indexOf(step)
     if (idx > 0) {
       setStep(STEPS[idx - 1])
@@ -294,24 +317,40 @@ export function QuickCreate() {
               ) : (
                 <>
                   {!creatingClient && clients.length > 0 && (
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                      {clients.map(c => (
-                        <button
-                          key={c.id}
-                          onClick={() => setSelectedClientId(c.id)}
-                          className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                            selectedClientId === c.id
-                              ? 'border-accent bg-accent/10 text-text-primary'
-                              : 'border-border-default bg-surface-input text-text-secondary hover:border-border-hover hover:text-text-primary'
-                          }`}
-                        >
-                          <span className="font-medium">{c.name}</span>
-                          {c.company && (
-                            <span className="text-text-tertiary ml-1.5 text-xs">— {c.company}</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
+                    <>
+                      {clients.length >= SEARCH_THRESHOLD && (
+                        <input
+                          type="text"
+                          value={clientSearch}
+                          onChange={e => setClientSearch(e.target.value)}
+                          placeholder="Search clients..."
+                          autoFocus
+                          className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                        />
+                      )}
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {filteredClients.length === 0 ? (
+                          <div className="py-3 text-center text-xs text-text-tertiary">No clients match &ldquo;{clientSearch}&rdquo;</div>
+                        ) : (
+                          filteredClients.map(c => (
+                            <button
+                              key={c.id}
+                              onClick={() => setSelectedClientId(c.id)}
+                              className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                                selectedClientId === c.id
+                                  ? 'border-accent bg-accent/10 text-text-primary'
+                                  : 'border-border-default bg-surface-input text-text-secondary hover:border-border-hover hover:text-text-primary'
+                              }`}
+                            >
+                              <span className="font-medium">{c.name}</span>
+                              {c.company && (
+                                <span className="text-text-tertiary ml-1.5 text-xs">— {c.company}</span>
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </>
                   )}
 
                   {!creatingClient && (
@@ -391,21 +430,37 @@ export function QuickCreate() {
               ) : (
                 <>
                   {!creatingShow && shows.length > 0 && (
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                      {shows.map(s => (
-                        <button
-                          key={s.id}
-                          onClick={() => setSelectedShowId(s.id)}
-                          className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
-                            selectedShowId === s.id
-                              ? 'border-accent bg-accent/10 text-text-primary'
-                              : 'border-border-default bg-surface-input text-text-secondary hover:border-border-hover hover:text-text-primary'
-                          }`}
-                        >
-                          <span className="font-medium">{s.name}</span>
-                        </button>
-                      ))}
-                    </div>
+                    <>
+                      {shows.length >= SEARCH_THRESHOLD && (
+                        <input
+                          type="text"
+                          value={showSearch}
+                          onChange={e => setShowSearch(e.target.value)}
+                          placeholder="Search shows..."
+                          autoFocus
+                          className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                        />
+                      )}
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto">
+                        {filteredShows.length === 0 ? (
+                          <div className="py-3 text-center text-xs text-text-tertiary">No shows match &ldquo;{showSearch}&rdquo;</div>
+                        ) : (
+                          filteredShows.map(s => (
+                            <button
+                              key={s.id}
+                              onClick={() => setSelectedShowId(s.id)}
+                              className={`w-full text-left rounded-lg border px-3 py-2.5 text-sm transition-colors ${
+                                selectedShowId === s.id
+                                  ? 'border-accent bg-accent/10 text-text-primary'
+                                  : 'border-border-default bg-surface-input text-text-secondary hover:border-border-hover hover:text-text-primary'
+                              }`}
+                            >
+                              <span className="font-medium">{s.name}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </>
                   )}
 
                   {!creatingShow && shows.length > 0 && (
