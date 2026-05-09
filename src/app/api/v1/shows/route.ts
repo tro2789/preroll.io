@@ -4,14 +4,15 @@ import { getOrgEntitlements } from '@/lib/entitlements'
 import { requireRole } from '@/lib/org/roles'
 
 export async function GET(request: NextRequest) {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const clientId = request.nextUrl.searchParams.get('client_id')
 
   let query = supabase!
     .from('shows')
-    .select('*', { count: 'exact' })
+    .select('*, clients!inner(org_id)', { count: 'exact' })
+    .eq('clients.org_id', org!.id)
     .order('name')
 
   if (clientId) {

@@ -1,7 +1,7 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 
 export async function GET() {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const today = new Date()
@@ -23,14 +23,16 @@ export async function GET() {
   ] = await Promise.all([
     supabase!
       .from('episodes')
-      .select('id, title, episode_number, status, scheduled_publish_date, updated_at, stage_id, pipeline_stages(name), shows(id, name)')
+      .select('id, title, episode_number, status, scheduled_publish_date, updated_at, stage_id, pipeline_stages(name), shows!inner(id, name, clients!inner(org_id))')
+      .eq('shows.clients.org_id', org!.id)
       .neq('status', 'published')
       .order('updated_at', { ascending: false })
       .limit(12),
 
     supabase!
       .from('episodes')
-      .select('id, title, episode_number, status, scheduled_publish_date, shows(id, name), pipeline_stages(name)')
+      .select('id, title, episode_number, status, scheduled_publish_date, shows!inner(id, name, clients!inner(org_id)), pipeline_stages(name)')
+      .eq('shows.clients.org_id', org!.id)
       .gte('scheduled_publish_date', todayStr)
       .lte('scheduled_publish_date', nextTwoWeeksStr)
       .neq('status', 'published')
@@ -39,26 +41,31 @@ export async function GET() {
 
     supabase!
       .from('activity_log')
-      .select('id, action, description, created_at, show_id, shows(name)')
+      .select('id, action, description, created_at, show_id, shows!inner(name, clients!inner(org_id))')
+      .eq('shows.clients.org_id', org!.id)
       .order('created_at', { ascending: false })
       .limit(8),
 
     supabase!
       .from('clients')
-      .select('*', { count: 'exact', head: true }),
+      .select('*', { count: 'exact', head: true })
+      .eq('org_id', org!.id),
 
     supabase!
       .from('shows')
-      .select('*', { count: 'exact', head: true }),
+      .select('*, clients!inner(org_id)', { count: 'exact', head: true })
+      .eq('clients.org_id', org!.id),
 
     supabase!
       .from('episodes')
-      .select('*', { count: 'exact', head: true })
+      .select('*, shows!inner(clients!inner(org_id))', { count: 'exact', head: true })
+      .eq('shows.clients.org_id', org!.id)
       .gte('created_at', monthStartStr),
 
     supabase!
       .from('deliverables')
-      .select('*', { count: 'exact', head: true })
+      .select('*, shows!inner(clients!inner(org_id))', { count: 'exact', head: true })
+      .eq('shows.clients.org_id', org!.id)
       .eq('status', 'pending'),
   ])
 

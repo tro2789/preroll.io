@@ -1,20 +1,26 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getActiveOrgId } from '@/lib/org/server'
 
 export default async function ClientsPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const orgId = user ? await getActiveOrgId(user.id) : null
 
   const [{ data: clients }, { data: showCounts }, { data: pendingCounts }] = await Promise.all([
     supabase
       .from('clients')
       .select('id, name, company, email, client_user_id, onboarded_at, invite_code')
+      .eq('org_id', orgId!)
       .order('name'),
     supabase
       .from('shows')
-      .select('client_id'),
+      .select('client_id, clients!inner(org_id)')
+      .eq('clients.org_id', orgId!),
     supabase
       .from('deliverables')
-      .select('show_id, shows!inner(client_id)')
+      .select('show_id, shows!inner(client_id, clients!inner(org_id))')
+      .eq('shows.clients.org_id', orgId!)
       .eq('status', 'pending'),
   ])
 

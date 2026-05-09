@@ -1,14 +1,18 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
+import { getActiveOrgId } from '@/lib/org/server'
 import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ShowsPage() {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const orgId = user ? await getActiveOrgId(user.id) : null
 
   const { data: shows } = await supabase
     .from('shows')
-    .select('id, name, format, schedule, cover_art_url, clients(id, name), episodes(id)')
+    .select('id, name, format, schedule, cover_art_url, clients!inner(id, name, org_id), episodes(id)')
+    .eq('clients.org_id', orgId!)
     .order('name')
 
   return (

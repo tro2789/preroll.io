@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 
 export async function GET(request: NextRequest) {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const status = request.nextUrl.searchParams.get('status')
@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
 
   let query = supabase!
     .from('episodes')
-    .select('*, shows(id, name)')
+    .select('*, shows!inner(id, name, clients!inner(org_id))')
+    .eq('shows.clients.org_id', org!.id)
     .order('scheduled_publish_date', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
 
