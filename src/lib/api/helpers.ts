@@ -1,7 +1,9 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { createHash } from 'crypto'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { resolveUserOrg, resolveOrgFromApiKey, type OrgContext } from '@/lib/org/resolve'
+import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 
 function hashKey(key: string): string {
   return createHash('sha256').update(key).digest('hex')
@@ -49,7 +51,9 @@ export async function getAuthenticatedClient() {
     return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   }
 
-  const org = await resolveUserOrg(user.id)
+  const cookieStore = await cookies()
+  const preferredOrgId = cookieStore.get(ORG_COOKIE_NAME)?.value
+  const org = await resolveUserOrg(user.id, preferredOrgId)
   if (!org) {
     return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'No organization found' }, { status: 401 }) }
   }

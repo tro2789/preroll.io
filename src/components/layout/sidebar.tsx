@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
+import { PLAN_LABELS } from '@/lib/constants/plans'
 
 export interface OrgMembership {
   id: string
@@ -20,12 +21,6 @@ const navItems = [
   { label: 'Docs', href: '/docs', icon: BookIcon },
   { label: 'Settings', href: '/app/settings', icon: CogIcon },
 ]
-
-const PLAN_LABELS: Record<string, string> = {
-  free: 'Free',
-  pro: 'Pro',
-  studio: 'Studio',
-}
 
 function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId?: string }) {
   const [open, setOpen] = useState(false)
@@ -46,14 +41,18 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
 
   async function switchOrg(orgId: string) {
     setSwitching(true)
-    await fetch('/api/v1/org/switch', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orgId }),
-    })
-    setOpen(false)
-    router.refresh()
-    setSwitching(false)
+    try {
+      const res = await fetch('/api/v1/org/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgId }),
+      })
+      if (!res.ok) return
+      setOpen(false)
+      router.refresh()
+    } finally {
+      setSwitching(false)
+    }
   }
 
   if (!activeOrg) return null
