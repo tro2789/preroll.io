@@ -12,8 +12,9 @@ export default async function LandingPage() {
     <div className="min-h-screen bg-surface-base">
       <Nav />
       <Hero />
-      <Pipeline />
-      <Features />
+      <ApiFirst />
+      <McpSection />
+      <Integrations />
       <BuiltBy />
       <Pricing />
       <FinalCta />
@@ -32,9 +33,9 @@ function Nav() {
           PreRoll
         </Link>
         <nav className="hidden sm:flex items-center gap-6">
-          <a href="#pipeline" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">How It Works</a>
           <a href="#features" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Features</a>
           <a href="#pricing" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Pricing</a>
+          <Link href="/docs/api-keys" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">API Docs</Link>
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
@@ -68,11 +69,12 @@ function Hero() {
       <div className="mx-auto max-w-7xl grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-center">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-4xl sm:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-text-primary leading-[1.08]">
-            Stop juggling shows across spreadsheets and Slack threads.
+            Your podcast pipeline, programmable.
           </h1>
           <p className="mt-6 text-lg text-text-secondary leading-relaxed max-w-xl">
-            PreRoll is the production pipeline built for podcast producers who manage
-            multiple client shows. Track every episode, collect approvals, publish. One place.
+            API-first episode management for producers and agencies.
+            Track, review, approve, and publish — from the UI, the API,
+            or your AI assistant.
           </p>
           <div className="mt-8 flex items-center gap-4">
             <Link
@@ -81,12 +83,12 @@ function Hero() {
             >
               Start Free
             </Link>
-            <a
-              href="#pipeline"
+            <Link
+              href="/docs/api-keys"
               className="text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
             >
-              See how it works &darr;
-            </a>
+              View API Docs &rarr;
+            </Link>
           </div>
         </div>
 
@@ -125,7 +127,6 @@ function Hero() {
                 )
               })}
             </div>
-            {/* Activity strip */}
             <div className="mt-4 border-t border-border-subtle pt-3">
               <div className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-status-approved" />
@@ -137,7 +138,6 @@ function Hero() {
               </div>
             </div>
           </div>
-          {/* Glow behind the mockup */}
           <div className="absolute -inset-10 -z-10 rounded-3xl bg-accent/5 blur-3xl" />
         </div>
       </div>
@@ -145,170 +145,218 @@ function Hero() {
   )
 }
 
-// ─── Pipeline ───────────────────────────────────────────────────────────────
+// ─── API-First ─────────────────────────────────────────────────────────────
 
-const STAGES = [
-  { name: 'Planning', color: 'var(--color-status-planning)', desc: 'Outline, guests, scheduling' },
-  { name: 'Recording', color: 'var(--color-status-recording)', desc: 'Capture the session' },
-  { name: 'Editing', color: 'var(--color-status-editing)', desc: 'Cut, mix, polish' },
-  { name: 'Review', color: 'var(--color-status-review)', desc: 'Client listens and approves' },
-  { name: 'Approved', color: 'var(--color-status-approved)', desc: 'Ready for publish' },
-  { name: 'Published', color: 'var(--color-status-published)', desc: 'Live on Transistor' },
-]
-
-function Pipeline() {
-  return (
-    <section id="pipeline" className="px-6 py-24 scroll-mt-20">
-      <div className="mx-auto max-w-7xl">
-        <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
-          How it works
-        </p>
-        <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight max-w-2xl">
-          Every episode flows through a pipeline you control.
-        </h2>
-        <p className="mt-4 text-base text-text-secondary max-w-xl">
-          Customize stages per show. Drag episodes between them. Status updates automatically. Your clients see progress without asking.
-        </p>
-
-        <div className="mt-14 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-border-subtle rounded-xl overflow-hidden">
-          {STAGES.map((stage) => (
-            <div key={stage.name} className="bg-surface-raised p-5 flex flex-col items-center text-center">
-              <span
-                className="h-3 w-3 rounded-full"
-                style={{ backgroundColor: stage.color }}
-              />
-              <span className="mt-3 font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">{stage.name}</span>
-              <span className="mt-1 text-xs text-text-tertiary">{stage.desc}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// ─── Features ───────────────────────────────────────────────────────────────
-
-function Features() {
+function ApiFirst() {
   return (
     <section id="features" className="px-6 py-24 scroll-mt-20">
-      <div className="mx-auto max-w-7xl">
-        <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
-          Features
-        </p>
+      <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
+            API-first architecture
+          </p>
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+            Every action is an API call.
+          </h2>
+          <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
+            The UI is a client. So is your script. So is your AI assistant.
+            PreRoll exposes a complete REST API — episodes, clients, approvals,
+            publishing — everything you can do in the dashboard, you can do in code.
+          </p>
 
-        {/* Hero feature: Client Portal */}
-        <div className="mt-10 grid lg:grid-cols-2 gap-10 items-center">
-          <div>
-            <h2 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
-              Your clients see status, not your inbox.
-            </h2>
-            <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
-              Clients get a magic-link portal. They check episode progress, approve
-              deliverables, leave revision notes. No passwords, no training, no
-              &ldquo;can you send me an update?&rdquo; emails.
-            </p>
-          </div>
-          {/* Portal mockup */}
-          <div className="rounded-xl border border-border-subtle bg-surface-raised p-5" aria-hidden="true">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs text-text-tertiary font-[family-name:var(--font-display)]">Client Portal — Acme Media</span>
-              <span className="rounded-full bg-success/10 text-success px-2.5 py-0.5 text-[10px] font-medium">2 pending</span>
-            </div>
-            <div className="space-y-2">
-              {[
-                { title: 'EP 14 Rough Cut', status: 'Awaiting Review', statusColor: 'text-warning' },
-                { title: 'EP 13 Final Mix', status: 'Approved', statusColor: 'text-success' },
-                { title: 'EP 12 Show Notes', status: 'Awaiting Review', statusColor: 'text-warning' },
-              ].map((d) => (
-                <div key={d.title} className="flex items-center justify-between rounded-lg bg-surface-overlay px-4 py-3">
-                  <span className="text-xs text-text-primary">{d.title}</span>
-                  <span className={`text-[10px] font-medium ${d.statusColor}`}>{d.status}</span>
-                </div>
-              ))}
-            </div>
+          {/* Endpoint grid */}
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            {[
+              { name: 'Episodes', desc: 'Create, update, move through pipeline' },
+              { name: 'Clients', desc: 'Manage contacts and shows' },
+              { name: 'Shows', desc: 'Configure stages and templates' },
+              { name: 'Webhooks', desc: 'Subscribe to pipeline events' },
+            ].map((ep) => (
+              <div key={ep.name} className="rounded-lg border border-border-subtle bg-surface-raised px-4 py-3">
+                <span className="font-mono text-xs text-accent">/api/v1/{ep.name.toLowerCase()}</span>
+                <p className="mt-1 text-xs text-text-tertiary">{ep.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Hero feature: API & MCP */}
-        <div className="mt-20 grid lg:grid-cols-2 gap-10 items-center">
-          {/* API mockup */}
-          <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 order-2 lg:order-1" aria-hidden="true">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-xs text-text-tertiary font-[family-name:var(--font-display)]">Terminal</span>
+        {/* Code example */}
+        <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-2xl shadow-black/30">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
+            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
+            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
+            <span className="ml-3 text-xs text-text-tertiary font-[family-name:var(--font-display)]">Terminal</span>
+          </div>
+          <div className="font-mono text-sm leading-relaxed">
+            <div className="text-text-tertiary">
+              <span className="text-text-secondary">$</span>{' '}
+              <span className="text-accent">curl</span>{' '}
+              <span className="text-text-secondary">https://api.preroll.io/episodes \</span>
             </div>
-            <div className="space-y-3 font-mono text-xs">
-              <div>
-                <span className="text-text-tertiary">$</span>{' '}
-                <span className="text-accent">curl</span>{' '}
-                <span className="text-text-secondary">api.preroll.io/api/v1/episodes?status=review</span>
-              </div>
-              <div className="rounded-lg bg-surface-overlay px-3 py-2.5 text-text-secondary leading-relaxed">
-                <span className="text-success">{'"data"'}</span>: [{'{'} <span className="text-accent">{'"title"'}</span>: {'"The Sleep Episode"'}, <span className="text-accent">{'"status"'}</span>: {'"review"'}, ... {'}'}]
-              </div>
-              <div className="mt-2 border-t border-border-subtle pt-3">
-                <span className="text-text-tertiary">{'>'}</span>{' '}
-                <span className="text-text-secondary">Ask Claude: &ldquo;What episodes need my attention?&rdquo;</span>
-              </div>
-              <div className="rounded-lg bg-surface-overlay px-3 py-2.5 text-text-secondary leading-relaxed">
-                <span className="text-accent">MCP</span> <span className="text-text-tertiary">get_dashboard</span> &rarr; 3 episodes in review, 2 deliverables pending approval
-              </div>
+            <div className="text-text-secondary pl-4">
+              {'-d \'{"show": "The Basecamp Podcast",'}
+            </div>
+            <div className="text-text-secondary pl-8">
+              {'"title": "Episode 14",'}
+            </div>
+            <div className="text-text-secondary pl-8">
+              {'"stage": "editing"}\''}
+            </div>
+            <div className="mt-4 rounded-lg bg-surface-overlay px-4 py-3 text-xs text-text-tertiary">
+              <span className="text-success">{'{ "ok": true }'}</span>
             </div>
           </div>
-          <div className="order-1 lg:order-2">
-            <h2 className="font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
-              API-first. AI-ready. Automate everything.
-            </h2>
-            <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
-              Every action in PreRoll is an API call. Build automations with n8n or Zapier
-              via signed webhooks. Or skip the GUI entirely and let Claude manage your
-              production pipeline through the MCP server.
+          <div className="mt-4 border-t border-border-subtle pt-4">
+            <p className="text-sm text-text-secondary">
+              Three lines. Episode created. Pipeline updated. Clients notified.
             </p>
-            <div className="mt-6 flex gap-4">
-              <Link
-                href="/docs/api-keys"
-                className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
-              >
-                API Docs &rarr;
-              </Link>
-              <Link
-                href="/docs/mcp"
-                className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
-              >
-                MCP Server &rarr;
-              </Link>
-            </div>
           </div>
-        </div>
-
-        {/* Secondary features strip */}
-        <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border-subtle rounded-xl overflow-hidden">
-          {[
-            {
-              title: 'Integrations',
-              desc: 'Frame.io, Google Drive, Vimeo, Transistor.fm. Review, deliver, and publish without switching tabs.',
-            },
-            {
-              title: 'Calendar',
-              desc: 'Every episode across every show on one calendar. Week and month views, per-show filtering.',
-            },
-            {
-              title: 'Episode Templates',
-              desc: 'Define default descriptions and show notes per show. New episodes start pre-filled, not blank.',
-            },
-          ].map((f) => (
-            <div key={f.title} className="bg-surface-raised p-6">
-              <h3 className="font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">{f.title}</h3>
-              <p className="mt-2 text-xs text-text-secondary leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
         </div>
       </div>
     </section>
   )
 }
 
-// ─── Built By ───────────────────────────────────────────────────────────────
+// ─── MCP / AI Assistant ────────────────────────────────────────────────────
+
+function McpSection() {
+  return (
+    <section className="px-6 py-24">
+      <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
+        {/* Chat mockup */}
+        <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-2xl shadow-black/30 order-2 lg:order-1">
+          <div className="flex items-center gap-2 mb-5">
+            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
+            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
+            <span className="h-2.5 w-2.5 rounded-full bg-text-tertiary/30" />
+            <span className="ml-3 text-xs text-text-tertiary font-[family-name:var(--font-display)]">Claude — PreRoll MCP</span>
+          </div>
+          <div className="space-y-4">
+            {/* User message 1 */}
+            <div className="flex justify-end">
+              <div className="rounded-lg bg-accent/15 px-4 py-2.5 max-w-[80%]">
+                <p className="text-sm text-text-primary">What episodes are in review for the Basecamp show?</p>
+              </div>
+            </div>
+            {/* Assistant message 1 */}
+            <div className="flex justify-start">
+              <div className="rounded-lg bg-surface-overlay px-4 py-2.5 max-w-[85%]">
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  Two episodes in review — Ep 14 &ldquo;Scaling Teams&rdquo; (waiting on client approval since Tuesday)
+                  and Ep 15 &ldquo;Hiring Right&rdquo; (uploaded today).
+                </p>
+              </div>
+            </div>
+            {/* User message 2 */}
+            <div className="flex justify-end">
+              <div className="rounded-lg bg-accent/15 px-4 py-2.5 max-w-[80%]">
+                <p className="text-sm text-text-primary">Move Ep 14 to approved and notify the client.</p>
+              </div>
+            </div>
+            {/* Assistant message 2 */}
+            <div className="flex justify-start">
+              <div className="rounded-lg bg-surface-overlay px-4 py-2.5 max-w-[85%]">
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  Done. Ep 14 moved to Approved. Client notification sent.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="order-1 lg:order-2">
+          <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
+            MCP Server
+          </p>
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+            Your AI assistant runs the pipeline.
+          </h2>
+          <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
+            PreRoll ships an MCP server. Connect it to Claude, ChatGPT, or any AI
+            assistant — and manage your production pipeline in natural language.
+          </p>
+          <p className="mt-6 text-sm text-text-tertiary max-w-lg">
+            No dashboard tab-switching. No Slack thread searching. Just ask.
+          </p>
+          <div className="mt-6">
+            <Link
+              href="/docs/mcp"
+              className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
+            >
+              MCP setup guide &rarr;
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ─── Integrations ──────────────────────────────────────────────────────────
+
+function Integrations() {
+  return (
+    <section className="px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="max-w-2xl">
+          <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
+            Integrations
+          </p>
+          <h2 className="mt-3 font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary leading-tight">
+            Webhooks in. Webhooks out.
+          </h2>
+          <p className="mt-4 text-base text-text-secondary leading-relaxed">
+            Push episode updates to your automation tools. Pull status changes from your
+            review and publishing platforms. Every event is signed, logged, and retryable.
+          </p>
+        </div>
+
+        <div className="mt-12 grid sm:grid-cols-2 gap-5 max-w-2xl">
+          <div className="rounded-xl border border-border-subtle bg-surface-raised p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <svg className="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+                </svg>
+              </div>
+              <h3 className="font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">Frame.io</h3>
+            </div>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Sync review comments and approval status. Timecoded feedback flows directly into your episode timeline.
+            </p>
+          </div>
+          <div className="rounded-xl border border-border-subtle bg-surface-raised p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                <svg className="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 7.5l16.5-4.125M12 6.75c-2.708 0-5.363.224-7.948.655C2.999 7.58 2.25 8.507 2.25 9.574v9.176A2.25 2.25 0 004.5 21h15a2.25 2.25 0 002.25-2.25V9.574c0-1.067-.75-1.994-1.802-2.169A48.329 48.329 0 0012 6.75z" />
+                </svg>
+              </div>
+              <h3 className="font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">Transistor.fm</h3>
+            </div>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              Publish episodes directly from the pipeline. Upload, set metadata, and go live without leaving PreRoll.
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-6 text-sm text-text-tertiary">
+          Also: Google Drive, Vimeo, n8n, Zapier.{' '}
+          <Link href="/docs" className="text-accent hover:text-accent-hover transition-colors">
+            See all integrations &rarr;
+          </Link>
+        </p>
+
+        <p className="mt-10 font-[family-name:var(--font-display)] text-base font-medium text-text-secondary">
+          Your tools stay. The duct tape goes.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+// ─── Built By ──────────────────────────────────────────────────────────────
 
 function BuiltBy() {
   return (
@@ -317,46 +365,57 @@ function BuiltBy() {
         <p className="font-[family-name:var(--font-display)] text-xs font-semibold uppercase tracking-widest text-accent">
           Built by a producer
         </p>
-        <p className="mt-4 text-lg text-text-secondary leading-relaxed">
-          PreRoll exists because its creator needed it. Every feature was built to solve a
-          real problem in a real production business, then generalized for other producers
-          and agencies. It is dogfooded daily.
+        <h2 className="mt-3 font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-bold text-text-primary leading-tight">
+          Built by a producer, for producers.
+        </h2>
+        <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-xl mx-auto">
+          PreRoll isn&apos;t a project management tool with podcast features bolted on.
+          It&apos;s built by someone who manages client shows every week — and got tired
+          of the spreadsheet.
         </p>
       </div>
     </section>
   )
 }
 
-// ─── Pricing ────────────────────────────────────────────────────────────────
+// ─── Pricing ───────────────────────────────────────────────────────────────
 
 function Pricing() {
   return <PricingSection />
 }
 
-// ─── Final CTA ──────────────────────────────────────────────────────────────
+// ─── Final CTA ─────────────────────────────────────────────────────────────
 
 function FinalCta() {
   return (
     <section className="px-6 py-20">
       <div className="mx-auto max-w-7xl rounded-2xl bg-accent/5 border border-accent/10 p-12 sm:p-16 text-center">
         <h2 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-bold text-text-primary">
-          Your next episode is waiting.
+          Your pipeline should be programmable.
         </h2>
         <p className="mt-3 text-base text-text-secondary">
-          Free tier. No credit card. One client, one show. See if it fits.
+          Start free. No credit card required.
         </p>
-        <Link
-          href="/signup"
-          className="mt-8 inline-block rounded-lg bg-accent px-8 py-3.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
-        >
-          Start Free
-        </Link>
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <Link
+            href="/signup"
+            className="inline-block rounded-lg bg-accent px-8 py-3.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
+          >
+            Start Free
+          </Link>
+          <Link
+            href="/docs/api-keys"
+            className="text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
+          >
+            Read the API Docs &rarr;
+          </Link>
+        </div>
       </div>
     </section>
   )
 }
 
-// ─── Footer ─────────────────────────────────────────────────────────────────
+// ─── Footer ────────────────────────────────────────────────────────────────
 
 function Footer() {
   return (
@@ -392,4 +451,3 @@ function Footer() {
     </footer>
   )
 }
-
