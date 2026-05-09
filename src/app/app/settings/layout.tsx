@@ -5,11 +5,11 @@ import { usePathname } from 'next/navigation'
 
 const tabs = [
   { label: 'Billing', href: '/app/settings/billing' },
-  { label: 'Team', href: '/app/settings/team' },
-  { label: 'Branding', href: '/app/settings/branding' },
   { label: 'Integrations', href: '/app/settings/integrations' },
   { label: 'Webhooks', href: '/app/settings/webhooks' },
   { label: 'API Keys', href: '/app/settings/api-keys' },
+  { label: 'Team', href: '/app/settings/team' },
+  { label: 'Branding', href: '/app/settings/branding' },
   { label: 'License', href: '/app/settings/license' },
 ]
 
