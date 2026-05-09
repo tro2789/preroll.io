@@ -17,7 +17,7 @@ export async function GET(
   const roleError = requireRole(org!, 'admin')
   if (roleError) return roleError
 
-  const entitlements = await getOrgEntitlements(org!.id)
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
   if (!entitlements.can('integrations')) {
     return errorResponse('Upgrade to Pro to connect integrations.', 403)
   }

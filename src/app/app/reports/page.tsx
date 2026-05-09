@@ -50,25 +50,29 @@ export default function ReportsPage() {
   const [shows, setShows] = useState<ShowOption[]>([])
 
   useEffect(() => {
+    if (gated) return
     fetch('/api/v1/shows')
       .then((r) => r.json())
       .then((r) => setShows(r.data || []))
       .catch(() => {})
-  }, [])
+  }, [gated])
 
-  const fetchReports = useCallback(() => {
+  const fetchReports = useCallback(async () => {
+    if (gated) return
     setLoading(true)
-    const params = new URLSearchParams({ period })
-    if (showId) params.set('show_id', showId)
-    fetch(`/api/v1/reports?${params}`)
-      .then((r) => {
-        if (r.status === 403) { setGated(true); return null }
-        return r.json()
-      })
-      .then((r) => { if (r) setData(r.data || null) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [period, showId])
+    try {
+      const params = new URLSearchParams({ period })
+      if (showId) params.set('show_id', showId)
+      const r = await fetch(`/api/v1/reports?${params}`)
+      if (r.status === 403) { setGated(true); return }
+      const json = await r.json()
+      setData(json.data || null)
+    } catch {
+      // silent
+    } finally {
+      setLoading(false)
+    }
+  }, [period, showId, gated])
 
   useEffect(() => {
     fetchReports()
@@ -79,34 +83,36 @@ export default function ReportsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-semibold text-text-primary">Reports</h1>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={showId}
-            onChange={(e) => setShowId(e.target.value)}
-            className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-          >
-            <option value="">All shows</option>
-            {shows.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+        {!gated && (
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={showId}
+              onChange={(e) => setShowId(e.target.value)}
+              className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              <option value="">All shows</option>
+              {shows.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
 
-          <div className="flex rounded-lg border border-border-default bg-surface-overlay p-0.5">
-            {PERIODS.map((p) => (
-              <button
-                key={p.value}
-                onClick={() => setPeriod(p.value)}
-                className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-                  period === p.value
-                    ? 'bg-accent text-white'
-                    : 'text-text-tertiary hover:text-text-primary'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+            <div className="flex rounded-lg border border-border-default bg-surface-overlay p-0.5">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setPeriod(p.value)}
+                  className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                    period === p.value
+                      ? 'bg-accent text-white'
+                      : 'text-text-tertiary hover:text-text-primary'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {gated ? (

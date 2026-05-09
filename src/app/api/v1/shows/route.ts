@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   const roleError = requireRole(org!, 'admin')
   if (roleError) return roleError
 
-  const entitlements = await getOrgEntitlements(org!.id)
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
   const max = entitlements.limit('max_shows')
   if (max !== null) {
     const { count } = await supabase!.from('shows').select('id, clients!inner(org_id)', { count: 'exact', head: true }).eq('clients.org_id', org!.id)

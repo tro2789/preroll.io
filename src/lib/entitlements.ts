@@ -29,18 +29,22 @@ const UNLIMITED: Entitlements = {
   limit: () => null,
 }
 
-export async function getOrgEntitlements(orgId: string): Promise<Entitlements> {
+export async function getOrgEntitlements(orgId: string, knownPlanId?: string): Promise<Entitlements> {
   if (isSelfHosted()) return UNLIMITED
 
   const supabase = createServiceClient()
 
-  const { data: org } = await supabase
-    .from('organizations')
-    .select('plan_id')
-    .eq('id', orgId)
-    .single()
-
-  const planId = org?.plan_id || 'free'
+  let planId: string
+  if (knownPlanId) {
+    planId = knownPlanId
+  } else {
+    const { data: org } = await supabase
+      .from('organizations')
+      .select('plan_id')
+      .eq('id', orgId)
+      .single()
+    planId = org?.plan_id || 'free'
+  }
 
   const { data: entitlements } = await supabase
     .from('plan_entitlements')
