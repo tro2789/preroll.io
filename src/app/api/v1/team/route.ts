@@ -1,5 +1,6 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getOrgEntitlements } from '@/lib/entitlements'
 
 export async function GET() {
   const { org, error } = await getAuthenticatedClient()
@@ -39,5 +40,7 @@ export async function GET() {
 
   if (invError) return errorResponse(invError.message, 500)
 
-  return jsonResponse({ members, invites: invites ?? [] })
+  const entitlements = await getOrgEntitlements(org!.id, org!.planId)
+
+  return jsonResponse({ members, invites: invites ?? [], canInvite: entitlements.can('multi_user') })
 }

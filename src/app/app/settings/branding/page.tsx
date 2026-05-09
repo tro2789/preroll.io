@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { UpgradeGate } from '@/components/ui/upgrade-gate'
 
 interface Branding {
   display_name: string | null
@@ -81,27 +82,16 @@ export default function BrandingPage() {
 
   if (!entitled) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-text-primary">Portal Branding</h2>
-        <div className="rounded-xl border border-border-default bg-surface-raised p-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent-muted">
-            <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" />
-            </svg>
-          </div>
-          <h3 className="text-base font-semibold text-text-primary">White-Label Branding</h3>
-          <p className="mt-2 text-sm text-text-secondary max-w-md mx-auto">
-            Customize the client portal with your own logo, brand name, and accent color.
-            This feature is available on the Studio plan.
-          </p>
-          <a
-            href="/app/settings/billing"
-            className="mt-6 inline-block rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
-          >
-            Upgrade to Studio
-          </a>
-        </div>
-      </div>
+      <UpgradeGate
+        feature="White-Label Branding"
+        description="Customize the client portal with your own logo, brand name, and accent color. Available on the Studio plan."
+        tier="Studio"
+        icon={
+          <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42" />
+          </svg>
+        }
+      />
     )
   }
 

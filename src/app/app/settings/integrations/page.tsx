@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { ConnectButton } from '@/components/integrations/connect-button'
 import { ConnectedAccountCard } from '@/components/integrations/connected-account-card'
+import { UpgradeGate } from '@/components/ui/upgrade-gate'
+import { getOrgEntitlements } from '@/lib/entitlements'
+import { resolveUserOrg } from '@/lib/org/resolve'
 
 const PROVIDERS = [
   { name: 'frame_io', displayName: 'Frame.io', comingSoon: false },
@@ -10,10 +13,34 @@ const PROVIDERS = [
   { name: 'dropbox', displayName: 'Dropbox', comingSoon: true },
 ]
 
+function IntegrationsIcon() {
+  return (
+    <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-2.07a4.5 4.5 0 0 0-1.242-7.244l4.5-4.5a4.5 4.5 0 1 1 6.364 6.364l-1.757 1.757" />
+    </svg>
+  )
+}
+
 export default async function IntegrationsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  const org = await resolveUserOrg(user.id)
+  if (!org) redirect('/login')
+
+  const entitlements = await getOrgEntitlements(org.id, org.planId)
+
+  if (!entitlements.can('integrations')) {
+    return (
+      <UpgradeGate
+        feature="Integrations"
+        description="Connect Frame.io, Google Drive, Vimeo, and more to streamline your delivery workflow. Available on the Pro plan."
+        tier="Pro"
+        icon={<IntegrationsIcon />}
+      />
+    )
+  }
 
   const { data: integrations } = await supabase
     .from('user_integrations')
