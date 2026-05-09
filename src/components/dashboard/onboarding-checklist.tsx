@@ -51,6 +51,20 @@ export function OnboardingChecklist() {
   }, [])
 
   useEffect(() => {
+    const refetch = () => {
+      fetch('/api/v1/onboarding')
+        .then((r) => r.json())
+        .then((json) => {
+          const d = json.data as OnboardingData | undefined
+          if (d) setData(d)
+        })
+        .catch(() => {})
+    }
+    window.addEventListener('preroll:episode-moved', refetch)
+    return () => window.removeEventListener('preroll:episode-moved', refetch)
+  }, [])
+
+  useEffect(() => {
     if (!data || dismissed || autoDismissedRef.current) return
     const allComplete = STEPS.every((s) => data.steps[s.key])
     if (allComplete) {

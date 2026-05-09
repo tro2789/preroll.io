@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
+import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
 import { QuickCreate } from '@/components/dashboard/quick-create'
 import { KanbanBoard } from '@/components/dashboard/kanban-board'
 import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
@@ -11,6 +12,8 @@ export default async function DashboardPage() {
   if (!user) {
     return <p className="text-text-tertiary">Loading...</p>
   }
+
+  await autoArchiveApprovedEpisodes(supabase)
 
   const [{ data: stagesData }, { data: episodesData }] = await Promise.all([
     supabase
@@ -79,20 +82,18 @@ export default async function DashboardPage() {
   const hasAnyEpisodes = episodes.length > 0
 
   return (
-    <div>
+    <div className="space-y-4">
+      <OnboardingChecklist />
+
       <div className="flex items-center justify-between">
         <div />
         <QuickCreate />
       </div>
 
-      <OnboardingChecklist />
-
       {!hasAnyEpisodes ? (
         <p className="text-sm text-text-tertiary py-12 text-center">No episodes yet. Create a show and add your first episode to get started.</p>
       ) : (
-        <div className="mt-4">
-          <KanbanBoard columns={columns} episodes={episodes} />
-        </div>
+        <KanbanBoard columns={columns} episodes={episodes} />
       )}
     </div>
   )
