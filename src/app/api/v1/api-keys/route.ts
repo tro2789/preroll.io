@@ -4,12 +4,13 @@ import { requireRole } from '@/lib/org/roles'
 import { createHash, randomBytes } from 'crypto'
 
 export async function GET() {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
     .from('api_keys')
     .select('id, name, last_used_at, created_at')
+    .eq('org_id', org!.id)
     .order('created_at', { ascending: false })
 
   if (dbError) return errorResponse(dbError.message, 500)

@@ -16,12 +16,13 @@ const VALID_EVENTS = [
 ]
 
 export async function GET() {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
     .from('webhook_endpoints')
     .select('id, url, events, is_active, description, created_at, updated_at')
+    .eq('org_id', org!.id)
     .order('created_at', { ascending: false })
 
   if (dbError) return errorResponse(dbError.message, 500)

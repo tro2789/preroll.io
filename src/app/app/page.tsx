@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
+import { getActiveOrgId } from '@/lib/org/server'
 import { QuickCreate } from '@/components/dashboard/quick-create'
 import { KanbanBoard } from '@/components/dashboard/kanban-board'
 import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
@@ -13,16 +14,20 @@ export default async function DashboardPage() {
     return <p className="text-text-tertiary">Loading...</p>
   }
 
+  const orgId = await getActiveOrgId(user.id)
+
   await autoArchiveApprovedEpisodes(supabase)
 
   const [{ data: stagesData }, { data: episodesData }] = await Promise.all([
     supabase
       .from('pipeline_stages')
-      .select('id, name, position, wip_limit, show_id')
+      .select('id, name, position, wip_limit, show_id, shows!inner(clients!inner(org_id))')
+      .eq('shows.clients.org_id', orgId!)
       .order('position', { ascending: true }),
     supabase
       .from('episodes')
-      .select('id, title, episode_number, status, stage_id, position, scheduled_publish_date, updated_at, image_url, show_id, shows(id, name, clients(id, name, company)), episode_tags(tag_id, tags(id, name, color))')
+      .select('id, title, episode_number, status, stage_id, position, scheduled_publish_date, updated_at, image_url, show_id, shows!inner(id, name, clients!inner(id, name, company, org_id)), episode_tags(tag_id, tags(id, name, color))')
+      .eq('shows.clients.org_id', orgId!)
       .not('status', 'eq', 'published')
       .is('archived_at', null)
       .order('position', { ascending: true }),

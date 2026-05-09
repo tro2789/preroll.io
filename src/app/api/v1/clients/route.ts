@@ -4,12 +4,13 @@ import { getOrgEntitlements } from '@/lib/entitlements'
 import { requireRole } from '@/lib/org/roles'
 
 export async function GET() {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError, count } = await supabase!
     .from('clients')
     .select('*', { count: 'exact' })
+    .eq('org_id', org!.id)
     .order('name')
 
   if (dbError) return errorResponse(dbError.message, 500)
