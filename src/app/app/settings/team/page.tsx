@@ -9,9 +9,12 @@ interface Member {
   user_id: string
   email: string | null
   name: string | null
+  avatar_url: string | null
   role: string
   created_at: string
 }
+
+import { resolveAssetUrl } from '@/lib/r2/resolve'
 
 interface Invite {
   id: string
@@ -154,9 +157,22 @@ export default function TeamPage() {
           </div>
         ) : (
           <div className="mt-4 space-y-2">
-            {members.map((m) => (
+            {members.map((m) => {
+              const avatarSrc = resolveAssetUrl(m.avatar_url)
+              return (
               <div key={m.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-raised px-5 py-3">
                 <div className="flex items-center gap-3">
+                  {avatarSrc ? (
+                    <img
+                      src={avatarSrc}
+                      alt={m.name || ''}
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent/15 text-accent text-xs font-bold">
+                      {(m.name || m.email || '?').charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm font-medium text-text-primary">
                       {m.name || m.email || 'Unknown'}
@@ -206,7 +222,7 @@ export default function TeamPage() {
                   )}
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

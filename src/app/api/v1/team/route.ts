@@ -8,30 +8,31 @@ export async function GET() {
 
   const service = createServiceClient()
 
-  const { data: memberships, error: memError } = await service
-    .from('memberships')
-    .select('id, user_id, role, created_at')
-    .eq('org_id', org!.id)
-    .order('created_at')
+  const [{ data: memberships, error: memError }, entitlements] = await Promise.all([
+    service
+      .from('memberships')
+      .select('id, user_id, role, created_at, user_profiles(email, display_name, avatar_url)')
+      .eq('org_id', org!.id)
+      .order('created_at'),
+    getOrgEntitlements(org!.id, org!.planId, org!.trialEndsAt),
+  ])
 
   if (memError) return errorResponse(memError.message, 500)
 
-  const entitlements = await getOrgEntitlements(org!.id, org!.planId, org!.trialEndsAt)
   const canInvite = entitlements.can('multi_user')
 
-  const members = await Promise.all(
-    (memberships ?? []).map(async (m) => {
-      const { data: { user: u } } = await service.auth.admin.getUserById(m.user_id)
-      return {
-        id: m.id,
-        user_id: m.user_id,
-        email: u?.email ?? null,
-        name: u?.user_metadata?.full_name ?? null,
-        role: m.role,
-        created_at: m.created_at,
-      }
-    })
-  )
+  const members = (memberships ?? []).map((m) => {
+    const profile = m.user_profiles as unknown as { email: string | null; display_name: string | null; avatar_url: string | null } | null
+    return {
+      id: m.id,
+      user_id: m.user_id,
+      email: profile?.email ?? null,
+      name: profile?.display_name ?? null,
+      avatar_url: profile?.avatar_url ?? null,
+      role: m.role,
+      created_at: m.created_at,
+    }
+  })
 
   let invites: Record<string, unknown>[] = []
   if (canInvite) {
