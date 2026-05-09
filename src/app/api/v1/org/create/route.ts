@@ -1,6 +1,6 @@
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { setOrgCookie } from '@/lib/constants/plans'
+import { setOrgCookie } from '@/lib/org/cookie'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
