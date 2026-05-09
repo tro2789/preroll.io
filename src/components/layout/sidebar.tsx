@@ -126,9 +126,11 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
 interface SidebarProps {
   orgs: OrgMembership[]
   activeOrgId?: string
+  userEmail: string
+  userDisplayName?: string | null
 }
 
-export function Sidebar({ orgs, activeOrgId }: SidebarProps) {
+export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: SidebarProps) {
   const pathname = usePathname()
   const showSwitcher = orgs.length > 0
 
@@ -176,6 +178,25 @@ export function Sidebar({ orgs, activeOrgId }: SidebarProps) {
               )
             })}
           </nav>
+          <div className="px-3 pt-3 mt-auto border-t border-border-subtle">
+            <div className="px-3 py-2">
+              <p className="text-sm font-medium text-text-primary truncate">
+                {userDisplayName || userEmail}
+              </p>
+              {userDisplayName && (
+                <p className="text-xs text-text-tertiary truncate">{userEmail}</p>
+              )}
+            </div>
+            <form action="/auth/signout" method="POST">
+              <button
+                type="submit"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-text-tertiary hover:text-text-primary hover:bg-surface-raised rounded-md transition-colors"
+              >
+                <SignOutIcon className="mr-3 h-5 w-5 flex-shrink-0 text-text-tertiary" />
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </aside>
 
@@ -259,6 +280,14 @@ function ChevronIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+    </svg>
+  )
+}
+
+function SignOutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
     </svg>
   )
 }

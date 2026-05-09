@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
 import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 import type { OrgMembership } from '@/components/layout/sidebar'
 
@@ -42,12 +41,13 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-surface-base overflow-x-hidden">
-      <Sidebar orgs={orgs} activeOrgId={activeOrg?.id} />
+      <Sidebar
+        orgs={orgs}
+        activeOrgId={activeOrg?.id}
+        userEmail={user.email ?? ''}
+        userDisplayName={profile?.display_name || null}
+      />
       <div className="md:pl-64 flex flex-col min-h-screen">
-        <Header
-          email={user.email ?? ''}
-          displayName={profile?.display_name || null}
-        />
         <main className="flex-1 p-4 sm:p-6 pb-20 md:pb-6">
           {children}
         </main>
