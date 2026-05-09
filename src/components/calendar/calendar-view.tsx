@@ -23,6 +23,7 @@ const SHOW_COLORS = [
 ]
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAY_NAMES_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
 const STATUS_LABELS: Record<string, string> = {
   published: 'Published',
@@ -112,7 +113,11 @@ export function CalendarView() {
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth())
   const [weekAnchor, setWeekAnchor] = useState(now.getDate())
-  const [view, setView] = useState<ViewMode>('month')
+  const [view, setView] = useState<ViewMode>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+      ? 'week'
+      : 'month'
+  )
   const [episodes, setEpisodes] = useState<Episode[]>([])
   const [loading, setLoading] = useState(true)
   const [showFilter, setShowFilter] = useState<string>('all')
@@ -206,10 +211,10 @@ export function CalendarView() {
   const rowCount = cells.length / 7
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 7rem)' }}>
-      <div className="flex items-center justify-between mb-4 shrink-0">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-text-primary">{heading}</h2>
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 7rem - env(safe-area-inset-bottom, 0px))' }}>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h2 className="text-base sm:text-lg font-semibold text-text-primary">{heading}</h2>
           <div className="flex items-center gap-1">
             <button onClick={prev} className="rounded-md p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors">
               <ChevronLeftIcon />
@@ -223,12 +228,12 @@ export function CalendarView() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {showNames.size > 1 && (
             <select
               value={showFilter}
               onChange={(e) => setShowFilter(e.target.value)}
-              className="rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-xs text-text-secondary focus:border-accent focus:outline-none"
+              className="rounded-md border border-border-default bg-surface-input px-2 sm:px-3 py-1.5 text-xs text-text-secondary focus:border-accent focus:outline-none"
             >
               <option value="all">All shows</option>
               {[...showNames.entries()].map(([id, name]) => (
@@ -260,9 +265,10 @@ export function CalendarView() {
       <div className={`grid grid-cols-7 flex-1 min-h-0 ${loading ? 'opacity-50' : ''} transition-opacity`}
         style={{ gridTemplateRows: `auto repeat(${rowCount}, 1fr)` }}
       >
-        {DAY_NAMES.map((day) => (
-          <div key={day} className="py-2 text-center text-xs font-medium text-text-tertiary border-b border-border-subtle">
-            {day}
+        {DAY_NAMES.map((day, idx) => (
+          <div key={day + idx} className="py-2 text-center text-xs font-medium text-text-tertiary border-b border-border-subtle">
+            <span className="hidden sm:inline">{day}</span>
+            <span className="sm:hidden">{DAY_NAMES_SHORT[idx]}</span>
           </div>
         ))}
 

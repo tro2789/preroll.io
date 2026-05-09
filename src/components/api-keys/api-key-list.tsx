@@ -81,18 +81,18 @@ export function ApiKeyList({ keys }: { keys: ApiKey[] }) {
         </div>
       )}
 
-      <form onSubmit={handleCreate} className="mt-4 flex gap-2">
+      <form onSubmit={handleCreate} className="mt-4 flex flex-col sm:flex-row gap-2">
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Key name, e.g. MCP Server"
-          className="flex-1 max-w-xs rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          className="flex-1 sm:max-w-xs rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
         />
         <button
           type="submit"
           disabled={!name.trim() || creating}
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+          className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50 sm:w-auto"
         >
           {creating ? 'Creating...' : 'Create Key'}
         </button>
@@ -109,7 +109,7 @@ export function ApiKeyList({ keys }: { keys: ApiKey[] }) {
       ) : (
         <div className="mt-4 space-y-2">
           {keys.map((k) => (
-            <div key={k.id} className="flex items-center justify-between rounded-lg border border-border-subtle bg-surface-raised px-5 py-3">
+            <div key={k.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-border-subtle bg-surface-raised px-4 sm:px-5 py-3">
               <div>
                 <p className="text-sm font-medium text-text-primary">{k.name}</p>
                 <p className="text-xs text-text-tertiary">

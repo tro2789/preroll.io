@@ -13,13 +13,20 @@ export interface OrgMembership {
   logoUrl?: string
 }
 
-const navItems = [
+interface NavItem {
+  label: string
+  href: string
+  icon: (props: { className?: string }) => React.JSX.Element
+  desktopOnly?: boolean
+}
+
+const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/app', icon: GridIcon },
   { label: 'Calendar', href: '/app/calendar', icon: CalendarIcon },
   { label: 'Reports', href: '/app/reports', icon: ChartIcon },
   { label: 'Shows', href: '/app/shows', icon: FilmIcon },
   { label: 'Clients', href: '/app/clients', icon: UsersIcon },
-  { label: 'Docs', href: '/docs', icon: BookIcon },
+  { label: 'Docs', href: '/docs', icon: BookIcon, desktopOnly: true },
   { label: 'Settings', href: '/app/settings', icon: CogIcon },
 ]
 
@@ -173,8 +180,8 @@ export function Sidebar({ orgs, activeOrgId }: SidebarProps) {
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-base border-t border-border-default flex justify-around">
-        {navItems.map((item) => {
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-base border-t border-border-default flex justify-around pb-[env(safe-area-inset-bottom,0px)]">
+        {navItems.filter((item) => !item.desktopOnly).map((item) => {
           const isActive =
             item.href === '/app'
               ? pathname === '/app'

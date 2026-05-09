@@ -136,7 +136,7 @@ export default function ReviewPage() {
   const backUrl = `/portal/shows/${showId}/episodes/${episodeId}`
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6.25rem)] overflow-hidden">
+    <div className="flex flex-col h-auto lg:h-[calc(100vh-6.25rem)] overflow-y-auto lg:overflow-hidden">
       {/* Error state */}
       {error ? (
         <div className="flex-1 flex items-center justify-center">
@@ -160,7 +160,7 @@ export default function ReviewPage() {
               onRefreshNeeded={fetchMedia}
             />
           </div>
-          <div className="lg:w-1/3 min-h-0 rounded-lg border border-border-subtle bg-surface-raised overflow-hidden">
+          <div className="h-[50vh] lg:h-auto lg:w-1/3 min-h-0 shrink-0 lg:shrink rounded-lg border border-border-subtle bg-surface-raised overflow-hidden">
             <CommentsSidebar
               comments={comments}
               currentTime={currentTime}

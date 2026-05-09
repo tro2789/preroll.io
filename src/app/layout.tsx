@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Sora, Inter } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "PreRoll",
   description: "Podcast production management platform",
+};
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
