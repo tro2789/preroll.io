@@ -18,34 +18,50 @@ interface OrgBilling {
   }
 }
 
+const UPGRADE_TIERS = [
+  {
+    plan: 'pro' as const,
+    name: 'Pro',
+    description: 'For producers managing multiple shows.',
+    monthly: 29,
+    annual: 289,
+    features: [
+      'Unlimited clients and shows',
+      'All integrations (Frame.io, Transistor, Drive, Vimeo)',
+      'Webhook egress and API keys',
+      'MCP server access',
+      'Episode templates',
+    ],
+    highlighted: true,
+  },
+  {
+    plan: 'studio' as const,
+    name: 'Studio',
+    description: 'For teams and agencies.',
+    monthly: 79,
+    annual: 789,
+    features: [
+      'Everything in Pro',
+      'Multi-user access with roles',
+      'White-label client portal',
+      'Reporting and analytics',
+      'Priority support',
+    ],
+    highlighted: false,
+  },
+]
+
 const PLAN_LABELS: Record<string, string> = {
   free: 'Free',
   pro: 'Pro',
   studio: 'Studio',
 }
 
-const PLAN_FEATURES: Record<string, string[]> = {
-  free: ['1 client, 1 show', 'Episode pipeline', 'Client portal', 'Calendar view'],
-  pro: [
-    'Unlimited clients and shows',
-    'All integrations',
-    'Webhooks and API keys',
-    'MCP server',
-    'Episode templates',
-  ],
-  studio: [
-    'Everything in Pro',
-    'Multi-user access',
-    'White-label portal',
-    'Reporting',
-    'Priority support',
-  ],
-}
-
 export default function BillingPage() {
   const [billing, setBilling] = useState<OrgBilling | null>(null)
   const [loading, setLoading] = useState(true)
   const [upgrading, setUpgrading] = useState<string | null>(null)
+  const [annual, setAnnual] = useState(false)
   const searchParams = useSearchParams()
   const success = searchParams.get('success')
   const canceled = searchParams.get('canceled')
@@ -108,20 +124,34 @@ export default function BillingPage() {
       )}
 
       {trial?.active && !isPaid && (
-        <div className="rounded-xl border border-accent/30 bg-accent/5 p-5">
-          <p className="text-sm font-semibold text-accent">
-            Studio Trial — {trial.days_left} {trial.days_left === 1 ? 'day' : 'days'} left
-          </p>
-          <p className="mt-1 text-sm text-text-secondary">
-            You have full access to all Studio features. Upgrade before your trial ends to keep them.
-          </p>
+        <div className="relative overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent p-6">
+          <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-accent/10 blur-2xl" />
+          <div className="absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-accent/10 blur-xl" />
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">&#x2728;</span>
+              <p className="text-base font-bold text-text-primary">
+                You&apos;re on the Studio Trial
+              </p>
+            </div>
+            <p className="mt-2 text-sm text-text-secondary leading-relaxed">
+              Every feature in PreRoll is unlocked right now — multi-user access, white-label portal, reporting, and more.
+              You have <span className="font-semibold text-accent">{trial.days_left} {trial.days_left === 1 ? 'day' : 'days'}</span> left to explore.
+            </p>
+            <p className="mt-3 text-xs text-text-tertiary">
+              Pick a plan below to keep everything when your trial ends.
+            </p>
+          </div>
         </div>
       )}
 
       {trial && !trial.active && !isPaid && (
-        <div className="rounded-xl border border-border-default bg-surface-raised p-5">
-          <p className="text-sm text-text-secondary">
-            Your free trial has ended. Upgrade to continue using Pro and Studio features.
+        <div className="rounded-xl border border-warning/30 bg-warning/5 p-5">
+          <p className="text-sm font-medium text-text-primary">
+            Your Studio trial has ended
+          </p>
+          <p className="mt-1 text-sm text-text-secondary">
+            Upgrade to restore access to unlimited clients, integrations, team features, and more.
           </p>
         </div>
       )}
@@ -164,58 +194,77 @@ export default function BillingPage() {
 
       {!isPaid && (
         <div>
-          <h2 className="text-lg font-semibold text-text-primary">Upgrade</h2>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            {(['pro', 'studio'] as const).map((plan) => (
-              <div
-                key={plan}
-                className={`rounded-xl border p-6 ${
-                  plan === 'pro'
-                    ? 'border-accent bg-surface-raised ring-1 ring-accent/20'
-                    : 'border-border-default bg-surface-raised'
-                }`}
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-text-primary">Upgrade</h2>
+            <div className="flex items-center gap-3">
+              <span className={`text-sm ${!annual ? 'text-text-primary font-medium' : 'text-text-tertiary'}`}>
+                Monthly
+              </span>
+              <button
+                role="switch"
+                aria-checked={annual}
+                aria-label="Toggle annual billing"
+                onClick={() => setAnnual(!annual)}
+                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${annual ? 'bg-accent' : 'bg-border-default'}`}
               >
-                <h3 className="text-lg font-semibold text-text-primary">
-                  {PLAN_LABELS[plan]}
-                </h3>
-                <div className="mt-1 flex items-baseline gap-1">
-                  <span className="text-2xl font-bold text-text-primary">
-                    ${plan === 'pro' ? '29' : '79'}
-                  </span>
-                  <span className="text-sm text-text-tertiary">/mo</span>
-                </div>
-                <ul className="mt-4 space-y-2">
-                  {PLAN_FEATURES[plan].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-text-secondary">
-                      <svg className="h-4 w-4 mt-0.5 shrink-0 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                      </svg>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-6 flex gap-2">
+                <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${annual ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+              <span className={`text-sm ${annual ? 'text-text-primary font-medium' : 'text-text-tertiary'}`}>
+                Annual
+              </span>
+              <span className={`rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success transition-opacity ${annual ? 'opacity-100' : 'opacity-0'}`}>
+                Save 17%
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {UPGRADE_TIERS.map((tier) => {
+              const price = annual ? tier.annual : tier.monthly
+              const period = annual ? '/yr' : '/mo'
+
+              return (
+                <div
+                  key={tier.plan}
+                  className={`rounded-xl border p-6 flex flex-col ${
+                    tier.highlighted
+                      ? 'border-accent bg-surface-raised ring-1 ring-accent/20'
+                      : 'border-border-default bg-surface-raised'
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold text-text-primary">
+                    {tier.name}
+                  </h3>
+                  <p className="mt-1 text-sm text-text-secondary">{tier.description}</p>
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className="text-3xl font-bold text-text-primary">
+                      ${price}
+                    </span>
+                    <span className="text-sm text-text-tertiary">{period}</span>
+                  </div>
+                  <ul className="mt-5 space-y-2.5 flex-1">
+                    {tier.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-text-secondary">
+                        <svg className="h-4 w-4 mt-0.5 shrink-0 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
                   <button
-                    onClick={() => handleUpgrade(plan, 'month')}
+                    onClick={() => handleUpgrade(tier.plan, annual ? 'year' : 'month')}
                     disabled={!!upgrading}
-                    className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
-                      plan === 'pro'
+                    className={`mt-6 w-full rounded-lg py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
+                      tier.highlighted
                         ? 'bg-accent text-white hover:bg-accent-hover'
                         : 'bg-surface-overlay text-text-primary hover:bg-surface-input border border-border-default'
                     }`}
                   >
-                    {upgrading === plan ? 'Redirecting...' : 'Monthly'}
-                  </button>
-                  <button
-                    onClick={() => handleUpgrade(plan, 'year')}
-                    disabled={!!upgrading}
-                    className="flex-1 rounded-lg border border-border-default bg-surface-overlay py-2.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
-                  >
-                    Annual (save 17%)
+                    {upgrading === tier.plan ? 'Redirecting...' : `Upgrade to ${tier.name}`}
                   </button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
