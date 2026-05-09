@@ -16,12 +16,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        Manage your account, billing, and integrations.
-      </p>
-
-      <nav className="mt-6 -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto border-b border-border-default">
+      <nav className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto border-b border-border-default">
         <div className="flex gap-1 min-w-max">
           {tabs.map((tab) => {
             const isActive = pathname.startsWith(tab.href)
@@ -42,7 +37,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         </div>
       </nav>
 
-      <div className="mt-8">{children}</div>
+      <div className="mt-6">{children}</div>
     </div>
   )
 }
