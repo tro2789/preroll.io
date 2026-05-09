@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 
 interface CreateOrgModalProps {
@@ -50,7 +51,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative w-full max-w-md rounded-xl border border-border-default bg-surface-base p-6 shadow-xl">
@@ -110,6 +111,7 @@ export function CreateOrgModal({ open, onClose }: CreateOrgModalProps) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
