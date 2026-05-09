@@ -60,6 +60,59 @@ export async function POST(
 
   const body = await request.json().catch(() => ({}))
 
+  if (body.link) {
+    const { provider: providerName, external_project_id, external_folder_id, external_view_url } = body
+    if (!providerName || !external_folder_id) {
+      return errorResponse('provider and external_folder_id are required when linking', 400)
+    }
+
+    const { data: episode, error: dbError } = await supabase!
+      .from('episodes')
+      .select('id, shows(id, client_id, clients(org_id))')
+      .eq('id', episodeId)
+      .single()
+
+    if (dbError || !episode) return errorResponse('Episode not found', 404)
+    const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
+    if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
+
+    const { data: existing } = await supabase!
+      .from('episode_integrations')
+      .select('id')
+      .eq('episode_id', episodeId)
+      .maybeSingle()
+
+    if (existing) {
+      return errorResponse('Episode already has a delivery provider connected', 409)
+    }
+
+    ensureProvidersRegistered()
+    const provider = getProvider(providerName)
+
+    const { data: inserted, error: insertError } = await supabase!
+      .from('episode_integrations')
+      .insert({
+        episode_id: episodeId,
+        provider: providerName,
+        external_project_id: external_project_id || external_folder_id,
+        external_folder_id,
+        external_view_url: external_view_url || null,
+      })
+      .select()
+      .single()
+
+    if (insertError) return errorResponse(insertError.message, 500)
+
+    return jsonResponse({
+      connected: true,
+      integration: {
+        ...inserted,
+        capabilities: provider.capabilities,
+        display_name: provider.displayName,
+      },
+    }, 201)
+  }
+
   const { data: episode, error: dbError } = await supabase!
     .from('episodes')
     .select('id, title, episode_number, shows(id, name, client_id, clients(org_id, name, company))')
