@@ -9,7 +9,7 @@ export async function GET() {
 
   const { data: orgData } = await supabase
     .from('organizations')
-    .select('plan_id, plan_status')
+    .select('plan_id, plan_status, trial_ends_at')
     .eq('id', org!.id)
     .single()
 
@@ -21,9 +21,17 @@ export async function GET() {
     .eq('org_id', org!.id)
     .maybeSingle()
 
+  const trialEndsAt = orgData.trial_ends_at
+  const trialActive = trialEndsAt ? new Date(trialEndsAt) > new Date() : false
+
   return jsonResponse({
     plan_id: orgData.plan_id,
     plan_status: orgData.plan_status,
     subscription: subscription || undefined,
+    trial: trialEndsAt ? {
+      active: trialActive,
+      days_left: trialActive ? Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0,
+      ends_at: trialEndsAt,
+    } : undefined,
   })
 }

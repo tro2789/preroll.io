@@ -11,6 +11,11 @@ interface OrgBilling {
     current_period_end: string
     cancel_at_period_end: boolean
   }
+  trial?: {
+    active: boolean
+    days_left: number
+    ends_at: string
+  }
 }
 
 const PLAN_LABELS: Record<string, string> = {
@@ -87,6 +92,7 @@ export default function BillingPage() {
   const currentPlan = billing?.plan_id || 'free'
   const isPaid = currentPlan !== 'free'
   const isCanceling = billing?.subscription?.cancel_at_period_end
+  const trial = billing?.trial
 
   return (
     <div className="space-y-8">
@@ -98,6 +104,29 @@ export default function BillingPage() {
       {canceled && (
         <div className="rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">
           Checkout was canceled. No changes were made.
+        </div>
+      )}
+
+      {trial?.active && !isPaid && (
+        <div className="rounded-xl border border-accent/30 bg-accent/5 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-accent">
+                Studio Trial — {trial.days_left} {trial.days_left === 1 ? 'day' : 'days'} left
+              </p>
+              <p className="mt-1 text-sm text-text-secondary">
+                You have full access to all Studio features. Upgrade before your trial ends to keep them.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {trial && !trial.active && !isPaid && (
+        <div className="rounded-xl border border-border-default bg-surface-raised p-5">
+          <p className="text-sm text-text-secondary">
+            Your free trial has ended. Upgrade to continue using Pro and Studio features.
+          </p>
         </div>
       )}
 
