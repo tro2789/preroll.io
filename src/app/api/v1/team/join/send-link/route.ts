@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   const { data: invite, error: fetchError } = await service
     .from('team_invites')
-    .select('id, org_id, email, accepted_at, expires_at')
+    .select('id, org_id, email, accepted_at, expires_at, organizations(name)')
     .eq('token', token)
     .single()
 
@@ -24,13 +24,8 @@ export async function POST(request: Request) {
   const fallbackUrl = `${siteUrl}${joinPath}`
   const loginUrl = await generateMagicLinkUrl(invite.email, siteUrl, joinPath, fallbackUrl)
 
-  const { data: orgData } = await service
-    .from('organizations')
-    .select('name')
-    .eq('id', invite.org_id)
-    .single()
-
-  const orgName = orgData?.name || 'a team'
+  const org = invite.organizations as unknown as { name: string } | null
+  const orgName = org?.name || 'a team'
 
   await sendEmail(
     invite.email,

@@ -1,7 +1,6 @@
-import { cookies } from 'next/headers'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
+import { setOrgCookie } from '@/lib/constants/plans'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -22,14 +21,7 @@ export async function POST(request: Request) {
 
   if (!membership) return errorResponse('You are not a member of this organization', 403)
 
-  const cookieStore = await cookies()
-  cookieStore.set(ORG_COOKIE_NAME, orgId, {
-    path: '/',
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 365,
-  })
+  await setOrgCookie(orgId)
 
   return jsonResponse({ orgId, role: membership.role })
 }

@@ -1,9 +1,8 @@
-import { cookies } from 'next/headers'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/org/roles'
 import { resolveImageUrl } from '@/lib/r2/client'
-import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
+import { setOrgCookie, clearOrgCookie } from '@/lib/constants/plans'
 
 export async function GET() {
   const { org, error } = await getAuthenticatedClient()
@@ -126,19 +125,12 @@ export async function DELETE(request: Request) {
     .eq('user_id', user!.id)
     .limit(1)
 
-  const cookieStore = await cookies()
   const nextOrgId = remaining?.[0]?.org_id ?? null
 
   if (nextOrgId) {
-    cookieStore.set(ORG_COOKIE_NAME, nextOrgId, {
-      path: '/',
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 365,
-    })
+    await setOrgCookie(nextOrgId)
   } else {
-    cookieStore.delete(ORG_COOKIE_NAME)
+    await clearOrgCookie()
   }
 
   return jsonResponse({ deleted: true, nextOrgId })
