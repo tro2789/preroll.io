@@ -269,7 +269,7 @@ export default function BillingPage() {
                             <>
                               {PLAN_PRICE[currentPlan]}
                               {billing?.subscription?.current_period_end && (
-                                <> &middot; Renews {new Date(billing.subscription.current_period_end).toLocaleDateString()}</>
+                                <> &middot; {isCanceling ? 'Ends' : 'Renews'} {new Date(billing.subscription.current_period_end).toLocaleDateString()}</>
                               )}
                             </>
                           )}
