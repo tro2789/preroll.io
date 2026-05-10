@@ -6,6 +6,7 @@ import { PipelineBoard } from '@/components/episodes/pipeline-board'
 import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
 import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
 import { Thumbnail } from '@/components/ui/thumbnail'
+import { ClientPortalSection, type PortalClient } from '@/components/client-portal-section'
 
 export default async function ShowDetailPage({
   params,
@@ -20,7 +21,7 @@ export default async function ShowDetailPage({
   const [{ data: show, error }, { data: episodes }] = await Promise.all([
     supabase
       .from('shows')
-      .select('*, clients(id, name), pipeline_stages(*)')
+      .select('*, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(*)')
       .eq('id', showId)
       .order('position', { referencedTable: 'pipeline_stages' })
       .single(),
@@ -48,7 +49,7 @@ export default async function ShowDetailPage({
   }
 
   const totalEpisodes = episodes?.length ?? 0
-  const client = show.clients as { id: string; name: string } | null
+  const client = show.clients as PortalClient | null
   const stages = (show.pipeline_stages ?? []) as { id: string; name: string; position: number; wip_limit: number | null; status_override: string | null }[]
 
   return (
@@ -100,6 +101,18 @@ export default async function ShowDetailPage({
           </Link>
         </div>
       </div>
+
+      {client && (
+        <div className="mt-6">
+          <ClientPortalSection
+            clientId={client.id}
+            clientName={client.name}
+            clientEmail={client.email}
+            inviteCode={client.invite_code}
+            onboardedAt={client.onboarded_at}
+          />
+        </div>
+      )}
 
       <section className="mt-8">
         <div className="flex items-center justify-between mb-4">

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
+import { ClientPortalSection, type PortalClient } from '@/components/client-portal-section'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -18,7 +19,7 @@ export default async function EpisodeDetailPage({
   const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnections }] = await Promise.all([
     supabase
       .from('episodes')
-      .select('*, pipeline_stages(id, name, position)')
+      .select('*, pipeline_stages(id, name, position), shows(clients(id, name, email, invite_code, client_user_id, onboarded_at))')
       .eq('id', episodeId)
       .eq('show_id', showId)
       .single(),
@@ -57,6 +58,7 @@ export default async function EpisodeDetailPage({
   }
 
   const stage = episode.pipeline_stages as { id: string; name: string; position: number } | null
+  const client = ((episode as any).shows?.clients as PortalClient | null) ?? null
 
   const providerMeta: Record<string, { displayName: string; acceptedMimeTypes?: string[] }> = {
     frame_io: { displayName: 'Frame.io' },
@@ -162,6 +164,18 @@ export default async function EpisodeDetailPage({
           <EpisodeDetailActions showId={showId} episodeId={episodeId} />
         </div>
       </div>
+
+      {client && (
+        <div className="mt-6">
+          <ClientPortalSection
+            clientId={client.id}
+            clientName={client.name}
+            clientEmail={client.email}
+            inviteCode={client.invite_code}
+            onboardedAt={client.onboarded_at}
+          />
+        </div>
+      )}
 
       <div className="mt-6">
         <DeliveryPanel
