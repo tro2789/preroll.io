@@ -151,7 +151,7 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: Sideb
         <div className="flex flex-col flex-grow bg-surface-base border-r border-border-default pt-6 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-6 mb-2">
             <span className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
-              PreRoll
+              PREROLL.IO
             </span>
           </div>
           {showSwitcher && (

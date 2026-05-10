@@ -94,7 +94,7 @@ export async function sendEmail(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'PreRoll <noreply@preroll.io>',
+        from: 'preroll.io <noreply@preroll.io>',
         to: [to],
         subject,
         html,

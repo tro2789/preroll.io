@@ -7,9 +7,9 @@ export const revalidate = false;
 export async function GET() {
   const pages = source.getPages();
   const content: string[] = [
-    '# PreRoll Documentation (Full)',
+    '# preroll.io Documentation (Full)',
     '',
-    'PreRoll is an API-first podcast production management platform for service providers.',
+    'preroll.io is an API-first podcast production management platform for service providers.',
     'This document contains the complete documentation for reference.',
     '',
   ];

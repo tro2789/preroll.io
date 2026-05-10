@@ -88,7 +88,7 @@ function OnboardingContent() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-base px-4">
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
           <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2.5 text-sm text-error">
             {error}
           </div>
@@ -101,7 +101,7 @@ function OnboardingContent() {
     <div className="min-h-screen flex items-center justify-center bg-surface-base px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
           <p className="mt-3 text-sm text-text-secondary">
             Welcome! Let&apos;s get your profile set up.
           </p>

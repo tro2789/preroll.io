@@ -1,11 +1,11 @@
 ---
 title: MCP Server
-description: Let AI assistants interact with PreRoll data through the Model Context Protocol.
+description: Let AI assistants interact with preroll.io data through the Model Context Protocol.
 ---
 
 ## Overview
 
-The PreRoll MCP server allows AI assistants (Claude, Cursor, etc.) to read and manage your podcast production data through the [Model Context Protocol](https://modelcontextprotocol.io). It's a thin wrapper over the PreRoll REST API that exposes structured tools for LLM interaction.
+The preroll.io MCP server allows AI assistants (Claude, Cursor, etc.) to read and manage your podcast production data through the [Model Context Protocol](https://modelcontextprotocol.io). It's a thin wrapper over the preroll.io REST API that exposes structured tools for LLM interaction.
 
 ## Setup
 
@@ -44,8 +44,8 @@ Add the following to your `.mcp.json` (or equivalent configuration for your MCP 
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `PREROLL_API_KEY` | Yes | — | Your PreRoll API key (starts with `pr_`) |
-| `PREROLL_BASE_URL` | No | `https://api.preroll.io` | Base URL for the PreRoll API |
+| `PREROLL_API_KEY` | Yes | — | Your preroll.io API key (starts with `pr_`) |
+| `PREROLL_BASE_URL` | No | `https://api.preroll.io` | Base URL for the preroll.io API |
 
 ## Available Tools
 
@@ -78,7 +78,7 @@ The MCP server exposes 21 tools:
 
 ## Example Usage Prompts
 
-Once connected, you can interact with PreRoll data naturally:
+Once connected, you can interact with preroll.io data naturally:
 
 - "What episodes need my attention this week?"
 - "Show me all episodes currently in the Review stage"

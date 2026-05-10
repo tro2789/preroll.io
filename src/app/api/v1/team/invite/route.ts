@@ -87,15 +87,15 @@ export async function POST(request: Request) {
 
   const emailSent = await sendEmail(
     email,
-    `${inviterName} invited you to join ${orgName} on PreRoll`,
+    `${inviterName} invited you to join ${orgName} on preroll.io`,
     `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL</h1>
+        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL.IO</h1>
         <p style="font-size: 15px; color: #333; line-height: 1.6;">
           Hi there,
         </p>
         <p style="font-size: 15px; color: #333; line-height: 1.6;">
-          ${inviterName} has invited you to join <strong>${orgName}</strong> on PreRoll as a ${role}. You'll be able to collaborate on podcast production, manage episodes, and more.
+          ${inviterName} has invited you to join <strong>${orgName}</strong> on preroll.io as a ${role}. You'll be able to collaborate on podcast production, manage episodes, and more.
         </p>
         <a href="${loginUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
           Join Team

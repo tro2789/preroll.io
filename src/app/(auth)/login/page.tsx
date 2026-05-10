@@ -34,7 +34,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">
-            PreRoll
+            PREROLL.IO
           </h1>
           <p className="mt-3 text-sm text-text-secondary">
             Sign in to your account

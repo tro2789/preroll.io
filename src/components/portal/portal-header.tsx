@@ -30,7 +30,7 @@ export function PortalHeader({ clientName, email, orgDisplayName, logoUrl }: Por
               <img src={logoUrl} alt={orgDisplayName || 'Logo'} className="h-6 w-auto" />
             ) : (
               <span className="text-sm font-bold tracking-widest uppercase text-text-primary hover:text-accent transition-colors">
-                {orgDisplayName || 'PreRoll'}
+                {orgDisplayName || 'preroll.io'}
               </span>
             )}
           </Link>

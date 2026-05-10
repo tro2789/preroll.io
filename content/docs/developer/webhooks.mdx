@@ -1,11 +1,11 @@
 ---
 title: Webhooks
-description: Receive real-time HTTP notifications when events occur in PreRoll.
+description: Receive real-time HTTP notifications when events occur in preroll.io.
 ---
 
 ## Overview
 
-Webhooks allow your systems to receive HTTP POST notifications when events happen in PreRoll. Configure webhook endpoints in **Settings → Developer → Webhooks**.
+Webhooks allow your systems to receive HTTP POST notifications when events happen in preroll.io. Configure webhook endpoints in **Settings → Developer → Webhooks**.
 
 ## Events
 
@@ -105,11 +105,11 @@ def verify_webhook(timestamp: str, body: str, signature: str, secret: str) -> bo
 
 ## n8n Setup
 
-To receive PreRoll webhooks in n8n:
+To receive preroll.io webhooks in n8n:
 
 1. Create a new workflow with a **Webhook** trigger node
 2. Set the HTTP method to `POST` and copy the webhook URL
-3. In PreRoll, go to **Settings → Developer → Webhooks** and create a new endpoint with the n8n webhook URL
+3. In preroll.io, go to **Settings → Developer → Webhooks** and create a new endpoint with the n8n webhook URL
 4. Select which events you want to receive and save — the signing secret will be displayed once
 
 ## Retry Behavior

@@ -1,10 +1,10 @@
 ---
 title: Core Concepts
-description: Understand PreRoll's data model — organizations, clients, shows, episodes, and how they connect.
+description: Understand preroll.io's data model — organizations, clients, shows, episodes, and how they connect.
 ---
 
 
-PreRoll's data model is hierarchical: everything lives inside an **organization**, and data flows down from clients to shows to episodes. Understanding this structure helps you work effectively with the platform and its API.
+preroll.io's data model is hierarchical: everything lives inside an **organization**, and data flows down from clients to shows to episodes. Understanding this structure helps you work effectively with the platform and its API.
 
 ---
 
@@ -12,7 +12,7 @@ PreRoll's data model is hierarchical: everything lives inside an **organization*
 
 ![System Architecture](/docs/diagrams/architecture.svg)
 
-PreRoll is API-first. The REST API is the product — the web UI, client portal, and MCP server are all consumers of the same API. Integrations (Frame.io, Transistor, Google Drive, Vimeo, YouTube) connect via OAuth or API keys and are orchestrated through PreRoll rather than replaced by it.
+preroll.io is API-first. The REST API is the product — the web UI, client portal, and MCP server are all consumers of the same API. Integrations (Frame.io, Transistor, Google Drive, Vimeo, YouTube) connect via OAuth or API keys and are orchestrated through preroll.io rather than replaced by it.
 
 ---
 
@@ -24,7 +24,7 @@ PreRoll is API-first. The REST API is the product — the web UI, client portal,
 
 ## Organizations
 
-An **organization** is the top-level workspace in PreRoll. All data — clients, shows, episodes, assets, integrations, API keys — belongs to an organization.
+An **organization** is the top-level workspace in preroll.io. All data — clients, shows, episodes, assets, integrations, API keys — belongs to an organization.
 
 - Solo producers have a single-person org created automatically at signup
 - Agencies can invite multiple team members to the same org
@@ -32,7 +32,7 @@ An **organization** is the top-level workspace in PreRoll. All data — clients,
 - The `org_id` field scopes everything in the database
 
 <Callout type="info">
-  PreRoll is multi-tenant at the organization level, not the user level. Users access data through their org membership, not directly.
+  preroll.io is multi-tenant at the organization level, not the user level. Users access data through their org membership, not directly.
 </Callout>
 
 ---
@@ -89,7 +89,7 @@ A **show** is an individual podcast series belonging to a client. This is where 
 
 ## Episodes
 
-An **episode** is the core unit of work in PreRoll. Each episode represents a single installment of a show and moves through the show's pipeline stages from creation to publication.
+An **episode** is the core unit of work in preroll.io. Each episode represents a single installment of a show and moves through the show's pipeline stages from creation to publication.
 
 **Key fields:**
 - Title, number, description/show notes
@@ -140,7 +140,7 @@ Scheduled → Recorded → Edited → Approved → Published
 
 ## Deliverables
 
-A **deliverable** is a piece of content sent to a client for review and approval. Deliverables power the approval workflow in PreRoll.
+A **deliverable** is a piece of content sent to a client for review and approval. Deliverables power the approval workflow in preroll.io.
 
 **Lifecycle:**
 
@@ -162,7 +162,7 @@ Created → Sent for Review → Approved / Changes Requested → Revised → App
 
 ## Assets
 
-**Assets** are media files stored in PreRoll's cloud storage (Cloudflare R2). They exist at two levels:
+**Assets** are media files stored in preroll.io's cloud storage (Cloudflare R2). They exist at two levels:
 
 | Level | Examples |
 |-------|----------|
@@ -198,7 +198,7 @@ Templates save time when your episodes follow a consistent format.
 
 ## Integrations
 
-PreRoll connects to external services to extend your workflow without replacing your existing tools.
+preroll.io connects to external services to extend your workflow without replacing your existing tools.
 
 | Integration | Purpose | Connection Type |
 |-------------|---------|-----------------|
@@ -247,7 +247,7 @@ Organization (your workspace)
 
 ## Two Auth Paths
 
-PreRoll has distinct authentication for producers and clients:
+preroll.io has distinct authentication for producers and clients:
 
 | Path | Who | How | Access |
 |------|-----|-----|--------|

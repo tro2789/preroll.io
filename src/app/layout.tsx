@@ -16,7 +16,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PreRoll",
+  title: "preroll.io",
   description: "Podcast production management platform",
 };
 

@@ -63,7 +63,7 @@ export function ApiKeyList({ keys }: { keys: ApiKey[] }) {
         API Keys
       </h2>
       <p className="mt-1 text-xs text-text-tertiary">
-        Use API keys to authenticate with the PreRoll API from scripts, the MCP server, or other tools.
+        Use API keys to authenticate with the preroll.io API from scripts, the MCP server, or other tools.
       </p>
 
       {newKey && (

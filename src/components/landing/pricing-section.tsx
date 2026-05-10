@@ -154,7 +154,7 @@ export default function PricingSection() {
         <p className="mt-8 text-center text-sm text-text-tertiary">
           Want to run it yourself?{' '}
           <Link href="/docs/developer/self-hosting" className="text-accent hover:text-accent-hover transition-colors">
-            PreRoll is open source and self-hostable.
+            preroll.io is open source and self-hostable.
           </Link>
         </p>
       </div>

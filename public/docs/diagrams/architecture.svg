@@ -13,7 +13,7 @@
 
   <!-- Main App Box -->
   <rect class="box" x="320" y="40" width="260" height="80" fill="#2a2635" stroke="#4a3f6b"/>
-  <text class="title" x="450" y="72" text-anchor="middle">PreRoll App</text>
+  <text class="title" x="450" y="72" text-anchor="middle">preroll.io</text>
   <text class="sublabel" x="450" y="92" text-anchor="middle">Next.js + TypeScript + Vercel</text>
 
   <!-- Supabase -->

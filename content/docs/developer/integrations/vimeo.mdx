@@ -5,7 +5,7 @@ description: Connect Vimeo for video hosting and delivery.
 
 ## Overview
 
-The Vimeo integration enables video hosting and delivery for your podcast episodes. Upload finished video episodes, generate private review links, and embed videos in your client portal — all managed from within PreRoll.
+The Vimeo integration enables video hosting and delivery for your podcast episodes. Upload finished video episodes, generate private review links, and embed videos in your client portal — all managed from within preroll.io.
 
 ## OAuth2 Setup
 
@@ -33,14 +33,14 @@ VIMEO_CLIENT_SECRET=your_client_secret
 
 1. Go to **Settings → Integrations**
 2. Click **Connect** next to Vimeo
-3. Authorize PreRoll to access your Vimeo account
+3. Authorize preroll.io to access your Vimeo account
 4. Your Vimeo projects and upload quota become available
 
 The integration connects at the organization level. All team members with appropriate roles can upload to the connected Vimeo account.
 
 ## Project Creation
 
-PreRoll organizes videos within Vimeo projects (folders):
+preroll.io organizes videos within Vimeo projects (folders):
 
 - Each **show** maps to a Vimeo project
 - Episodes are uploaded as videos within the show's project
@@ -58,7 +58,7 @@ Vimeo Account/
 
 ## Upload Protocol
 
-PreRoll uses the **tus resumable upload protocol** for reliable video uploads to Vimeo:
+preroll.io uses the **tus resumable upload protocol** for reliable video uploads to Vimeo:
 
 - Supports files of any size (tested up to 10 GB+)
 - Automatic resume on network interruption
@@ -67,11 +67,11 @@ PreRoll uses the **tus resumable upload protocol** for reliable video uploads to
 
 ### Upload Flow
 
-1. PreRoll creates a video resource on Vimeo with metadata
+1. preroll.io creates a video resource on Vimeo with metadata
 2. A tus upload URI is returned
 3. The file is uploaded in chunks (default 128 MB per chunk)
 4. Vimeo processes the video (transcoding, thumbnail generation)
-5. PreRoll receives a webhook when processing completes
+5. preroll.io receives a webhook when processing completes
 
 ```bash
 # Under the hood, the tus upload looks like:
@@ -83,7 +83,7 @@ Content-Type: application/offset+octet-stream
 
 ## Generating Review Links
 
-Once a video is uploaded and processed, PreRoll can generate private review links:
+Once a video is uploaded and processed, preroll.io can generate private review links:
 
 | Link Type | Use Case |
 |-----------|----------|
@@ -91,11 +91,11 @@ Once a video is uploaded and processed, PreRoll can generate private review link
 | Review page | Vimeo's built-in review interface with timecoded comments |
 | Embed code | Embed in client portal or external pages |
 
-Review links are automatically attached to the corresponding deliverable in PreRoll.
+Review links are automatically attached to the corresponding deliverable in preroll.io.
 
 ## Embedding Videos
 
-Videos hosted on Vimeo can be embedded directly in the PreRoll client portal:
+Videos hosted on Vimeo can be embedded directly in the preroll.io client portal:
 
 - Private videos are accessible via domain-restricted embeds
 - No Vimeo account required for clients to view
@@ -123,6 +123,6 @@ Videos hosted on Vimeo can be embedded directly in the PreRoll client portal:
 |-------|----------|
 | Upload stalls | Check network stability — tus will auto-resume when connection returns |
 | Video stuck in processing | Large/high-resolution videos can take 30+ minutes to transcode |
-| Embed not loading | Verify domain whitelist includes your PreRoll domain |
+| Embed not loading | Verify domain whitelist includes your preroll.io domain |
 | Quota exceeded | Check your Vimeo plan's weekly upload limit |
-| Token expired | PreRoll automatically refreshes tokens — reconnect if issues persist |
+| Token expired | preroll.io automatically refreshes tokens — reconnect if issues persist |

@@ -29,10 +29,10 @@ export async function POST(request: Request) {
 
   await sendEmail(
     invite.email,
-    `Sign in to join ${orgName} on PreRoll`,
+    `Sign in to join ${orgName} on preroll.io`,
     `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL</h1>
+        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL.IO</h1>
         <p style="font-size: 15px; color: #333; line-height: 1.6;">
           Click the link below to sign in and join <strong>${orgName}</strong>.
         </p>
