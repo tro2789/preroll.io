@@ -31,43 +31,27 @@ export function ConnectButton({ provider, displayName, comingSoon, note, autoCon
     if (autoConnect && !comingSoon) handleConnect()
   }, [])
 
-  if (comingSoon) {
-    return (
-      <div className="rounded-lg border border-border-subtle bg-surface-raised p-5 opacity-60">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ProviderLogo provider={provider} />
-            <div>
-              <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
-              <p className="text-xs text-text-tertiary mt-1">Coming soon</p>
-            </div>
-          </div>
-          <span className="rounded-full bg-surface-overlay px-2.5 py-0.5 text-xs text-text-tertiary">
-            Coming Soon
-          </span>
+  return (
+    <div className={`flex items-center justify-between py-3 ${comingSoon ? 'opacity-40' : ''}`}>
+      <div className="flex items-center gap-3 min-w-0">
+        <ProviderLogo provider={provider} className="w-9 h-9" />
+        <div className="min-w-0">
+          <span className="text-sm font-medium text-text-primary">{displayName}</span>
+          {note && <p className="text-xs text-text-tertiary mt-0.5">{note}</p>}
         </div>
       </div>
-    )
-  }
-
-  return (
-    <div className="rounded-lg border border-border-subtle bg-surface-raised p-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ProviderLogo provider={provider} />
-          <div>
-            <h3 className="text-sm font-medium text-text-primary">{displayName}</h3>
-            <p className="text-xs text-text-tertiary mt-1">Not connected</p>
-            {note && <p className="text-xs text-text-tertiary mt-1">{note}</p>}
-          </div>
-        </div>
-        <button
-          onClick={handleConnect}
-          disabled={loading}
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-        >
-          {loading ? 'Connecting...' : 'Connect'}
-        </button>
+      <div className="shrink-0 ml-4">
+        {comingSoon ? (
+          <span className="text-xs text-text-tertiary">Coming soon</span>
+        ) : (
+          <button
+            onClick={handleConnect}
+            disabled={loading}
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Connecting...' : 'Connect'}
+          </button>
+        )}
       </div>
     </div>
   )

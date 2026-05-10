@@ -132,51 +132,51 @@ export function DeveloperTabs({
       <div className="mt-6">
         {activeTab === 'integrations' && (
           canIntegrations ? (
-            <div className="space-y-3">
-              <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-                Connected Accounts
-              </h2>
-
+            <div>
               {connectedProvider && (
-                <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
-                  Successfully connected {connectedProvider.replace('_', ' ')}.
+                <div className="mb-4 rounded-lg bg-success/8 px-4 py-2.5 text-sm text-success">
+                  {connectedProvider.replace(/_/g, ' ')} connected successfully.
                 </div>
               )}
 
               {oauthError && (
-                <div className="rounded-lg border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
+                <div className="mb-4 rounded-lg bg-error/8 px-4 py-2.5 text-sm text-error">
                   Connection failed: {oauthError.replace(/_/g, ' ')}
                 </div>
               )}
 
-              {providers.map((provider) => {
-                const connected = connectedMap.get(provider.name)
-                if (connected) {
-                  return (
-                    <ConnectedAccountCard
-                      key={provider.name}
-                      provider={provider.name}
-                      displayName={provider.displayName}
-                      accountName={connected.account_name}
-                      accountEmail={connected.account_email}
-                      accountAvatarUrl={connected.account_avatar_url}
-                      connectedAt={connected.created_at}
-                      note={provider.note}
-                    />
-                  )
-                }
-                return (
-                  <ConnectButton
-                    key={provider.name}
-                    provider={provider.name}
-                    displayName={provider.displayName}
-                    comingSoon={provider.comingSoon}
-                    note={provider.note}
-                    autoConnect={autoConnectProvider === provider.name}
-                    returnTo={autoConnectProvider === provider.name ? returnTo : undefined}
-                  />
-                )
-              })}
+              <div className="rounded-lg border border-border-subtle bg-surface-raised">
+                <div className="divide-y divide-border-subtle px-4">
+                  {providers.map((provider) => {
+                    const connected = connectedMap.get(provider.name)
+                    if (connected) {
+                      return (
+                        <ConnectedAccountCard
+                          key={provider.name}
+                          provider={provider.name}
+                          displayName={provider.displayName}
+                          accountName={connected.account_name}
+                          accountEmail={connected.account_email}
+                          accountAvatarUrl={connected.account_avatar_url}
+                          connectedAt={connected.created_at}
+                          note={provider.note}
+                        />
+                      )
+                    }
+                    return (
+                      <ConnectButton
+                        key={provider.name}
+                        provider={provider.name}
+                        displayName={provider.displayName}
+                        comingSoon={provider.comingSoon}
+                        note={provider.note}
+                        autoConnect={autoConnectProvider === provider.name}
+                        returnTo={autoConnectProvider === provider.name ? returnTo : undefined}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           ) : (
             <UpgradeGate
