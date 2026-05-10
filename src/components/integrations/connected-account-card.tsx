@@ -35,7 +35,7 @@ export function ConnectedAccountCard({
   }
 
   const subtitle = accountName || accountEmail
-  const connectedDate = new Date(connectedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const connectedDate = new Date(connectedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 
   return (
     <div className="flex items-center justify-between py-3">
