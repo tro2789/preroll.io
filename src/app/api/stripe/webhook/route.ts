@@ -53,6 +53,45 @@ export async function POST(request: Request) {
         .update({ stripe_customer_id: customerId })
         .eq('id', orgId)
 
+      if (session.metadata?.type === 'ai_credits') {
+        const credits = parseInt(session.metadata.credits || '0')
+        if (credits > 0) {
+          const paymentIntentId = session.payment_intent as string
+
+          const { data: existing } = await supabase
+            .from('ai_addon')
+            .select('id')
+            .eq('org_id', orgId)
+            .single()
+
+          if (!existing) {
+            await supabase
+              .from('ai_addon')
+              .insert({ org_id: orgId, enabled: true, credits_balance: 0 })
+          } else {
+            await supabase
+              .from('ai_addon')
+              .update({ enabled: true })
+              .eq('org_id', orgId)
+          }
+
+          await supabase.rpc('refund_ai_credits', {
+            p_org_id: orgId,
+            p_amount: credits,
+            p_reason: 'credit_purchase',
+            p_reference_id: orgId,
+          })
+
+          await supabase.from('ai_credit_purchases').insert({
+            org_id: orgId,
+            stripe_payment_intent_id: paymentIntentId,
+            credits_purchased: credits,
+            amount_cents: session.amount_total || 0,
+          })
+        }
+        break
+      }
+
       const subscriptionId = session.subscription as string
       if (subscriptionId) {
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
