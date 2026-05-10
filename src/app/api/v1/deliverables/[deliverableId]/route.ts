@@ -58,6 +58,7 @@ export async function PATCH(
     if (body.description !== undefined) updates.description = body.description
     if (body.file_url !== undefined) updates.file_url = body.file_url
     if (body.file_key !== undefined) updates.file_key = body.file_key
+    if (body.producer_notes !== undefined) updates.producer_notes = body.producer_notes
     if (body.status === 'pending') {
       updates.status = 'pending'
       updates.reviewed_at = null

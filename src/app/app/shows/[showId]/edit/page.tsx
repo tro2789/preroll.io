@@ -153,6 +153,33 @@ export default function EditShowPage({
                 onSubmit={handleSubmit}
                 submitLabel="Save Changes"
               />
+
+              <div className="mt-8 border-t border-border-default pt-6">
+                <h3 className="text-sm font-medium text-text-secondary">Client Downloads</h3>
+                <p className="mt-1 text-xs text-text-tertiary">Control whether clients can download deliverables for this show.</p>
+                <select
+                  value={show.allow_client_downloads == null ? '' : String(show.allow_client_downloads) === 'true' ? 'true' : 'false'}
+                  onChange={async (e) => {
+                    const val = e.target.value === '' ? null : e.target.value === 'true'
+                    const prev = show.allow_client_downloads
+                    setShow((p) => p ? { ...p, allow_client_downloads: val as unknown as string } : p)
+                    const res = await fetch(`/api/v1/shows/${showId}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ allow_client_downloads: val }),
+                    })
+                    if (!res.ok) {
+                      setShow((p) => p ? { ...p, allow_client_downloads: prev } : p)
+                      setError('Failed to update download setting')
+                    }
+                  }}
+                  className="mt-3 w-full max-w-xs rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                >
+                  <option value="">Use workspace default</option>
+                  <option value="true">Allow downloads</option>
+                  <option value="false">Disallow downloads</option>
+                </select>
+              </div>
             </div>
           </div>
         )}

@@ -52,7 +52,7 @@ export async function PATCH(
   if (error) return error
 
   const body = await request.json()
-  const allowedFields = ['name', 'description', 'format', 'schedule', 'cover_art_url', 'episode_template']
+  const allowedFields = ['name', 'description', 'format', 'schedule', 'cover_art_url', 'episode_template', 'allow_client_downloads']
   const updateData: Record<string, unknown> = {}
   for (const field of allowedFields) {
     if (field in body) {

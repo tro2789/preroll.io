@@ -11,7 +11,7 @@ export async function GET() {
   const service = createServiceClient()
   const { data } = await service
     .from('organizations')
-    .select('id, name, slug, logo_url')
+    .select('id, name, slug, logo_url, allow_client_downloads')
     .eq('id', org!.id)
     .single()
 
@@ -23,6 +23,7 @@ export async function GET() {
     slug: data.slug,
     logo_url: resolveImageUrl(data.logo_url) || null,
     role: org!.role,
+    allow_client_downloads: data.allow_client_downloads,
   })
 }
 
@@ -53,6 +54,10 @@ export async function PATCH(request: Request) {
     updates.logo_url = body.logo_url || null
   }
 
+  if (typeof body.allow_client_downloads === 'boolean') {
+    updates.allow_client_downloads = body.allow_client_downloads
+  }
+
   if (Object.keys(updates).length === 0) {
     return errorResponse('No valid fields to update')
   }
@@ -62,7 +67,7 @@ export async function PATCH(request: Request) {
     .from('organizations')
     .update(updates)
     .eq('id', org!.id)
-    .select('id, name, slug, logo_url')
+    .select('id, name, slug, logo_url, allow_client_downloads')
     .single()
 
   if (updateError) return errorResponse(updateError.message, 500)
@@ -72,6 +77,7 @@ export async function PATCH(request: Request) {
     name: data.name,
     slug: data.slug,
     logo_url: resolveImageUrl(data.logo_url) || null,
+    allow_client_downloads: data.allow_client_downloads,
   })
 }
 
