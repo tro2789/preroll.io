@@ -1,5 +1,5 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
-import { getSiteUrl, generateMagicLinkUrl, sendEmail } from '@/lib/email/send'
+import { getSiteUrl, sendEmail } from '@/lib/email/send'
 
 export async function POST(request: Request) {
   const { supabase, user, org, error } = await getAuthenticatedClient()
@@ -52,10 +52,7 @@ export async function POST(request: Request) {
   if (updateError) return errorResponse(updateError.message, 500)
 
   const siteUrl = await getSiteUrl()
-  const onboardingPath = `/onboarding?invite=${invite_code}`
-  const fallbackUrl = `${siteUrl}/invite/${invite_code}`
-
-  const loginUrl = await generateMagicLinkUrl(client.email, siteUrl, onboardingPath, fallbackUrl)
+  const shareUrl = `${siteUrl}/share/${invite_code}`
 
   const emailSent = await sendEmail(
     client.email,
@@ -69,11 +66,11 @@ export async function POST(request: Request) {
         <p style="font-size: 15px; color: #333; line-height: 1.6;">
           ${producerName} has set up a client portal for you on preroll.io${showNames.length > 0 ? ` for <strong>${showNames.join('</strong>, <strong>')}</strong>` : ''}. You'll be able to track episode progress, review deliverables, and leave feedback — all in one place.
         </p>
-        <a href="${loginUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
+        <a href="${shareUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
           Open Your Portal
         </a>
         <p style="font-size: 13px; color: #888; line-height: 1.5; margin-top: 24px;">
-          This link expires in 24 hours. If it's expired, <a href="${fallbackUrl}" style="color: #7c3aed;">click here</a> to request a new one.
+          Bookmark this link to come back anytime.
         </p>
       </div>
     `,
