@@ -11,7 +11,7 @@ export function NoOrgsPrompt() {
       <div className="w-full max-w-sm text-center space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">
-            PreRoll
+            PREROLL.IO
           </h1>
           <p className="mt-3 text-sm text-text-secondary">
             Create an organization to get started.

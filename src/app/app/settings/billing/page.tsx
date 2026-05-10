@@ -186,7 +186,7 @@ export default function BillingPage() {
               </p>
             </div>
             <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-              Every feature in PreRoll is unlocked right now — multi-user access, white-label portal, reporting, and more.
+              Every feature in preroll.io is unlocked right now — multi-user access, white-label portal, reporting, and more.
               You have <span className="font-semibold text-accent">{trial.days_left} {trial.days_left === 1 ? 'day' : 'days'}</span> left to explore.
             </p>
             <p className="mt-3 text-xs text-text-tertiary">
@@ -356,7 +356,7 @@ export default function BillingPage() {
             ) : (
               <>
                 <p className="text-sm text-text-secondary">
-                  Register your self-hosted installation. All features work without a license key — registration enables update notifications and helps us understand how PreRoll is being used.
+                  Register your self-hosted installation. All features work without a license key — registration enables update notifications and helps us understand how preroll.io is being used.
                 </p>
                 <form onSubmit={handleLicenseRegister} className="mt-5 space-y-4">
                   <div>

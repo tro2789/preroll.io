@@ -215,7 +215,7 @@ export function DeveloperTabs({
           ) : (
             <UpgradeGate
               feature="API Keys"
-              description="Access the PreRoll API to build custom automations, connect the MCP server, or integrate with your own tools. Available on the Pro plan."
+              description="Access the preroll.io API to build custom automations, connect the MCP server, or integrate with your own tools. Available on the Pro plan."
               tier="Pro"
               icon={
                 <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

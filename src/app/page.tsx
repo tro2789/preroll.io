@@ -30,7 +30,7 @@ function Nav() {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border-subtle/50 bg-surface-base/80 backdrop-blur-lg">
       <div className="mx-auto max-w-7xl flex items-center justify-between px-6 py-4">
         <Link href="/" className="font-[family-name:var(--font-display)] text-sm font-bold uppercase tracking-widest text-text-primary">
-          PreRoll
+          PREROLL.IO
         </Link>
         <nav className="hidden sm:flex items-center gap-6">
           <a href="#features" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Features</a>
@@ -38,7 +38,7 @@ function Nav() {
           <Link href="/docs" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Docs</Link>
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-text-tertiary hover:text-text-primary transition-colors hidden sm:block">
+          <Link href="/login" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
             Sign in
           </Link>
           <Link
@@ -156,7 +156,7 @@ function ApiFirst() {
           </h2>
           <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
             The UI is a client. So is your script. So is your AI assistant.
-            PreRoll exposes a complete REST API: episodes, clients, approvals,
+            preroll.io exposes a complete REST API: episodes, clients, approvals,
             publishing. Everything you can do in the dashboard, you can do in code.
           </p>
 
@@ -223,7 +223,7 @@ function McpSection() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
               </svg>
             </div>
-            <span className="text-xs text-text-tertiary font-[family-name:var(--font-display)]">Claude &middot; PreRoll MCP</span>
+            <span className="text-xs text-text-tertiary font-[family-name:var(--font-display)]">Claude &middot; preroll.io MCP</span>
           </div>
           <div className="space-y-3">
             <div className="flex justify-end">
@@ -259,7 +259,7 @@ function McpSection() {
             Your AI assistant runs the pipeline.
           </h2>
           <p className="mt-4 text-base text-text-secondary leading-relaxed max-w-lg">
-            PreRoll ships an MCP server. Connect it to Claude, ChatGPT, or any AI
+            preroll.io ships an MCP server. Connect it to Claude, ChatGPT, or any AI
             assistant and manage your production pipeline in natural language.
           </p>
           <p className="mt-6 text-sm text-text-tertiary max-w-lg">
@@ -319,7 +319,7 @@ function Integrations() {
               <h3 className="font-[family-name:var(--font-display)] text-sm font-semibold text-text-primary">Transistor.fm</h3>
             </div>
             <p className="text-sm text-text-secondary leading-relaxed">
-              Publish episodes directly from the pipeline. Upload, set metadata, and go live without leaving PreRoll.
+              Publish episodes directly from the pipeline. Upload, set metadata, and go live without leaving preroll.io.
             </p>
           </div>
         </div>
@@ -347,7 +347,7 @@ function BuiltBy() {
           Built by a producer, for producers.
         </h2>
         <p className="mt-4 text-base text-text-secondary leading-relaxed">
-          PreRoll isn&apos;t a project management tool with podcast features bolted on.
+          preroll.io isn&apos;t a project management tool with podcast features bolted on.
           It&apos;s built by someone who manages client shows every week and got tired
           of the spreadsheet.
         </p>
@@ -424,7 +424,7 @@ function Footer() {
             </ul>
           </div>
         </div>
-        <p className="text-xs text-text-tertiary">&copy; {new Date().getFullYear()} PreRoll</p>
+        <p className="text-xs text-text-tertiary">&copy; {new Date().getFullYear()} preroll.io</p>
       </div>
     </footer>
   )

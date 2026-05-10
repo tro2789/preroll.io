@@ -47,15 +47,15 @@ export async function POST(request: Request) {
 
   const emailSent = await sendEmail(
     client.email,
-    `${producerName} has invited you to PreRoll`,
+    `${producerName} has invited you to preroll.io`,
     `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL</h1>
+        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL.IO</h1>
         <p style="font-size: 15px; color: #333; line-height: 1.6;">
           Hi ${client.name?.split(' ')[0] || 'there'},
         </p>
         <p style="font-size: 15px; color: #333; line-height: 1.6;">
-          ${producerName} has set up a client portal for you on PreRoll${showNames.length > 0 ? ` for <strong>${showNames.join('</strong>, <strong>')}</strong>` : ''}. You'll be able to track episode progress, review deliverables, and leave feedback — all in one place.
+          ${producerName} has set up a client portal for you on preroll.io${showNames.length > 0 ? ` for <strong>${showNames.join('</strong>, <strong>')}</strong>` : ''}. You'll be able to track episode progress, review deliverables, and leave feedback — all in one place.
         </p>
         <a href="${loginUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
           Open Your Portal

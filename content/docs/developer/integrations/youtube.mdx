@@ -39,7 +39,7 @@ If you already have Google Drive connected with the same Google Cloud project, t
 2. Click **Connect** next to YouTube
 3. Sign in with the Google account that owns (or manages) the target YouTube channel
 4. If you manage multiple channels, select which channel to connect
-5. PreRoll stores the channel ID and refresh token for future uploads
+5. preroll.io stores the channel ID and refresh token for future uploads
 
 ## Publishing Workflow
 
@@ -51,7 +51,7 @@ The video file is uploaded using Google's resumable upload protocol:
 
 - Supports files up to 256 GB (YouTube's maximum)
 - Chunked upload with automatic retry on failure
-- Progress tracking in the PreRoll UI
+- Progress tracking in the preroll.io UI
 - Background upload — continue working while the file transfers
 
 ### 2. Set Metadata
@@ -153,4 +153,4 @@ Episode-specific metadata overrides the defaults.
 | Thumbnail rejected | Ensure image meets size requirements (min 640px wide, max 2 MB) |
 | Channel not found | Reconnect with the Google account that owns the channel |
 | Scheduled publish didn't fire | Verify the `publishAt` time is in the future and timezone is correct |
-| Token expired | PreRoll automatically refreshes tokens — reconnect if persistent |
+| Token expired | preroll.io automatically refreshes tokens — reconnect if persistent |

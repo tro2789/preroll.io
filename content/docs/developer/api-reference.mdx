@@ -1,13 +1,13 @@
 ---
 title: API Reference
-description: Authenticate and interact with the PreRoll REST API using API keys.
+description: Authenticate and interact with the preroll.io REST API using API keys.
 ---
 
 ## Authentication
 
 All API requests require a Bearer token in the `Authorization` header. API keys are created in **Settings → Developer → API Keys**.
 
-Keys are prefixed with `pr_` and are only shown once at creation. They are stored as SHA-256 hashes — PreRoll never stores your raw key.
+Keys are prefixed with `pr_` and are only shown once at creation. They are stored as SHA-256 hashes — preroll.io never stores your raw key.
 
 ```bash
 curl -H "Authorization: Bearer pr_your_api_key_here" \

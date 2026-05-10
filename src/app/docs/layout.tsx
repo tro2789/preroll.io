@@ -7,7 +7,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     <DocsLayout
       tree={source.pageTree}
       nav={{
-        title: 'PreRoll Docs',
+        title: 'preroll.io docs',
         url: '/docs',
       }}
       themeSwitch={{ enabled: false }}

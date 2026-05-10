@@ -44,7 +44,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">
-            PreRoll
+            PREROLL.IO
           </h1>
           <p className="mt-3 text-sm text-text-secondary">
             Set your new password

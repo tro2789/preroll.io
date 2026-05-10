@@ -8,7 +8,7 @@ export function AIActions({ slug, title }: { slug: string; title: string }) {
   const pageUrl = `${siteUrl}/docs/${slug}`;
   const fullDocsUrl = `${siteUrl}/llms-full.txt`;
 
-  const claudePrompt = `Read the PreRoll documentation at ${fullDocsUrl} — I'm currently on the "${title}" page (${pageUrl}). Help me with any questions I have.`;
+  const claudePrompt = `Read the preroll.io documentation at ${fullDocsUrl} — I'm currently on the "${title}" page (${pageUrl}). Help me with any questions I have.`;
   const chatgptPrompt = claudePrompt;
 
   const claudeUrl = `https://claude.ai/new?q=${encodeURIComponent(claudePrompt)}`;

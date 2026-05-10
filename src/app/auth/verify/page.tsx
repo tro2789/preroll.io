@@ -46,7 +46,7 @@ function VerifyContent() {
   if (error) {
     return (
       <div className="w-full max-w-sm text-center space-y-4">
-        <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL</h1>
+        <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
         <div className="rounded-md bg-error/10 border border-error/30 px-4 py-3 text-sm text-error">
           {error}
         </div>

@@ -70,7 +70,7 @@ export default function InvitePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-base px-4">
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
           <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2.5 text-sm text-error">
             {error}
           </div>
@@ -83,7 +83,7 @@ export default function InvitePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-base px-4">
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
           <div className="rounded-lg bg-surface-raised p-6 border border-border-subtle space-y-3">
             <p className="text-text-primary font-medium">Check your email</p>
             <p className="text-sm text-text-secondary">
@@ -99,7 +99,7 @@ export default function InvitePage() {
     <div className="min-h-screen flex items-center justify-center bg-surface-base px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
           <p className="mt-3 text-sm text-text-secondary">
             You&apos;ve been invited to view <strong className="text-text-primary">{showName}</strong>
           </p>

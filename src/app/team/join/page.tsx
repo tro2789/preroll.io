@@ -112,7 +112,7 @@ function JoinContent() {
     if (magicLinkSent) {
       return (
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+          <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
           <div className="rounded-lg bg-surface-raised p-6 border border-border-subtle space-y-3">
             <p className="text-sm font-medium text-text-primary">Check your email</p>
             <p className="text-sm text-text-secondary">
@@ -125,7 +125,7 @@ function JoinContent() {
 
     return (
       <div className="w-full max-w-sm text-center space-y-4">
-        <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+        <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
         <div className="rounded-lg bg-surface-raised p-6 border border-border-subtle space-y-3">
           <p className="text-sm font-medium text-text-primary">Sign in to accept this invite</p>
           <p className="text-sm text-text-secondary">
@@ -146,7 +146,7 @@ function JoinContent() {
   if (phase === 'error') {
     return (
       <div className="w-full max-w-sm text-center space-y-4">
-        <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+        <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
         <div className="rounded-md bg-error/10 border border-error/30 px-3 py-2.5 text-sm text-error">
           {error}
         </div>
@@ -162,7 +162,7 @@ function JoinContent() {
 
   return (
     <div className="w-full max-w-sm text-center space-y-4">
-      <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PreRoll</h1>
+      <h1 className="text-2xl font-bold tracking-widest uppercase text-text-primary">PREROLL.IO</h1>
       <div className="rounded-lg bg-surface-raised p-6 border border-border-subtle space-y-3">
         <svg className="mx-auto h-10 w-10 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />

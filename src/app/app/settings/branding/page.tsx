@@ -145,7 +145,7 @@ export default function BrandingPage() {
             Display Name
           </label>
           <p className="mt-1 text-xs text-text-tertiary">
-            Replaces &quot;PreRoll&quot; in the portal header.
+            Replaces &quot;preroll.io&quot; in the portal header.
           </p>
           <input
             id="display-name"
@@ -244,7 +244,7 @@ export default function BrandingPage() {
                   className="text-sm font-bold tracking-widest uppercase"
                   style={{ color: accentColor || undefined }}
                 >
-                  {displayName || 'PreRoll'}
+                  {displayName || 'preroll.io'}
                 </span>
               )}
               <span className="text-border-default">/</span>
