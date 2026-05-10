@@ -85,10 +85,10 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
     <div className="rounded-lg bg-surface-raised border border-border-subtle overflow-hidden">
       <div className="flex">
         {thumb && !thumbFailed && (
-          <div className="shrink-0 w-40 self-center overflow-hidden">
+          <div className="shrink-0 w-48 relative overflow-hidden">
             {reviewUrl ? (
-              <a href={reviewUrl} className="block relative group/thumb">
-                <img src={thumb} alt="" className="w-full object-cover aspect-video" onError={() => setThumbFailed(true)} />
+              <a href={reviewUrl} className="block h-full relative group/thumb">
+                <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover" onError={() => setThumbFailed(true)} />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-white">
                     <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
@@ -96,7 +96,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
                 </div>
               </a>
             ) : (
-              <img src={thumb} alt="" className="w-full object-cover aspect-video" onError={() => setThumbFailed(true)} />
+              <img src={thumb} alt="" className="absolute inset-0 w-full h-full object-cover" onError={() => setThumbFailed(true)} />
             )}
           </div>
         )}
