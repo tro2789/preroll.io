@@ -67,6 +67,8 @@ export async function GET(
       workspaceId = 'root'
     } else if (providerName === 'vimeo') {
       workspaceId = result.account.id
+    } else if (providerName === 'youtube') {
+      workspaceId = result.account.id
     }
 
     const userOrg = await resolveUserOrg(state.userId)

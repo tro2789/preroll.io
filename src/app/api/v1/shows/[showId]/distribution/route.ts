@@ -9,12 +9,20 @@ export async function GET(
   const { supabase, error } = await getAuthenticatedClient()
   if (error) return error
 
-  const { data, error: dbError } = await supabase!
+  const provider = request.nextUrl.searchParams.get('provider')
+
+  let query = supabase!
     .from('distribution_connections')
     .select('id, provider, external_show_id, external_show_name, created_at')
     .eq('show_id', showId)
-    .maybeSingle()
 
+  if (provider) {
+    const { data, error: dbError } = await query.eq('provider', provider).maybeSingle()
+    if (dbError) return errorResponse(dbError.message, 500)
+    return jsonResponse(data)
+  }
+
+  const { data, error: dbError } = await query
   if (dbError) return errorResponse(dbError.message, 500)
 
   return jsonResponse(data)
@@ -28,11 +36,18 @@ export async function DELETE(
   const { supabase, error } = await getAuthenticatedClient()
   if (error) return error
 
-  const { error: dbError } = await supabase!
+  const provider = request.nextUrl.searchParams.get('provider')
+
+  let query = supabase!
     .from('distribution_connections')
     .delete()
     .eq('show_id', showId)
 
+  if (provider) {
+    query = query.eq('provider', provider)
+  }
+
+  const { error: dbError } = await query
   if (dbError) return errorResponse(dbError.message, 500)
 
   return jsonResponse({ success: true })

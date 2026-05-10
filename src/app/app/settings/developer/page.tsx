@@ -17,6 +17,7 @@ const PROVIDERS = [
   { name: 'frame_io', displayName: 'Frame.io', comingSoon: false },
   { name: 'google_drive', displayName: 'Google Drive', comingSoon: false },
   { name: 'vimeo', displayName: 'Vimeo', comingSoon: false, note: 'In-app video playback requires a Vimeo Pro, Business, or Premium plan.' },
+  { name: 'youtube', displayName: 'YouTube', comingSoon: false },
   { name: 'dropbox', displayName: 'Dropbox', comingSoon: true },
 ]
 

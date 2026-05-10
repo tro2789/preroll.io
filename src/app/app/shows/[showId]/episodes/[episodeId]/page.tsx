@@ -15,7 +15,7 @@ export default async function EpisodeDetailPage({
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnection }] = await Promise.all([
+  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnections }] = await Promise.all([
     supabase
       .from('episodes')
       .select('*, pipeline_stages(id, name, position)')
@@ -39,8 +39,7 @@ export default async function EpisodeDetailPage({
     supabase
       .from('distribution_connections')
       .select('id, provider')
-      .eq('show_id', showId)
-      .maybeSingle(),
+      .eq('show_id', showId),
   ])
 
   if (error || !episode) {
@@ -63,6 +62,7 @@ export default async function EpisodeDetailPage({
     frame_io: { displayName: 'Frame.io' },
     google_drive: { displayName: 'Google Drive' },
     vimeo: { displayName: 'Vimeo', acceptedMimeTypes: ['video/*'] },
+    youtube: { displayName: 'YouTube', acceptedMimeTypes: ['video/*'] },
     dropbox: { displayName: 'Dropbox' },
   }
 
@@ -126,12 +126,24 @@ export default async function EpisodeDetailPage({
               View on Transistor &rarr;
             </a>
           )}
+          {(episode.distribution_metadata as any)?.view_url && (
+            <a
+              href={(episode.distribution_metadata as any).view_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-accent hover:text-accent-hover transition-colors"
+            >
+              View on YouTube &rarr;
+            </a>
+          )}
         </div>
         <div className="flex shrink-0 items-center gap-2 flex-wrap">
-          {distributionConnection && (
+          {(distributionConnections || []).map((dc: any) => (
             <PublishButton
+              key={dc.id}
               showId={showId}
               episodeId={episodeId}
+              provider={dc.provider}
               episode={{
                 title: episode.title,
                 episode_number: episode.episode_number,
@@ -140,7 +152,7 @@ export default async function EpisodeDetailPage({
               }}
               deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, type: d.type }))}
             />
-          )}
+          ))}
           <Link
             href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
             className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"

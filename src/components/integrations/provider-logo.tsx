@@ -3,6 +3,7 @@ const logos: Record<string, string> = {
   google_drive: '/images/providers/google-drive.svg',
   vimeo: '/images/providers/vimeo.png',
   dropbox: '/images/providers/dropbox.svg',
+  youtube: '/images/providers/youtube.svg',
 }
 
 export function ProviderLogo({ provider, className }: { provider: string; className?: string }) {

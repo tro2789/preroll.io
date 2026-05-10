@@ -3,9 +3,15 @@
 import { useState } from 'react'
 import { PublishDialog } from '@/components/episodes/publish-dialog'
 
+const PROVIDER_LABELS: Record<string, string> = {
+  transistor: 'Transistor',
+  youtube: 'YouTube',
+}
+
 interface PublishButtonProps {
   showId: string
   episodeId: string
+  provider: string
   episode: {
     title: string
     episode_number: number | null
@@ -15,7 +21,7 @@ interface PublishButtonProps {
   deliverables: { id: string; title: string; type: string }[]
 }
 
-export function PublishButton({ showId, episodeId, episode, deliverables }: PublishButtonProps) {
+export function PublishButton({ showId, episodeId, provider, episode, deliverables }: PublishButtonProps) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -24,11 +30,12 @@ export function PublishButton({ showId, episodeId, episode, deliverables }: Publ
         onClick={() => setOpen(true)}
         className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
       >
-        Publish
+        Publish to {PROVIDER_LABELS[provider] || provider}
       </button>
       <PublishDialog
         showId={showId}
         episodeId={episodeId}
+        provider={provider}
         episode={episode}
         deliverables={deliverables}
         isOpen={open}

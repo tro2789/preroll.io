@@ -143,6 +143,7 @@ export function DeliveryPanel({
     frame_io: 'Frame.io',
     google_drive: 'Google Drive',
     vimeo: 'Vimeo',
+    youtube: 'YouTube',
     dropbox: 'Dropbox',
   }
 
@@ -614,6 +615,7 @@ export function DeliveryPanel({
                 { provider: 'frame_io' as IntegrationProvider, name: 'Frame.io', desc: 'Video review & approval' },
                 { provider: 'google_drive' as IntegrationProvider, name: 'Google Drive', desc: 'File storage & sharing' },
                 { provider: 'vimeo' as IntegrationProvider, name: 'Vimeo', desc: 'Video hosting & delivery' },
+                { provider: 'youtube' as IntegrationProvider, name: 'YouTube', desc: 'Video hosting & publishing' },
               ]).map((p) => (
                 <Link
                   key={p.provider}
@@ -862,6 +864,7 @@ export function DeliveryPanel({
                     { provider: 'frame_io' as IntegrationProvider, name: 'Frame.io', desc: 'Video review & approval' },
                     { provider: 'google_drive' as IntegrationProvider, name: 'Google Drive', desc: 'File storage & sharing' },
                     { provider: 'vimeo' as IntegrationProvider, name: 'Vimeo', desc: 'Video hosting & delivery' },
+                    { provider: 'youtube' as IntegrationProvider, name: 'YouTube', desc: 'Video hosting & publishing' },
                   ]).map((p) => (
                     <Link
                       key={p.provider}

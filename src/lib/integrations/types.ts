@@ -1,4 +1,4 @@
-export type IntegrationProvider = 'frame_io' | 'google_drive' | 'vimeo' | 'dropbox'
+export type IntegrationProvider = 'frame_io' | 'google_drive' | 'vimeo' | 'dropbox' | 'youtube'
 
 export interface OAuthConfig {
   authUrl: string
