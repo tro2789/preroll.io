@@ -20,19 +20,22 @@ export async function generateMagicLinkUrl(
 
   await service.auth.admin.createUser({ email, email_confirm: true }).catch(() => {})
 
-  const { data: linkData, error: linkError } = await service.auth.admin.generateLink({
-    type: 'magiclink',
-    email,
-  })
+  const linkTypes = ['magiclink', 'recovery'] as const
+  for (const linkType of linkTypes) {
+    const { data: linkData, error: linkError } = await service.auth.admin.generateLink({
+      type: linkType,
+      email,
+    })
 
-  if (!linkError && linkData?.properties?.hashed_token) {
-    const tokenHash = linkData.properties.hashed_token
-    const verifyType = linkData.properties.verification_type || 'magiclink'
-    return `${siteUrl}/auth/verify?token_hash=${tokenHash}&type=${verifyType}&next=${encodeURIComponent(redirectPath)}`
-  }
+    if (!linkError && linkData?.properties?.hashed_token) {
+      const tokenHash = linkData.properties.hashed_token
+      const verifyType = linkData.properties.verification_type || linkType
+      return `${siteUrl}/auth/verify?token_hash=${tokenHash}&type=${verifyType}&next=${encodeURIComponent(redirectPath)}`
+    }
 
-  if (linkError) {
-    console.error('generateLink failed:', linkError.message)
+    if (linkError) {
+      console.error(`generateLink (${linkType}) failed for ${email}:`, linkError.message)
+    }
   }
 
   return fallbackUrl

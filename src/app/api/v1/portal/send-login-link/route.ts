@@ -10,7 +10,7 @@ export async function POST(request: Request) {
 
   const { data: client, error: fetchError } = await supabase!
     .from('clients')
-    .select('id, name, email, org_id')
+    .select('id, name, email, org_id, invite_code')
     .eq('id', body.client_id)
     .single()
 
@@ -21,7 +21,11 @@ export async function POST(request: Request) {
   const siteUrl = await getSiteUrl()
   const producerName = user!.user_metadata?.full_name || user!.email?.split('@')[0] || 'Your producer'
 
-  const loginUrl = await generateMagicLinkUrl(client.email, siteUrl, '/portal', `${siteUrl}/login`)
+  const fallbackUrl = client.invite_code
+    ? `${siteUrl}/invite/${client.invite_code}`
+    : `${siteUrl}/forgot-password`
+
+  const loginUrl = await generateMagicLinkUrl(client.email, siteUrl, '/portal', fallbackUrl)
 
   const emailSent = await sendEmail(
     client.email,
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
           Open Your Portal
         </a>
         <p style="font-size: 13px; color: #888; line-height: 1.5; margin-top: 24px;">
-          This link expires in 24 hours.
+          This link expires in 24 hours. If it's expired, <a href="${fallbackUrl}" style="color: #7c3aed;">click here</a> to request a new one.
         </p>
       </div>
     `,

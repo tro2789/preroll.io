@@ -10,7 +10,7 @@ function VerifyContent() {
 
   useEffect(() => {
     const tokenHash = searchParams.get('token_hash')
-    const type = searchParams.get('type') as 'magiclink' | 'email' | 'signup'
+    const type = searchParams.get('type') as string
     const next = searchParams.get('next') || '/portal'
 
     if (!tokenHash || !type) {
@@ -20,24 +20,23 @@ function VerifyContent() {
 
     async function verify() {
       const supabase = createClient()
-      const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash!, type })
 
-      if (error) {
-        if (type === 'magiclink') {
-          const { error: retryError } = await supabase.auth.verifyOtp({
-            token_hash: tokenHash!,
-            type: 'email',
-          })
-          if (!retryError) {
-            window.location.href = next
-            return
-          }
+      const typesToTry: string[] = [type]
+      if (type === 'magiclink') typesToTry.push('email')
+      if (type === 'recovery') typesToTry.push('magiclink', 'email')
+
+      for (const t of typesToTry) {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash!,
+          type: t as 'magiclink' | 'email' | 'recovery' | 'signup',
+        })
+        if (!error) {
+          window.location.href = next
+          return
         }
-        setError('This link has expired or already been used. Ask your producer to resend the invite.')
-        return
       }
 
-      window.location.href = next
+      setError('This link has expired or already been used. Ask your producer to resend the invite.')
     }
 
     verify()
