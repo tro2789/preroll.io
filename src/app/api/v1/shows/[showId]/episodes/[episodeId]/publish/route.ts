@@ -219,65 +219,9 @@ async function handleYouTubePublish(
     return errorResponse('YouTube OAuth token not found. Reconnect YouTube in Settings.', 401)
   }
 
-  let videoBuffer: ArrayBuffer
-  let mimeType = 'video/mp4'
-
-  if (video_source.startsWith('deliverable:')) {
-    const deliverableId = video_source.slice('deliverable:'.length)
-
-    const { data: fileRef, error: fileRefError } = await supabase
-      .from('file_references')
-      .select('external_id, name, mime_type, provider')
-      .eq('deliverable_id', deliverableId)
-      .single()
-
-    if (fileRefError || !fileRef) {
-      return errorResponse('No file reference found for this deliverable', 404)
-    }
-
-    let downloadUrl: string
-
-    if (fileRef.provider === 'frame_io') {
-      const [frameToken, accountId] = await Promise.all([
-        getValidToken(org.id, 'frame_io'),
-        getIntegrationAccountId(org.id, 'frame_io'),
-      ])
-      const fileRes = await fetch(
-        `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.original`,
-        { headers: { Authorization: `Bearer ${frameToken}` } }
-      )
-      if (!fileRes.ok) return errorResponse(`Frame.io API error ${fileRes.status}`, 502)
-      const fileJson = await fileRes.json()
-      const fileData = fileJson.data || fileJson
-      downloadUrl = fileData.media_links?.original?.url
-      if (!downloadUrl) return errorResponse('Could not resolve download URL from Frame.io', 502)
-    } else if (fileRef.provider === 'google_drive') {
-      const driveToken = await getValidToken(org.id, 'google_drive')
-      downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileRef.external_id}?alt=media`
-      const dlRes = await fetch(downloadUrl, { headers: { Authorization: `Bearer ${driveToken}` } })
-      if (!dlRes.ok) return errorResponse(`Google Drive download failed: ${dlRes.status}`, 502)
-      videoBuffer = await dlRes.arrayBuffer()
-      if (fileRef.mime_type) mimeType = fileRef.mime_type
-    } else {
-      return errorResponse(`Unsupported file provider: ${fileRef.provider}`, 400)
-    }
-
-    if (!videoBuffer!) {
-      const videoRes = await fetch(downloadUrl!)
-      if (!videoRes.ok) return errorResponse(`Failed to download video: ${videoRes.status}`, 502)
-      videoBuffer = await videoRes.arrayBuffer()
-      if (fileRef.mime_type) mimeType = fileRef.mime_type
-    }
-  } else if (video_source.startsWith('url:')) {
-    const url = video_source.slice('url:'.length)
-    const videoRes = await fetch(url)
-    if (!videoRes.ok) return errorResponse(`Failed to download video from URL: ${videoRes.status}`, 502)
-    videoBuffer = await videoRes.arrayBuffer()
-    const contentType = videoRes.headers.get('content-type')
-    if (contentType?.startsWith('video/')) mimeType = contentType
-  } else {
-    return errorResponse('video_source must start with "deliverable:" or "url:"', 400)
-  }
+  const resolved = await resolveVideoSource(supabase, org.id, video_source)
+  if ('error' in resolved) return resolved.error
+  const { videoBuffer, mimeType } = resolved
 
   const resumableUrl = await initiateVideoUpload(
     ytToken,
@@ -296,26 +240,29 @@ async function handleYouTubePublish(
 
   const uploadResult = await uploadVideoBytes(resumableUrl, videoBuffer!, mimeType)
 
+  const postUploadTasks: Promise<void>[] = []
+
   if (thumbnail_url) {
-    try {
-      const thumbRes = await fetch(thumbnail_url)
-      if (thumbRes.ok) {
-        const thumbBuffer = await thumbRes.arrayBuffer()
-        const thumbType = thumbRes.headers.get('content-type') || 'image/jpeg'
-        await setThumbnail(ytToken, uploadResult.videoId, thumbBuffer, thumbType)
-      }
-    } catch {
-      // Thumbnail upload is non-critical
-    }
+    postUploadTasks.push(
+      fetch(thumbnail_url)
+        .then(async (thumbRes) => {
+          if (!thumbRes.ok) return
+          const thumbBuffer = await thumbRes.arrayBuffer()
+          const thumbType = thumbRes.headers.get('content-type') || 'image/jpeg'
+          await setThumbnail(ytToken, uploadResult.videoId, thumbBuffer, thumbType)
+        })
+        .catch((err) => console.warn('YouTube thumbnail upload failed:', err))
+    )
   }
 
   if (playlist_id) {
-    try {
-      await addToPlaylist(ytToken, playlist_id, uploadResult.videoId)
-    } catch {
-      // Playlist add is non-critical
-    }
+    postUploadTasks.push(
+      addToPlaylist(ytToken, playlist_id, uploadResult.videoId)
+        .catch((err) => console.warn('YouTube playlist add failed:', err))
+    )
   }
+
+  await Promise.all(postUploadTasks)
 
   const status = scheduled_at ? 'scheduled' : 'published'
 
@@ -362,4 +309,90 @@ async function handleYouTubePublish(
     status,
     view_url: uploadResult.viewUrl,
   }, 201)
+}
+
+type VideoSourceResult =
+  | { videoBuffer: ArrayBuffer; mimeType: string }
+  | { error: Response }
+
+async function resolveVideoSource(
+  supabase: any,
+  orgId: string,
+  videoSource: string,
+): Promise<VideoSourceResult> {
+  if (videoSource.startsWith('deliverable:')) {
+    const deliverableId = videoSource.slice('deliverable:'.length)
+    const { data: fileRef, error: fileRefError } = await supabase
+      .from('file_references')
+      .select('external_id, name, mime_type, provider')
+      .eq('deliverable_id', deliverableId)
+      .single()
+
+    if (fileRefError || !fileRef) {
+      return { error: errorResponse('No file reference found for this deliverable', 404) }
+    }
+
+    const downloadUrl = await resolveDownloadUrl(orgId, fileRef)
+    if (!downloadUrl) {
+      return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
+    }
+
+    const res = await fetch(downloadUrl.url, downloadUrl.headers ? { headers: downloadUrl.headers } : undefined)
+    if (!res.ok) {
+      return { error: errorResponse(`Failed to download video: ${res.status}`, 502) }
+    }
+
+    return {
+      videoBuffer: await res.arrayBuffer(),
+      mimeType: fileRef.mime_type || 'video/mp4',
+    }
+  }
+
+  if (videoSource.startsWith('url:')) {
+    const url = videoSource.slice('url:'.length)
+    const res = await fetch(url)
+    if (!res.ok) {
+      return { error: errorResponse(`Failed to download video from URL: ${res.status}`, 502) }
+    }
+    const contentType = res.headers.get('content-type')
+    return {
+      videoBuffer: await res.arrayBuffer(),
+      mimeType: contentType?.startsWith('video/') ? contentType : 'video/mp4',
+    }
+  }
+
+  return { error: errorResponse('video_source must start with "deliverable:" or "url:"', 400) }
+}
+
+async function resolveDownloadUrl(
+  orgId: string,
+  fileRef: { external_id: string; provider: string },
+): Promise<{ url: string; headers?: Record<string, string> } | null> {
+  ensureProvidersRegistered()
+
+  if (fileRef.provider === 'frame_io') {
+    const [frameToken, accountId] = await Promise.all([
+      getValidToken(orgId, 'frame_io'),
+      getIntegrationAccountId(orgId, 'frame_io'),
+    ])
+    const fileRes = await fetch(
+      `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.original`,
+      { headers: { Authorization: `Bearer ${frameToken}` } }
+    )
+    if (!fileRes.ok) return null
+    const fileJson = await fileRes.json()
+    const fileData = fileJson.data || fileJson
+    const url = fileData.media_links?.original?.url
+    return url ? { url } : null
+  }
+
+  if (fileRef.provider === 'google_drive') {
+    const driveToken = await getValidToken(orgId, 'google_drive')
+    return {
+      url: `https://www.googleapis.com/drive/v3/files/${fileRef.external_id}?alt=media`,
+      headers: { Authorization: `Bearer ${driveToken}` },
+    }
+  }
+
+  return null
 }

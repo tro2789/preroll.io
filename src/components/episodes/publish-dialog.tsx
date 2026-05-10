@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { DISTRIBUTION_PROVIDER_NAMES } from '@/lib/integrations/types'
 
 const YOUTUBE_CATEGORIES = [
   { id: '22', name: 'People & Blogs' },
@@ -12,11 +13,6 @@ const YOUTUBE_CATEGORIES = [
   { id: '26', name: 'Howto & Style' },
   { id: '23', name: 'Comedy' },
 ]
-
-const PROVIDER_NAMES: Record<string, string> = {
-  transistor: 'Transistor',
-  youtube: 'YouTube',
-}
 
 interface PublishDialogProps {
   showId: string
@@ -121,7 +117,7 @@ export function PublishDialog({
   const inputClasses =
     'w-full rounded-md bg-surface-input border border-border-default px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none'
 
-  const providerName = PROVIDER_NAMES[provider] || provider
+  const providerName = DISTRIBUTION_PROVIDER_NAMES[provider as keyof typeof DISTRIBUTION_PROVIDER_NAMES] || provider
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
