@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ConnectButton } from '@/components/integrations/connect-button'
 import { ConnectedAccountCard } from '@/components/integrations/connected-account-card'
@@ -88,6 +88,16 @@ export function DeveloperTabs({
   }
 
   const [activeTab, setActiveTab] = useState<Tab>(resolveInitialTab)
+
+  useEffect(() => {
+    if (connectedProvider || oauthError) {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('connected')
+      url.searchParams.delete('error')
+      url.searchParams.delete('detail')
+      window.history.replaceState(null, '', url.toString())
+    }
+  }, [connectedProvider, oauthError])
 
   function switchTab(tab: Tab) {
     setActiveTab(tab)
