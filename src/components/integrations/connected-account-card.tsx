@@ -74,7 +74,7 @@ export function ConnectedAccountCard({
         ) : (
           <button
             onClick={() => setConfirmOpen(true)}
-            className="text-xs text-text-tertiary hover:text-red-400 transition-colors"
+            className="rounded-md border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-red-400 hover:border-red-400/30 transition-colors"
           >
             Disconnect
           </button>
