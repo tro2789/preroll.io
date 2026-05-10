@@ -32,14 +32,17 @@ export async function GET(
   const nonce = crypto.randomUUID()
   const returnTo = request.nextUrl.searchParams.get('returnTo')
 
+  const host = request.headers.get('host') || request.nextUrl.host
+  const proto = request.headers.get('x-forwarded-proto') || 'https'
+  const origin = `${proto}://${host}`
+
   const state = Buffer.from(JSON.stringify({
     userId: user!.id,
     provider: providerName,
     nonce,
+    origin,
     ...(returnTo && { returnTo }),
   })).toString('base64url')
-
-  const origin = request.nextUrl.origin
   const redirectUri = `${origin}${provider.oauthConfig.callbackPath}`
   const url = provider.getAuthUrl(state, redirectUri)
 
@@ -50,6 +53,7 @@ export async function GET(
     sameSite: 'lax',
     maxAge: 600,
     path: '/',
+    domain: '.preroll.io',
   })
 
   return jsonResponse({ url })

@@ -18,7 +18,7 @@ export function ConnectButton({ provider, displayName, comingSoon, note, autoCon
   async function handleConnect() {
     setLoading(true)
     const params = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''
-    const res = await fetch(`/api/v1/integrations/${provider}/auth-url${params}`)
+    const res = await fetch(`/api/v1/integrations/${provider}/auth-url${params}`, { cache: 'no-store' })
     const json = await res.json()
     if (json.data?.url) {
       window.location.href = json.data.url
