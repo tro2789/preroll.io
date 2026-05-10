@@ -7,6 +7,7 @@ import {
   DocsPage,
   DocsTitle,
 } from 'fumadocs-ui/page';
+import { AIActions } from '@/components/docs/ai-actions';
 
 export default async function Page(props: { params: Promise<{ slug?: string[] }> }) {
   const params = await props.params;
@@ -14,11 +15,13 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
   if (!page) notFound();
 
   const MDX = page.data.body;
+  const slug = params.slug?.join('/') ?? '';
 
   return (
     <DocsPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      <AIActions slug={slug} title={page.data.title} />
       <DocsBody>
         <MDX components={{ ...defaultMdxComponents }} />
       </DocsBody>
