@@ -49,7 +49,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Dev server binds to 0.0.0.0** for LAN access. The dev machine is at `192.168.0.83`, accessed via SSH.
 
-**Prefer HTTPS over SSH** for git pushes (SSH may be blocked in Claude Code's sandbox).
+**Use SSH for git pushes** — remote is `ssh://gitea@192.168.0.245:2222/tro2789/preroll.io.git`. HTTPS doesn't work since `gitea.tohareprod.com` resolves to LAN via `/etc/hosts`.
 
 ## Multi-Tenancy & Billing
 
