@@ -2,6 +2,7 @@ import { registerProvider } from './registry'
 import { createFrameIoClient } from './providers/frame-io'
 import { createGoogleDriveClient } from './providers/google-drive'
 import { createVimeoClient } from './providers/vimeo'
+import { createYouTubeClient } from './providers/youtube'
 
 let initialized = false
 
@@ -28,6 +29,13 @@ export function ensureProvidersRegistered() {
     displayName: 'Vimeo',
     comingSoon: false,
     getClient: createVimeoClient,
+  })
+
+  registerProvider({
+    name: 'youtube',
+    displayName: 'YouTube',
+    comingSoon: false,
+    getClient: createYouTubeClient,
   })
 
   registerProvider({

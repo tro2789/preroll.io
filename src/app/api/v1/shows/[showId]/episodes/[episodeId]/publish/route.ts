@@ -4,6 +4,12 @@ import { decrypt } from '@/lib/integrations/crypto'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { authorizeUpload, createEpisode, publishEpisode } from '@/lib/integrations/providers/transistor'
+import {
+  initiateVideoUpload,
+  uploadVideoBytes,
+  setThumbnail,
+  addToPlaylist,
+} from '@/lib/integrations/providers/youtube-distribution'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 
 export async function POST(
@@ -11,40 +17,50 @@ export async function POST(
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
 ) {
   const { showId, episodeId } = await params
-  const { supabase, user, org, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
-  const { title, description, episode_number, season_number, episode_type, scheduled_at, audio_source } = body
+  const { provider: requestedProvider } = body
 
-  // Validate required fields
-  if (!title) return errorResponse('title is required', 400)
-  if (!audio_source) return errorResponse('audio_source is required', 400)
-
-  // Fetch Transistor distribution connection for this show
+  const providerFilter = requestedProvider || 'transistor'
   const { data: connection, error: connError } = await supabase!
     .from('distribution_connections')
     .select('*')
     .eq('show_id', showId)
-    .eq('provider', 'transistor')
+    .eq('provider', providerFilter)
     .single()
 
   if (connError || !connection) {
-    return errorResponse('No Transistor distribution connection found for this show', 404)
+    return errorResponse(`No ${providerFilter} distribution connection found for this show`, 404)
   }
 
-  // Decrypt the Transistor API key
-  const apiKey = decrypt(connection.api_key_enc)
+  if (connection.provider === 'youtube') {
+    return handleYouTubePublish(supabase!, org!, showId, episodeId, connection, body)
+  }
 
-  // Resolve audio source
+  return handleTransistorPublish(supabase!, org!, showId, episodeId, connection, body)
+}
+
+async function handleTransistorPublish(
+  supabase: any,
+  org: { id: string },
+  showId: string,
+  episodeId: string,
+  connection: any,
+  body: any,
+) {
+  const { title, description, episode_number, season_number, episode_type, scheduled_at, audio_source } = body
+
+  if (!title) return errorResponse('title is required', 400)
+  if (!audio_source) return errorResponse('audio_source is required', 400)
+
+  const apiKey = decrypt(connection.api_key_enc)
   let audioUrl: string
 
   if (audio_source.startsWith('deliverable:')) {
-    // Download from Frame.io via deliverable reference
     const deliverableId = audio_source.slice('deliverable:'.length)
-
-    // Get the Frame.io file reference for this deliverable
-    const { data: fileRef, error: fileRefError } = await supabase!
+    const { data: fileRef, error: fileRefError } = await supabase
       .from('file_references')
       .select('external_id, name')
       .eq('deliverable_id', deliverableId)
@@ -55,14 +71,12 @@ export async function POST(
       return errorResponse('No Frame.io file reference found for this deliverable', 404)
     }
 
-    // Get a valid Frame.io token
     ensureProvidersRegistered()
     const [frameToken, accountId] = await Promise.all([
-      getValidToken(org!.id, 'frame_io'),
-      getIntegrationAccountId(org!.id, 'frame_io'),
+      getValidToken(org.id, 'frame_io'),
+      getIntegrationAccountId(org.id, 'frame_io'),
     ])
 
-    // Fetch file metadata with media links from Frame.io V4 API
     const fileRes = await fetch(
       `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.original`,
       { headers: { Authorization: `Bearer ${frameToken}` } }
@@ -81,14 +95,12 @@ export async function POST(
       return errorResponse('Could not resolve download URL from Frame.io', 502)
     }
 
-    // Download the audio file
     const audioRes = await fetch(downloadUrl)
     if (!audioRes.ok) {
       return errorResponse(`Failed to download audio from Frame.io: ${audioRes.status}`, 502)
     }
     const audioBuffer = await audioRes.arrayBuffer()
 
-    // Upload to Transistor
     const filename = fileRef.name || 'audio.mp3'
     const upload = await authorizeUpload(apiKey, filename)
 
@@ -109,7 +121,6 @@ export async function POST(
     return errorResponse('audio_source must start with "deliverable:" or "url:"', 400)
   }
 
-  // Create episode on Transistor
   const transistorEpisode = await createEpisode(apiKey, {
     showId: connection.external_show_id,
     title,
@@ -122,7 +133,6 @@ export async function POST(
 
   const transistorEpisodeId = transistorEpisode.id
 
-  // Publish or schedule
   const publishResult = await publishEpisode(apiKey, transistorEpisodeId, {
     status: scheduled_at ? 'scheduled' : 'published',
     publishedAt: scheduled_at || undefined,
@@ -132,50 +142,224 @@ export async function POST(
   const shareUrl = (publishResult as Record<string, unknown>).share_url as string | undefined
 
   await Promise.all([
-    supabase!
+    supabase
       .from('episodes')
       .update({
         distribution_status: scheduled_at ? 'scheduled' : 'published',
         distribution_external_id: transistorEpisodeId,
         distribution_published_at: scheduled_at || new Date().toISOString(),
         distribution_metadata: {
+          provider: 'transistor',
           transistor_episode_id: transistorEpisodeId,
           media_url: mediaUrl,
           share_url: shareUrl,
         },
       })
       .eq('id', episodeId),
-    supabase!.from('activity_log').insert({
+    supabase.from('activity_log').insert({
       show_id: showId,
       episode_id: episodeId,
       action: scheduled_at ? 'episode_scheduled' : 'episode_published',
       description: scheduled_at
         ? `Episode '${title}' scheduled for ${scheduled_at}`
         : `Episode '${title}' published to Transistor`,
-      metadata: {
-        transistor_episode_id: transistorEpisodeId,
-        audio_source,
-      },
+      metadata: { transistor_episode_id: transistorEpisodeId, audio_source: body.audio_source },
     }),
   ])
 
-  dispatchWebhooks(org!.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
+  dispatchWebhooks(org.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
     episode_id: episodeId,
     show_id: showId,
     title,
+    provider: 'transistor',
     transistor_episode_id: transistorEpisodeId,
     media_url: mediaUrl,
     share_url: shareUrl,
     scheduled_at: scheduled_at || null,
   })
 
-  return jsonResponse(
+  return jsonResponse({
+    provider: 'transistor',
+    transistor_episode_id: transistorEpisodeId,
+    status: scheduled_at ? 'scheduled' : 'published',
+    media_url: mediaUrl,
+    share_url: shareUrl,
+  }, 201)
+}
+
+async function handleYouTubePublish(
+  supabase: any,
+  org: { id: string },
+  showId: string,
+  episodeId: string,
+  connection: any,
+  body: any,
+) {
+  const {
+    title,
+    description,
+    tags,
+    category_id,
+    privacy_status = 'public',
+    scheduled_at,
+    video_source,
+    playlist_id,
+    thumbnail_url,
+  } = body
+
+  if (!title) return errorResponse('title is required', 400)
+  if (!video_source) return errorResponse('video_source is required', 400)
+
+  ensureProvidersRegistered()
+
+  let ytToken: string
+  try {
+    ytToken = await getValidToken(org.id, 'youtube')
+  } catch {
+    return errorResponse('YouTube OAuth token not found. Reconnect YouTube in Settings.', 401)
+  }
+
+  let videoBuffer: ArrayBuffer
+  let mimeType = 'video/mp4'
+
+  if (video_source.startsWith('deliverable:')) {
+    const deliverableId = video_source.slice('deliverable:'.length)
+
+    const { data: fileRef, error: fileRefError } = await supabase
+      .from('file_references')
+      .select('external_id, name, mime_type, provider')
+      .eq('deliverable_id', deliverableId)
+      .single()
+
+    if (fileRefError || !fileRef) {
+      return errorResponse('No file reference found for this deliverable', 404)
+    }
+
+    let downloadUrl: string
+
+    if (fileRef.provider === 'frame_io') {
+      const [frameToken, accountId] = await Promise.all([
+        getValidToken(org.id, 'frame_io'),
+        getIntegrationAccountId(org.id, 'frame_io'),
+      ])
+      const fileRes = await fetch(
+        `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.original`,
+        { headers: { Authorization: `Bearer ${frameToken}` } }
+      )
+      if (!fileRes.ok) return errorResponse(`Frame.io API error ${fileRes.status}`, 502)
+      const fileJson = await fileRes.json()
+      const fileData = fileJson.data || fileJson
+      downloadUrl = fileData.media_links?.original?.url
+      if (!downloadUrl) return errorResponse('Could not resolve download URL from Frame.io', 502)
+    } else if (fileRef.provider === 'google_drive') {
+      const driveToken = await getValidToken(org.id, 'google_drive')
+      downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileRef.external_id}?alt=media`
+      const dlRes = await fetch(downloadUrl, { headers: { Authorization: `Bearer ${driveToken}` } })
+      if (!dlRes.ok) return errorResponse(`Google Drive download failed: ${dlRes.status}`, 502)
+      videoBuffer = await dlRes.arrayBuffer()
+      if (fileRef.mime_type) mimeType = fileRef.mime_type
+    } else {
+      return errorResponse(`Unsupported file provider: ${fileRef.provider}`, 400)
+    }
+
+    if (!videoBuffer!) {
+      const videoRes = await fetch(downloadUrl!)
+      if (!videoRes.ok) return errorResponse(`Failed to download video: ${videoRes.status}`, 502)
+      videoBuffer = await videoRes.arrayBuffer()
+      if (fileRef.mime_type) mimeType = fileRef.mime_type
+    }
+  } else if (video_source.startsWith('url:')) {
+    const url = video_source.slice('url:'.length)
+    const videoRes = await fetch(url)
+    if (!videoRes.ok) return errorResponse(`Failed to download video from URL: ${videoRes.status}`, 502)
+    videoBuffer = await videoRes.arrayBuffer()
+    const contentType = videoRes.headers.get('content-type')
+    if (contentType?.startsWith('video/')) mimeType = contentType
+  } else {
+    return errorResponse('video_source must start with "deliverable:" or "url:"', 400)
+  }
+
+  const resumableUrl = await initiateVideoUpload(
+    ytToken,
     {
-      transistor_episode_id: transistorEpisodeId,
-      status: scheduled_at ? 'scheduled' : 'published',
-      media_url: mediaUrl,
-      share_url: shareUrl,
+      title,
+      description,
+      tags,
+      categoryId: category_id,
+      privacyStatus: privacy_status,
+      scheduledAt: scheduled_at,
+      madeForKids: false,
     },
-    201
+    videoBuffer!.byteLength,
+    mimeType,
   )
+
+  const uploadResult = await uploadVideoBytes(resumableUrl, videoBuffer!, mimeType)
+
+  if (thumbnail_url) {
+    try {
+      const thumbRes = await fetch(thumbnail_url)
+      if (thumbRes.ok) {
+        const thumbBuffer = await thumbRes.arrayBuffer()
+        const thumbType = thumbRes.headers.get('content-type') || 'image/jpeg'
+        await setThumbnail(ytToken, uploadResult.videoId, thumbBuffer, thumbType)
+      }
+    } catch {
+      // Thumbnail upload is non-critical
+    }
+  }
+
+  if (playlist_id) {
+    try {
+      await addToPlaylist(ytToken, playlist_id, uploadResult.videoId)
+    } catch {
+      // Playlist add is non-critical
+    }
+  }
+
+  const status = scheduled_at ? 'scheduled' : 'published'
+
+  await Promise.all([
+    supabase
+      .from('episodes')
+      .update({
+        distribution_status: status,
+        distribution_external_id: uploadResult.videoId,
+        distribution_published_at: scheduled_at || new Date().toISOString(),
+        distribution_metadata: {
+          provider: 'youtube',
+          youtube_video_id: uploadResult.videoId,
+          view_url: uploadResult.viewUrl,
+          privacy_status,
+          channel_id: connection.external_show_id,
+        },
+      })
+      .eq('id', episodeId),
+    supabase.from('activity_log').insert({
+      show_id: showId,
+      episode_id: episodeId,
+      action: scheduled_at ? 'episode_scheduled' : 'episode_published',
+      description: scheduled_at
+        ? `Episode '${title}' scheduled on YouTube for ${scheduled_at}`
+        : `Episode '${title}' published to YouTube`,
+      metadata: { youtube_video_id: uploadResult.videoId, video_source },
+    }),
+  ])
+
+  dispatchWebhooks(org.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
+    episode_id: episodeId,
+    show_id: showId,
+    title,
+    provider: 'youtube',
+    youtube_video_id: uploadResult.videoId,
+    view_url: uploadResult.viewUrl,
+    scheduled_at: scheduled_at || null,
+  })
+
+  return jsonResponse({
+    provider: 'youtube',
+    youtube_video_id: uploadResult.videoId,
+    status,
+    view_url: uploadResult.viewUrl,
+  }, 201)
 }
