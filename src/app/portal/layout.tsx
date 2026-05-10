@@ -1,7 +1,11 @@
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { PortalHeader } from '@/components/portal/portal-header'
+import { PortalPreviewBanner } from '@/components/portal/preview-banner'
 import { getOrgEntitlements, isSelfHosted } from '@/lib/entitlements'
+
+const CLIENT_SELECT = 'name, org_id, organizations(display_name, logo_url, accent_color, plan_id)' as const
 
 export default async function PortalLayout({
   children,
@@ -15,17 +19,41 @@ export default async function PortalLayout({
     redirect('/login')
   }
 
-  const { data: client } = await supabase
-    .from('clients')
-    .select('name, org_id, organizations(display_name, logo_url, accent_color, plan_id)')
-    .eq('client_user_id', user.id)
-    .single()
+  const headersList = await headers()
+  const url = headersList.get('x-url') || ''
+  const previewClientId = url ? new URL(url, 'http://localhost').searchParams.get('preview') : null
+
+  let isPreview = false
+  let client: { name: string; org_id: string; organizations: unknown } | null = null
+
+  if (previewClientId) {
+    const { data } = await supabase
+      .from('clients')
+      .select(CLIENT_SELECT)
+      .eq('id', previewClientId)
+      .single()
+
+    if (data) {
+      client = data
+      isPreview = true
+    }
+  }
+
+  if (!client) {
+    const { data } = await supabase
+      .from('clients')
+      .select(CLIENT_SELECT)
+      .eq('client_user_id', user.id)
+      .single()
+
+    client = data
+  }
 
   if (!client) {
     redirect('/login')
   }
 
-  const org = client.organizations as unknown as {
+  const org = client.organizations as {
     display_name: string | null
     logo_url: string | null
     accent_color: string | null
@@ -50,6 +78,7 @@ export default async function PortalLayout({
       {accentColor && (
         <style>{`:root { --color-accent: ${accentColor}; }`}</style>
       )}
+      {isPreview && <PortalPreviewBanner clientName={client.name} />}
       <PortalHeader
         clientName={client.name}
         email={user.email ?? ''}

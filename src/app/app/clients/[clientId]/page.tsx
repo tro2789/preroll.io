@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { ClientDetailActions } from './client-detail-actions'
-import { InviteButton } from './invite-button'
+import { ClientPortalSection } from '@/components/client-portal-section'
 import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ClientDetailPage({
@@ -151,17 +151,13 @@ export default async function ClientDetailPage({
             </div>
           </div>
 
-          {/* Portal status */}
-          <div className="rounded-lg border border-border-subtle bg-surface-raised p-4">
-            <h3 className="text-[11px] text-text-tertiary uppercase tracking-wider mb-3">Client Portal</h3>
-            <InviteButton
-              clientId={clientId}
-              clientEmail={client.email}
-              inviteCode={client.invite_code}
-              clientUserId={client.client_user_id}
-              onboardedAt={client.onboarded_at}
-            />
-          </div>
+          <ClientPortalSection
+            clientId={clientId}
+            clientName={client.name}
+            clientEmail={client.email}
+            inviteCode={client.invite_code}
+            onboardedAt={client.onboarded_at}
+          />
         </div>
 
         {/* Right column: shows */}

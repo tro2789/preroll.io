@@ -8,27 +8,39 @@ export async function POST(request: Request) {
   const body = await request.json()
   if (!body.client_id) return errorResponse('client_id is required')
 
-  const [{ data: client, error: fetchError }, { data: shows }] = await Promise.all([
-    supabase!
+  const { data: client, error: fetchError } = await supabase!
+    .from('clients')
+    .select('id, name, email, org_id, invite_code')
+    .eq('id', body.client_id)
+    .single()
+
+  if (fetchError || !client) return errorResponse('Client not found', 404)
+  if (client.org_id !== org!.id) return errorResponse('Forbidden', 403)
+
+  const invite_code = client.invite_code || crypto.randomUUID()
+
+  if (body.generate_only) {
+    if (client.invite_code) return jsonResponse({ invite_code })
+    const { error: updateError } = await supabase!
       .from('clients')
-      .select('id, name, email, org_id')
+      .update({ invite_code })
       .eq('id', body.client_id)
-      .single(),
+    if (updateError) return errorResponse(updateError.message, 500)
+    return jsonResponse({ invite_code }, 201)
+  }
+
+  if (!client.email) return errorResponse('Client has no email address', 400)
+
+  const [{ data: shows }, producerName] = await Promise.all([
     supabase!
       .from('shows')
       .select('name')
       .eq('client_id', body.client_id)
       .limit(5),
+    Promise.resolve(user!.user_metadata?.full_name || user!.email?.split('@')[0] || 'Your producer'),
   ])
 
-  if (fetchError || !client) return errorResponse('Client not found', 404)
-  if (client.org_id !== org!.id) return errorResponse('Forbidden', 403)
-  if (!client.email) return errorResponse('Client has no email address', 400)
-
-  const producerName = user!.user_metadata?.full_name || user!.email?.split('@')[0] || 'Your producer'
   const showNames = (shows ?? []).map((s) => s.name)
-
-  const invite_code = crypto.randomUUID()
 
   const { data, error: updateError } = await supabase!
     .from('clients')
