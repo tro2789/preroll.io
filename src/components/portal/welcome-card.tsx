@@ -20,9 +20,9 @@ export function WelcomeCard({ orgDisplayName }: WelcomeCardProps) {
     <div className="rounded-xl border border-border-subtle bg-surface-raised p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-sm font-semibold text-text-primary">Here&apos;s what you can do here</h2>
+          <h2 className="text-sm font-semibold text-text-primary">Your client portal</h2>
           <p className="mt-1.5 text-sm text-text-secondary leading-relaxed">
-            {orgDisplayName || 'Your producer'} uses this portal to share work with you. You&apos;ll find everything for your shows in one place.
+            This is where{' '}{orgDisplayName ? <>{orgDisplayName} shares</> : <>your producer shares</>}{' '}work with you. Everything for your shows lives here.
           </p>
           <ul className="mt-3 space-y-1.5 text-sm text-text-secondary">
             <li className="flex items-center gap-2">
