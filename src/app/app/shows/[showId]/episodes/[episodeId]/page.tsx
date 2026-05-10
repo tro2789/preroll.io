@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
+import { AiPanel } from '@/components/episodes/ai-panel'
 import { ClientPortalSection, type PortalClient } from '@/components/client-portal-section'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
@@ -178,6 +179,14 @@ export default async function EpisodeDetailPage({
       )}
 
       <div className="mt-6">
+        <AiPanel
+          episodeId={episodeId}
+          showId={showId}
+          hasAudioFiles={!!episodeIntegration}
+        />
+      </div>
+
+      <div className="mt-4">
         <DeliveryPanel
           episodeId={episodeId}
           showId={showId}
