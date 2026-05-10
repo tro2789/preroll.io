@@ -18,7 +18,6 @@ const PROVIDERS = [
   { name: 'google_drive', displayName: 'Google Drive', comingSoon: false },
   { name: 'vimeo', displayName: 'Vimeo', comingSoon: false, note: 'In-app video playback requires a Vimeo Pro, Business, or Premium plan.' },
   { name: 'youtube', displayName: 'YouTube', comingSoon: false },
-  { name: 'dropbox', displayName: 'Dropbox', comingSoon: true },
 ]
 
 export default async function DeveloperPage({ searchParams }: { searchParams: Promise<{ tab?: string; connect?: string; returnTo?: string; connected?: string; error?: string }> }) {
