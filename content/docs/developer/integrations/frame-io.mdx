@@ -1,0 +1,105 @@
+---
+title: Frame.io
+description: Connect Frame.io for video review, approval workflows, and comment synchronization.
+---
+
+## Overview
+
+The Frame.io integration enables video review workflows directly within PreRoll. Upload cuts for client review, receive timecoded feedback, and sync approval status — all without leaving your production pipeline.
+
+## OAuth Setup
+
+Frame.io uses Adobe IMS (Identity Management System) for OAuth authentication.
+
+### Register Your Application
+
+1. Go to the [Adobe Developer Console](https://developer.adobe.com/console)
+2. Create a new project and add the **Frame.io API**
+3. Configure OAuth 2.0 with the following settings:
+
+| Setting | Value |
+|---------|-------|
+| Redirect URI | `https://your-domain.com/api/integrations/frameio/callback` |
+| Scopes | `openid`, `frame.io.read`, `frame.io.write` |
+
+4. Note your **Client ID** and **Client Secret**
+
+### Environment Variables
+
+```bash
+FRAMEIO_CLIENT_ID=your_client_id
+FRAMEIO_CLIENT_SECRET=your_client_secret
+```
+
+## Connecting Your Account
+
+1. Go to **Settings → Integrations**
+2. Click **Connect** next to Frame.io
+3. You'll be redirected to Adobe's login page to authorize PreRoll
+4. Once authorized, your Frame.io teams and projects are accessible
+
+The connection is stored per-organization. Any team member with admin access can manage the integration.
+
+## Creating Review Projects
+
+When you create a deliverable or initiate a review, PreRoll can automatically create a Frame.io project structure:
+
+- A **root project** is created for each show (or reused if it already exists)
+- Each episode gets a **folder** within the show project
+- Deliverables are uploaded as **assets** within the episode folder
+
+This keeps your Frame.io workspace organized without manual folder management.
+
+## Uploading Files for Review
+
+To send a file to Frame.io for review:
+
+1. Navigate to an episode and open the **Deliverables** tab
+2. Create or select a deliverable
+3. Click **Send to Frame.io** — the file is uploaded to the corresponding project folder
+4. A review link is generated and shared with the client via the client portal
+
+Large files use chunked uploads with progress tracking.
+
+## Comment Synchronization
+
+Comments sync bidirectionally between PreRoll and Frame.io:
+
+| Direction | Behavior |
+|-----------|----------|
+| PreRoll → Frame.io | Timecoded comments added in the PreRoll review player are pushed to the Frame.io asset |
+| Frame.io → PreRoll | Comments added directly in Frame.io are pulled into the PreRoll episode timeline |
+
+Sync happens via Frame.io webhooks. When a comment is created or updated on a linked asset, PreRoll receives the notification and updates the local comment thread.
+
+### Timecoded Comments
+
+Comments include precise timestamps, so feedback is tied to specific moments in the video:
+
+```json
+{
+  "text": "Can we tighten this transition?",
+  "timestamp": 45.2,
+  "author": "Client Name",
+  "source": "frame.io"
+}
+```
+
+## Webhook Notifications
+
+Frame.io sends webhook events to PreRoll for:
+
+- **Asset status changes** — when a reviewer marks an asset as approved or needs revision
+- **New comments** — when a comment or reply is added to a linked asset
+- **Upload completion** — confirmation that a file upload has finished processing
+
+These events update the deliverable status and comment threads in real time.
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| OAuth redirect fails | Verify the redirect URI matches exactly (including trailing slash) |
+| Comments not syncing | Check that the Frame.io webhook is active in Settings → Integrations |
+| Upload fails | Ensure the connected account has write access to the target team |
+| Token expired | PreRoll automatically refreshes tokens — if issues persist, reconnect the integration |

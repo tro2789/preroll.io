@@ -1,0 +1,115 @@
+---
+title: "Calendar"
+description: "Visualize episode deadlines and publishing schedules across all your shows."
+---
+
+# Calendar
+
+The calendar view provides a time-based perspective on your production schedule. While the Kanban board shows pipeline state, the calendar shows when things are due — helping you plan capacity and avoid deadline conflicts.
+
+{/* Screenshot: Calendar View — /docs/screenshots/calendar.png */}
+
+## Calendar Views
+
+### Month View
+
+The default view shows a full month with episodes plotted on their deadline dates. Each episode appears as a colored bar matching its show's color, making it easy to see which shows have deliverables due on any given day.
+
+### Week View
+
+Switch to week view for a more detailed look at the current or upcoming week. Episode cards in week view show more information:
+
+- Episode title
+- Show name
+- Current pipeline stage
+- Deliverable count
+
+### Day View
+
+Day view lists all episodes with deadlines on a specific date, with full detail cards including description previews and quick-action buttons.
+
+## What Appears on the Calendar
+
+The calendar displays:
+
+| Item | Color/Style |
+|------|-------------|
+| Episode deadlines | Show color, solid bar |
+| Published episodes | Green, with checkmark |
+| Overdue episodes | Red highlight |
+| Scheduled publishes | Dashed outline |
+
+## Cross-Show Visibility
+
+The calendar aggregates deadlines from all your shows in one view. This is particularly useful when you produce multiple shows and need to:
+
+- Avoid scheduling conflicts (two shows due the same day)
+- Balance workload across the week
+- Plan recording sessions around editing deadlines
+- Coordinate with clients on review timing
+
+## Scheduling Episodes
+
+### Setting Deadlines
+
+Set or change an episode's deadline directly from the calendar:
+
+1. **Click a date** — Opens the new episode form with that date pre-filled
+2. **Drag an episode** — Move its deadline to a different date
+3. **Click an episode** — Opens the detail view where you can edit the deadline
+
+### Recurring Schedules
+
+For shows with regular publishing cadences, the calendar helps you maintain rhythm:
+
+- Shows with a defined schedule (weekly, biweekly, monthly) display expected publish dates as subtle markers
+- These serve as planning guides — create episodes aligned to the schedule
+
+## Filtering
+
+Filter the calendar to focus on specific work:
+
+| Filter | Effect |
+|--------|--------|
+| By show | Display only one show's episodes |
+| By client | Display only one client's episodes |
+| By stage | Show only episodes in specific pipeline stages |
+| By status | Show only overdue, upcoming, or published |
+
+Filters can be combined. For example, show only "Client X" episodes that are in "Review" stage.
+
+## Date-Based Operations
+
+### Today Indicator
+
+The current date is always highlighted, making it easy to orient yourself in the month view.
+
+### Quick Navigation
+
+- **Today button** — Jump back to the current date from any point in the calendar
+- **Arrow navigation** — Move forward/backward by the current view increment (day, week, or month)
+- **Date picker** — Jump to any specific date
+
+### Deadline Warnings
+
+The calendar uses visual cues to highlight urgency:
+
+- **Red background** — Episode is overdue
+- **Orange dot** — Episode deadline is within 48 hours
+- **Pulsing indicator** — Episode has pending client revision requests
+
+## Integration with Other Views
+
+The calendar complements the other episode management views:
+
+- Click any episode on the calendar to open its detail view
+- The Kanban board shows the same episodes organized by stage instead of date
+- Dashboard "Due This Week" card links directly to the calendar's week view
+- Reporting uses deadline data to calculate on-time delivery rates
+
+## Tips for Effective Scheduling
+
+- **Stagger deadlines** — Avoid putting all shows due on the same day
+- **Build in buffer** — Set internal deadlines a day or two before the client-facing deadline
+- **Use the week view for planning** — It gives the best balance of detail and context
+- **Check the calendar before committing** — When a client asks "can you deliver by Friday?", the calendar tells you if that's realistic

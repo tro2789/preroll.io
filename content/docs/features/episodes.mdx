@@ -1,0 +1,154 @@
+---
+title: "Episodes"
+description: "Manage episode production with a Kanban board, stage-based pipeline, bulk operations, and filters."
+---
+
+# Episodes
+
+Episodes are the core unit of work in PreRoll. Each episode flows through your show's pipeline stages from creation to publication. The primary interface for managing episodes is the Kanban board.
+
+![Episode Pipeline](/docs/diagrams/episode-pipeline.svg)
+
+## Kanban Board
+
+The Kanban board is the heart of episode management. Each column represents a pipeline stage, and episode cards move between columns as work progresses.
+
+{/* Screenshot: Kanban Board — /docs/screenshots/episodes-kanban.png */}
+
+### Board Features
+
+- **Drag and drop** — Move episodes between stages by dragging cards
+- **Swimlanes** — Group episodes by show, client, or assignee
+- **Card preview** — Hover over a card to see deadline, deliverable count, and tags
+- **Column counts** — Each column header shows the number of episodes in that stage
+- **WIP indicators** — Visual warnings when too many episodes pile up in one stage
+
+### Card Information
+
+Each episode card on the board displays:
+
+- Episode title
+- Show name (with color indicator)
+- Deadline (highlighted if overdue or approaching)
+- Tag badges
+- Deliverable status (submitted/approved/total)
+- Assignment indicator (Studio plan)
+
+## Episode Lifecycle
+
+### Creating an Episode
+
+1. Click **New Episode** from the board, dashboard, or show detail
+2. Select the show (pipeline stages load automatically)
+3. Enter the episode title
+4. Optionally set: description, deadline, tags, notes
+5. If the show has a template, fields are pre-populated
+
+### Stage Transitions
+
+Episodes move through stages in two ways:
+
+- **Drag on the board** — Visual, immediate
+- **Stage selector** — In the episode detail view, use the dropdown
+
+Stage transitions are logged in the episode's activity history, including who made the change and when.
+
+### Episode Detail View
+
+Click any episode to open its full detail:
+
+| Section | Contents |
+|---------|----------|
+| Overview | Title, description, show, client, stage, deadline |
+| Deliverables | Files uploaded for client review with approval status |
+| Comments | Discussion thread (visible to team and optionally client) |
+| Assets | Episode-specific files (thumbnails, show notes, clips) |
+| Activity | Full history of changes, transitions, and comments |
+| Distribution | Publishing status and controls |
+
+## Bulk Operations
+
+Select multiple episodes on the Kanban board to perform bulk actions:
+
+- **Move to stage** — Advance multiple episodes at once
+- **Apply tags** — Tag several episodes simultaneously
+- **Set deadline** — Assign the same deadline to a batch
+- **Delete** — Remove multiple episodes (with confirmation)
+
+To select multiple episodes:
+- Hold `Shift` and click cards
+- Or use the checkbox that appears on hover
+
+## Reordering
+
+Within a column, episodes are ordered by:
+
+1. **Manual order** — Drag within a column to prioritize
+2. **Deadline** — Toggle to auto-sort by due date
+3. **Created date** — Toggle to sort by creation order
+
+The ordering preference persists per-user.
+
+## Filters
+
+The board supports powerful filtering to focus on what matters:
+
+| Filter | Options |
+|--------|---------|
+| Show | Filter to one or more specific shows |
+| Client | Filter to a specific client's episodes |
+| Tags | Include/exclude specific tags |
+| Deadline | Overdue, due this week, due this month, no deadline |
+| Stage | Show only specific stages |
+| Search | Free-text search across episode titles |
+
+Active filters are shown as pills above the board and persist across page navigations.
+
+### Saved Views
+
+Combine filters into saved views for quick access:
+
+- "Overdue episodes" — Deadline filter: overdue
+- "Client X this week" — Client + deadline filters
+- "Video shows in review" — Show format + stage filters
+
+## Episode Statuses
+
+While pipeline stages are customizable per show, episodes also have a high-level status derived from their current stage:
+
+| Status | Meaning |
+|--------|---------|
+| `draft` | Not yet in active production |
+| `in_progress` | Being actively worked on |
+| `in_review` | Waiting for client approval |
+| `approved` | Client signed off, ready to publish |
+| `published` | Live and distributed |
+
+These statuses power the dashboard metrics and reporting views.
+
+## Deadlines
+
+- Set deadlines when creating or editing an episode
+- Deadlines appear on the [Calendar](/docs/features/calendar) view
+- Overdue episodes are highlighted on the board and dashboard
+- Deadline changes are logged in the activity history
+
+## Episode Deletion
+
+Deleting an episode removes it and all associated data:
+
+- Deliverables and their files (removed from R2)
+- Comments
+- Distribution records
+- Activity history
+
+This action requires confirmation and cannot be undone.
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `N` | New episode |
+| `F` | Open filters |
+| `/` | Search episodes |
+| `Esc` | Clear filters / close detail |

@@ -1,0 +1,160 @@
+---
+title: "Deliverables"
+description: "Upload files for client review with a structured approval workflow."
+---
+
+# Deliverables
+
+Deliverables are the files you produce for your clients — edited episodes, video cuts, show notes, transcripts, or any other asset that requires client approval before publication. PreRoll provides a structured workflow for submitting, reviewing, and approving deliverables.
+
+{/* Screenshot: Deliverables List — /docs/screenshots/deliverables.png */}
+
+## Creating a Deliverable
+
+1. Open an episode's detail view
+2. Navigate to the **Deliverables** tab
+3. Click **Add Deliverable**
+4. Upload your file (or link an external file)
+5. Add a title and optional description
+6. Click **Submit for Review**
+
+### Supported File Types
+
+Deliverables support any file type. Common uploads include:
+
+| Type | Examples |
+|------|----------|
+| Audio | `.mp3`, `.wav`, `.m4a`, `.flac` |
+| Video | `.mp4`, `.mov`, `.mkv` |
+| Documents | `.pdf`, `.docx`, `.txt` |
+| Images | `.png`, `.jpg`, `.svg` |
+
+Files are uploaded to Cloudflare R2 and served via signed URLs for security.
+
+### File Size Limits
+
+| Plan | Max File Size |
+|------|--------------|
+| Free | 100 MB per file |
+| Pro | 500 MB per file |
+| Studio | 2 GB per file |
+
+## Approval Workflow
+
+Deliverables follow a clear approval lifecycle:
+
+```
+Draft → Submitted → Approved
+                  ↘ Revision Requested → Resubmitted → Approved
+                                                      ↘ Revision Requested → ...
+```
+
+### Statuses
+
+| Status | Meaning | Who sets it |
+|--------|---------|-------------|
+| `draft` | Uploaded but not yet shared with client | Producer |
+| `submitted` | Sent to client for review | Producer |
+| `approved` | Client has approved this deliverable | Client |
+| `revision_requested` | Client wants changes | Client |
+| `resubmitted` | Producer uploaded a revision | Producer |
+
+### Submitting for Review
+
+When you submit a deliverable:
+
+1. The status changes to `submitted`
+2. The client receives a notification (if portal access is configured)
+3. The deliverable appears in the client's portal
+4. A note is added to the episode's activity feed
+
+### Client Review
+
+Clients review deliverables through the [Client Portal](/docs/features/client-portal) or the [Review Player](/docs/features/review-player):
+
+- **Approve** — Marks the deliverable as approved, triggers a notification to the producer
+- **Request Revision** — Client adds a comment explaining what needs to change
+
+### Handling Revisions
+
+When a client requests a revision:
+
+1. You receive a notification with their feedback
+2. The deliverable status changes to `revision_requested`
+3. Make your changes and upload a new version
+4. Click **Resubmit** — the status moves to `resubmitted`
+5. The client is notified of the new version
+
+Previous versions are preserved in the deliverable's history.
+
+## Version History
+
+Each deliverable maintains a version history:
+
+- Every resubmission creates a new version
+- Previous versions remain accessible
+- Clients can compare versions in the review player
+- Version notes document what changed
+
+## Client Notifications
+
+The approval workflow triggers notifications at key points:
+
+| Event | Notification to |
+|-------|----------------|
+| Deliverable submitted | Client (via portal + email) |
+| Revision requested | Producer (in-app + email) |
+| Deliverable resubmitted | Client (via portal + email) |
+| Deliverable approved | Producer (in-app) |
+
+Email notifications include a magic link that takes the client directly to the deliverable in their portal.
+
+## Deliverable Organization
+
+### Per-Episode View
+
+Each episode shows its deliverables with status indicators:
+
+- Green checkmark — Approved
+- Orange clock — Awaiting review
+- Red exclamation — Revision requested
+- Gray circle — Draft (not yet submitted)
+
+### Bulk Submission
+
+Submit multiple deliverables at once:
+
+1. Upload all files to the episode
+2. Select the deliverables you want to submit
+3. Click **Submit Selected**
+
+## Linking External Files
+
+For files too large to upload or stored in external systems, create a deliverable with an external link:
+
+- Frame.io review links
+- Google Drive share URLs
+- Vimeo private links
+- Dropbox share links
+
+The approval workflow works the same way regardless of where the file lives.
+
+## Deliverable Metadata
+
+Each deliverable tracks:
+
+| Field | Description |
+|-------|-------------|
+| Title | Name of the deliverable |
+| Description | What this file is / context for the client |
+| Type | Audio, video, document, image, other |
+| Submitted at | When it was sent to the client |
+| Reviewed at | When the client took action |
+| Turnaround time | Calculated time between submission and approval |
+
+## Tips
+
+- **Name deliverables clearly** — "Episode 47 Final Mix v2" is better than "export_final2.mp3"
+- **Add context in the description** — Tell clients what to listen/look for
+- **Use draft status** — Upload work-in-progress files without notifying the client
+- **Review the activity feed** — See the full approval history at a glance

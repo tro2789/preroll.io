@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, Inter } from "next/font/google";
+import { RootProvider } from 'fumadocs-ui/provider/next';
 import "./globals.css";
 
 const sora = Sora({
@@ -29,9 +30,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable}`}>
+    <html lang="en" className={`${sora.variable} ${inter.variable}`} suppressHydrationWarning>
       <body className="antialiased">
-        {children}
+        <RootProvider
+          theme={{
+            defaultTheme: 'dark',
+            forcedTheme: 'dark',
+          }}
+        >
+          {children}
+        </RootProvider>
       </body>
     </html>
   );

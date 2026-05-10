@@ -1,0 +1,193 @@
+---
+title: "Client Portal"
+description: "A branded portal where clients review deliverables, leave feedback, and approve episodes."
+---
+
+# Client Portal
+
+The client portal is a separate, streamlined interface for your clients. It gives them visibility into their show's progress and allows them to review deliverables, leave feedback, and approve episodes — without needing to understand your full production workflow.
+
+{/* Screenshot: Client Portal — /docs/screenshots/client-portal.png */}
+
+## Portal Invite Flow
+
+### Inviting a Client
+
+1. Open the client's profile in PreRoll
+2. Click **Portal Access**
+3. Enter the client's email address
+4. Click **Send Invitation**
+
+The client receives an email with a magic link that grants immediate access — no password to set up or remember.
+
+### Magic-Link Authentication
+
+Clients authenticate exclusively via magic links:
+
+- Each login sends a fresh link to their email
+- Links expire after 15 minutes for security
+- No passwords to manage or reset
+- Works across all devices
+
+### First-Time Experience
+
+When a client first accesses their portal:
+
+1. They click the magic link in their email
+2. They land on their portal dashboard
+3. They see their shows, recent episodes, and any pending deliverables
+4. If white-label branding is configured, the portal reflects your brand
+
+## What Clients Can See
+
+The portal shows clients only their own content:
+
+| Section | What's Visible |
+|---------|---------------|
+| Shows | All shows belonging to this client |
+| Episodes | Episodes across their shows with current status |
+| Deliverables | Files submitted for their review |
+| Activity | Recent actions and updates on their content |
+| Comments | Their comment history and threads |
+
+### What Clients Cannot See
+
+- Other clients' content
+- Your internal team discussions
+- Production costs or billing
+- Pipeline stage names (they see simplified statuses)
+- Other team members' names (unless you choose to show them)
+
+## Portal UI
+
+### Client Dashboard
+
+The portal dashboard shows:
+
+- **Pending reviews** — Deliverables awaiting their feedback (prominently displayed)
+- **Recent activity** — What's happened since their last visit
+- **Episode progress** — Current status of their active episodes
+- **Show overview** — Their shows with episode counts
+
+### Episode View
+
+Clients can view their episodes with:
+
+- Episode title and description
+- Current status (simplified: In Progress, Ready for Review, Approved, Published)
+- Deadline information
+- Associated deliverables with status
+
+### Deliverable Review
+
+When reviewing deliverables, clients can:
+
+- Play audio/video in the [Review Player](/docs/features/review-player)
+- Download files
+- Leave timestamped comments
+- Approve the deliverable
+- Request revisions with notes
+
+{/* Screenshot: Portal Deliverable Review — /docs/screenshots/client-portal-review.png */}
+
+## Approval Workflow
+
+The portal integrates with PreRoll's [deliverable approval workflow](/docs/features/deliverables):
+
+### Approving
+
+1. Client opens a deliverable
+2. Reviews the content (plays audio/video, reads document)
+3. Clicks **Approve**
+4. Optionally leaves a comment ("sounds great!")
+5. Producer is notified immediately
+
+### Requesting Revisions
+
+1. Client opens a deliverable
+2. Identifies something that needs changing
+3. Clicks **Request Revision**
+4. Writes feedback explaining what to change
+5. Optionally adds timestamped comments on specific moments
+6. Producer is notified with the revision details
+
+## Activity Feed
+
+The portal includes a real-time activity feed showing:
+
+- New deliverables submitted for review
+- Episode status changes
+- Responses to their comments
+- New episodes created for their shows
+
+The feed helps clients stay informed without needing constant email updates.
+
+## Notifications
+
+Clients receive email notifications for:
+
+| Event | Email Content |
+|-------|---------------|
+| New deliverable | "A new [type] is ready for your review" with magic link |
+| Episode update | "Your episode [title] has moved to [status]" |
+| Comment reply | "The producer replied to your comment on [episode]" |
+| Episode published | "Your episode [title] is now live" |
+
+Each email includes a magic link that takes the client directly to the relevant content.
+
+## Branding
+
+The client portal supports white-label branding (Studio plan):
+
+- **Custom logo** — Your brand logo in the portal header
+- **Accent color** — Buttons and highlights use your brand color
+- **Display name** — Your business name instead of "PreRoll"
+- **Custom domain** — (Coming soon) Use your own domain for the portal
+
+See [White-Label Branding](/docs/features/white-label) for configuration details.
+
+## Security
+
+### Access Control
+
+- Clients can only see content explicitly associated with their client record
+- Portal sessions expire after 30 days of inactivity
+- Magic links are single-use and time-limited
+- All portal traffic is encrypted (HTTPS)
+
+### Client User Accounts
+
+Client portal users are separate from producer accounts:
+
+- They authenticate via `client_user_id`, not org membership
+- They cannot access the producer interface (`/app/*` routes)
+- They have no visibility into your organization structure
+- Revoking portal access immediately locks them out
+
+## Managing Portal Access
+
+### Revoking Access
+
+To remove a client's portal access:
+
+1. Open the client's profile
+2. Go to **Portal Access**
+3. Click **Revoke Access**
+
+The client immediately loses the ability to log in. Their comment history and approval records are preserved.
+
+### Multiple Contacts
+
+If a client has multiple people who need portal access (e.g., a host and a marketing manager):
+
+- Each person gets their own magic-link email
+- All contacts see the same content for that client
+- Comments are attributed to the individual who left them
+
+## Tips for a Great Client Experience
+
+- **Submit deliverables promptly** — Clients appreciate quick turnaround
+- **Use clear deliverable names** — "Episode 12 Final Mix" not "export_v3_final_FINAL.mp3"
+- **Add context** — Include descriptions on deliverables so clients know what they're reviewing
+- **Respond to comments quickly** — The activity feed shows response times
+- **Configure branding** — A branded portal looks more professional than a generic one

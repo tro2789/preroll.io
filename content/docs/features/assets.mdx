@@ -1,0 +1,168 @@
+---
+title: "Assets"
+description: "Upload and manage show and episode assets including cover art, intros, outros, thumbnails, and music beds."
+---
+
+# Assets
+
+PreRoll includes built-in asset management for the lightweight files that make up your podcast production — cover art, thumbnails, intro/outro clips, music beds, and branding packages. Assets are stored on Cloudflare R2 for fast global delivery.
+
+{/* Screenshot: Assets Library — /docs/screenshots/assets.png */}
+
+## Asset Levels
+
+Assets exist at two levels in PreRoll:
+
+### Show-Level Assets
+
+These are shared across all episodes of a show:
+
+| Asset Type | Description |
+|------------|-------------|
+| Cover art | The show's podcast cover image (3000x3000px recommended) |
+| Intro | Audio or video intro clip played at the start of every episode |
+| Outro | Audio or video outro clip played at the end |
+| Music beds | Background music tracks used during segments |
+| Branding package | Logos, fonts, color palettes, brand guidelines |
+| Bumpers | Short transition clips between segments |
+
+### Episode-Level Assets
+
+These are specific to a single episode:
+
+| Asset Type | Description |
+|------------|-------------|
+| Thumbnail | Custom image for this episode (YouTube, website, etc.) |
+| Show notes | Written companion content for the episode |
+| Transcript | Full text transcript |
+| Clips | Short audio/video excerpts for promotion |
+| Social graphics | Images sized for social media promotion |
+| Chapter art | Images associated with podcast chapters |
+
+## Upload Flow
+
+### Uploading Assets
+
+1. Navigate to the show or episode's **Assets** tab
+2. Click **Upload Asset**
+3. Select your file (drag-and-drop is supported)
+4. Choose the asset type from the dropdown
+5. Add an optional label/description
+6. Click **Upload**
+
+{/* Screenshot: Upload Flow — /docs/screenshots/assets-upload.png */}
+
+### Upload Progress
+
+- Large files show a progress bar during upload
+- Uploads continue in the background if you navigate away
+- Failed uploads can be retried without re-selecting the file
+
+### Supported Formats
+
+| Category | Formats |
+|----------|---------|
+| Images | PNG, JPG, JPEG, WebP, SVG, GIF |
+| Audio | MP3, WAV, M4A, FLAC, OGG, AAC |
+| Video | MP4, MOV, WebM |
+| Documents | PDF, DOCX, TXT, MD |
+
+## R2 Storage
+
+All assets are stored on Cloudflare R2:
+
+- **Fast delivery** — Files are served from Cloudflare's global CDN
+- **Signed URLs** — Assets are accessed via time-limited signed URLs for security
+- **No egress fees** — R2 doesn't charge for downloads
+- **Automatic organization** — Files are stored in a structured path: `org/show/episode/filename`
+
+### Storage Limits
+
+| Plan | Storage |
+|------|---------|
+| Free | 1 GB |
+| Pro | 50 GB |
+| Studio | 250 GB |
+
+Storage usage is displayed in your organization settings.
+
+## Managing Assets
+
+### Asset Library View
+
+The asset library shows all uploaded files with:
+
+- Thumbnail preview (for images and video)
+- File name and type badge
+- Upload date
+- File size
+- Associated show/episode
+
+### Actions
+
+| Action | Description |
+|--------|-------------|
+| Preview | View/play the asset in-browser |
+| Download | Download the original file |
+| Replace | Upload a new version (preserves the asset record) |
+| Delete | Remove the asset from R2 |
+| Copy URL | Get a signed URL for sharing |
+
+### Organizing Assets
+
+- **Labels** — Add descriptive labels to assets for quick identification
+- **Type filtering** — Filter the library by asset type (image, audio, video, document)
+- **Show filtering** — View assets for a specific show only
+- **Search** — Find assets by filename or label
+
+## Cover Art
+
+Cover art deserves special mention as it's displayed throughout PreRoll:
+
+- **Show cards** — Thumbnail version appears on the show list and Kanban board
+- **Episode defaults** — Episodes inherit the show's cover art unless overridden
+- **Distribution** — Used as the podcast artwork when publishing to Transistor/YouTube
+- **Client portal** — Displayed on the client's show page
+
+### Best Practices for Cover Art
+
+- Use 3000x3000px (Apple Podcasts requirement)
+- Keep text large and readable at small sizes
+- Use RGB color space
+- File size under 512KB for optimal loading
+- PNG or JPG format
+
+## Episode Thumbnails
+
+Episode thumbnails are individual images for each episode:
+
+- Used as the video thumbnail on YouTube
+- Displayed in podcast apps that support episode-level artwork
+- Shown in the PreRoll UI on episode cards
+
+If no episode thumbnail is uploaded, the show's cover art is used as the default.
+
+## Intros and Outros
+
+Audio/video clips that bookend your episodes:
+
+- Upload once at the show level
+- Reference from any episode
+- Multiple intros/outros can be stored (e.g., seasonal variations)
+- Tag with descriptions so you remember which is which
+
+## Music Beds
+
+Background music tracks stored for easy access during editing:
+
+- Upload licensed music tracks to the show
+- Label with mood/genre for quick selection
+- Include license information in the description field
+- Keep all your production music in one searchable place
+
+## Tips
+
+- **Upload assets before you need them** — Having cover art, intros, and music beds ready makes episode creation faster
+- **Use descriptive labels** — "Intro v2 - shorter, no music" is better than "intro_new.mp3"
+- **Replace rather than delete** — Replacing preserves references to the asset across episodes
+- **Check storage usage periodically** — Large video files add up quickly

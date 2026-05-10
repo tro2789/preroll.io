@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600" fill="none">
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #e8e6f0; }
+    .title { font-size: 16px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 500; }
+    .sublabel { font-size: 10px; fill: #a09cb0; }
+    .box { rx: 8; ry: 8; stroke-width: 1.5; }
+    .connector { stroke-width: 1.5; stroke-dasharray: none; }
+  </style>
+
+  <!-- Background -->
+  <rect width="900" height="600" fill="#1a1820"/>
+
+  <!-- Main App Box -->
+  <rect class="box" x="320" y="40" width="260" height="80" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="title" x="450" y="72" text-anchor="middle">PreRoll App</text>
+  <text class="sublabel" x="450" y="92" text-anchor="middle">Next.js + TypeScript + Vercel</text>
+
+  <!-- Supabase -->
+  <rect class="box" x="60" y="200" width="200" height="80" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="label" x="160" y="232" text-anchor="middle">Supabase</text>
+  <text class="sublabel" x="160" y="252" text-anchor="middle">Postgres + Auth + RLS + Realtime</text>
+
+  <!-- R2 Storage -->
+  <rect class="box" x="60" y="340" width="200" height="70" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="label" x="160" y="370" text-anchor="middle">Cloudflare R2</text>
+  <text class="sublabel" x="160" y="388" text-anchor="middle">Assets, thumbnails, intros</text>
+
+  <!-- Client Portal -->
+  <rect class="box" x="350" y="200" width="200" height="70" fill="#2a2635" stroke="#6b4a9e"/>
+  <text class="label" x="450" y="228" text-anchor="middle">Client Portal</text>
+  <text class="sublabel" x="450" y="246" text-anchor="middle">Magic-link auth, approvals</text>
+
+  <!-- MCP Server -->
+  <rect class="box" x="350" y="320" width="200" height="70" fill="#2a2635" stroke="#6b4a9e"/>
+  <text class="label" x="450" y="348" text-anchor="middle">MCP Server</text>
+  <text class="sublabel" x="450" y="366" text-anchor="middle">AI assistant integration</text>
+
+  <!-- Webhooks -->
+  <rect class="box" x="350" y="440" width="200" height="70" fill="#2a2635" stroke="#6b4a9e"/>
+  <text class="label" x="450" y="468" text-anchor="middle">Webhook Delivery</text>
+  <text class="sublabel" x="450" y="486" text-anchor="middle">Signed payloads, event-driven</text>
+
+  <!-- Integrations Group -->
+  <rect class="box" x="640" y="180" width="220" height="260" fill="#221f2a" stroke="#3a3545"/>
+  <text class="label" x="750" y="206" text-anchor="middle">External Integrations</text>
+
+  <rect class="box" x="660" y="220" width="180" height="36" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="sublabel" x="750" y="242" text-anchor="middle">Frame.io — Video review</text>
+
+  <rect class="box" x="660" y="266" width="180" height="36" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="sublabel" x="750" y="288" text-anchor="middle">Google Drive — File delivery</text>
+
+  <rect class="box" x="660" y="312" width="180" height="36" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="sublabel" x="750" y="334" text-anchor="middle">Vimeo — Video hosting</text>
+
+  <rect class="box" x="660" y="358" width="180" height="36" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="sublabel" x="750" y="380" text-anchor="middle">YouTube — Video publishing</text>
+
+  <rect class="box" x="660" y="404" width="180" height="36" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="sublabel" x="750" y="426" text-anchor="middle">Transistor.fm — Podcast RSS</text>
+
+  <!-- Stripe -->
+  <rect class="box" x="60" y="480" width="200" height="70" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="label" x="160" y="508" text-anchor="middle">Stripe</text>
+  <text class="sublabel" x="160" y="526" text-anchor="middle">Subscriptions + billing</text>
+
+  <!-- Connectors -->
+  <!-- App to Supabase -->
+  <line class="connector" x1="320" y1="100" x2="200" y2="200" stroke="#6b4a9e"/>
+  <!-- App to R2 -->
+  <line class="connector" x1="320" y1="110" x2="160" y2="340" stroke="#6b4a9e"/>
+  <!-- App to Client Portal -->
+  <line class="connector" x1="450" y1="120" x2="450" y2="200" stroke="#6b4a9e"/>
+  <!-- App to MCP -->
+  <line class="connector" x1="450" y1="120" x2="450" y2="320" stroke="#4a3f6b"/>
+  <!-- App to Webhooks -->
+  <line class="connector" x1="450" y1="120" x2="450" y2="440" stroke="#4a3f6b"/>
+  <!-- App to Integrations -->
+  <line class="connector" x1="580" y1="80" x2="640" y2="300" stroke="#6b4a9e"/>
+  <!-- App to Stripe -->
+  <line class="connector" x1="320" y1="110" x2="160" y2="480" stroke="#4a3f6b"/>
+
+  <!-- Legend -->
+  <text class="sublabel" x="40" y="580">API-first: REST API consumed by Web UI, Client Portal, MCP Server, and external integrations</text>
+</svg>

@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" fill="none">
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #e8e6f0; }
+    .stage-label { font-size: 12px; font-weight: 600; }
+    .stage-desc { font-size: 9px; fill: #a09cb0; }
+    .arrow { stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .revision { stroke-dasharray: 6,4; }
+    .note { font-size: 10px; fill: #8b7fb0; font-style: italic; }
+  </style>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6b4a9e"/>
+    </marker>
+    <marker id="arrowhead-muted" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4a3f6b"/>
+    </marker>
+  </defs>
+
+  <rect width="900" height="300" fill="#1a1820"/>
+
+  <!-- Title -->
+  <text class="stage-label" x="450" y="30" text-anchor="middle" font-size="14">Episode Pipeline (Default Stages)</text>
+  <text class="note" x="450" y="48" text-anchor="middle">Stages are fully customizable per show</text>
+
+  <!-- Stage 1: Planning -->
+  <rect x="30" y="80" width="120" height="70" rx="8" fill="#2a2635" stroke="oklch(0.65 0.15 260)" stroke-width="2"/>
+  <text class="stage-label" x="90" y="110" text-anchor="middle">Planning</text>
+  <text class="stage-desc" x="90" y="128" text-anchor="middle">Research, outline,</text>
+  <text class="stage-desc" x="90" y="140" text-anchor="middle">guest booking</text>
+
+  <!-- Stage 2: Recording -->
+  <rect x="180" y="80" width="120" height="70" rx="8" fill="#2a2635" stroke="oklch(0.72 0.16 30)" stroke-width="2"/>
+  <text class="stage-label" x="240" y="110" text-anchor="middle">Recording</text>
+  <text class="stage-desc" x="240" y="128" text-anchor="middle">Capture audio</text>
+  <text class="stage-desc" x="240" y="140" text-anchor="middle">or video</text>
+
+  <!-- Stage 3: Editing -->
+  <rect x="330" y="80" width="120" height="70" rx="8" fill="#2a2635" stroke="oklch(0.75 0.14 85)" stroke-width="2"/>
+  <text class="stage-label" x="390" y="110" text-anchor="middle">Editing</text>
+  <text class="stage-desc" x="390" y="128" text-anchor="middle">Post-production,</text>
+  <text class="stage-desc" x="390" y="140" text-anchor="middle">mixing, mastering</text>
+
+  <!-- Stage 4: Review -->
+  <rect x="480" y="80" width="120" height="70" rx="8" fill="#2a2635" stroke="oklch(0.65 0.18 275)" stroke-width="2"/>
+  <text class="stage-label" x="540" y="110" text-anchor="middle">Review</text>
+  <text class="stage-desc" x="540" y="128" text-anchor="middle">Client approval</text>
+  <text class="stage-desc" x="540" y="140" text-anchor="middle">via deliverables</text>
+
+  <!-- Stage 5: Approved -->
+  <rect x="630" y="80" width="120" height="70" rx="8" fill="#2a2635" stroke="oklch(0.72 0.16 155)" stroke-width="2"/>
+  <text class="stage-label" x="690" y="110" text-anchor="middle">Approved</text>
+  <text class="stage-desc" x="690" y="128" text-anchor="middle">Ready for</text>
+  <text class="stage-desc" x="690" y="140" text-anchor="middle">distribution</text>
+
+  <!-- Stage 6: Published -->
+  <rect x="780" y="80" width="100" height="70" rx="8" fill="#2a2635" stroke="oklch(0.60 0.12 260)" stroke-width="2"/>
+  <text class="stage-label" x="830" y="110" text-anchor="middle">Published</text>
+  <text class="stage-desc" x="830" y="128" text-anchor="middle">Live on</text>
+  <text class="stage-desc" x="830" y="140" text-anchor="middle">platforms</text>
+
+  <!-- Forward arrows -->
+  <path class="arrow" d="M150 115 L178 115" stroke="#6b4a9e"/>
+  <path class="arrow" d="M300 115 L328 115" stroke="#6b4a9e"/>
+  <path class="arrow" d="M450 115 L478 115" stroke="#6b4a9e"/>
+  <path class="arrow" d="M600 115 L628 115" stroke="#6b4a9e"/>
+  <path class="arrow" d="M750 115 L778 115" stroke="#6b4a9e"/>
+
+  <!-- Revision loop: Review → Editing -->
+  <path class="arrow revision" d="M510 150 C510 210, 420 210, 420 150" stroke="#4a3f6b" marker-end="url(#arrowhead-muted)"/>
+  <text class="note" x="465" y="220" text-anchor="middle">Revision requested</text>
+
+  <!-- Legend -->
+  <rect x="30" y="250" width="840" height="40" rx="6" fill="#221f2a" stroke="#3a3545" stroke-width="1"/>
+  <line x1="50" y1="270" x2="80" y2="270" stroke="#6b4a9e" stroke-width="2"/>
+  <text class="stage-desc" x="90" y="274">Forward progression</text>
+  <line x1="220" y1="270" x2="250" y2="270" stroke="#4a3f6b" stroke-width="2" stroke-dasharray="6,4"/>
+  <text class="stage-desc" x="260" y="274">Revision loop</text>
+  <text class="stage-desc" x="450" y="274">Each stage color is customizable. Stages can be added, removed, or reordered per show.</text>
+</svg>

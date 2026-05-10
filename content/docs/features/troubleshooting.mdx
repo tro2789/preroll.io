@@ -1,0 +1,284 @@
+---
+title: "Troubleshooting"
+description: "Solutions for common issues with authentication, integrations, storage, email delivery, and portal access."
+---
+
+# Troubleshooting
+
+This page covers common issues you might encounter while using PreRoll, along with their solutions.
+
+## Authentication Issues
+
+### "Unable to sign in" or magic link not working
+
+**Symptoms:** Clicking the magic link shows an error, or you're redirected to the login page.
+
+**Solutions:**
+
+1. **Check link expiry** — Magic links expire after 15 minutes. Request a new one if the link is old.
+2. **Check your email** — Make sure you're clicking the most recent link. Earlier links are invalidated when a new one is sent.
+3. **Clear cookies** — Clear your browser cookies for `preroll.io` and try again.
+4. **Check the email address** — Ensure you're using the same email address you registered with.
+5. **Disable VPN** — Some VPNs can interfere with token validation.
+
+### Session expired unexpectedly
+
+**Symptoms:** You're logged out while actively using PreRoll.
+
+**Solutions:**
+
+1. Sessions last 7 days by default. If you're being logged out sooner:
+   - Check if you have browser extensions that clear cookies
+   - Ensure your system clock is accurate
+   - Try a different browser to rule out browser-specific issues
+2. Click **Sign In** and request a new magic link
+
+### "You don't have access to this organization"
+
+**Symptoms:** After signing in, you see an access error instead of your dashboard.
+
+**Solutions:**
+
+1. Confirm you're using the correct email address
+2. Check with your organization owner/admin that your membership is active
+3. If you were recently invited, try signing out and back in
+
+---
+
+## Integration Disconnections
+
+### Transistor.fm connection lost
+
+**Symptoms:** Publishing fails with "unauthorized" or "invalid API key" error.
+
+**Solutions:**
+
+1. Go to **Settings > Integrations**
+2. Check the Transistor connection status
+3. If disconnected, click **Reconnect** and re-enter your API key
+4. Verify the API key is still valid in your Transistor account settings
+5. Ensure the Transistor show hasn't been deleted or transferred
+
+### YouTube / Google OAuth expired
+
+**Symptoms:** YouTube publishing fails, or you see "token expired" errors.
+
+**Solutions:**
+
+1. Go to **Settings > Integrations**
+2. Click **Reconnect** next to YouTube/Google
+3. Re-authenticate with your Google account
+4. Ensure you grant all requested permissions
+
+Google OAuth tokens expire periodically and need re-authorization. This is normal.
+
+### Frame.io disconnected
+
+**Symptoms:** Comment sync stops, or you see "authentication failed" in the activity log.
+
+**Solutions:**
+
+1. Go to **Settings > Integrations**
+2. Click **Reconnect** next to Frame.io
+3. Re-authenticate with your Adobe ID
+4. Ensure your Frame.io team/project still exists
+
+**Note:** Frame.io uses Adobe IMS for authentication. If your Adobe account password changed, all Frame.io connections need re-authentication.
+
+### Google Drive disconnected
+
+**Symptoms:** File delivery to Google Drive fails.
+
+**Solutions:**
+
+1. Go to **Settings > Integrations**
+2. Reconnect your Google account
+3. Ensure the target Drive folder still exists and you have write access
+4. Check that Drive storage isn't full
+
+---
+
+## Storage and Upload Errors
+
+### Upload fails or stalls
+
+**Symptoms:** File upload progress bar stops or shows an error.
+
+**Solutions:**
+
+1. **Check file size** — Ensure you're within your plan's limit (Free: 100MB, Pro: 500MB, Studio: 2GB)
+2. **Check storage quota** — View usage in Settings > Organization
+3. **Check your connection** — Large uploads need a stable connection
+4. **Try a different browser** — Some browser extensions block uploads
+5. **Retry** — Click the retry button; transient network issues are common
+
+### "Storage limit exceeded"
+
+**Symptoms:** Upload button is disabled or shows a storage warning.
+
+**Solutions:**
+
+1. Check your current storage usage in **Settings > Organization**
+2. Delete unused assets to free space
+3. Upgrade your plan for more storage
+4. Consider linking external files instead of uploading (Frame.io, Google Drive, Vimeo links)
+
+### Uploaded file shows broken preview
+
+**Symptoms:** Image thumbnails or video previews don't render.
+
+**Solutions:**
+
+1. Verify the file isn't corrupted (try opening it locally)
+2. Check that the file format is supported
+3. Large files may take a moment to process — wait 30 seconds and refresh
+4. Clear your browser cache
+
+---
+
+## Email Delivery Issues
+
+### Client not receiving magic links or notifications
+
+**Symptoms:** Client says they never got the email.
+
+**Solutions:**
+
+1. **Check spam/junk folder** — PreRoll emails sometimes land in spam initially
+2. **Verify the email address** — Check for typos in the client's email on their profile
+3. **Whitelist the sender** — Ask clients to add `notifications@preroll.io` to their contacts
+4. **Check corporate filters** — Some companies block emails from unfamiliar domains
+5. **Resend** — Use the "Resend Invitation" button on the client's portal access settings
+
+### Emails arriving delayed
+
+**Symptoms:** Magic links or notifications arrive minutes or hours late.
+
+**Solutions:**
+
+1. This is usually on the recipient's email server side
+2. Magic links remain valid for 15 minutes from when they were *sent* (not received)
+3. If consistently delayed, the client should check with their IT department
+4. Request the link, then check email immediately (don't wait)
+
+---
+
+## Portal Access Issues
+
+### Client sees "Portal not found" or blank page
+
+**Symptoms:** Client clicks the portal link but sees an error.
+
+**Solutions:**
+
+1. Confirm portal access is enabled for this client
+2. Check that the client's email matches what's configured in portal access
+3. Ensure the magic link hasn't expired (15-minute window)
+4. Have the client try a different browser or clear cookies
+
+### Client can't see their deliverables
+
+**Symptoms:** Client logs into the portal but the deliverable list is empty.
+
+**Solutions:**
+
+1. Verify deliverables are in `submitted` status (not `draft`)
+2. Check that deliverables are attached to the correct episode and show
+3. Confirm the show belongs to the correct client record
+4. Check that the episode isn't in a hidden/archived state
+
+### Client sees wrong content
+
+**Symptoms:** Client reports seeing content from another show or client.
+
+**Solutions:**
+
+1. This should not happen due to RLS policies. If it does:
+   - Check that shows and episodes have the correct `client_id`
+   - Verify the client's `client_user_id` matches their auth record
+   - Contact support immediately — this may indicate a configuration issue
+
+---
+
+## Distribution Failures
+
+### Transistor publish fails
+
+**Symptoms:** Episode status shows "failed" after attempting to publish.
+
+**Solutions:**
+
+1. Check the error message in the distribution tab
+2. Common causes:
+   - Audio file format not supported (use MP3 or M4A)
+   - File too large for your Transistor plan
+   - Missing required fields (title, audio file)
+   - API key revoked or expired
+3. Fix the issue and click **Retry**
+
+### YouTube upload fails
+
+**Symptoms:** Video upload starts but fails partway through.
+
+**Solutions:**
+
+1. Check the error message in the distribution tab
+2. Common causes:
+   - OAuth token expired (reconnect in Settings)
+   - Video file exceeds YouTube limits
+   - Daily upload limit reached
+   - Copyright/content policy flag
+3. For large videos, ensure a stable connection during upload
+
+### Scheduled publish didn't fire
+
+**Symptoms:** The episode was scheduled to publish at a specific time but remains in "scheduled" status.
+
+**Solutions:**
+
+1. Check if the schedule time has actually passed (verify timezone)
+2. Look for error messages in the distribution tab
+3. Verify the integration connection is still active
+4. Manually publish if the schedule window has passed
+
+---
+
+## Performance Issues
+
+### Kanban board loads slowly
+
+**Symptoms:** The board takes a long time to load or feels sluggish.
+
+**Solutions:**
+
+1. **Reduce visible episodes** — Use filters to show only relevant episodes
+2. **Archive completed shows** — Remove old shows from the active board
+3. **Clear browser cache** — Stale data can slow rendering
+4. **Check your connection** — Slow connections affect real-time updates
+
+### Pages not updating in real time
+
+**Symptoms:** Changes made by team members don't appear until page refresh.
+
+**Solutions:**
+
+1. Check your internet connection
+2. Try refreshing the page (`Ctrl/Cmd + R`)
+3. Real-time updates require a WebSocket connection — some corporate firewalls block these
+4. If persistent, try a different network
+
+---
+
+## Getting More Help
+
+If none of the above solutions resolve your issue:
+
+1. **Check the error message** — Copy the exact error text for reference
+2. **Note your browser and OS** — Helps identify browser-specific issues
+3. **Check the status page** — Look for any ongoing incidents
+4. **Contact support** — Email support@preroll.io with:
+   - What you were trying to do
+   - What happened instead
+   - Any error messages
+   - Your browser and OS
+   - Screenshots if possible

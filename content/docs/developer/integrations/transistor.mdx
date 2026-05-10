@@ -1,0 +1,135 @@
+---
+title: Transistor.fm
+description: Publish podcast episodes to Transistor.fm for RSS distribution.
+---
+
+## Overview
+
+The Transistor.fm integration handles podcast publishing and RSS distribution. Unlike other integrations that use OAuth, Transistor uses a per-show API key configured in the show's distribution settings. This keeps setup simple — paste your API key and start publishing.
+
+## API Key Setup
+
+Transistor.fm uses API key authentication (no OAuth flow required):
+
+1. Log in to your [Transistor.fm dashboard](https://dashboard.transistor.fm)
+2. Go to **Account → API** and generate (or copy) your API key
+3. In PreRoll, navigate to the show's **Settings → Distribution**
+4. Paste your Transistor API key and select which Transistor podcast to link
+
+Each show in PreRoll connects to one Transistor podcast. If you manage multiple podcasts on Transistor, use the same API key — it grants access to all podcasts on your account.
+
+## Connecting a Show
+
+1. Open a show in PreRoll
+2. Go to **Settings → Distribution**
+3. Enter your Transistor API key
+4. PreRoll fetches your Transistor podcasts — select the one to link
+5. Save the connection
+
+Once connected, the show displays its Transistor podcast ID and current publish status.
+
+## Publishing Flow
+
+Publishing an episode to Transistor follows three steps:
+
+### 1. Upload Audio
+
+The audio file is uploaded to Transistor's storage:
+
+- Supported formats: MP3, M4A, WAV
+- Maximum file size varies by Transistor plan
+- Upload progress is tracked in PreRoll
+
+```
+Episode → Actions → Publish to Transistor
+└── Upload audio file
+└── Uploading... 45%
+└── Upload complete ✓
+```
+
+### 2. Set Metadata
+
+Configure the episode's podcast metadata:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| Title | Episode title | Yes |
+| Description | Show notes (HTML supported) | Yes |
+| Season number | Season grouping | No |
+| Episode number | Episode number within season | No |
+| Episode type | `full`, `trailer`, or `bonus` | No |
+| Explicit | Whether episode contains explicit content | No |
+| Slug | URL-friendly identifier | No (auto-generated) |
+
+```json
+{
+  "title": "EP042: The Answer to Everything",
+  "description": "<p>In this episode we discuss...</p>",
+  "season_number": 3,
+  "episode_number": 42,
+  "type": "full",
+  "explicit": false
+}
+```
+
+### 3. Publish
+
+Once audio is uploaded and metadata is set, publish the episode:
+
+- **Publish immediately** — episode goes live in the RSS feed right away
+- **Schedule for later** — set a future publish date/time
+
+Published episodes appear in the show's RSS feed and are distributed to all connected podcast directories (Apple Podcasts, Spotify, Google Podcasts, etc.).
+
+## Scheduled Publishing
+
+To schedule an episode for future release:
+
+1. Set all metadata and upload audio as normal
+2. Choose **Schedule** instead of **Publish Now**
+3. Select the publish date and time (in your timezone)
+4. Transistor holds the episode and publishes it at the scheduled time
+
+```json
+{
+  "published_at": "2025-02-01T14:00:00Z",
+  "status": "scheduled"
+}
+```
+
+Scheduled episodes show a countdown in both PreRoll and Transistor's dashboard.
+
+## Checking Publish Status
+
+PreRoll tracks the publish status of each episode:
+
+| Status | Meaning |
+|--------|---------|
+| `draft` | Not yet sent to Transistor |
+| `uploaded` | Audio uploaded, metadata pending |
+| `scheduled` | Queued for future publish |
+| `published` | Live in the RSS feed |
+
+The episode detail page shows the current Transistor status and includes a direct link to the episode on Transistor's dashboard.
+
+## Episode Metadata from Templates
+
+If the show has an **episode template** configured, new episodes are pre-filled with:
+
+- Default description boilerplate (sponsor reads, links, etc.)
+- Standard tags
+- Episode type
+- Explicit flag
+
+This reduces repetitive data entry when publishing regularly scheduled shows.
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Invalid API key" | Verify the key in Transistor's dashboard under Account → API |
+| No podcasts found | Ensure the API key belongs to an account with at least one podcast |
+| Upload fails | Check file format (MP3/M4A/WAV) and size against your Transistor plan limits |
+| Episode not appearing in feed | Allow a few minutes for RSS propagation after publishing |
+| Scheduled episode didn't publish | Verify the timezone — Transistor uses UTC internally |
+| Metadata not updating | Ensure the episode hasn't already been published (some fields lock after publish) |

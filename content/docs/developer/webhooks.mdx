@@ -1,0 +1,123 @@
+---
+title: Webhooks
+description: Receive real-time HTTP notifications when events occur in PreRoll.
+---
+
+## Overview
+
+Webhooks allow your systems to receive HTTP POST notifications when events happen in PreRoll. Configure webhook endpoints in **Settings → Developer → Webhooks**.
+
+## Events
+
+| Event | Description |
+|-------|-------------|
+| `episode.status_changed` | Episode status changed (draft, in_progress, published) |
+| `episode.stage_changed` | Episode moved to a different pipeline stage |
+| `episode.published` | Episode published to distribution |
+| `episode.scheduled` | Episode scheduled for future publication |
+| `deliverable.submitted` | Deliverable submitted for review |
+| `deliverable.approved` | Deliverable approved by client |
+| `deliverable.revision_requested` | Client requested revisions on a deliverable |
+| `deliverable.resubmitted` | Revised deliverable resubmitted for review |
+
+## Payload Format
+
+All webhook payloads are JSON with the following structure:
+
+```json
+{
+  "id": "wh_evt_abc123",
+  "event": "episode.stage_changed",
+  "created_at": "2025-01-15T10:30:00Z",
+  "data": {
+    "episode_id": "uuid",
+    "show_id": "uuid",
+    "title": "Episode 42",
+    "previous_stage": "Editing",
+    "current_stage": "Review"
+  }
+}
+```
+
+## Request Headers
+
+Every webhook request includes the following headers:
+
+| Header | Description |
+|--------|-------------|
+| `X-PreRoll-Signature` | HMAC-SHA256 signature (`sha256=<hex>`) |
+| `X-PreRoll-Timestamp` | Unix timestamp of when the event was sent |
+| `X-PreRoll-Event` | Event type (e.g., `episode.stage_changed`) |
+| `Content-Type` | `application/json` |
+
+## Signature Verification
+
+To verify that a webhook request is authentic:
+
+1. Extract the `X-PreRoll-Timestamp` header value
+2. Concatenate: `{timestamp}.{raw_request_body}`
+3. Compute an HMAC-SHA256 using your endpoint's signing secret
+4. Compare the hex digest to the value in `X-PreRoll-Signature` (after removing the `sha256=` prefix)
+
+### Node.js Example
+
+```javascript
+import crypto from "crypto";
+
+function verifyWebhook(req, secret) {
+  const timestamp = req.headers["x-preroll-timestamp"];
+  const signature = req.headers["x-preroll-signature"];
+  const body = req.body; // raw string body
+
+  const payload = `${timestamp}.${body}`;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
+
+  const received = signature.replace("sha256=", "");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expected, "hex"),
+    Buffer.from(received, "hex")
+  );
+}
+```
+
+### Python Example
+
+```python
+import hmac
+import hashlib
+
+def verify_webhook(timestamp: str, body: str, signature: str, secret: str) -> bool:
+    payload = f"{timestamp}.{body}"
+    expected = hmac.new(
+        secret.encode(),
+        payload.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    received = signature.replace("sha256=", "")
+
+    return hmac.compare_digest(expected, received)
+```
+
+## n8n Setup
+
+To receive PreRoll webhooks in n8n:
+
+1. Create a new workflow with a **Webhook** trigger node
+2. Set the HTTP method to `POST` and copy the webhook URL
+3. In PreRoll, go to **Settings → Developer → Webhooks** and create a new endpoint with the n8n webhook URL
+4. Select which events you want to receive and save — the signing secret will be displayed once
+
+## Retry Behavior
+
+Webhook delivery is **fire-and-forget**:
+
+- Requests have a **10-second timeout**
+- There are **no automatic retries** on failure
+- Failed deliveries are logged and visible in the delivery log
+
+You can inspect delivery history via the API or in **Settings → Developer → Webhooks** by selecting an endpoint and viewing its delivery log.

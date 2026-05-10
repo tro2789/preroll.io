@@ -1,0 +1,104 @@
+---
+title: "Dashboard"
+description: "Your command center for managing podcast production across all clients and shows."
+---
+
+# Dashboard
+
+The PreRoll dashboard gives you an at-a-glance view of your entire production operation. When you log in, you land here — everything that needs your attention is surfaced immediately.
+
+{/* Screenshot: Dashboard Overview — /docs/screenshots/dashboard.png */}
+
+## Overview Cards
+
+The top of the dashboard displays key metrics for your current billing period:
+
+| Card | What it shows |
+|------|---------------|
+| Active Episodes | Total episodes currently in progress (not yet published) |
+| Due This Week | Episodes with deadlines in the next 7 days |
+| Awaiting Approval | Deliverables submitted to clients pending review |
+| Published This Month | Episodes successfully published this billing cycle |
+
+These cards update in real time as you and your team move episodes through the pipeline.
+
+## In-Progress Episodes
+
+Below the overview cards, you'll find a list of episodes currently being worked on, sorted by deadline urgency. Each entry shows:
+
+- Episode title and show name
+- Current pipeline stage (with color coding)
+- Assigned deadline
+- Client name
+- Number of pending deliverables
+
+Click any episode to jump directly into its detail view.
+
+## Deadline Timeline
+
+The timeline section visualizes upcoming deadlines across all your shows in a horizontal scrollable view. Episodes are plotted on a 30-day timeline so you can spot bottlenecks before they become problems.
+
+- **Red markers** — Overdue episodes
+- **Orange markers** — Due within 48 hours
+- **Blue markers** — On track
+
+{/* Screenshot: Deadline Timeline — /docs/screenshots/dashboard-timeline.png */}
+
+## Quick Stats
+
+The dashboard includes a compact statistics panel showing:
+
+- **On-time rate** — Percentage of episodes delivered by their deadline (rolling 90 days)
+- **Avg. turnaround** — Average time from recording to published
+- **Client approval speed** — Average time clients take to approve deliverables
+- **Episodes this month** — Compared to the same period last month
+
+## Quick-Create Actions
+
+The dashboard header includes quick-create buttons for common actions:
+
+- **New Episode** — Opens the episode creation form with show selector
+- **New Client** — Starts the client onboarding flow
+- **New Show** — Opens show setup with pipeline configuration
+
+These actions are also accessible via the keyboard shortcut `Ctrl+K` (or `Cmd+K` on Mac), which opens the command palette.
+
+## Attention List
+
+The attention list highlights items that specifically need your action:
+
+- Episodes stuck in a stage longer than expected
+- Deliverables with client revision requests
+- Upcoming deadlines with incomplete deliverables
+- Failed distribution attempts (Transistor/YouTube publish errors)
+- Integration disconnections requiring re-authentication
+
+## Activity Feed
+
+The right sidebar shows a chronological feed of recent activity across your organization:
+
+- Episode stage transitions
+- Client approvals and revision requests
+- New comments on deliverables
+- Team member actions (for Studio plan users)
+- Distribution publish events
+
+The feed updates in real time and can be filtered by client, show, or activity type.
+
+## Customization
+
+The dashboard respects your organization's scope:
+
+- **Solo producers** see all their clients and shows
+- **Team members** see activity scoped to their organization
+- **Filtered views** persist across sessions — if you filter to a specific client, the dashboard remembers
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl/Cmd + K` | Open command palette |
+| `Ctrl/Cmd + N` | New episode |
+| `G` then `D` | Go to dashboard |
+| `G` then `C` | Go to clients |
+| `G` then `E` | Go to episodes |

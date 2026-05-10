@@ -1,0 +1,155 @@
+---
+title: UI Walkthrough
+description: A visual tour of PreRoll's interface and key screens.
+---
+
+# UI Walkthrough
+
+This guide walks through each major screen in PreRoll so you know where everything lives. Each section includes a screenshot and describes the key actions available on that page.
+
+---
+
+## Dashboard
+
+{/* Screenshot: Dashboard overview — /docs/screenshots/dashboard.png */}
+
+The dashboard is your home base. It shows everything that needs attention across all your clients and shows at a glance.
+
+**Key elements:**
+
+- **Attention List** — episodes that are overdue, awaiting approval, or stuck in a stage too long
+- **Activity Feed** — recent actions across your organization (episode moves, comments, deliverables approved)
+- **Stats Panel** — episode counts by status, on-time delivery rate, active shows
+- **Quick Create** — jump directly to creating a new client, show, or episode
+
+The dashboard is designed for your morning check-in: scan the attention list, respond to anything urgent, then move into focused work.
+
+---
+
+## Client List
+
+{/* Screenshot: Client list — /docs/screenshots/clients.png */}
+
+The clients page shows all your active clients in a searchable, filterable list.
+
+**Key elements:**
+
+- **Client cards** — name, company, number of active shows, last activity date
+- **Search and filter** — find clients by name, company, or tag
+- **New Client button** — create a client directly from this view
+- **Client detail view** — click into any client to see their profile, shows, meeting notes, and service terms
+
+---
+
+## Show View
+
+{/* Screenshot: Show view — /docs/screenshots/show.png */}
+
+Each show has its own dedicated page with tabs for different aspects of production.
+
+**Key elements:**
+
+- **Overview tab** — show details, format, schedule, and branding (cover art, colors)
+- **Episodes tab** — the kanban board (see below)
+- **Assets tab** — cover art, intros, outros, music beds, and other show-level media
+- **Distribution tab** — Transistor.fm connection status and publishing controls
+- **Settings tab** — pipeline stage configuration, episode templates, integrations
+
+---
+
+## Episode Kanban Board
+
+{/* Screenshot: Kanban board — /docs/screenshots/kanban.png */}
+
+The kanban board is where most day-to-day work happens. Each column represents a pipeline stage, and episodes are cards you drag between them.
+
+**Key elements:**
+
+- **Drag and drop** — move episodes between stages
+- **Bulk actions** — select multiple episodes to move, tag, or archive
+- **Swimlanes** — optionally group by show when viewing across a client
+- **Quick add** — the **+** button at the top of each column creates an episode in that stage
+- **Episode cards** — show title, episode number, assignee, due date, and tag badges
+- **Filters** — filter by tag, assignee, due date, or show
+
+---
+
+## Calendar
+
+{/* Screenshot: Calendar view — /docs/screenshots/calendar.png */}
+
+The calendar provides a time-based view of your production schedule across all shows.
+
+**Key elements:**
+
+- **Month/week/day views** — toggle between zoom levels
+- **Episode markers** — colored by show, positioned by due date
+- **Drag to reschedule** — move episodes to new dates directly on the calendar
+- **Multi-show overlay** — see all shows at once or filter to a single show
+- **Click to open** — click any episode to open its detail view
+
+---
+
+## Episode Detail
+
+{/* Screenshot: Episode detail — /docs/screenshots/episode-detail.png */}
+
+The episode detail page is where you manage everything about a single episode.
+
+**Key elements:**
+
+- **Status and stage** — current pipeline position with quick-move controls
+- **Description and notes** — markdown-supported episode notes and show notes
+- **Deliverables panel** — files sent to the client for approval, with status tracking
+- **Assets panel** — episode-specific files (thumbnails, clips, show notes documents)
+- **Integrations panel** — linked Frame.io projects, Google Drive folders, or Vimeo videos
+- **Activity timeline** — every action taken on this episode, with timestamps
+- **Comments** — internal team discussion (separate from client-facing review comments)
+
+---
+
+## Client Portal
+
+{/* Screenshot: Client portal — /docs/screenshots/portal.png */}
+
+The client portal is a separate, simplified interface your clients use to review and approve deliverables.
+
+**Key elements:**
+
+- **Deliverable queue** — pending items needing review, with approve/request changes actions
+- **Review player** — video player with timecoded comments (synced to Frame.io if connected)
+- **Activity feed** — what's happened on their shows recently
+- **Approved history** — previously approved deliverables for reference
+- **White-label branding** — your logo, accent color, and display name (Studio plan)
+
+Clients access the portal via magic link — no password needed. Each client sees only their own shows and deliverables.
+
+---
+
+## Settings
+
+{/* Screenshot: Settings page — /docs/screenshots/settings.png */}
+
+Organization settings are split into several tabs:
+
+| Tab | What it controls |
+|-----|-----------------|
+| **General** | Org name, timezone, default pipeline stages |
+| **Team** | Member list, invitations, role management |
+| **Billing** | Current plan, trial status, upgrade/downgrade, Stripe portal |
+| **Integrations** | Connected accounts (Frame.io, Google Drive, Vimeo, YouTube) |
+| **Webhooks** | Outgoing webhook endpoints and delivery log |
+| **API Keys** | Manage API keys for external access |
+| **Branding** | White-label settings for the client portal (Studio plan) |
+
+---
+
+## Navigation Patterns
+
+PreRoll uses a consistent navigation structure:
+
+- **Sidebar** — primary navigation (Dashboard, Clients, Calendar, Settings)
+- **Breadcrumbs** — show your current location (Client > Show > Episode)
+- **Context menus** — right-click or use the "..." menu on any card for quick actions
+- **Keyboard shortcuts** — press `?` anywhere to see available shortcuts
+- **Command palette** — press `Cmd+K` (or `Ctrl+K`) to quickly jump to any client, show, or episode
