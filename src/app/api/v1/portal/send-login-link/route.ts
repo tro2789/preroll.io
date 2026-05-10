@@ -1,5 +1,5 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
-import { getSiteUrl, generateMagicLinkUrl, sendEmail } from '@/lib/email/send'
+import { getSiteUrl, sendEmail } from '@/lib/email/send'
 
 export async function POST(request: Request) {
   const { supabase, user, org, error } = await getAuthenticatedClient()
@@ -18,18 +18,22 @@ export async function POST(request: Request) {
   if (client.org_id !== org!.id) return errorResponse('Forbidden', 403)
   if (!client.email) return errorResponse('Client has no email address', 400)
 
+  let inviteCode = client.invite_code
+  if (!inviteCode) {
+    inviteCode = crypto.randomUUID()
+    await supabase!
+      .from('clients')
+      .update({ invite_code: inviteCode })
+      .eq('id', client.id)
+  }
+
   const siteUrl = await getSiteUrl()
+  const shareUrl = `${siteUrl}/share/${inviteCode}`
   const producerName = user!.user_metadata?.full_name || user!.email?.split('@')[0] || 'Your producer'
-
-  const fallbackUrl = client.invite_code
-    ? `${siteUrl}/invite/${client.invite_code}`
-    : `${siteUrl}/forgot-password`
-
-  const loginUrl = await generateMagicLinkUrl(client.email, siteUrl, '/portal', fallbackUrl)
 
   const emailSent = await sendEmail(
     client.email,
-    `Your preroll.io login link`,
+    `Your preroll.io portal link`,
     `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
         <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL.IO</h1>
@@ -37,13 +41,13 @@ export async function POST(request: Request) {
           Hi ${client.name?.split(' ')[0] || 'there'},
         </p>
         <p style="font-size: 15px; color: #333; line-height: 1.6;">
-          ${producerName} sent you a link to access your client portal.
+          ${producerName} shared your client portal with you. Click below to view your shows, track episode progress, and review deliverables.
         </p>
-        <a href="${loginUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
+        <a href="${shareUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
           Open Your Portal
         </a>
         <p style="font-size: 13px; color: #888; line-height: 1.5; margin-top: 24px;">
-          This link expires in 24 hours. If it's expired, <a href="${fallbackUrl}" style="color: #7c3aed;">click here</a> to request a new one.
+          Bookmark this link to come back anytime.
         </p>
       </div>
     `,
