@@ -23,7 +23,7 @@ export default async function PortalEpisodePage({
   ] = await Promise.all([
     supabase
       .from('shows')
-      .select('id, name')
+      .select('id, name, allow_client_downloads, client_id, clients!inner(org_id, organizations(allow_client_downloads))')
       .eq('id', showId)
       .single(),
     supabase
@@ -50,6 +50,10 @@ export default async function PortalEpisodePage({
 
   if (!show) redirect('/portal')
   if (!episode) redirect(`/portal/shows/${showId}`)
+
+  const clientRow = show.clients as unknown as { organizations: { allow_client_downloads: boolean } | null } | null
+  const orgDownloads = clientRow?.organizations?.allow_client_downloads ?? true
+  const allowDownloads = show.allow_client_downloads !== null ? show.allow_client_downloads : orgDownloads
 
   const deliverableIds = new Set((deliverables ?? []).map((d) => d.id))
   const fileRefs = (allFileRefs ?? []).filter((fr) => fr.deliverable_id && deliverableIds.has(fr.deliverable_id))
@@ -110,7 +114,7 @@ export default async function PortalEpisodePage({
         ) : (
           <div className="space-y-3">
             {deliverables.map((d) => (
-              <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} />
+              <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} allowDownload={allowDownloads} />
             ))}
           </div>
         )}

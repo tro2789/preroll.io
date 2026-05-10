@@ -44,6 +44,7 @@ export async function POST(request: Request) {
       description: body.description || null,
       file_url: body.file_url || null,
       file_key: body.file_key || null,
+      producer_notes: body.producer_notes || null,
     })
     .select()
     .single()

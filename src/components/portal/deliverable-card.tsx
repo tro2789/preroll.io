@@ -13,6 +13,7 @@ interface Deliverable {
   reviewer_notes: string | null
   reviewed_at: string | null
   created_at: string
+  producer_notes?: string | null
 }
 
 interface DeliverableCardProps {
@@ -20,6 +21,7 @@ interface DeliverableCardProps {
   episodeContext?: string
   reviewUrl?: string
   thumbnailUrl?: string
+  allowDownload?: boolean
 }
 
 const typeLabels: Record<string, string> = {
@@ -40,7 +42,7 @@ const statusConfig: Record<string, { dot: string; label: string; muted?: boolean
   revision_requested: { dot: 'bg-red-400', label: 'Revision Requested' },
 }
 
-export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbnailUrl: initialThumb }: DeliverableCardProps) {
+export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbnailUrl: initialThumb, allowDownload }: DeliverableCardProps) {
   const router = useRouter()
   const [showRevisionForm, setShowRevisionForm] = useState(false)
   const [notes, setNotes] = useState('')
@@ -116,6 +118,12 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
             {deliverable.description && (
               <p className="text-xs text-text-secondary mt-1">{deliverable.description}</p>
             )}
+            {deliverable.producer_notes && (
+              <div className="rounded-md bg-accent/5 border border-accent/15 px-3 py-2 mt-2">
+                <p className="text-[11px] font-medium text-text-tertiary mb-0.5">Producer notes</p>
+                <p className="text-xs text-text-secondary whitespace-pre-wrap">{deliverable.producer_notes}</p>
+              </div>
+            )}
           </div>
 
           {deliverable.status === 'approved' && deliverable.reviewed_at && (
@@ -174,14 +182,18 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
             </div>
           )}
 
-          {!isPending && !reviewUrl && deliverable.file_url && (
+          {allowDownload && !isPending && deliverable.file_url && (
             <div className="pt-1">
               <a
                 href={deliverable.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
               >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
+                  <path d="M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14H2.75Z" />
+                  <path d="M7.25 7.689V2a.75.75 0 0 1 1.5 0v5.689l1.97-1.969a.749.749 0 1 1 1.06 1.06l-3.25 3.25a.749.749 0 0 1-1.06 0L4.22 6.78a.749.749 0 1 1 1.06-1.06l1.97 1.969Z" />
+                </svg>
                 Download
               </a>
             </div>

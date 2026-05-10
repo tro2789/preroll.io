@@ -19,11 +19,15 @@ export default async function PortalShowPage({
 
   const { data: show } = await supabase
     .from('shows')
-    .select('id, name, description, cover_art_url')
+    .select('id, name, description, cover_art_url, allow_client_downloads, clients!inner(org_id, organizations(allow_client_downloads))')
     .eq('id', showId)
     .single()
 
   if (!show) redirect('/portal')
+
+  const clientRow = show.clients as unknown as { organizations: { allow_client_downloads: boolean } | null } | null
+  const orgDownloads = clientRow?.organizations?.allow_client_downloads ?? true
+  const allowDownloads = show.allow_client_downloads !== null ? show.allow_client_downloads : orgDownloads
 
   const [
     { data: stages },
@@ -45,7 +49,7 @@ export default async function PortalShowPage({
       .order('episode_number', { ascending: true, nullsFirst: false }),
     supabase
       .from('deliverables')
-      .select('id, type, title, description, file_url, status, reviewer_notes, reviewed_at, created_at, episode_id, episodes(title, episode_number)')
+      .select('id, type, title, description, producer_notes, file_url, status, reviewer_notes, reviewed_at, created_at, episode_id, episodes(title, episode_number)')
       .eq('show_id', showId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false }),
@@ -82,6 +86,7 @@ export default async function PortalShowPage({
       type: d.type,
       title: d.title,
       description: d.description,
+      producer_notes: d.producer_notes,
       file_url: d.file_url,
       status: d.status,
       reviewer_notes: d.reviewer_notes,
@@ -124,7 +129,7 @@ export default async function PortalShowPage({
             <span className="ml-2 text-accent font-medium">({reviewItems.length})</span>
           )}
         </h2>
-        <ReviewQueue deliverables={reviewItems} />
+        <ReviewQueue deliverables={reviewItems} allowDownload={allowDownloads} />
       </section>
 
       <section>

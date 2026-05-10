@@ -12,6 +12,7 @@ interface ReviewDeliverable {
   reviewer_notes: string | null
   reviewed_at: string | null
   created_at: string
+  producer_notes?: string | null
   episode_title: string | null
   episode_number: number | null
   reviewUrl?: string
@@ -20,9 +21,10 @@ interface ReviewDeliverable {
 
 interface ReviewQueueProps {
   deliverables: ReviewDeliverable[]
+  allowDownload?: boolean
 }
 
-export function ReviewQueue({ deliverables }: ReviewQueueProps) {
+export function ReviewQueue({ deliverables, allowDownload }: ReviewQueueProps) {
   if (deliverables.length === 0) {
     return (
       <div className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-6 text-center">
@@ -46,6 +48,7 @@ export function ReviewQueue({ deliverables }: ReviewQueueProps) {
             episodeContext={episodeContext}
             reviewUrl={d.reviewUrl}
             thumbnailUrl={d.thumbnailUrl}
+            allowDownload={allowDownload}
           />
         )
       })}

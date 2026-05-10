@@ -129,6 +129,7 @@ export function DeliveryPanel({
   const [manualTitle, setManualTitle] = useState('')
   const [manualType, setManualType] = useState('rough_cut')
   const [manualFileUrl, setManualFileUrl] = useState('')
+  const [manualProducerNotes, setManualProducerNotes] = useState('')
   const [manualLoading, setManualLoading] = useState(false)
   const [manualError, setManualError] = useState<string | null>(null)
   const [showConnectModal, setShowConnectModal] = useState(false)
@@ -363,6 +364,7 @@ export function DeliveryPanel({
     setManualTitle('')
     setManualType('rough_cut')
     setManualFileUrl('')
+    setManualProducerNotes('')
     setManualError(null)
     setShowManualForm(false)
   }
@@ -377,7 +379,7 @@ export function DeliveryPanel({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           show_id: showId, episode_id: episodeId, type: manualType,
-          title: manualTitle, file_url: manualFileUrl || null,
+          title: manualTitle, file_url: manualFileUrl || null, producer_notes: manualProducerNotes || null,
         }),
       })
       if (!res.ok) {
@@ -983,6 +985,13 @@ export function DeliveryPanel({
                         onChange={(e) => setManualFileUrl(e.target.value)}
                         placeholder="File URL (optional)"
                         className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                      />
+                      <textarea
+                        value={manualProducerNotes}
+                        onChange={(e) => setManualProducerNotes(e.target.value)}
+                        placeholder="Notes for client (optional)"
+                        rows={2}
+                        className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none resize-none"
                       />
                       <div className="flex items-center gap-2">
                         <button

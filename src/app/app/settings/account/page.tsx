@@ -18,6 +18,7 @@ interface OrgSettings {
   slug: string
   logo_url: string | null
   role?: string
+  allow_client_downloads?: boolean
 }
 
 export default function AccountPage() {
@@ -34,6 +35,7 @@ export default function AccountPage() {
   const [savingOrg, setSavingOrg] = useState(false)
   const [orgSaved, setOrgSaved] = useState(false)
   const [orgError, setOrgError] = useState<string | null>(null)
+  const [allowDownloads, setAllowDownloads] = useState(true)
 
   useEffect(() => {
     Promise.all([
@@ -48,6 +50,7 @@ export default function AccountPage() {
         if (orgRes.data) {
           setOrg(orgRes.data)
           setOrgName(orgRes.data.name || '')
+          setAllowDownloads(orgRes.data.allow_client_downloads !== false)
         }
       })
       .catch(() => {})
@@ -246,6 +249,46 @@ export default function AccountPage() {
             </div>
           </form>
         </section>
+      )}
+
+      {org && (
+        <>
+          <div className="border-t border-border-default" />
+
+          <section>
+            <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Client Portal</h3>
+            <div className="mt-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-text-primary">Allow clients to download deliverables</p>
+                <p className="mt-0.5 text-xs text-text-tertiary">When enabled, clients can download files from deliverable cards in their portal.</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={allowDownloads}
+                aria-label="Allow clients to download deliverables"
+                onClick={async () => {
+                  const prev = allowDownloads
+                  const next = !prev
+                  setAllowDownloads(next)
+                  const res = await fetch('/api/v1/org/settings', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ allow_client_downloads: next }),
+                  })
+                  if (!res.ok) {
+                    setAllowDownloads(prev)
+                    const json = await res.json().catch(() => ({}))
+                    setOrgError(json.error || 'Failed to update download setting')
+                  }
+                }}
+                className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface-base ${allowDownloads ? 'bg-accent' : 'bg-border-default'}`}
+              >
+                <span className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${allowDownloads ? 'translate-x-6' : 'translate-x-0.5'}`} />
+              </button>
+            </div>
+          </section>
+        </>
       )}
 
       {org && org.role === 'owner' && (

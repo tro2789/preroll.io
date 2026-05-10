@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { Thumbnail } from '@/components/ui/thumbnail'
+import { WelcomeCard } from '@/components/portal/welcome-card'
 
 export default async function PortalDashboard() {
   const supabase = await createClient()
@@ -11,7 +12,7 @@ export default async function PortalDashboard() {
 
   const { data: client } = await supabase
     .from('clients')
-    .select('id, name')
+    .select('id, name, portal_welcome_dismissed_at, org_id, organizations(display_name)')
     .eq('client_user_id', user.id)
     .single()
 
@@ -31,7 +32,7 @@ export default async function PortalDashboard() {
     )
   }
 
-  if (shows.length === 1) {
+  if (shows.length === 1 && client.portal_welcome_dismissed_at) {
     redirect(`/portal/shows/${shows[0].id}`)
   }
 
@@ -52,8 +53,14 @@ export default async function PortalDashboard() {
     pendingCount: pendingByShow.get(show.id) ?? 0,
   }))
 
+  const org = client.organizations as unknown as { display_name: string | null } | null
+  const orgDisplayName = org?.display_name || undefined
+
   return (
     <div className="space-y-6">
+      {!client.portal_welcome_dismissed_at && (
+        <WelcomeCard orgDisplayName={orgDisplayName} />
+      )}
       <p className="text-lg text-text-primary">
         Welcome back, <span className="font-semibold">{client.name.split(' ')[0]}</span>
       </p>
