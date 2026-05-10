@@ -10,6 +10,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         title: 'PreRoll Docs',
         url: '/docs',
       }}
+      themeSwitch={{ enabled: false }}
       links={[
         { text: 'Sign In', url: '/login' },
         { text: 'Get Started', url: '/signup' },
