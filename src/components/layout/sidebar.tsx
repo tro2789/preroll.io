@@ -20,6 +20,7 @@ interface NavItem {
   icon: (props: { className?: string }) => React.JSX.Element
   desktopOnly?: boolean
   mobileMenu?: boolean
+  external?: boolean
 }
 
 const navItems: NavItem[] = [
@@ -28,7 +29,7 @@ const navItems: NavItem[] = [
   { label: 'Reports', href: '/app/reports', icon: ChartIcon, mobileMenu: true },
   { label: 'Shows', href: '/app/shows', icon: FilmIcon },
   { label: 'Clients', href: '/app/clients', icon: UsersIcon },
-  { label: 'Docs', href: '/docs', icon: BookIcon, desktopOnly: true, mobileMenu: true },
+  { label: 'Docs', href: '/docs', icon: BookIcon, desktopOnly: true, mobileMenu: true, external: true },
   { label: 'Settings', href: '/app/settings', icon: CogIcon },
 ]
 
@@ -169,6 +170,7 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: Sideb
                   key={item.href}
                   href={item.href}
                   aria-current={isActive ? 'page' : undefined}
+                  {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
                       ? 'bg-accent-muted text-accent-hover'
@@ -183,6 +185,9 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: Sideb
                     }`}
                   />
                   {item.label}
+                  {item.external && (
+                    <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
                 </Link>
               )
             })}
@@ -297,6 +302,7 @@ function MobileBottomNav({ navItems, pathname }: { navItems: NavItem[]; pathname
                     key={item.href}
                     href={item.href}
                     onClick={() => setMenuOpen(false)}
+                    {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                     className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
                       isActive
                         ? 'text-accent-hover bg-accent/5'
@@ -305,6 +311,9 @@ function MobileBottomNav({ navItems, pathname }: { navItems: NavItem[]; pathname
                   >
                     <item.icon className="h-4 w-4" />
                     {item.label}
+                    {item.external && (
+                      <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-text-tertiary" />
+                    )}
                   </Link>
                 )
               })}
@@ -320,6 +329,14 @@ function MenuIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+    </svg>
+  )
+}
+
+function ExternalLinkIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
     </svg>
   )
 }
