@@ -103,7 +103,7 @@ export default async function ShowDetailPage({
       </div>
 
       {client && (
-        <div className="mt-6">
+        <div className="mt-6 max-w-sm">
           <ClientPortalSection
             clientId={client.id}
             clientName={client.name}
