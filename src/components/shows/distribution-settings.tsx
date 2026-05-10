@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { DISTRIBUTION_PROVIDER_NAMES } from '@/lib/integrations/types'
 
 interface Connection {
   id: string
@@ -12,11 +13,6 @@ interface Connection {
 interface SelectionItem {
   id: string
   name: string
-}
-
-const PROVIDER_NAMES: Record<string, string> = {
-  transistor: 'Transistor.fm',
-  youtube: 'YouTube',
 }
 
 export function DistributionSettings({ showId }: { showId: string }) {
@@ -170,7 +166,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
         <div key={conn.id} className="mt-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-text-primary">
-              {PROVIDER_NAMES[conn.provider] || conn.provider}
+              {DISTRIBUTION_PROVIDER_NAMES[conn.provider as keyof typeof DISTRIBUTION_PROVIDER_NAMES] || conn.provider}
             </p>
             <p className="text-sm text-text-secondary">
               {conn.external_show_name}
@@ -276,7 +272,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
             )
           )}
 
-          {connectedProviders.has('transistor') && connectedProviders.has('youtube') && connections.length > 0 && (
+          {connectedProviders.has('transistor') && connectedProviders.has('youtube') && (
             <p className="text-sm text-text-tertiary">All distribution providers connected.</p>
           )}
         </div>

@@ -23,7 +23,10 @@ function getOAuthConfig(): OAuthConfig {
   }
 }
 
-async function ytFetch(path: string, token: string, options?: RequestInit) {
+export const YT_API_BASE = YT_API
+export const YT_UPLOAD_BASE = YT_UPLOAD
+
+export async function ytFetch(path: string, token: string, options?: RequestInit) {
   const base = path.startsWith('http') ? '' : YT_API
   const url = path.startsWith('http') ? path : `${base}${path}`
   const res = await fetch(url, {
@@ -40,7 +43,7 @@ async function ytFetch(path: string, token: string, options?: RequestInit) {
   return res
 }
 
-async function ytJson(path: string, token: string, options?: RequestInit) {
+export async function ytJson(path: string, token: string, options?: RequestInit) {
   const res = await ytFetch(path, token, {
     ...options,
     headers: { 'Content-Type': 'application/json', ...options?.headers },

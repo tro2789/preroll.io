@@ -1,29 +1,4 @@
-const YT_API = 'https://www.googleapis.com/youtube/v3'
-const YT_UPLOAD = 'https://www.googleapis.com/upload/youtube/v3'
-
-async function ytApiFetch(path: string, token: string, options?: RequestInit) {
-  const url = path.startsWith('http') ? path : `${YT_API}${path}`
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...options?.headers,
-    },
-  })
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`YouTube API error ${res.status}: ${body}`)
-  }
-  return res
-}
-
-async function ytApiJson(path: string, token: string, options?: RequestInit) {
-  const res = await ytApiFetch(path, token, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-  })
-  return res.json()
-}
+import { ytFetch, ytJson, YT_UPLOAD_BASE } from './youtube'
 
 export interface YouTubeChannel {
   id: string
@@ -48,7 +23,7 @@ export interface PublishToYouTubeParams {
 }
 
 export async function listChannels(token: string): Promise<YouTubeChannel[]> {
-  const data = await ytApiJson('/channels?part=snippet&mine=true&maxResults=50', token)
+  const data = await ytJson('/channels?part=snippet&mine=true&maxResults=50', token)
   return (data.items || []).map((ch: Record<string, unknown>) => {
     const snippet = ch.snippet as Record<string, unknown>
     const thumbnails = snippet?.thumbnails as Record<string, Record<string, unknown>> | undefined
@@ -82,8 +57,8 @@ export async function initiateVideoUpload(
     },
   }
 
-  const res = await ytApiFetch(
-    `${YT_UPLOAD}/videos?uploadType=resumable&part=snippet,status`,
+  const res = await ytFetch(
+    `${YT_UPLOAD_BASE}/videos?uploadType=resumable&part=snippet,status`,
     token,
     {
       method: 'POST',
@@ -133,7 +108,7 @@ export async function setThumbnail(
   thumbnailBuffer: ArrayBuffer,
   mimeType: string = 'image/jpeg'
 ): Promise<void> {
-  const res = await fetch(`${YT_UPLOAD}/thumbnails/set?videoId=${videoId}`, {
+  const res = await fetch(`${YT_UPLOAD_BASE}/thumbnails/set?videoId=${videoId}`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -152,7 +127,7 @@ export async function addToPlaylist(
   playlistId: string,
   videoId: string
 ): Promise<void> {
-  await ytApiJson('/playlistItems?part=snippet', token, {
+  await ytJson('/playlistItems?part=snippet', token, {
     method: 'POST',
     body: JSON.stringify({
       snippet: {
@@ -175,7 +150,7 @@ export async function updateVideo(
     publishAt?: string
   }
 ): Promise<void> {
-  const current = await ytApiJson(`/videos?part=snippet,status&id=${videoId}`, token)
+  const current = await ytJson(`/videos?part=snippet,status&id=${videoId}`, token)
   const video = current.items?.[0]
   if (!video) throw new Error('Video not found')
 
@@ -189,7 +164,7 @@ export async function updateVideo(
   if (updates.privacyStatus !== undefined) status.privacyStatus = updates.privacyStatus
   if (updates.publishAt !== undefined) status.publishAt = updates.publishAt
 
-  await ytApiJson('/videos?part=snippet,status', token, {
+  await ytJson('/videos?part=snippet,status', token, {
     method: 'PUT',
     body: JSON.stringify({ id: videoId, snippet, status }),
   })
@@ -199,7 +174,7 @@ export async function getVideoStatus(
   token: string,
   videoId: string
 ): Promise<{ status: string; privacyStatus: string; uploadStatus: string }> {
-  const data = await ytApiJson(`/videos?part=status,processingDetails&id=${videoId}`, token)
+  const data = await ytJson(`/videos?part=status,processingDetails&id=${videoId}`, token)
   const video = data.items?.[0]
   if (!video) throw new Error('Video not found')
   return {
@@ -212,7 +187,7 @@ export async function getVideoStatus(
 export async function listPlaylists(
   token: string
 ): Promise<{ id: string; title: string }[]> {
-  const data = await ytApiJson('/playlists?part=snippet&mine=true&maxResults=50', token)
+  const data = await ytJson('/playlists?part=snippet&mine=true&maxResults=50', token)
   return (data.items || []).map((pl: Record<string, unknown>) => ({
     id: pl.id as string,
     title: ((pl.snippet as Record<string, unknown>)?.title as string) || 'Untitled',
