@@ -2,11 +2,8 @@
   "title": "Documentation",
   "pages": [
     "index",
-    "---Getting Started---",
     "getting-started",
-    "---Features---",
     "features",
-    "---Developer---",
     "developer"
   ]
 }
