@@ -132,7 +132,7 @@ export function DeveloperTabs({
       <div className="mt-6">
         {activeTab === 'integrations' && (
           canIntegrations ? (
-            <div>
+            <div className="max-w-xl">
               {connectedProvider && (
                 <div className="mb-4 rounded-lg bg-success/8 px-4 py-2.5 text-sm text-success">
                   {connectedProvider.replace(/_/g, ' ')} connected successfully.
