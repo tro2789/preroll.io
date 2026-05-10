@@ -4,18 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { Thumbnail } from '@/components/ui/thumbnail'
 import { WelcomeCard } from '@/components/portal/welcome-card'
+import { resolvePortalClient } from '@/lib/portal/resolve'
 
 export default async function PortalDashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: client } = await supabase
-    .from('clients')
-    .select('id, name, portal_welcome_dismissed_at, org_id, organizations(display_name)')
-    .eq('client_user_id', user.id)
-    .single()
-
+  const { client } = await resolvePortalClient(supabase, user.id)
   if (!client) redirect('/login')
 
   const { data: shows } = await supabase
@@ -53,8 +49,7 @@ export default async function PortalDashboard() {
     pendingCount: pendingByShow.get(show.id) ?? 0,
   }))
 
-  const org = client.organizations as unknown as { display_name: string | null } | null
-  const orgDisplayName = org?.display_name || undefined
+  const orgDisplayName = client.organizations?.display_name || undefined
 
   return (
     <div className="space-y-6">
