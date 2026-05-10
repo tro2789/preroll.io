@@ -1,0 +1,169 @@
+---
+title: "Shows"
+description: "Configure podcast shows with custom pipeline stages, branding, templates, and distribution."
+---
+
+# Shows
+
+A show in PreRoll represents a single podcast series. Each show belongs to a client and contains episodes. Shows are where you configure the production pipeline, branding, distribution, and templates that apply to all episodes within.
+
+{/* Screenshot: Show Detail — /docs/screenshots/shows.png */}
+
+## Creating a Show
+
+1. Navigate to a client's detail page, or use the **New Show** quick-create action
+2. Select the client this show belongs to
+3. Enter the show name and optional description
+4. Configure the pipeline stages (or accept the defaults)
+5. Click **Create**
+
+## Show Settings
+
+### Basic Information
+
+| Field | Description |
+|-------|-------------|
+| Name | The podcast show name |
+| Description | Brief description of the show |
+| Format | Audio, video, or hybrid |
+| Schedule | Publishing cadence (weekly, biweekly, monthly, etc.) |
+| Timezone | Used for deadline calculations |
+
+### Cover Art
+
+Upload your show's cover art directly to PreRoll. This image is:
+
+- Displayed throughout the UI wherever the show appears
+- Used as the default thumbnail for episodes (unless overridden)
+- Stored on Cloudflare R2 for fast global delivery
+- Recommended size: 3000x3000px (standard podcast cover art dimensions)
+
+{/* Screenshot: Show Cover Art Upload — /docs/screenshots/show-cover-art.png */}
+
+## Pipeline Stages
+
+Every show has a customizable production pipeline. The default stages are:
+
+```
+Planning → Recording → Editing → Review → Approved → Published
+```
+
+### Customizing Stages
+
+You can add, remove, rename, and reorder stages to match your production workflow:
+
+1. Open the show's **Settings** tab
+2. Navigate to **Pipeline Stages**
+3. Drag stages to reorder, click to rename, or use the + button to add
+
+**Examples of custom pipelines:**
+
+For a video podcast:
+```
+Script → Recording → Rough Cut → Color Grade → Review → Approved → Published
+```
+
+For a minimal audio show:
+```
+Recording → Edit → Publish
+```
+
+### Stage Rules
+
+- Every show must have at least one stage
+- Stage names must be unique within a show
+- Stages have a position (order) that determines the flow
+- Deleting a stage will prompt you to reassign any episodes currently in that stage
+
+### Status Overrides
+
+Each stage can optionally map to a high-level episode status:
+
+| Status | Meaning |
+|--------|---------|
+| `draft` | Episode is being prepared |
+| `in_progress` | Active production work |
+| `in_review` | Waiting on client feedback |
+| `approved` | Client has signed off |
+| `published` | Episode is live |
+
+These overrides power the dashboard metrics and reporting.
+
+## Episode Templates
+
+Each show can have a template that auto-populates new episodes. Templates define:
+
+- Default description text
+- Default show notes structure
+- Starting pipeline stage
+- Default tags
+
+See [Templates](/docs/features/templates) for full details.
+
+## Distribution Connection
+
+Connect a show to external publishing platforms:
+
+### Transistor.fm
+
+Link your show to a Transistor.fm podcast for one-click publishing:
+
+1. Go to the show's **Distribution** tab
+2. Click **Connect Transistor**
+3. Enter your Transistor API key
+4. Select the matching show from your Transistor account
+
+### YouTube
+
+Connect to YouTube for video episode distribution:
+
+1. Go to the show's **Distribution** tab
+2. Click **Connect YouTube**
+3. Authenticate with your Google account
+4. Select or create a YouTube channel/playlist
+
+See [Distribution](/docs/features/distribution) for the full publishing workflow.
+
+## Show Assets
+
+Shows can have shared assets that apply to all episodes:
+
+- **Intro** — Audio/video intro clip
+- **Outro** — Audio/video outro clip
+- **Music beds** — Background music tracks
+- **Branding package** — Logos, fonts, color palette files
+
+See [Assets](/docs/features/assets) for details on uploading and managing assets.
+
+## Show List View
+
+The shows list (accessible from the sidebar or a client's detail page) displays:
+
+- Show name and cover art thumbnail
+- Client name
+- Episode count (active / total)
+- Publishing schedule
+- Last episode date
+
+### Filtering
+
+- **By client** — Show only one client's shows
+- **By format** — Audio, video, or hybrid
+- **By status** — Active or archived
+
+## Plan Limits
+
+| Plan | Show Limit |
+|------|-----------|
+| Free | 1 show |
+| Pro | Unlimited |
+| Studio | Unlimited |
+
+## Archiving Shows
+
+Shows that are no longer in active production can be archived:
+
+- Episodes are preserved but hidden from the Kanban board
+- The show won't appear in dropdowns or the calendar
+- Archived shows can be restored at any time
+- Distribution connections are preserved but inactive

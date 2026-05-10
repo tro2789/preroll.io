@@ -35,7 +35,7 @@ function Nav() {
         <nav className="hidden sm:flex items-center gap-6">
           <a href="#features" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Features</a>
           <a href="#pricing" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Pricing</a>
-          <Link href="/docs/api-keys" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">API Docs</Link>
+          <Link href="/docs" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Docs</Link>
         </nav>
         <div className="flex items-center gap-3">
           <Link href="/login" className="text-sm text-text-tertiary hover:text-text-primary transition-colors hidden sm:block">
@@ -84,7 +84,7 @@ function Hero() {
               Start Free
             </Link>
             <Link
-              href="/docs/api-keys"
+              href="/docs/developer/api-reference"
               className="text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
             >
               View API Docs &rarr;
@@ -267,7 +267,7 @@ function McpSection() {
           </p>
           <div className="mt-6">
             <Link
-              href="/docs/mcp"
+              href="/docs/developer/mcp-server"
               className="text-sm font-medium text-accent hover:text-accent-hover transition-colors"
             >
               MCP setup guide &rarr;
@@ -382,7 +382,7 @@ function FinalCta() {
             Start Free
           </Link>
           <Link
-            href="/docs/api-keys"
+            href="/docs/developer/api-reference"
             className="text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
           >
             Read the API Docs &rarr;
@@ -411,9 +411,9 @@ function Footer() {
           <div>
             <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Developers</p>
             <ul className="mt-3 space-y-2">
-              <li><Link href="/docs/api-keys" className="text-sm text-text-secondary hover:text-text-primary transition-colors">API</Link></li>
-              <li><Link href="/docs/mcp" className="text-sm text-text-secondary hover:text-text-primary transition-colors">MCP Server</Link></li>
-              <li><Link href="/docs/webhooks" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Webhooks</Link></li>
+              <li><Link href="/docs/developer/api-reference" className="text-sm text-text-secondary hover:text-text-primary transition-colors">API</Link></li>
+              <li><Link href="/docs/developer/mcp-server" className="text-sm text-text-secondary hover:text-text-primary transition-colors">MCP Server</Link></li>
+              <li><Link href="/docs/developer/webhooks" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Webhooks</Link></li>
             </ul>
           </div>
           <div>

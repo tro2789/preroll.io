@@ -1,0 +1,89 @@
+---
+title: MCP Server
+description: Let AI assistants interact with PreRoll data through the Model Context Protocol.
+---
+
+## Overview
+
+The PreRoll MCP server allows AI assistants (Claude, Cursor, etc.) to read and manage your podcast production data through the [Model Context Protocol](https://modelcontextprotocol.io). It's a thin wrapper over the PreRoll REST API that exposes structured tools for LLM interaction.
+
+## Setup
+
+### 1. Create an API Key
+
+Go to **Settings → Developer → API Keys** and create a new key. Copy the key — it's only shown once.
+
+### 2. Build the Server
+
+```bash
+cd mcp
+npm install
+npm run build
+```
+
+### 3. Configure Your Client
+
+Add the following to your `.mcp.json` (or equivalent configuration for your MCP client):
+
+```json
+{
+  "mcpServers": {
+    "preroll": {
+      "command": "node",
+      "args": ["path/to/mcp/dist/index.js"],
+      "env": {
+        "PREROLL_API_KEY": "pr_your_api_key_here",
+        "PREROLL_BASE_URL": "https://api.preroll.io"
+      }
+    }
+  }
+}
+```
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PREROLL_API_KEY` | Yes | — | Your PreRoll API key (starts with `pr_`) |
+| `PREROLL_BASE_URL` | No | `https://api.preroll.io` | Base URL for the PreRoll API |
+
+## Available Tools
+
+The MCP server exposes 21 tools:
+
+| Tool | Description |
+|------|-------------|
+| `get_dashboard` | Get dashboard summary (stats, attention list, recent activity) |
+| `list_clients` | List all clients in the organization |
+| `get_client` | Get detailed information about a specific client |
+| `create_client` | Create a new client |
+| `update_client` | Update an existing client |
+| `list_shows` | List shows (optionally filtered by client) |
+| `get_show` | Get detailed information about a specific show |
+| `create_show` | Create a new show for a client |
+| `update_show` | Update show details |
+| `list_episodes` | List episodes (filterable by show, status, stage) |
+| `get_episode` | Get detailed information about a specific episode |
+| `create_episode` | Create a new episode for a show |
+| `update_episode` | Update episode details or move to a new stage |
+| `list_deliverables` | List deliverables (filterable by episode, status) |
+| `create_deliverable` | Create a new deliverable for an episode |
+| `update_deliverable` | Update deliverable status or details |
+| `get_activity` | Get recent activity feed |
+| `list_tags` | List all tags in the organization |
+| `create_tag` | Create a new tag |
+| `list_stages` | List pipeline stages for a show |
+| `list_notes` | List meeting notes for a client |
+| `create_note` | Create a meeting note for a client |
+
+## Example Usage Prompts
+
+Once connected, you can interact with PreRoll data naturally:
+
+- "What episodes need my attention this week?"
+- "Show me all episodes currently in the Review stage"
+- "Create a new episode for The Morning Show called 'Interview with Jane'"
+- "Move episode 42 to the Editing stage"
+- "What deliverables are pending approval?"
+- "List all clients and their active shows"
+- "Add a meeting note for Acme Corp about the new season plan"

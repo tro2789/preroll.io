@@ -1,0 +1,288 @@
+---
+title: "FAQ"
+description: "Frequently asked questions about PreRoll — billing, limits, security, integrations, and more."
+---
+
+# Frequently Asked Questions
+
+## Billing & Plans
+
+### What plans are available?
+
+PreRoll offers three plans:
+
+| Plan | Price | Best for |
+|------|-------|----------|
+| Free | $0/month | Trying PreRoll with a single client |
+| Pro | $29/month or $289/year | Solo producers with multiple clients |
+| Studio | $79/month or $789/year | Teams and agencies |
+
+Annual billing saves you roughly 17% compared to monthly.
+
+### Is there a free trial?
+
+Yes. Every new account gets a **7-day Studio trial** with full access to all features. No credit card is required to start. After the trial, you can continue on the Free plan or upgrade.
+
+### What happens when my trial ends?
+
+Your account automatically moves to the Free plan. You won't lose any data, but:
+
+- Feature access is limited to Free plan entitlements (1 client, 1 show)
+- Integrations, templates, reporting, and white-label are disabled
+- You can upgrade at any time to restore full access
+
+### Can I switch plans or cancel anytime?
+
+Yes. You can upgrade, downgrade, or cancel at any time from **Settings > Billing**. When you cancel a paid plan:
+
+- You retain access until the end of the current billing period
+- Your data is preserved (you can re-subscribe later)
+- You move to the Free plan when the period expires
+
+### Do you offer refunds?
+
+We offer a full refund within 14 days of your first payment if PreRoll isn't the right fit. Contact support@preroll.io.
+
+---
+
+## Limits & Quotas
+
+### How many clients/shows/episodes can I have?
+
+| Resource | Free | Pro | Studio |
+|----------|------|-----|--------|
+| Clients | 1 | Unlimited | Unlimited |
+| Shows | 1 | Unlimited | Unlimited |
+| Episodes | Unlimited | Unlimited | Unlimited |
+| Storage | 1 GB | 50 GB | 250 GB |
+| Team members | 1 | 1 | Unlimited |
+
+### Is there a limit on file upload size?
+
+Yes, per-file limits depend on your plan:
+
+- Free: 100 MB per file
+- Pro: 500 MB per file
+- Studio: 2 GB per file
+
+For larger files, use the external file linking feature (link to Frame.io, Google Drive, or Vimeo).
+
+### What counts toward storage?
+
+All files uploaded to PreRoll count toward your storage quota: deliverable files, show assets, episode assets, thumbnails, and cover art. External file links (references to Frame.io, Google Drive, etc.) do not count.
+
+---
+
+## Security & Privacy
+
+### How is my data stored?
+
+- All data is stored in Supabase (PostgreSQL) with row-level security
+- Files are stored on Cloudflare R2 with signed URL access
+- All connections are encrypted with TLS/HTTPS
+- Database backups run daily
+
+### Can clients see each other's data?
+
+No. Row-level security (RLS) policies ensure that:
+
+- Clients can only see content associated with their client record
+- Producers can only see content within their organization
+- There is no cross-organization data access
+
+### Who can access my organization's data?
+
+Only members of your organization can access producer-side data. Access is controlled by:
+
+- Organization membership (invite-only)
+- Role-based permissions (owner, admin, member)
+- API keys (created and managed by org owners/admins)
+
+### Do you sell or share my data?
+
+No. Your data is yours. We don't sell, share, or use your content for any purpose other than providing the PreRoll service.
+
+### Can I delete my account and all data?
+
+Yes. Contact support@preroll.io to request full account deletion. All associated data (episodes, files, client records) will be permanently removed within 30 days.
+
+---
+
+## Multi-Organization & Teams
+
+### Can I belong to multiple organizations?
+
+Yes. A single PreRoll account (email) can be a member of multiple organizations. Switch between them using the organization picker in the top navigation.
+
+### How do team roles work?
+
+| Role | Permissions |
+|------|-------------|
+| Owner | Full access, billing, can delete org |
+| Admin | Full access except billing and org deletion |
+| Member | Create/edit episodes, manage deliverables, but no settings access |
+
+### How do I invite team members?
+
+1. Go to **Settings > Team**
+2. Click **Invite Member**
+3. Enter their email and select a role
+4. They receive an email invitation
+
+Team members are a Studio plan feature.
+
+### Can team members see all clients?
+
+Yes. All members of an organization can see all clients, shows, and episodes within that org. There is no per-client permission scoping (this keeps the system simple for small production teams).
+
+---
+
+## Self-Hosting
+
+### Can I self-host PreRoll?
+
+Yes. PreRoll supports self-hosting for organizations that need full control over their data and infrastructure.
+
+### What do I need to self-host?
+
+- A server capable of running Node.js (Next.js)
+- A Supabase project (cloud or self-hosted)
+- Cloudflare R2 bucket (or S3-compatible storage)
+- Set `PREROLL_SELF_HOSTED=true` in your environment
+
+### Do self-hosted instances need a license?
+
+Self-hosted instances use a license key system (soft gate). You can run PreRoll without a license, but a valid key removes the reminder banner and grants access to license-holder support channels.
+
+### Are self-hosted instances limited?
+
+When `PREROLL_SELF_HOSTED=true` is set, all plan entitlement checks are bypassed. You get full Studio-level access without needing a Stripe subscription.
+
+---
+
+## Integrations
+
+### Which integrations are available?
+
+| Integration | Purpose |
+|-------------|---------|
+| Frame.io | Video review and comment sync |
+| Google Drive | File delivery and collaboration |
+| Vimeo | Video delivery |
+| Transistor.fm | Podcast publishing |
+| YouTube | Video episode publishing |
+| Webhooks | Custom automation (send events to any URL) |
+| API Keys | Programmatic access for scripts and tools |
+| MCP Server | AI assistant integration |
+
+### Do integrations cost extra?
+
+No. All integrations are included in the Pro and Studio plans at no additional cost. You do need your own accounts with the integrated services (Frame.io, Transistor, etc.).
+
+### What if an integration disconnects?
+
+OAuth-based integrations (Frame.io, Google, Vimeo, YouTube) may need periodic re-authentication. When this happens:
+
+1. You'll see a warning in Settings > Integrations
+2. Click **Reconnect** and re-authenticate
+3. All linked content remains intact — only the auth token needs refreshing
+
+See [Troubleshooting](/docs/features/troubleshooting) for specific integration issues.
+
+### Can I use webhooks to integrate with other tools?
+
+Yes. PreRoll can send webhook events to any URL when things happen (episode created, deliverable approved, episode published, etc.). Use this to connect with:
+
+- Zapier or Make
+- n8n
+- Slack or Discord
+- Custom applications
+
+Webhook payloads are signed for security, and delivery is logged with retry capability.
+
+---
+
+## Client Access
+
+### How do clients log in?
+
+Clients use magic-link authentication. They receive an email with a one-click login link — no password needed. Links expire after 15 minutes.
+
+### Can clients have passwords instead?
+
+Currently, no. Magic links are the only client authentication method. This eliminates password management issues and reduces support requests.
+
+### What can clients do in the portal?
+
+Clients can:
+
+- View their shows and episodes
+- See episode progress (simplified status)
+- Review and play deliverables
+- Leave timestamped comments
+- Approve deliverables or request revisions
+- View their activity feed
+
+Clients cannot:
+
+- See other clients' content
+- Access producer tools or settings
+- View billing or organizational information
+- Create or edit episodes
+
+### Can I have multiple client contacts per show?
+
+Yes. You can grant portal access to multiple email addresses for the same client. All contacts see the same content.
+
+---
+
+## Data & Export
+
+### Can I export my data?
+
+Yes. You can export:
+
+- **Reports** — CSV export of production metrics
+- **Episode data** — Export episode metadata via the API
+- **Files** — Download any uploaded asset directly
+
+### What format is exported data in?
+
+CSV for reports, JSON for API exports, and original format for uploaded files.
+
+### What happens to my data if I cancel?
+
+Your data is preserved indefinitely on the Free plan. If you want data removed entirely, contact support for full account deletion.
+
+---
+
+## General
+
+### What browsers are supported?
+
+PreRoll works in all modern browsers:
+
+- Chrome (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+- Edge (latest 2 versions)
+
+Mobile browsers are supported for the client portal. The producer interface is optimized for desktop/tablet use.
+
+### Is there a mobile app?
+
+Not currently. PreRoll is a web application optimized for desktop use. The client portal is mobile-responsive, so clients can review and approve on their phones.
+
+### How do I get help?
+
+- **Documentation** — You're reading it!
+- **Email support** — support@preroll.io
+- **Troubleshooting guide** — [Common issues and solutions](/docs/features/troubleshooting)
+
+### Is there an API?
+
+Yes. PreRoll is API-first. Everything the web UI does is available via the REST API. Authenticate with API keys (available on Pro and Studio plans). See the [API documentation](/docs/api) for details.
+
+### Can I use PreRoll with my AI assistant?
+
+Yes. PreRoll includes an MCP (Model Context Protocol) server that AI assistants can use to interact with your production data — creating episodes, checking status, managing deliverables, and more. The MCP server wraps the same REST API that powers the web UI.

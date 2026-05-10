@@ -1,0 +1,175 @@
+---
+title: "Templates"
+description: "Define episode templates per show to standardize creation and save time on repetitive setup."
+---
+
+# Templates
+
+Episode templates let you define a reusable starting point for new episodes. Each show can have a template that pre-populates fields when you create an episode, ensuring consistency and saving time on repetitive data entry.
+
+{/* Screenshot: Template Editor — /docs/screenshots/templates.png */}
+
+## What Gets Templated
+
+A template can define defaults for:
+
+| Field | Description |
+|-------|-------------|
+| Description | Standard episode description text or structure |
+| Show notes | Pre-built show notes template with sections |
+| Starting stage | Which pipeline stage new episodes begin in |
+| Tags | Default tags automatically applied |
+| Notes | Internal production notes that apply to every episode |
+
+## How Templates Work
+
+### Auto-Apply on Creation
+
+When you create a new episode for a show that has a template:
+
+1. Click **New Episode**
+2. Select the show
+3. Template fields are automatically populated
+4. Edit any pre-filled values as needed
+5. Click **Create**
+
+The template values are suggestions — you can override any field before or after creation.
+
+### Template Inheritance
+
+Templates are set at the show level. Every episode created under that show inherits the template values. This means:
+
+- All episodes in a show start with the same structure
+- You maintain consistency without manual copying
+- New team members follow the established format automatically
+
+## Creating a Template
+
+1. Navigate to the show's **Settings** tab
+2. Click **Episode Template**
+3. Fill in the template fields
+4. Click **Save Template**
+
+### Description Template
+
+Write a default description that applies to most episodes. Use this for:
+
+- Standard opening/closing text
+- Recurring links (website, social media, sponsor)
+- SEO-optimized boilerplate
+
+**Example:**
+
+```
+[Episode Title] - [Show Name]
+
+[Episode-specific description goes here]
+
+---
+Links mentioned in this episode:
+- [Link 1]
+- [Link 2]
+
+Follow us:
+- Twitter: @showhandle
+- Website: https://example.com
+
+Produced by [Your Company] | https://preroll.io
+```
+
+### Show Notes Template
+
+Structure your show notes with predefined sections:
+
+```
+## Summary
+[Brief episode summary]
+
+## Key Topics
+- Topic 1
+- Topic 2
+- Topic 3
+
+## Guest Bio
+[Guest name and background]
+
+## Resources & Links
+- [Resource 1]
+- [Resource 2]
+
+## Timestamps
+- 00:00 - Intro
+- [xx:xx] - [Topic]
+- [xx:xx] - [Topic]
+
+## Credits
+Hosted by [Host Name]
+Produced by [Producer Name]
+Music by [Artist]
+```
+
+### Default Tags
+
+Select tags that should be applied to every new episode in this show:
+
+- Useful for show-specific tags (e.g., the show name as a tag)
+- Content type tags if the show always produces the same format
+- Client tags for quick filtering
+
+## Template Management
+
+### Editing a Template
+
+1. Go to the show's **Settings > Episode Template**
+2. Modify any fields
+3. Click **Save**
+
+Changes only affect future episodes. Existing episodes are not retroactively updated.
+
+### Removing a Template
+
+1. Go to the show's **Settings > Episode Template**
+2. Click **Clear Template**
+3. Confirm
+
+New episodes will be created with blank fields (except for required fields).
+
+### Previewing a Template
+
+Before saving, you can preview what a new episode would look like with the template applied. This helps ensure the formatting and content look correct.
+
+## Multiple Shows, Multiple Templates
+
+Each show has its own independent template. This is intentional:
+
+- An interview show might have a guest bio section
+- A news show might have a "stories covered" section
+- A narrative show might have chapter-based notes
+- A solo show might be minimal with just links
+
+## Templates and Team Workflows
+
+For Studio plan organizations with multiple team members:
+
+- Templates ensure everyone creates episodes the same way
+- New team members don't need to ask "what format do we use?"
+- Template changes propagate to all team members immediately
+- Only owners and admins can edit show templates
+
+## Tips
+
+- **Start with structure, not content** — Use placeholders like `[Episode-specific description]` so it's clear what to fill in
+- **Include recurring links** — Anything that appears in every episode description should be in the template
+- **Use the notes field** — Add internal reminders ("Remember to ask for the guest's preferred link")
+- **Review templates quarterly** — Update as your show evolves
+- **Keep it flexible** — Templates should save time, not constrain creativity
+
+## Plan Availability
+
+| Plan | Template Access |
+|------|----------------|
+| Free | Not available |
+| Pro | Full template support |
+| Studio | Full template support |
+
+Templates are available during the 7-day Studio trial.

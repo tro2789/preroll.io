@@ -1,0 +1,178 @@
+---
+title: "Review Player"
+description: "In-app audio/video player with timestamped comments and Frame.io sync for client review."
+---
+
+# Review Player
+
+The review player is a built-in media player that enables precise, timestamped feedback on audio and video deliverables. Clients and producers can leave comments tied to specific moments in the media, making feedback clear and actionable.
+
+{/* Screenshot: Review Player — /docs/screenshots/review-player.png */}
+
+## Overview
+
+The review player supports:
+
+- Audio and video playback (all common formats)
+- Timestamped comments with second-level precision
+- Two-way sync with Frame.io comments
+- Approval and revision actions directly in the player
+- Waveform visualization for audio files
+- Keyboard shortcuts for efficient review
+
+## Using the Review Player
+
+### Opening the Player
+
+The review player opens when you click on an audio or video deliverable — either from the episode detail view or the client portal.
+
+### Playback Controls
+
+| Control | Action |
+|---------|--------|
+| Space | Play/pause |
+| Left/Right arrows | Skip back/forward 5 seconds |
+| Shift + Left/Right | Skip back/forward 15 seconds |
+| `[` / `]` | Slow down / speed up playback |
+| `M` | Mute/unmute |
+| `F` | Fullscreen (video) |
+
+### Waveform Display
+
+For audio files, the player shows a waveform visualization:
+
+- Click anywhere on the waveform to seek
+- Comments are displayed as markers on the waveform
+- Hover over a marker to preview the comment text
+
+## Timestamped Comments
+
+### Leaving a Comment
+
+1. Play or seek to the moment you want to comment on
+2. Click the **Comment** button (or press `C`)
+3. The playback pauses and the timestamp is captured
+4. Type your comment
+5. Click **Post** (or press `Ctrl+Enter`)
+
+The comment is pinned to that exact timestamp and appears as a marker on the timeline.
+
+### Viewing Comments
+
+Comments appear in two places:
+
+- **Timeline markers** — Visual indicators on the playback timeline/waveform
+- **Comment panel** — Scrollable list alongside the player, sorted by timestamp
+
+Click any comment in the panel to jump to its timestamp in the media.
+
+### Comment Threading
+
+Reply to existing comments to create a thread:
+
+- Click **Reply** on any comment
+- The thread stays attached to the original timestamp
+- Threads are collapsible for cleaner reading
+
+## Frame.io Comment Sync
+
+If the episode is connected to Frame.io, comments sync bidirectionally:
+
+### How Sync Works
+
+```
+PreRoll Comment → Frame.io Comment (on linked asset)
+Frame.io Comment → PreRoll Comment (via webhook)
+```
+
+### Setup
+
+1. Connect your Frame.io account in **Settings > Integrations**
+2. Link an episode to a Frame.io project
+3. Upload or link the asset in Frame.io
+
+Once linked, any comment left in PreRoll appears in Frame.io (and vice versa), preserving timestamps.
+
+### Sync Details
+
+| Field | Synced? |
+|-------|---------|
+| Comment text | Yes |
+| Timestamp | Yes |
+| Author name | Yes |
+| Replies | Yes |
+| Reactions/emoji | No |
+| Annotations (drawings) | No |
+
+{/* Screenshot: Frame.io Sync — /docs/screenshots/review-player-frameio-sync.png */}
+
+## Approval Actions
+
+The review player includes approval controls for clients:
+
+### Approve
+
+Click **Approve** to mark the deliverable as approved. This:
+
+- Updates the deliverable status
+- Notifies the producer
+- Logs the approval in the activity feed
+- Timestamps when the approval happened
+
+### Request Revision
+
+Click **Request Revision** to ask for changes. This:
+
+- Opens a comment field for explaining what needs to change
+- Updates the deliverable status to `revision_requested`
+- Notifies the producer with the revision notes
+- The comment is pinned to the current playback position (optional)
+
+## Client Portal Experience
+
+When clients access the review player through their portal:
+
+- They see the same player interface with full playback controls
+- They can leave timestamped comments
+- Approve/revision buttons are prominently displayed
+- They see only their own comments and producer replies (not internal team notes)
+- White-label branding is applied to the player interface
+
+{/* Screenshot: Client Portal Review — /docs/screenshots/review-player-portal.png */}
+
+## Producer View
+
+Producers see additional information in the review player:
+
+- All comments (including internal team comments marked as such)
+- Version switcher to compare different deliverable versions
+- Direct link to the Frame.io asset (if connected)
+- Client activity indicators (when they last viewed, how far they watched)
+
+## Supported Formats
+
+### Audio
+- MP3, WAV, M4A, FLAC, OGG, AAC
+
+### Video
+- MP4, MOV, WebM, MKV (browser-supported codecs)
+
+### Limitations
+
+- Files must be uploaded to R2 or linked from a supported provider
+- Maximum recommended duration: 4 hours
+- Video playback quality depends on the uploaded file (no transcoding)
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Space` | Play/pause |
+| `C` | New comment at current time |
+| `Ctrl+Enter` | Submit comment |
+| `Esc` | Cancel comment / close player |
+| `←` / `→` | Skip 5 seconds |
+| `Shift+←` / `Shift+→` | Skip 15 seconds |
+| `N` | Next comment marker |
+| `P` | Previous comment marker |
+| `F` | Toggle fullscreen |

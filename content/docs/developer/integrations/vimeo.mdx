@@ -1,0 +1,128 @@
+---
+title: Vimeo
+description: Connect Vimeo for video hosting and delivery.
+---
+
+## Overview
+
+The Vimeo integration enables video hosting and delivery for your podcast episodes. Upload finished video episodes, generate private review links, and embed videos in your client portal — all managed from within PreRoll.
+
+## OAuth2 Setup
+
+### Register Your Application
+
+1. Go to the [Vimeo Developer Portal](https://developer.vimeo.com/apps)
+2. Create a new app
+3. Under **Authentication**, configure OAuth 2.0:
+
+| Setting | Value |
+|---------|-------|
+| Callback URL | `https://your-domain.com/api/integrations/vimeo/callback` |
+| Scopes | `private`, `upload`, `edit`, `video_files` |
+
+4. Note your **Client ID** and **Client Secret**
+
+### Environment Variables
+
+```bash
+VIMEO_CLIENT_ID=your_client_id
+VIMEO_CLIENT_SECRET=your_client_secret
+```
+
+## Connecting Your Account
+
+1. Go to **Settings → Integrations**
+2. Click **Connect** next to Vimeo
+3. Authorize PreRoll to access your Vimeo account
+4. Your Vimeo projects and upload quota become available
+
+The integration connects at the organization level. All team members with appropriate roles can upload to the connected Vimeo account.
+
+## Project Creation
+
+PreRoll organizes videos within Vimeo projects (folders):
+
+- Each **show** maps to a Vimeo project
+- Episodes are uploaded as videos within the show's project
+- Projects are created automatically on first upload, or you can link to an existing Vimeo project
+
+```
+Vimeo Account/
+├── The Morning Show (Project)
+│   ├── EP001 - Pilot
+│   ├── EP002 - The Interview
+│   └── EP003 - Season Finale
+└── Tech Talks (Project)
+    └── EP001 - AI in Podcasting
+```
+
+## Upload Protocol
+
+PreRoll uses the **tus resumable upload protocol** for reliable video uploads to Vimeo:
+
+- Supports files of any size (tested up to 10 GB+)
+- Automatic resume on network interruption
+- Chunk-based upload with progress tracking
+- Background upload — continue working while files transfer
+
+### Upload Flow
+
+1. PreRoll creates a video resource on Vimeo with metadata
+2. A tus upload URI is returned
+3. The file is uploaded in chunks (default 128 MB per chunk)
+4. Vimeo processes the video (transcoding, thumbnail generation)
+5. PreRoll receives a webhook when processing completes
+
+```bash
+# Under the hood, the tus upload looks like:
+PATCH /upload?upload_id=xyz
+Tus-Resumable: 1.0.0
+Upload-Offset: 0
+Content-Type: application/offset+octet-stream
+```
+
+## Generating Review Links
+
+Once a video is uploaded and processed, PreRoll can generate private review links:
+
+| Link Type | Use Case |
+|-----------|----------|
+| Private link | Share with specific people (password-optional) |
+| Review page | Vimeo's built-in review interface with timecoded comments |
+| Embed code | Embed in client portal or external pages |
+
+Review links are automatically attached to the corresponding deliverable in PreRoll.
+
+## Embedding Videos
+
+Videos hosted on Vimeo can be embedded directly in the PreRoll client portal:
+
+- Private videos are accessible via domain-restricted embeds
+- No Vimeo account required for clients to view
+- Responsive player adapts to any screen size
+- Playback analytics are available in your Vimeo dashboard
+
+### Embed Configuration
+
+```json
+{
+  "privacy": "disable",
+  "embed": {
+    "domains": ["your-domain.com"],
+    "buttons": {
+      "share": false,
+      "embed": false
+    }
+  }
+}
+```
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Upload stalls | Check network stability — tus will auto-resume when connection returns |
+| Video stuck in processing | Large/high-resolution videos can take 30+ minutes to transcode |
+| Embed not loading | Verify domain whitelist includes your PreRoll domain |
+| Quota exceeded | Check your Vimeo plan's weekly upload limit |
+| Token expired | PreRoll automatically refreshes tokens — reconnect if issues persist |

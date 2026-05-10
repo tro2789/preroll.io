@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 650" fill="none">
+  <style>
+    text { font-family: Inter, system-ui, sans-serif; fill: #e8e6f0; }
+    .entity { font-size: 13px; font-weight: 600; }
+    .field { font-size: 10px; fill: #a09cb0; }
+    .relation { font-size: 9px; fill: #8b7fb0; }
+    .box { rx: 6; ry: 6; stroke-width: 1.5; }
+    .line { stroke-width: 1.2; }
+  </style>
+
+  <rect width="900" height="650" fill="#1a1820"/>
+
+  <!-- Organization (root) -->
+  <rect class="box" x="350" y="30" width="200" height="90" fill="#2a2635" stroke="#6b4a9e"/>
+  <text class="entity" x="450" y="55" text-anchor="middle">Organization</text>
+  <text class="field" x="370" y="75">plan_id, stripe_customer_id</text>
+  <text class="field" x="370" y="90">trial_ends_at, name</text>
+  <text class="field" x="370" y="105">branding (logo, color, name)</text>
+
+  <!-- Memberships -->
+  <rect class="box" x="620" y="40" width="170" height="70" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="705" y="65" text-anchor="middle">Membership</text>
+  <text class="field" x="640" y="85">user_id, org_id, role</text>
+  <text class="field" x="640" y="100">(owner / admin / member)</text>
+
+  <!-- Clients -->
+  <rect class="box" x="140" y="180" width="180" height="80" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="230" y="205" text-anchor="middle">Client</text>
+  <text class="field" x="160" y="225">name, company, email</text>
+  <text class="field" x="160" y="240">service_terms, notes</text>
+  <text class="field" x="160" y="255">client_user_id (portal auth)</text>
+
+  <!-- Tags -->
+  <rect class="box" x="620" y="180" width="160" height="60" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="700" y="205" text-anchor="middle">Tag</text>
+  <text class="field" x="640" y="225">name, color, org_id</text>
+
+  <!-- API Keys -->
+  <rect class="box" x="100" y="40" width="160" height="60" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="180" y="65" text-anchor="middle">API Key</text>
+  <text class="field" x="120" y="85">key_hash, name, org_id</text>
+
+  <!-- Shows -->
+  <rect class="box" x="300" y="320" width="200" height="90" fill="#2a2635" stroke="#6b4a9e"/>
+  <text class="entity" x="400" y="345" text-anchor="middle">Show</text>
+  <text class="field" x="320" y="365">name, description, format</text>
+  <text class="field" x="320" y="380">schedule, cover_art_url</text>
+  <text class="field" x="320" y="395">client_id, org_id</text>
+
+  <!-- Pipeline Stages -->
+  <rect class="box" x="570" y="310" width="180" height="70" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="660" y="335" text-anchor="middle">Pipeline Stage</text>
+  <text class="field" x="590" y="355">name, position, color</text>
+  <text class="field" x="590" y="370">status_override, show_id</text>
+
+  <!-- Episodes -->
+  <rect class="box" x="200" y="480" width="220" height="90" fill="#2a2635" stroke="#6b4a9e"/>
+  <text class="entity" x="310" y="505" text-anchor="middle">Episode</text>
+  <text class="field" x="220" y="525">title, description, number</text>
+  <text class="field" x="220" y="540">stage_id, status, due_date</text>
+  <text class="field" x="220" y="555">show_id, org_id, user_id</text>
+
+  <!-- Deliverables -->
+  <rect class="box" x="500" y="480" width="190" height="80" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="595" y="505" text-anchor="middle">Deliverable</text>
+  <text class="field" x="520" y="525">title, status, file_url</text>
+  <text class="field" x="520" y="540">episode_id, version</text>
+  <text class="field" x="520" y="555">(submitted/approved/revision)</text>
+
+  <!-- Assets -->
+  <rect class="box" x="50" y="580" width="170" height="60" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="135" y="605" text-anchor="middle">Asset</text>
+  <text class="field" x="70" y="625">file_url, type, show_id</text>
+
+  <!-- Comments -->
+  <rect class="box" x="730" y="480" width="150" height="70" fill="#2a2635" stroke="#4a3f6b"/>
+  <text class="entity" x="805" y="505" text-anchor="middle">Comment</text>
+  <text class="field" x="750" y="525">body, timestamp_sec</text>
+  <text class="field" x="750" y="540">deliverable_id, user_id</text>
+
+  <!-- Webhook Endpoints -->
+  <rect class="box" x="100" y="120" width="170" height="50" fill="#2a2635" stroke="#3a3545"/>
+  <text class="entity" x="185" y="145" text-anchor="middle">Webhook Endpoint</text>
+  <text class="field" x="120" y="160">url, secret, events, org_id</text>
+
+  <!-- Relationships (lines) -->
+  <!-- Org → Membership -->
+  <line class="line" x1="550" y1="65" x2="620" y2="65" stroke="#6b4a9e"/>
+  <text class="relation" x="585" y="58" text-anchor="middle">has many</text>
+
+  <!-- Org → Client -->
+  <line class="line" x1="400" y1="120" x2="260" y2="180" stroke="#6b4a9e"/>
+  <text class="relation" x="310" y="142" text-anchor="middle">has many</text>
+
+  <!-- Org → Tags -->
+  <line class="line" x1="500" y1="120" x2="680" y2="180" stroke="#4a3f6b"/>
+
+  <!-- Org → API Keys -->
+  <line class="line" x1="350" y1="60" x2="260" y2="60" stroke="#4a3f6b"/>
+
+  <!-- Org → Webhooks -->
+  <line class="line" x1="350" y1="100" x2="200" y2="120" stroke="#4a3f6b"/>
+
+  <!-- Client → Show -->
+  <line class="line" x1="260" y1="260" x2="360" y2="320" stroke="#6b4a9e"/>
+  <text class="relation" x="290" y="285" text-anchor="middle">has many</text>
+
+  <!-- Show → Stage -->
+  <line class="line" x1="500" y1="350" x2="570" y2="340" stroke="#4a3f6b"/>
+  <text class="relation" x="535" y="335" text-anchor="middle">has many</text>
+
+  <!-- Show → Episode -->
+  <line class="line" x1="380" y1="410" x2="330" y2="480" stroke="#6b4a9e"/>
+  <text class="relation" x="340" y="445" text-anchor="middle">has many</text>
+
+  <!-- Episode → Deliverable -->
+  <line class="line" x1="420" y1="520" x2="500" y2="520" stroke="#4a3f6b"/>
+  <text class="relation" x="460" y="513" text-anchor="middle">has many</text>
+
+  <!-- Deliverable → Comment -->
+  <line class="line" x1="690" y1="520" x2="730" y2="520" stroke="#4a3f6b"/>
+  <text class="relation" x="710" y="513" text-anchor="middle">has many</text>
+
+  <!-- Show → Asset -->
+  <line class="line" x1="300" y1="400" x2="150" y2="580" stroke="#4a3f6b"/>
+</svg>

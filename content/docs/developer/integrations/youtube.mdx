@@ -1,0 +1,156 @@
+---
+title: YouTube
+description: Publish episodes directly to YouTube with full metadata control.
+---
+
+## Overview
+
+The YouTube integration lets you publish podcast episodes directly to YouTube with full control over metadata, scheduling, thumbnails, and playlists. Manage your YouTube presence alongside your audio distribution without switching tools.
+
+## OAuth2 Setup
+
+### Register Your Application
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project (or use the same project as Google Drive)
+3. Enable the **YouTube Data API v3** under APIs & Services
+4. Configure the **OAuth consent screen**
+5. Create **OAuth 2.0 credentials** (Web application type):
+
+| Setting | Value |
+|---------|-------|
+| Authorized redirect URI | `https://your-domain.com/api/integrations/youtube/callback` |
+| Scopes | `https://www.googleapis.com/auth/youtube.upload`, `https://www.googleapis.com/auth/youtube` |
+
+6. Note your **Client ID** and **Client Secret**
+
+### Environment Variables
+
+```bash
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+```
+
+If you already have Google Drive connected with the same Google Cloud project, the same credentials work for YouTube — the scopes are requested separately during the connection flow.
+
+## Connecting Your YouTube Channel
+
+1. Go to **Settings → Integrations**
+2. Click **Connect** next to YouTube
+3. Sign in with the Google account that owns (or manages) the target YouTube channel
+4. If you manage multiple channels, select which channel to connect
+5. PreRoll stores the channel ID and refresh token for future uploads
+
+## Publishing Workflow
+
+Publishing an episode to YouTube follows this flow:
+
+### 1. Upload Video
+
+The video file is uploaded using Google's resumable upload protocol:
+
+- Supports files up to 256 GB (YouTube's maximum)
+- Chunked upload with automatic retry on failure
+- Progress tracking in the PreRoll UI
+- Background upload — continue working while the file transfers
+
+### 2. Set Metadata
+
+Configure the video's public-facing information:
+
+| Field | Description |
+|-------|-------------|
+| Title | Video title (max 100 characters) |
+| Description | Full description with links, timestamps, credits |
+| Tags | Search keywords (max 500 characters total) |
+| Category | YouTube category (e.g., Education, Entertainment, Science & Technology) |
+| Privacy | `public`, `unlisted`, or `private` |
+| Language | Default audio language |
+| License | Standard YouTube or Creative Commons |
+
+```json
+{
+  "title": "EP042: The Answer to Everything",
+  "description": "In this episode we discuss...\n\nTimestamps:\n0:00 Intro\n2:30 Topic 1\n...",
+  "tags": ["podcast", "technology", "interviews"],
+  "categoryId": "22",
+  "privacyStatus": "public"
+}
+```
+
+### 3. Publish
+
+Once uploaded with metadata set, the video is published according to the privacy setting. For `public` videos, it immediately appears on your channel.
+
+## Scheduled Publishing
+
+Set a future publish date to queue videos for release:
+
+1. Set the privacy to `private` during upload
+2. Specify a `publishAt` timestamp (ISO 8601 format)
+3. YouTube automatically makes the video public at the scheduled time
+
+```json
+{
+  "privacyStatus": "private",
+  "publishAt": "2025-02-01T14:00:00Z"
+}
+```
+
+This is useful for coordinating YouTube releases with your podcast RSS publish time on Transistor.
+
+## Thumbnail Upload
+
+Upload a custom thumbnail for each video:
+
+- Supported formats: JPEG, PNG, GIF, BMP
+- Maximum file size: 2 MB
+- Recommended resolution: 1280x720 pixels (16:9 aspect ratio)
+- Minimum width: 640 pixels
+
+Thumbnails can be uploaded at any time after the video is created — useful if your thumbnail designer delivers after the initial upload.
+
+## Playlist Management
+
+Organize episodes into YouTube playlists:
+
+| Action | Description |
+|--------|-------------|
+| Create playlist | Create a new playlist for a show |
+| Add to playlist | Add published videos to one or more playlists |
+| Reorder | Change video position within a playlist |
+| Remove | Remove a video from a playlist without deleting it |
+
+### Automatic Playlist Assignment
+
+You can configure a show to automatically add new episodes to a specific playlist. When an episode is published to YouTube, it's appended to the configured playlist in the correct order.
+
+```
+Show Settings → Distribution → YouTube
+├── Channel: Your Channel Name
+├── Default Playlist: "The Morning Show - Season 3"
+├── Default Category: Education
+└── Default Privacy: Public
+```
+
+## Metadata Templates
+
+Configure default metadata per show to avoid repetitive entry:
+
+- **Description template** — include standard links, social handles, and boilerplate
+- **Default tags** — show-level tags applied to every episode
+- **Default category** — set once per show
+- **Default privacy** — control whether new uploads default to public, unlisted, or private
+
+Episode-specific metadata overrides the defaults.
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Upload fails with 403 | Verify YouTube Data API is enabled in Google Cloud Console |
+| "Quota exceeded" error | YouTube API has a daily quota — uploads consume 1600 units each |
+| Thumbnail rejected | Ensure image meets size requirements (min 640px wide, max 2 MB) |
+| Channel not found | Reconnect with the Google account that owns the channel |
+| Scheduled publish didn't fire | Verify the `publishAt` time is in the future and timezone is correct |
+| Token expired | PreRoll automatically refreshes tokens — reconnect if persistent |

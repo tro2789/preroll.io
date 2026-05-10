@@ -1,0 +1,102 @@
+---
+title: Google Drive
+description: Connect Google Drive for file delivery and organization.
+---
+
+## Overview
+
+The Google Drive integration provides structured file delivery and organization for your podcast production workflow. PreRoll automatically creates and maintains a folder hierarchy for each client, show, and episode, making it easy to share final deliverables with clients.
+
+## OAuth2 Setup
+
+### Register Your Application
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project (or select an existing one)
+3. Enable the **Google Drive API** under APIs & Services
+4. Configure the **OAuth consent screen** (External or Internal based on your needs)
+5. Create **OAuth 2.0 credentials** (Web application type):
+
+| Setting | Value |
+|---------|-------|
+| Authorized redirect URI | `https://your-domain.com/api/integrations/google-drive/callback` |
+| Scopes | `https://www.googleapis.com/auth/drive.file` |
+
+6. Note your **Client ID** and **Client Secret**
+
+### Environment Variables
+
+```bash
+GOOGLE_CLIENT_ID=your_client_id
+GOOGLE_CLIENT_SECRET=your_client_secret
+```
+
+## Connecting Your Account
+
+1. Go to **Settings → Integrations**
+2. Click **Connect** next to Google Drive
+3. Authorize PreRoll to access your Google Drive
+4. Select a root folder where PreRoll will organize files (or let it create one)
+
+The connection uses the `drive.file` scope, which only grants access to files and folders that PreRoll creates — it cannot access your other Drive files.
+
+## Folder Hierarchy
+
+PreRoll automatically creates and maintains a structured folder hierarchy:
+
+```
+PreRoll/
+├── Acme Corp/
+│   ├── The Morning Show/
+│   │   ├── EP001 - Pilot/
+│   │   ├── EP002 - The Interview/
+│   │   └── EP003 - Season Finale/
+│   └── Tech Talks/
+│       └── EP001 - AI in Podcasting/
+└── Beta Client/
+    └── Weekly Roundup/
+        └── EP001 - First Episode/
+```
+
+Folders are created on demand when files are first delivered to a client/show/episode combination.
+
+## File Upload
+
+PreRoll uses Google Drive's **resumable upload protocol** for reliable file transfers, especially for large files:
+
+- Files under 5 MB use simple upload
+- Files over 5 MB use resumable upload with automatic retry on network interruption
+- Upload progress is tracked and displayed in the UI
+
+### Supported File Types
+
+Any file type can be uploaded to Google Drive. Common podcast production deliverables include:
+
+| Type | Examples |
+|------|----------|
+| Audio | `.mp3`, `.wav`, `.flac`, `.aac` |
+| Video | `.mp4`, `.mov`, `.mkv` |
+| Documents | `.pdf`, `.docx`, show notes |
+| Images | `.png`, `.jpg`, cover art, thumbnails |
+
+## Sharing Delivered Files
+
+When a deliverable is uploaded to Google Drive, PreRoll can automatically share the file or folder with the client:
+
+1. **Per-file sharing** — individual files are shared with the client's email address
+2. **Folder sharing** — the episode folder is shared, giving the client access to all files within it
+
+Sharing permissions default to **Viewer** access. You can configure this per-client in the client settings.
+
+### Client Portal Integration
+
+Files delivered via Google Drive appear in the client portal with direct download links. Clients can access their files without needing a Google account — PreRoll generates shareable links with appropriate permissions.
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| OAuth consent screen shows "unverified" | Submit your app for Google verification or add test users |
+| Upload fails for large files | Check available Drive storage quota |
+| Folder not created | Ensure the connected account has write access to the root folder |
+| Permission denied | Reconnect the integration — the refresh token may have been revoked |

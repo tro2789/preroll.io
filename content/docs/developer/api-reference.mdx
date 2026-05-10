@@ -1,0 +1,100 @@
+---
+title: API Reference
+description: Authenticate and interact with the PreRoll REST API using API keys.
+---
+
+## Authentication
+
+All API requests require a Bearer token in the `Authorization` header. API keys are created in **Settings → Developer → API Keys**.
+
+Keys are prefixed with `pr_` and are only shown once at creation. They are stored as SHA-256 hashes — PreRoll never stores your raw key.
+
+```bash
+curl -H "Authorization: Bearer pr_your_api_key_here" \
+  https://api.preroll.io/api/v1/dashboard
+```
+
+## Response Format
+
+All endpoints return a consistent JSON envelope.
+
+### Success
+
+```json
+{
+  "data": { ... }
+}
+```
+
+### Error
+
+```json
+{
+  "error": {
+    "message": "Human-readable error description",
+    "code": "ERROR_CODE"
+  }
+}
+```
+
+HTTP status codes follow standard conventions: `200` for success, `400` for bad requests, `401` for unauthorized, `403` for forbidden, `404` for not found, and `500` for server errors.
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/v1/dashboard` | Dashboard summary (stats, attention list, recent activity) |
+| `GET` | `/api/v1/clients` | List all clients in your organization |
+| `GET` | `/api/v1/shows` | List all shows (optionally filter by `?client_id=`) |
+| `GET` | `/api/v1/episodes` | List episodes (filter with `?show_id=`, `?status=`, `?stage_id=`) |
+| `GET` | `/api/v1/deliverables` | List deliverables (filter with `?episode_id=`, `?status=`) |
+| `POST` | `/api/v1/shows/{show_id}/episodes` | Create a new episode for a show |
+| `PATCH` | `/api/v1/shows/{show_id}/episodes/{episode_id}` | Update an episode |
+
+### Query Parameters
+
+#### `GET /api/v1/episodes`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `show_id` | `uuid` | Filter episodes by show |
+| `status` | `string` | Filter by status (`draft`, `in_progress`, `published`) |
+| `stage_id` | `uuid` | Filter by pipeline stage |
+
+#### `GET /api/v1/deliverables`
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `episode_id` | `uuid` | Filter deliverables by episode |
+| `status` | `string` | Filter by status (`pending`, `approved`, `revision_requested`) |
+
+### Creating an Episode
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer pr_your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Episode 42: The Answer",
+    "description": "In this episode we discuss...",
+    "episode_number": 42
+  }' \
+  https://api.preroll.io/api/v1/shows/{show_id}/episodes
+```
+
+### Updating an Episode
+
+```bash
+curl -X PATCH \
+  -H "Authorization: Bearer pr_your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Episode 42: The Updated Title",
+    "status": "in_progress"
+  }' \
+  https://api.preroll.io/api/v1/shows/{show_id}/episodes/{episode_id}
+```
+
+## Rate Limits
+
+There are no enforced rate limits at this time. Please be respectful with your request volume. Rate limiting may be introduced in the future with standard `429` responses and `Retry-After` headers.

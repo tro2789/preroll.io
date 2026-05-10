@@ -1,0 +1,121 @@
+---
+title: "Clients"
+description: "Manage your podcast clients, their profiles, service terms, and portal access."
+---
+
+# Clients
+
+PreRoll organizes all your work around clients. Each client represents a person or company you produce podcasts for. Clients own shows, and shows contain episodes — this hierarchy keeps everything cleanly separated.
+
+{/* Screenshot: Clients List — /docs/screenshots/clients.png */}
+
+## Creating a Client
+
+To create a new client:
+
+1. Navigate to **Clients** in the sidebar
+2. Click **New Client**
+3. Fill in the client profile (name is required, everything else is optional)
+4. Click **Create**
+
+The client is immediately available and you can start creating shows for them.
+
+## Client Profile
+
+Each client has a rich profile with multiple sections:
+
+### Contact Information
+
+| Field | Description |
+|-------|-------------|
+| Name | Client's display name (person or company) |
+| Email | Primary contact email |
+| Phone | Contact phone number |
+| Company | Company/organization name |
+| Website | Client's website URL |
+
+### Service Terms
+
+Document the business relationship directly on the client record:
+
+- **Service type** — Retainer, per-episode, package deal
+- **Rate/pricing** — What you charge this client
+- **Billing frequency** — Weekly, monthly, per-episode
+- **Contract dates** — Start and end dates for the engagement
+- **Notes** — Free-form field for any additional terms
+
+### Notes
+
+A rich-text notes field for anything else you need to track about the client — preferences, communication style, special requirements, or internal reminders.
+
+## Meeting Notes
+
+Each client has a dedicated meeting notes section for tracking conversations:
+
+- Add timestamped meeting notes with a title and body
+- Notes are displayed chronologically
+- Use these to document feedback sessions, planning calls, or scope changes
+- Searchable across all clients
+
+{/* Screenshot: Meeting Notes — /docs/screenshots/client-meeting-notes.png */}
+
+## Portal Access
+
+Each client can be granted access to their own [Client Portal](/docs/features/client-portal) where they can:
+
+- Review and approve deliverables
+- Leave timestamped comments on episodes
+- View their activity feed
+- See episode progress
+
+Portal access is configured per-client:
+
+1. Open the client's profile
+2. Click **Portal Access**
+3. Enter the client's email address
+4. PreRoll sends a magic-link invitation
+
+The client authenticates via magic link (no password needed) and sees only their own shows and episodes.
+
+## Multi-Client Management
+
+### Client List View
+
+The clients list shows all your clients with:
+
+- Client name and company
+- Number of active shows
+- Number of in-progress episodes
+- Last activity date
+
+### Filtering and Search
+
+- **Search** — Filter clients by name or company
+- **Sort** — By name, creation date, or last activity
+- **Status** — Filter by active/archived clients
+
+### Archiving Clients
+
+When a client engagement ends, archive the client rather than deleting:
+
+- Archived clients are hidden from the default list view
+- All historical data (shows, episodes, deliverables) is preserved
+- Archived clients can be restored at any time
+- Shows under archived clients won't appear in the Kanban board or calendar
+
+## Plan Limits
+
+| Plan | Client Limit |
+|------|-------------|
+| Free | 1 client |
+| Pro | Unlimited |
+| Studio | Unlimited |
+
+When you reach your plan's client limit, you'll see an upgrade prompt. During your 7-day trial, you have Studio-level access (unlimited clients).
+
+## Best Practices
+
+- **Use descriptive names** — If you have multiple contacts at the same company, include their role or show name
+- **Keep service terms updated** — This helps when it's time to invoice or renegotiate
+- **Add meeting notes immediately** — Document decisions while they're fresh
+- **Set up portal access early** — Clients appreciate being able to check progress on their own

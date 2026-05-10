@@ -1,0 +1,196 @@
+---
+title: "Distribution"
+description: "Publish episodes to Transistor.fm and YouTube with metadata management and scheduled publishing."
+---
+
+# Distribution
+
+PreRoll connects to podcast hosting platforms and video services so you can publish episodes directly from your production pipeline. No need to leave PreRoll to upload files, set metadata, or schedule releases.
+
+{/* Screenshot: Distribution Overview — /docs/screenshots/distribution.png */}
+
+## Supported Platforms
+
+| Platform | Content Type | Connection Method |
+|----------|-------------|-------------------|
+| Transistor.fm | Audio podcasts | API key |
+| YouTube | Video episodes | OAuth2 (Google account) |
+
+## Transistor.fm Integration
+
+Transistor.fm is a podcast hosting platform that distributes your show to Apple Podcasts, Spotify, and all major directories.
+
+### Connecting to Transistor
+
+1. Go to your show's **Settings > Distribution**
+2. Click **Connect Transistor**
+3. Enter your Transistor API key (found in your Transistor account settings)
+4. Select the matching show from your Transistor account
+5. Click **Save Connection**
+
+### Publishing an Episode to Transistor
+
+Once your episode is approved and ready to publish:
+
+1. Open the episode detail view
+2. Navigate to the **Distribution** tab
+3. Click **Publish to Transistor**
+4. Review and edit the episode metadata:
+
+| Field | Description |
+|-------|-------------|
+| Title | Episode title (pre-filled from PreRoll) |
+| Description | Episode description / show notes |
+| Episode number | Numeric episode number |
+| Season number | Optional season number |
+| Episode type | Full, trailer, or bonus |
+| Explicit | Whether the episode contains explicit content |
+| Audio file | Select from uploaded assets or upload new |
+
+5. Choose **Publish Now** or **Schedule** (set a future publish date/time)
+6. Click **Publish**
+
+### Publish Status Tracking
+
+After publishing, PreRoll tracks the status:
+
+| Status | Meaning |
+|--------|---------|
+| `draft` | Not yet published |
+| `scheduled` | Set to publish at a future date |
+| `publishing` | Upload in progress |
+| `published` | Live on Transistor |
+| `failed` | Publish attempt failed (see error details) |
+
+The episode card on the Kanban board and calendar reflect the distribution status.
+
+### Updating Published Episodes
+
+After an episode is published to Transistor, you can:
+
+- Update the title, description, or metadata
+- Replace the audio file
+- Change the publish date
+- Unpublish (remove from Transistor)
+
+Changes sync to Transistor within seconds.
+
+## YouTube Integration
+
+Publish video episodes directly to YouTube from PreRoll.
+
+### Connecting to YouTube
+
+1. Go to **Settings > Integrations**
+2. Click **Connect YouTube**
+3. Sign in with your Google account
+4. Grant PreRoll permission to upload videos and manage your channel
+5. Select the YouTube channel to use (if you have multiple)
+
+### Publishing an Episode to YouTube
+
+1. Open the episode detail view
+2. Navigate to the **Distribution** tab
+3. Click **Publish to YouTube**
+4. Configure the video details:
+
+| Field | Description |
+|-------|-------------|
+| Title | Video title (pre-filled from episode title) |
+| Description | Video description with links, timestamps, etc. |
+| Tags | Comma-separated tags for discoverability |
+| Category | YouTube content category |
+| Privacy | Public, unlisted, or private |
+| Thumbnail | Custom thumbnail (or uses episode/show art) |
+| Playlist | Optional playlist to add the video to |
+| Scheduled publish | Set a premiere date/time |
+
+5. Select the video file from episode assets
+6. Click **Publish**
+
+{/* Screenshot: YouTube Publishing — /docs/screenshots/distribution-youtube.png */}
+
+### YouTube Features
+
+- **Thumbnail upload** — Use episode thumbnails or upload a custom image
+- **Playlist management** — Automatically add episodes to a show playlist
+- **Scheduled premieres** — Set videos to premiere at a specific date/time
+- **Privacy controls** — Publish as public, unlisted, or private
+- **Description templates** — Pre-fill descriptions with standard links and credits
+
+### YouTube Status Tracking
+
+| Status | Meaning |
+|--------|---------|
+| `not_published` | No YouTube publish attempted |
+| `uploading` | Video file being uploaded |
+| `processing` | YouTube is processing the video |
+| `scheduled` | Set to go live at a future time |
+| `published` | Live on YouTube |
+| `failed` | Upload or processing failed |
+
+## Scheduled Publishing
+
+Both Transistor and YouTube support scheduled publishing:
+
+### Setting a Schedule
+
+1. When publishing, select **Schedule** instead of **Publish Now**
+2. Set the date and time (in your show's configured timezone)
+3. Confirm the schedule
+
+### Managing Scheduled Episodes
+
+- Scheduled episodes show a clock icon on the Kanban board
+- The calendar view displays scheduled publish dates
+- You can reschedule or cancel before the publish time
+- PreRoll sends a confirmation notification when the episode goes live
+
+## Multi-Platform Publishing
+
+Publish the same episode to multiple platforms:
+
+- Audio version to Transistor.fm
+- Video version to YouTube
+- Each platform has independent metadata and status tracking
+- Publish to one, both, or neither — it's your choice per episode
+
+## Metadata Management
+
+### Episode Metadata
+
+PreRoll maintains a single source of truth for episode information that can be pushed to any platform:
+
+- Title and description flow from the episode record
+- Platform-specific fields (tags, category, privacy) are configured per-platform
+- Changes to episode metadata can be synced to already-published episodes
+
+### Description Formatting
+
+- Transistor accepts HTML and plain text
+- YouTube accepts plain text with limited formatting
+- PreRoll stores your description as rich text and converts appropriately for each platform
+
+## Error Handling
+
+When publishing fails:
+
+1. The distribution status shows `failed`
+2. Error details are displayed in the distribution tab
+3. Common causes:
+   - Expired OAuth token (re-authenticate in Settings)
+   - File too large for the platform
+   - Missing required metadata
+   - Platform API rate limits
+4. Click **Retry** to attempt publishing again after fixing the issue
+
+## Plan Requirements
+
+| Feature | Required Plan |
+|---------|--------------|
+| Transistor.fm publishing | Pro or Studio |
+| YouTube publishing | Pro or Studio |
+| Scheduled publishing | Pro or Studio |
+| Multi-platform publishing | Pro or Studio |
+
+Distribution features are available during the 7-day Studio trial.
