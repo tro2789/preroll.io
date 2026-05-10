@@ -35,6 +35,9 @@ export function ClientPortalSection({
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fetchingRef = useRef(false)
+  const [sendingLogin, setSendingLogin] = useState(false)
+  const [loginSent, setLoginSent] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
 
   useEffect(() => {
     if (onboardedAt || inviteCode || fetchingRef.current) return
@@ -87,6 +90,30 @@ export function ClientPortalSection({
     setSending(false)
   }
 
+  async function handleSendLoginLink() {
+    if (!clientEmail) return
+    setSendingLogin(true)
+    setLoginError(null)
+    setLoginSent(false)
+    try {
+      const res = await fetch('/api/v1/portal/send-login-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: clientId }),
+      })
+      if (res.ok) {
+        setLoginSent(true)
+      } else {
+        const json = await res.json()
+        setLoginError(json.error || 'Failed to send')
+      }
+    } catch {
+      setLoginError('Failed to send')
+    } finally {
+      setSendingLogin(false)
+    }
+  }
+
   if (onboardedAt) {
     return (
       <div className="rounded-lg border border-border-subtle bg-surface-raised p-4">
@@ -98,19 +125,31 @@ export function ClientPortalSection({
             </svg>
             {clientName} has access
           </span>
-          <a
-            href={`/portal?preview=${clientId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-text-tertiary hover:text-accent transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-            </svg>
-            View as client
-          </a>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSendLoginLink}
+              disabled={!clientEmail || sendingLogin}
+              className="text-xs text-text-tertiary hover:text-accent transition-colors disabled:opacity-40"
+            >
+              {sendingLogin ? 'Sending...' : loginSent ? 'Link sent' : 'Send login link'}
+            </button>
+            <a
+              href={`/portal?preview=${clientId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-text-tertiary hover:text-accent transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              </svg>
+              View as client
+            </a>
+          </div>
         </div>
+        {loginError && (
+          <p className="mt-2 text-xs text-error">{loginError}</p>
+        )}
       </div>
     )
   }
