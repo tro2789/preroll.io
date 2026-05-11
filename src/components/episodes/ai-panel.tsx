@@ -64,6 +64,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const [generating, setGenerating] = useState<GenerationType | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(false)
+  const [startingPipeline, setStartingPipeline] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -224,6 +225,36 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     })
   }
 
+  const handleRunPipeline = async () => {
+    setStartingPipeline(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/v1/episodes/${episodeId}/pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Failed to start AI pipeline')
+        return
+      }
+      if (data.data?.status === 'skipped') {
+        setError(data.data.skippedReason === 'no_credits'
+          ? 'Not enough credits to run the pipeline.'
+          : data.data.skippedReason === 'disabled'
+          ? 'AI is not available on your current plan.'
+          : 'Pipeline was skipped.')
+        return
+      }
+      setPipeline({ id: data.data.jobId, status: data.data.status, trigger_source: 'manual', error_message: null, skipped_reason: null, created_at: new Date().toISOString(), completed_at: null })
+    } catch {
+      setError('Failed to start AI pipeline')
+    } finally {
+      setStartingPipeline(false)
+    }
+  }
+
   if (loading) return null
 
   if (!addon?.addon.enabled) {
@@ -313,29 +344,43 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             </div>
           )}
 
-          {/* No audio yet or waiting for processing */}
+          {/* No audio yet or ready to run */}
           {!hasTranscript && !isTranscribing && !isRunning && (
             <div className="space-y-3">
               {hasAudioFiles ? (
-                <div className="flex items-center gap-3 py-2">
+                <div className="space-y-3">
+                  <p className="text-xs text-text-secondary">
+                    Audio detected. Run the AI pipeline to transcribe and generate show notes, descriptions, and social posts.
+                  </p>
                   <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                    <p className="text-xs text-text-secondary">
-                      Waiting for audio to finish processing. AI transcription and content generation will start automatically.
-                    </p>
+                    <button
+                      onClick={handleRunPipeline}
+                      disabled={startingPipeline || totalAvailable < 1}
+                      className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                    >
+                      {startingPipeline ? 'Starting...' : 'Run AI Pipeline'}
+                    </button>
+                    <TranscribeButton
+                      episodeId={episodeId}
+                      transcribing={transcribing}
+                      hasAudioFiles={hasAudioFiles}
+                      onTranscribe={handleTranscribe}
+                    />
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-text-secondary">
-                  Upload or link audio to this episode to automatically generate show notes, descriptions, and social posts.
-                </p>
+                <div className="space-y-3">
+                  <p className="text-xs text-text-secondary">
+                    Upload or link audio to this episode to automatically generate show notes, descriptions, and social posts.
+                  </p>
+                  <TranscribeButton
+                    episodeId={episodeId}
+                    transcribing={transcribing}
+                    hasAudioFiles={hasAudioFiles}
+                    onTranscribe={handleTranscribe}
+                  />
+                </div>
               )}
-              <TranscribeButton
-                episodeId={episodeId}
-                transcribing={transcribing}
-                hasAudioFiles={hasAudioFiles}
-                onTranscribe={handleTranscribe}
-              />
             </div>
           )}
 
