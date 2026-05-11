@@ -39,9 +39,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |-------|--------|
 | Framework | Next.js (App Router) with TypeScript |
 | Database + Auth | Supabase (Postgres + Auth + RLS + Realtime) |
+| UI Components | shadcn/ui (Radix primitives) + Tailwind CSS v4 |
 | Storage | Cloudflare R2 (branding, thumbnails, intros, light assets) |
 | Deployment | Vercel |
 | Payments | Stripe (subscriptions, checkout, customer portal) |
+| AI | Anthropic Claude API (generation), Deepgram Nova-2 (transcription) |
 
 ## Environment Constraints
 
@@ -109,10 +111,12 @@ Organizations
         └── Episodes
             ├── Pipeline stage (customizable per show, with position)
             ├── Episode assets (thumbnails, show notes, clips — R2)
-            ├── Deliverables (approval workflow)
+            ├── Shared files / deliverables (approval workflow — "Share" in UI, "deliverables" in DB/API)
             ├── Episode integrations (Frame.io / Google Drive / Vimeo)
             ├── File references (external files linked to episodes/deliverables)
             ├── Review comments (timecoded, synced to Frame.io)
+            ├── Transcriptions (Deepgram, async with webhook callback)
+            ├── AI generations (show notes, descriptions, social copy from transcripts)
             └── Distribution (Transistor publish state)
 ```
 
@@ -134,6 +138,9 @@ The central auth helper is `getAuthenticatedClient()` in `src/lib/api/helpers.ts
 | `src/lib/api/helpers.ts` | `getAuthenticatedClient()`, `jsonResponse()`, `errorResponse()` |
 | `src/lib/org/resolve.ts` | `resolveUserOrg()`, `resolveOrgFromApiKey()` → returns `OrgContext` (id, planId, trialEndsAt, role) |
 | `src/lib/entitlements.ts` | `getOrgEntitlements()`, `computeTrialInfo()`, `isSelfHosted()`, `Feature` type |
+| `src/lib/format.ts` | `formatFileSize()`, `formatDuration()`, `formatTimecode()`, timecode converters |
+| `src/lib/utils.ts` | `cn()` — Tailwind class composition (clsx + tailwind-merge) |
+| `src/lib/constants/deliverables.ts` | `Deliverable` type, `DELIVERABLE_TYPES`, `TYPE_LABELS`, `STATUS_STYLES` |
 | `src/components/ui/upgrade-gate.tsx` | `<UpgradeGate>` — shared upgrade prompt for gated features |
 | `src/lib/webhooks/dispatch.ts` | `dispatchWebhooks(orgId, event, data)` — fire-and-forget webhook delivery |
 | `src/lib/integrations/token-refresh.ts` | `getValidToken(orgId, provider)`, `getIntegrationAccountId(orgId, provider)` |
@@ -141,6 +148,10 @@ The central auth helper is `getAuthenticatedClient()` in `src/lib/api/helpers.ts
 | `src/lib/r2/client.ts` | R2 upload URLs, image URL resolution |
 | `src/lib/org/roles.ts` | `requireRole(org, minRole)` — role-based access control |
 | `src/lib/email/send.ts` | `sendEmail()`, `generateMagicLinkUrl()`, `getSiteUrl()` — shared email helpers |
+| `src/lib/ai/entitlements.ts` | `getAiAddonStatus()`, `consumeCredits()`, `getDeepgramApiKey()`, `getAnthropicApiKey()` |
+| `src/lib/ai/deepgram.ts` | `submitTranscription()`, `parseDeepgramResponse()` — Deepgram Nova-2 client |
+| `src/lib/ai/generate.ts` | `generate()` — Claude API content generation |
+| `src/lib/ai/prompts.ts` | Prompt templates for show notes, descriptions, social copy, titles |
 
 ## Integrations
 
@@ -151,7 +162,9 @@ The central auth helper is `getAuthenticatedClient()` in `src/lib/api/helpers.ts
 | Vimeo | Video delivery | OAuth2, project creation, tus uploads |
 | Transistor.fm | Episode publishing/distribution | API key per show, upload + publish |
 | Cloudflare R2 | Asset storage (branding, thumbnails, intros) | S3-compatible API, signed URLs |
-| Stripe | Subscription billing | Checkout, webhooks, customer portal |
+| Deepgram | Audio transcription | Nova-2 API, webhook callbacks, speaker diarization |
+| Anthropic Claude | AI content generation | Show notes, descriptions, social copy, titles from transcripts |
+| Stripe | Subscription billing + AI credits | Checkout, webhooks, customer portal, one-time credit packs |
 | n8n | Workflow automation | Webhooks (send + receive) |
 | MCP | AI assistant interaction | Local MCP server wrapping REST API |
 
@@ -188,6 +201,23 @@ The central auth helper is `getAuthenticatedClient()` in `src/lib/api/helpers.ts
 - License key system for self-hosted (soft gate, contact capture)
 - 7-day Studio trial for new signups
 - Standardized upgrade gates across all gated features (shared `<UpgradeGate>` component)
+
+### Complete (AI Add-on)
+- AI add-on system (metered, separate from plan tiers)
+- Episode transcription via Deepgram Nova-2 (async webhook callback + Supabase Realtime)
+- AI content generation from transcripts (show notes, descriptions, social copy, title suggestions)
+- Prepaid credit packs via Stripe one-time checkout
+- AI settings page (enable/disable, credit balance, purchase, BYOK keys for self-hosted)
+- Atomic credit consumption with RPC functions
+- shadcn/ui component library (tabs, badge, separator, tooltip, button, card, dialog, input, etc.)
+
+### Complete (Design System)
+- Sitewide contrast audit — `text-tertiary` upgraded to `text-secondary` where needed (~300 changes)
+- shadcn/ui adopted as component library
+- Notion-style episode detail page (max-width container, property rows, no sidebar)
+- Episode page: single continuous view (Files section + Details section, no tabs)
+- "Deliverable" renamed to "Share" in user-facing UI text (API/DB unchanged)
+- Shared constants extracted (`src/lib/constants/deliverables.ts`, `src/lib/format.ts`)
 
 ### Not Yet Built
 - Custom domain support for white-label portal
@@ -226,5 +256,66 @@ Old projects (`muooiflyyjrtueabmzwy`, `fvbpmpfatzcrwpmmkqdn`) are inactive.
 
 - Gitea remote with auto-mirroring to GitHub
 - GitHub triggers Vercel rebuilds
-- Push to Gitea via HTTPS, not SSH
+- **Use SSH for git pushes** — remote is `ssh://gitea@192.168.0.245:2222/tro2789/preroll.io.git`
 - Gitea API commits must use `tro2789@gmail.com` as author/committer email
+
+## AI Add-on Architecture
+
+The AI add-on is **separate from plan tiers** (Free/Pro/Studio). It has its own billing via prepaid credit packs.
+
+### Key concepts:
+- **`ai_addon`** — per-org config (enabled, credits_balance, BYOK keys for self-hosted)
+- **`transcriptions`** — async transcription jobs (pending → completed/failed)
+- **`ai_generations`** — generation history (type, result, tokens, credits)
+- **`ai_credit_usage`** — append-only audit log for credit consumption
+- **Credits** — consumed per operation (1/min transcription, 1-3 per generation)
+- **Self-hosted** — BYOK keys, no credits needed (`PREROLL_SELF_HOSTED=true` bypass)
+
+### Async transcription flow:
+1. `POST /api/v1/episodes/:id/transcribe` → submit audio URL to Deepgram
+2. Deepgram processes → calls back to `POST /api/v1/webhooks/deepgram`
+3. Webhook handler updates `transcriptions` table → Supabase Realtime pushes to frontend
+
+### AI generation:
+- `POST /api/v1/episodes/:id/generate` with `type` param (show_notes, description, social_twitter, etc.)
+- Uses Claude Haiku via `@anthropic-ai/sdk`
+- Prompts in `src/lib/ai/prompts.ts`
+
+### Credit packs (Stripe one-time payments):
+| Pack | Credits | Price |
+|------|---------|-------|
+| Starter | 100 | $9 |
+| Growth | 500 | $39 |
+| Scale | 1,000 | $69 |
+
+### Environment variables:
+```
+DEEPGRAM_API_KEY=        # Transcription
+ANTHROPIC_API_KEY=       # AI generation
+STRIPE_AI_100_PRICE_ID=  # Credit pack prices (create in Stripe dashboard)
+STRIPE_AI_500_PRICE_ID=
+STRIPE_AI_1000_PRICE_ID=
+```
+
+## Design System
+
+Uses **shadcn/ui** (Radix primitives) with Tailwind CSS v4 and OKLCH color tokens.
+
+### Typography hierarchy:
+| Role | Size | Weight | Color |
+|------|------|--------|-------|
+| Page title | text-2xl | font-bold | text-primary |
+| Section heading | text-lg | font-semibold | text-primary |
+| Card title | text-sm | font-semibold | text-primary |
+| Body text | text-sm | font-normal | text-primary |
+| Label | text-sm | font-medium | text-secondary |
+| Caption | text-xs | font-medium | text-secondary |
+| Hint (placeholder only) | text-xs | font-normal | text-tertiary |
+
+### Rules:
+- `text-tertiary` is ONLY for placeholder text and decorative elements — never for readable content
+- Min font size for readable text: `text-xs` (0.694rem)
+- Use `cn()` from `@/lib/utils` for conditional class composition
+- Use shadcn components from `src/components/ui/` (add new ones with `npx shadcn@latest add <name>`)
+- Max-width containers: `max-w-4xl` for detail pages, `max-w-6xl` for list/grid pages
+- Property rows (Notion-style) for metadata, not sidebars
