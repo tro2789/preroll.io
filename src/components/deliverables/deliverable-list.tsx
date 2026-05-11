@@ -65,7 +65,7 @@ export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: 
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-tertiary">{typeLabels[d.type] || d.type}</span>
+                  <span className="text-xs text-text-secondary">{typeLabels[d.type] || d.type}</span>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>
                     {style.label}
                   </span>
@@ -93,7 +93,7 @@ export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: 
 
             {d.status === 'revision_requested' && d.reviewer_notes && (
               <div className="rounded-md bg-red-500/5 border border-red-500/20 px-3 py-2">
-                <p className="text-xs text-text-tertiary mb-0.5">Client feedback:</p>
+                <p className="text-xs text-text-secondary mb-0.5">Client feedback:</p>
                 <p className="text-xs text-text-secondary">{d.reviewer_notes}</p>
               </div>
             )}

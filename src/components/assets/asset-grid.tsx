@@ -57,7 +57,7 @@ function formatFileSize(bytes?: number): string {
 export function AssetGrid({ assets, onDelete }: AssetGridProps) {
   if (assets.length === 0) {
     return (
-      <p className="text-sm text-text-tertiary">
+      <p className="text-sm text-text-secondary">
         No assets yet. Upload one to get started.
       </p>
     )
@@ -92,9 +92,9 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
 
         return (
           <section key={type}>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">
+            <h3 className="text-xs font-medium uppercase tracking-wider text-text-secondary mb-3">
               {ASSET_TYPE_ICONS[type]} {ASSET_TYPE_LABELS[type]}{' '}
-              <span className="text-text-tertiary">({group.length})</span>
+              <span className="text-text-secondary">({group.length})</span>
             </h3>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {group.map((asset) => (
@@ -115,7 +115,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                     <span className="inline-flex items-center rounded-full bg-surface-overlay px-2 py-0.5 text-xs font-medium text-text-secondary">
                       {ASSET_TYPE_LABELS[asset.asset_type as AssetType]}
                     </span>
-                    <span className="text-xs text-text-tertiary">
+                    <span className="text-xs text-text-secondary">
                       {formatFileSize(asset.file_size)}
                     </span>
                   </div>

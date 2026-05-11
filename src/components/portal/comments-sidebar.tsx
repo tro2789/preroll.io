@@ -53,7 +53,7 @@ const CommentItem = memo(function CommentItem({
           {comment.author_name}
         </span>
         {comment.is_external && (
-          <span className="text-[10px] bg-surface-overlay border border-border-subtle rounded px-1 text-text-tertiary">
+          <span className="text-[10px] bg-surface-overlay border border-border-subtle rounded px-1 text-text-secondary">
             Editor
           </span>
         )}
@@ -62,7 +62,7 @@ const CommentItem = memo(function CommentItem({
             {formatTimecode(comment.timestamp_secs!)}
           </span>
         )}
-        <span className="ml-auto text-[10px] text-text-tertiary">
+        <span className="ml-auto text-[10px] text-text-secondary">
           {timeAgo(comment.created_at)}
         </span>
       </div>
@@ -141,7 +141,7 @@ export function CommentsSidebar({
         {!hasComments ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             <p className="text-sm text-text-secondary">No comments yet</p>
-            <p className="text-xs text-text-tertiary mt-1">
+            <p className="text-xs text-text-secondary mt-1">
               Add a timecoded comment to start the conversation.
             </p>
           </div>
@@ -149,7 +149,7 @@ export function CommentsSidebar({
           <div className="space-y-1 py-2">
             {generalComments.length > 0 && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-text-tertiary px-3 pt-1 pb-1.5">
+                <p className="text-[10px] uppercase tracking-wider text-text-secondary px-3 pt-1 pb-1.5">
                   General
                 </p>
                 {generalComments.map((c) => (
@@ -185,7 +185,7 @@ export function CommentsSidebar({
 
       {/* Comment input */}
       <div className="shrink-0 border-t border-border-subtle pt-3 mt-3 px-3 pb-3">
-        <p className="text-xs text-text-tertiary mb-2">
+        <p className="text-xs text-text-secondary mb-2">
           Commenting at{' '}
           <span className="font-mono text-accent bg-surface-overlay border border-border-subtle rounded px-1.5 py-0.5">
             {formatTimecode(currentTime)}
