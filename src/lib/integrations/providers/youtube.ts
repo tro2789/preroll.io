@@ -255,6 +255,17 @@ class YouTubeClient implements IntegrationProviderClient {
     }
   }
 
+  async deleteFile(accessToken: string, _accountId: string, fileId: string): Promise<void> {
+    const res = await fetch(`${YT_API}/videos?id=${fileId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`YouTube API error ${res.status}: ${body}`)
+    }
+  }
+
   async listFolderContents(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
     return this.browse(accessToken, accountId, folderId, cursor)
   }

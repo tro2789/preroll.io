@@ -211,6 +211,20 @@ class VimeoClient implements IntegrationProviderClient {
     }
   }
 
+  async deleteFile(accessToken: string, _accountId: string, fileId: string): Promise<void> {
+    const res = await fetch(`${VIMEO_API}/videos/${fileId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/vnd.vimeo.*+json;version=3.4',
+      },
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Vimeo API error ${res.status}: ${body}`)
+    }
+  }
+
   async listFolderContents(accessToken: string, _accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
     const data = await vimeoFetch(`/me/projects/${folderId}/videos?per_page=50${cursor ? `&page=${cursor}` : ''}`, accessToken)
     const items: BrowseItem[] = (data.data || []).map(mapVimeoVideo)

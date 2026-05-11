@@ -284,7 +284,14 @@ class FrameIoClient implements IntegrationProviderClient {
   }
 
   async deleteFile(accessToken: string, _accountId: string, fileId: string): Promise<void> {
-    await frameioFetch(`/assets/${fileId}`, accessToken, { method: 'DELETE' })
+    const res = await fetch(`https://api.frame.io/v2/assets/${fileId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      throw new Error(`Frame.io API error ${res.status}: ${body}`)
+    }
   }
 
   async listFolderContents(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
