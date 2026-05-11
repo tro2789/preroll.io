@@ -764,6 +764,7 @@ export function DeliveryPanel({
         onUploadComplete={handleUploadComplete}
         onUnavailableDrop={() => setShowConnectModal(true)}
         onProjectMissing={() => setProjectMissing(true)}
+        triggerRef={fileInputRef}
       />
 
       {showConnectModal && (

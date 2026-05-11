@@ -19,6 +19,7 @@ interface FileUploaderProps {
   onUploadComplete: () => void
   onUnavailableDrop?: () => void
   onProjectMissing?: () => void
+  triggerRef?: React.RefObject<HTMLInputElement | null>
 }
 
 const MAX_CONCURRENT = 3
@@ -32,10 +33,11 @@ function matchesMimeType(fileType: string, patterns: string[]): boolean {
   })
 }
 
-export function FileUploader({ episodeId, enabled, listenForDrags = true, acceptedMimeTypes, onUploadComplete, onUnavailableDrop, onProjectMissing }: FileUploaderProps) {
+export function FileUploader({ episodeId, enabled, listenForDrags = true, acceptedMimeTypes, onUploadComplete, onUnavailableDrop, onProjectMissing, triggerRef }: FileUploaderProps) {
   const [uploads, setUploads] = useState<UploadingFile[]>([])
   const [isDragging, setIsDragging] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const internalRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = triggerRef || internalRef
   const activeCountRef = useRef(0)
   const queueRef = useRef<File[]>([])
   const dragCountRef = useRef(0)
