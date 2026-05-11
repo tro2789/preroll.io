@@ -38,9 +38,9 @@ export async function submitTranscription(
 }
 
 export function buildCallbackUrl(transcriptionId: string): string {
-  const base = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3003'
+  const base = process.env.NEXT_PUBLIC_SITE_URL
+    || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null)
+    || 'http://localhost:3003'
   return `${base}/api/v1/webhooks/deepgram?id=${transcriptionId}`
 }
 
