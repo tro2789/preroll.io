@@ -80,16 +80,14 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
 
   const sortedStages = [...stages].sort((a, b) => a.position - b.position)
   const episodesByStage = new Map<string, Episode[]>()
-  const unstaged: Episode[] = []
   for (const ep of episodes) {
     if (ep.stage_id) {
       const list = episodesByStage.get(ep.stage_id) || []
       list.push(ep)
       episodesByStage.set(ep.stage_id, list)
-    } else {
-      unstaged.push(ep)
     }
   }
+  const activeStages = sortedStages.filter((s) => (episodesByStage.get(s.id) || []).length > 0)
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: 'review', label: 'Needs Review', count: reviewItems.length || undefined },
@@ -133,24 +131,17 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
           {episodes.length === 0 ? (
             <p className="text-sm text-text-secondary py-8 text-center">No episodes yet.</p>
           ) : (
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {sortedStages.map((stage) => {
+            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(activeStages.length, 4)}, minmax(0, 1fr))` }}>
+              {activeStages.map((stage) => {
                 const stageEps = episodesByStage.get(stage.id) || []
                 return (
-                  <div key={stage.id} className="shrink-0 w-56">
+                  <div key={stage.id} className="min-w-0">
                     <div className="flex items-center gap-2 mb-2 px-1">
                       <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{stage.name}</h3>
-                      {stageEps.length > 0 && (
-                        <span className="text-[10px] text-text-tertiary">{stageEps.length}</span>
-                      )}
+                      <span className="text-[10px] text-text-tertiary">{stageEps.length}</span>
                     </div>
                     <div className="space-y-2">
-                      {stageEps.length === 0 ? (
-                        <div className="rounded-lg border border-dashed border-border-subtle p-4 text-center">
-                          <p className="text-xs text-text-tertiary">No episodes</p>
-                        </div>
-                      ) : (
-                        stageEps.map((ep) => (
+                      {stageEps.map((ep) => (
                           <Link
                             key={ep.id}
                             href={`/portal/shows/${showId}/episodes/${ep.id}`}
@@ -173,8 +164,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
                               </span>
                             )}
                           </Link>
-                        ))
-                      )}
+                        ))}
                     </div>
                   </div>
                 )
