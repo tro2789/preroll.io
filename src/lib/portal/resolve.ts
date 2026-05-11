@@ -2,7 +2,6 @@ import { headers, cookies } from 'next/headers'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const CLIENT_SELECT = 'id, name, org_id, portal_welcome_dismissed_at, organizations(display_name, logo_url, accent_color, plan_id, allow_client_downloads)' as const
-const PREVIEW_COOKIE = 'portal_preview_client_id'
 
 export interface PortalClient {
   id: string
@@ -26,7 +25,7 @@ export async function resolvePortalClient(
   const cookieStore = await cookies()
   const url = headersList.get('x-url') || ''
   const previewFromUrl = url ? new URL(url, 'http://localhost').searchParams.get('preview') : null
-  const previewClientId = previewFromUrl || cookieStore.get(PREVIEW_COOKIE)?.value || null
+  const previewClientId = previewFromUrl || cookieStore.get('portal_preview_client_id')?.value || null
 
   if (previewClientId) {
     const { data } = await supabase
@@ -36,17 +35,7 @@ export async function resolvePortalClient(
       .single()
 
     if (data) {
-      if (previewFromUrl) {
-        cookieStore.set(PREVIEW_COOKIE, previewClientId, {
-          path: '/portal',
-          maxAge: 60 * 60,
-          httpOnly: true,
-          sameSite: 'lax',
-        })
-      }
       return { client: data as unknown as PortalClient, isPreview: true }
-    } else {
-      cookieStore.delete(PREVIEW_COOKIE)
     }
   }
 
