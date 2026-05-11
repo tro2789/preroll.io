@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
-import { createServiceClient } from '@/lib/supabase/server'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 
 export async function GET(request: NextRequest) {
@@ -20,13 +19,5 @@ export async function GET(request: NextRequest) {
 
   const body = await frameRes.json()
 
-  const supabase = createServiceClient()
-  await supabase.from('webhook_events').insert({
-    provider: 'debug',
-    event_type: 'frameio_file_details',
-    external_id: fileExternalId,
-    payload: body,
-  })
-
-  return jsonResponse({ stored: true, status: frameRes.status })
+  return jsonResponse({ raw: body, status: frameRes.status })
 }
