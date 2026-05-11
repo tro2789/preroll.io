@@ -88,8 +88,19 @@ export async function POST(
     .eq('version_group_id', targetFile.version_group_id)
     .eq('status', 'pending')
 
+  const autoResharedIds: string[] = []
   if (autoUpdated && autoUpdated.length > 0) {
     for (const deliverable of autoUpdated) {
+      autoResharedIds.push(deliverable.id)
+
+      await supabase!.from('activity_log').insert({
+        show_id: deliverable.show_id,
+        episode_id: deliverable.episode_id,
+        action: 'deliverable_resubmitted',
+        description: `New version (v${result.version_number}) of "${deliverable.title}" automatically shared with client`,
+        metadata: { deliverable_id: deliverable.id, version_number: result.version_number },
+      })
+
       dispatchWebhooks(org!.id, 'deliverable.resubmitted', {
         deliverable_id: deliverable.id,
         show_id: deliverable.show_id,
@@ -101,5 +112,5 @@ export async function POST(
     }
   }
 
-  return jsonResponse(result)
+  return jsonResponse({ ...result, auto_reshared: autoResharedIds })
 }
