@@ -5,6 +5,7 @@ import { resolveImageUrl } from '@/lib/r2/client'
 import { Sidebar } from '@/components/layout/sidebar'
 import { NoOrgsPrompt } from '@/components/layout/no-orgs-prompt'
 import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import type { OrgMembership } from '@/components/layout/sidebar'
 
 export default async function AppLayout({
@@ -45,18 +46,20 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-surface-base overflow-x-hidden">
-      <Sidebar
-        orgs={orgs}
-        activeOrgId={activeOrg?.id}
-        userEmail={user.email ?? ''}
-        userDisplayName={profile?.display_name || null}
-      />
-      <div className="md:pl-64 flex flex-col min-h-screen">
-        <main className="flex-1 p-4 sm:p-6 pb-20 md:pb-6">
-          {children}
-        </main>
+    <TooltipProvider>
+      <div className="min-h-screen bg-surface-base overflow-x-hidden">
+        <Sidebar
+          orgs={orgs}
+          activeOrgId={activeOrg?.id}
+          userEmail={user.email ?? ''}
+          userDisplayName={profile?.display_name || null}
+        />
+        <div className="md:pl-64 flex flex-col min-h-screen">
+          <main className="flex-1 p-4 sm:p-6 pb-20 md:pb-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   )
 }
