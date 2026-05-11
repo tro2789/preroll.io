@@ -2,9 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
-import { DeliveryPanel } from '@/components/episodes/delivery-panel'
-import { AiPanel } from '@/components/episodes/ai-panel'
-import { ClientPortalSection, type PortalClient } from '@/components/client-portal-section'
+import { EpisodeDetailTabs } from './episode-detail-tabs'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -20,7 +18,7 @@ export default async function EpisodeDetailPage({
   const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnections }] = await Promise.all([
     supabase
       .from('episodes')
-      .select('*, pipeline_stages(id, name, position), shows(clients(id, name, email, invite_code, client_user_id, onboarded_at))')
+      .select('*, pipeline_stages(id, name, position), shows(name, clients(id, name, email, invite_code, client_user_id, onboarded_at))')
       .eq('id', episodeId)
       .eq('show_id', showId)
       .single(),
@@ -59,7 +57,8 @@ export default async function EpisodeDetailPage({
   }
 
   const stage = episode.pipeline_stages as { id: string; name: string; position: number } | null
-  const client = ((episode as any).shows?.clients as PortalClient | null) ?? null
+  const showData = (episode as any).shows as { name?: string; clients?: any } | null
+  const client = showData?.clients ?? null
 
   const providerMeta: Record<string, { displayName: string; acceptedMimeTypes?: string[] }> = {
     frame_io: { displayName: 'Frame.io' },
@@ -89,58 +88,15 @@ export default async function EpisodeDetailPage({
 
   return (
     <div>
-      <Link
-        href={`/app/shows/${showId}`}
-        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
-      >
-        &larr; Back to Show
-      </Link>
-
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold text-text-primary leading-tight">{episode.title}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {episode.episode_number != null && (
-              <span className="text-xs text-text-tertiary">
-                EP {String(episode.episode_number).padStart(2, '0')}
-              </span>
-            )}
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[episode.status] || 'bg-surface-overlay text-text-secondary'}`}>
-              {stage?.name || episode.status}
-            </span>
-            {episode.distribution_status === 'published' && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
-                Published
-              </span>
-            )}
-            {episode.distribution_status === 'scheduled' && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
-                Scheduled
-              </span>
-            )}
-          </div>
-          {(episode.distribution_metadata as any)?.share_url && (
-            <a
-              href={(episode.distribution_metadata as any).share_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-accent hover:text-accent-hover transition-colors"
-            >
-              View on Transistor &rarr;
-            </a>
-          )}
-          {(episode.distribution_metadata as any)?.view_url && (
-            <a
-              href={(episode.distribution_metadata as any).view_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-accent hover:text-accent-hover transition-colors"
-            >
-              View on YouTube &rarr;
-            </a>
-          )}
-        </div>
-        <div className="flex shrink-0 items-center gap-2 flex-wrap">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-4">
+        <Link
+          href={`/app/shows/${showId}`}
+          className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+        >
+          &larr; {showData?.name || 'Back to Show'}
+        </Link>
+        <div className="flex shrink-0 items-center gap-2">
           {(distributionConnections || []).map((dc: any) => (
             <PublishButton
               key={dc.id}
@@ -166,28 +122,46 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
-      {client && (
-        <div className="mt-6 max-w-sm">
-          <ClientPortalSection
-            clientId={client.id}
-            clientName={client.name}
-            clientEmail={client.email}
-            inviteCode={client.invite_code}
-            onboardedAt={client.onboarded_at}
-          />
+      {/* Title + badges */}
+      <div className="mt-3">
+        <div className="flex items-baseline gap-3">
+          {episode.episode_number != null && (
+            <span className="text-sm font-medium text-text-tertiary">
+              EP {String(episode.episode_number).padStart(2, '0')}
+            </span>
+          )}
+          <h1 className="text-xl font-bold text-text-primary leading-tight">{episode.title}</h1>
         </div>
-      )}
-
-      <div className="mt-6">
-        <AiPanel
-          episodeId={episodeId}
-          showId={showId}
-          hasAudioFiles={!!episodeIntegration}
-        />
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[episode.status] || 'bg-surface-overlay text-text-secondary'}`}>
+            {stage?.name || episode.status}
+          </span>
+          {episode.distribution_status === 'published' && (
+            <span className="inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
+              Published
+            </span>
+          )}
+          {episode.distribution_status === 'scheduled' && (
+            <span className="inline-flex items-center rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
+              Scheduled
+            </span>
+          )}
+          {(episode.distribution_metadata as any)?.share_url && (
+            <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover">
+              Transistor &rarr;
+            </a>
+          )}
+          {(episode.distribution_metadata as any)?.view_url && (
+            <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover">
+              YouTube &rarr;
+            </a>
+          )}
+        </div>
       </div>
 
-      <div className="mt-4">
-        <DeliveryPanel
+      {/* Tabs + Sidebar layout */}
+      <div className="mt-6">
+        <EpisodeDetailTabs
           episodeId={episodeId}
           showId={showId}
           integration={integration}
@@ -200,6 +174,9 @@ export default async function EpisodeDetailPage({
             notes: episode.notes,
             stage: stage ? { name: stage.name } : null,
           }}
+          imageUrl={episode.image_url}
+          client={client}
+          hasIntegration={!!episodeIntegration}
         />
       </div>
     </div>

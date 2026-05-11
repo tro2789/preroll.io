@@ -52,7 +52,7 @@ export async function generate(
     messages: [{ role: 'user', content: user }],
   })
 
-  const textBlock = response.content.find(b => b.type === 'text')
+  const textBlock = response.content.find((b: { type: string }) => b.type === 'text') as { type: 'text'; text: string } | undefined
   const result = textBlock?.text || ''
 
   return {
