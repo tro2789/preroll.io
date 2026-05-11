@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { TYPE_LABELS } from '@/lib/constants/deliverables'
 
 interface Deliverable {
   id: string
@@ -22,18 +23,6 @@ interface DeliverableCardProps {
   reviewUrl?: string
   thumbnailUrl?: string
   allowDownload?: boolean
-}
-
-const typeLabels: Record<string, string> = {
-  rough_cut: 'Rough Cut',
-  final_cut: 'Final Cut',
-  thumbnail: 'Thumbnail',
-  show_notes: 'Show Notes',
-  cover_art: 'Cover Art',
-  intro: 'Intro',
-  outro: 'Outro',
-  social_clip: 'Social Clip',
-  other: 'Other',
 }
 
 const statusConfig: Record<string, { dot: string; bg: string; label: string }> = {
@@ -113,7 +102,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
             )}
             <h3 className="text-sm font-medium text-text-primary">{deliverable.title}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-text-secondary">{typeLabels[deliverable.type] || deliverable.type}</span>
+              <span className="text-xs text-text-secondary">{TYPE_LABELS[deliverable.type] || deliverable.type}</span>
               {!thumb && (
                 <>
                   <span className="text-text-tertiary">&middot;</span>
