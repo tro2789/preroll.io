@@ -4,6 +4,7 @@ import { getProvider, isValidProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { frameIoTimecodeToSecs } from '@/lib/format'
 import { persistExternalThumbnail } from '@/lib/r2/client'
+import { triggerAiPipeline } from '@/lib/ai/pipeline'
 
 export async function POST(
   request: NextRequest,
@@ -171,6 +172,29 @@ export async function POST(
           const r2Url = await persistExternalThumbnail(thumb, 'episodes', fileRef.episode_id)
           await supabase.from('episodes').update({ image_url: r2Url || thumb }).eq('id', fileRef.episode_id)
         }
+      }
+    }
+
+    const fileType = (fileData?.filetype as string) || ''
+    const originalUrl = fileData?.original as string | undefined
+    const duration = fileData?.duration as number | undefined
+
+    if (fileRef.episode_id && originalUrl && (fileType === 'audio' || fileType === 'video')) {
+      const { data: ref } = await supabase
+        .from('file_references')
+        .select('org_id')
+        .eq('id', fileRef.id)
+        .single()
+
+      if (ref?.org_id) {
+        triggerAiPipeline({
+          orgId: ref.org_id,
+          episodeId: fileRef.episode_id,
+          fileReferenceId: fileRef.id,
+          audioUrl: originalUrl,
+          durationSeconds: duration ? Math.ceil(duration) : undefined,
+          triggerSource: 'auto_webhook',
+        }).catch(err => console.error('AI pipeline trigger failed:', err))
       }
     }
   }

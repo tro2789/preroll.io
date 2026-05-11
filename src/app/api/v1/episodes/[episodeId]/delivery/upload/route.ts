@@ -2,7 +2,6 @@ import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/h
 import { getProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
-import { isAudioMimeType, triggerAiPipeline } from '@/lib/ai/pipeline'
 
 export async function POST(
   request: Request,
@@ -52,7 +51,7 @@ export async function POST(
       token, accountId, integration.external_folder_id, body.name, body.file_size
     )
 
-    const { data: fileRef } = await supabase!.from('file_references').insert({
+    await supabase!.from('file_references').insert({
       user_id: user!.id,
       org_id: org!.id,
       provider: integration.provider,
@@ -61,21 +60,7 @@ export async function POST(
       file_size: body.file_size,
       mime_type: body.mime_type || null,
       episode_id: episodeId,
-    }).select('id').single()
-
-    if (fileRef && isAudioMimeType(body.mime_type)) {
-      const downloadUrl = result.uploadUrls?.[0]?.url || result.resumableUrl
-      if (downloadUrl) {
-        triggerAiPipeline({
-          orgId: org!.id,
-          episodeId,
-          fileReferenceId: fileRef.id,
-          audioUrl: downloadUrl,
-          durationSeconds: body.duration_seconds,
-          triggerSource: 'auto_upload',
-        }).catch(err => console.error('AI pipeline trigger failed:', err))
-      }
-    }
+    })
 
     return jsonResponse({
       fileId: result.fileId,
