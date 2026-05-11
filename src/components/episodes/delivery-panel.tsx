@@ -84,6 +84,15 @@ export function DeliveryPanel({
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [versioningFileId, setVersioningFileId] = useState<string | null>(null)
 
+  const [versionHistoryFileId, setVersionHistoryFileId] = useState<string | null>(null)
+  const [versionHistory, setVersionHistory] = useState<Array<{
+    id: string; name: string; version_number: number; is_latest: boolean
+    thumbnail_url: string | null; mime_type: string | null; file_size: number | null
+    duration_seconds: number | null; external_url: string | null; created_at: string
+  }>>([])
+  const [versionHistoryLoading, setVersionHistoryLoading] = useState(false)
+  const [unstacking, setUnstacking] = useState<string | null>(null)
+
   const [showManualForm, setShowManualForm] = useState(false)
   const [manualTitle, setManualTitle] = useState('')
   const [manualType, setManualType] = useState('rough_cut')
@@ -363,6 +372,39 @@ export function DeliveryPanel({
     return null
   }
 
+  async function openVersionHistory(fileExternalId: string) {
+    setVersionHistoryFileId(fileExternalId)
+    setVersionHistoryLoading(true)
+    try {
+      const { data: ref } = await fetch(`/api/v1/integrations/file-references?episode_id=${episodeId}&external_id=${fileExternalId}`)
+        .then((r) => r.json())
+      const fileRefId = Array.isArray(ref) ? ref[0]?.id : ref?.id
+      if (!fileRefId) { setVersionHistoryLoading(false); return }
+
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files/${fileRefId}/versions`)
+      if (res.ok) {
+        const json = await res.json()
+        setVersionHistory(json.data?.versions || [])
+      }
+    } catch { /* ignore */ }
+    setVersionHistoryLoading(false)
+  }
+
+  async function handleUnstack(fileRefId: string) {
+    setUnstacking(fileRefId)
+    try {
+      await fetch(`/api/v1/integrations/file-references/${fileRefId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ unstack: true }),
+      })
+      setVersionHistoryFileId(null)
+      setVersionHistory([])
+      fetchFiles()
+    } catch { /* ignore */ }
+    setUnstacking(null)
+  }
+
   function getMimePrefix(mimeType?: string): string {
     if (!mimeType) return ''
     return mimeType.split('/')[0]
@@ -454,9 +496,12 @@ export function DeliveryPanel({
             </span>
           )}
           {file.version_count != null && file.version_count > 1 && (
-            <span className="absolute top-1.5 right-1.5 rounded bg-surface-raised/90 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary backdrop-blur-sm">
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); openVersionHistory(file.id) }}
+              className="absolute top-1.5 right-1.5 rounded bg-surface-raised/90 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary backdrop-blur-sm hover:bg-surface-raised hover:text-text-primary transition-colors"
+            >
               v{file.version_number}
-            </span>
+            </button>
           )}
         </a>
         <div className="p-2.5 space-y-2">
@@ -602,9 +647,12 @@ export function DeliveryPanel({
                       <div className="flex items-center gap-1.5">
                         <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
                         {file.version_count != null && file.version_count > 1 && (
-                          <span className="shrink-0 rounded bg-surface-raised px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
+                          <button
+                            onClick={() => openVersionHistory(file.id)}
+                            className="shrink-0 rounded bg-surface-raised px-1.5 py-0.5 text-[10px] font-medium text-text-secondary hover:bg-accent/10 hover:text-accent transition-colors"
+                          >
                             v{file.version_number}
-                          </span>
+                          </button>
                         )}
                       </div>
                       {linked && <p className="text-xs text-text-secondary">{TYPE_LABELS[linked.type] || linked.type}</p>}
@@ -1109,6 +1157,96 @@ export function DeliveryPanel({
           <EpisodeAssets episodeId={episodeId} />
         </aside>}
       </div>
+      {/* Version history modal */}
+      {versionHistoryFileId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) { setVersionHistoryFileId(null); setVersionHistory([]) } }}
+        >
+          <div className="w-full max-w-md rounded-xl border border-border-subtle bg-surface-raised shadow-xl">
+            <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
+              <h3 className="text-sm font-semibold text-text-primary">Version History</h3>
+              <button
+                onClick={() => { setVersionHistoryFileId(null); setVersionHistory([]) }}
+                className="rounded p-1 text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              </button>
+            </div>
+            <div className="max-h-80 overflow-y-auto p-2">
+              {versionHistoryLoading ? (
+                <div className="space-y-3 p-2">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex gap-3 animate-pulse">
+                      <div className="w-20 aspect-video rounded bg-surface-overlay" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3.5 w-3/4 rounded bg-surface-overlay" />
+                        <div className="h-3 w-1/2 rounded bg-surface-overlay" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {versionHistory.map((v) => (
+                    <div
+                      key={v.id}
+                      className={`flex items-center gap-3 rounded-lg p-2 ${v.is_latest ? 'bg-accent/5' : 'hover:bg-surface-overlay'} transition-colors`}
+                    >
+                      <div className="shrink-0 w-20 aspect-video rounded overflow-hidden">
+                        {v.thumbnail_url ? (
+                          <img src={v.thumbnail_url} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="h-full w-full" style={{ background: getGradient(v.id) }} />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded bg-surface-raised px-1.5 py-0.5 text-[10px] font-semibold text-text-primary">
+                            v{v.version_number}
+                          </span>
+                          <p className="truncate text-sm font-medium text-text-primary">{v.name}</p>
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-2 text-xs text-text-secondary">
+                          {v.file_size != null && <span>{formatFileSize(v.file_size)}</span>}
+                          {v.duration_seconds != null && <span>{formatDuration(v.duration_seconds)}</span>}
+                          <span>{new Date(v.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+                        </div>
+                        {v.is_latest && (
+                          <span className="mt-1 inline-block text-[10px] font-medium text-accent">Current version</span>
+                        )}
+                      </div>
+                      {v.external_url && (
+                        <a href={v.external_url} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded p-1.5 text-text-secondary hover:text-text-primary hover:bg-surface-overlay transition-colors" title="Open in provider">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                            <path fillRule="evenodd" d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Zm7.97-2.03a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 1 1-1.06 1.06l-3.22-3.22V11a.75.75 0 0 1-1.5 0V5.81l-3.22 3.22a.75.75 0 0 1-1.06-1.06l4.5-4.5Z" clipRule="evenodd" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {versionHistory.length > 1 && (
+              <div className="border-t border-border-subtle px-4 py-2.5">
+                <button
+                  onClick={() => {
+                    const latest = versionHistory.find((v) => v.is_latest)
+                    if (latest) handleUnstack(latest.id)
+                  }}
+                  disabled={unstacking !== null}
+                  className="text-xs text-text-secondary hover:text-error transition-colors disabled:opacity-50"
+                >
+                  {unstacking ? 'Unstacking...' : 'Remove latest from stack'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }

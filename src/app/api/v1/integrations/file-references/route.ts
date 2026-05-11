@@ -8,6 +8,7 @@ export async function GET(request: NextRequest) {
 
   const episodeId = request.nextUrl.searchParams.get('episode_id')
   const deliverableId = request.nextUrl.searchParams.get('deliverable_id')
+  const externalId = request.nextUrl.searchParams.get('external_id')
 
   if (!episodeId && !deliverableId) return errorResponse('episode_id or deliverable_id required')
 
@@ -18,6 +19,7 @@ export async function GET(request: NextRequest) {
 
   if (episodeId) query = query.eq('episode_id', episodeId)
   if (deliverableId) query = query.eq('deliverable_id', deliverableId)
+  if (externalId) query = query.eq('external_id', externalId)
 
   const { data, error: dbError } = await query
   if (dbError) return errorResponse(dbError.message, 500)
