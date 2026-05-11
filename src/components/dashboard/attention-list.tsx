@@ -45,10 +45,10 @@ function formatRelativeDate(dateStr: string): string {
 export function AttentionList({ title, episodes, emptyMessage }: AttentionListProps) {
   return (
     <div>
-      <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">{title}</h2>
+      <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary mb-3">{title}</h2>
       {episodes.length === 0 ? (
         <div className="rounded-lg border border-border-subtle bg-surface-raised px-4 py-6 text-center">
-          <p className="text-sm text-text-tertiary">{emptyMessage}</p>
+          <p className="text-sm text-text-secondary">{emptyMessage}</p>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -75,18 +75,18 @@ export function AttentionList({ title, episodes, emptyMessage }: AttentionListPr
                     {episode.title}
                   </span>
                   {show && (
-                    <span className="text-xs text-text-tertiary">{show.name}</span>
+                    <span className="text-xs text-text-secondary">{show.name}</span>
                   )}
                 </div>
 
                 {episode.episode_number != null && (
-                  <span className="shrink-0 text-xs font-mono text-text-tertiary">
+                  <span className="shrink-0 text-xs font-mono text-text-secondary">
                     #{episode.episode_number}
                   </span>
                 )}
 
                 {episode.scheduled_publish_date && (
-                  <span className="shrink-0 text-xs text-text-tertiary">
+                  <span className="shrink-0 text-xs text-text-secondary">
                     {formatRelativeDate(episode.scheduled_publish_date)}
                   </span>
                 )}

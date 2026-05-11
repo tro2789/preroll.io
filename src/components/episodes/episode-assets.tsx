@@ -123,7 +123,7 @@ export function EpisodeAssets({ episodeId }: EpisodeAssetsProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-xs font-medium text-text-tertiary">
+        <h4 className="text-xs font-medium text-text-secondary">
           Assets{assets.length > 0 ? ` (${assets.length})` : ''}
         </h4>
       </div>
@@ -176,7 +176,7 @@ export function EpisodeAssets({ episodeId }: EpisodeAssetsProps) {
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-text-primary truncate">{asset.name}</p>
-                  <div className="flex items-center gap-1.5 text-[10px] text-text-tertiary">
+                  <div className="flex items-center gap-1.5 text-[10px] text-text-secondary">
                     <span>{typeLabels[asset.asset_type] || asset.asset_type}</span>
                     {asset.file_size && <span>&middot; {formatFileSize(asset.file_size)}</span>}
                   </div>
@@ -193,7 +193,7 @@ export function EpisodeAssets({ episodeId }: EpisodeAssetsProps) {
       )}
 
       {!loading && assets.length === 0 && (
-        <p className="text-xs text-text-tertiary">No assets yet.</p>
+        <p className="text-xs text-text-secondary">No assets yet.</p>
       )}
     </div>
   )

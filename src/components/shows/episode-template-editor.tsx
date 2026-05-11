@@ -64,7 +64,7 @@ export function EpisodeTemplateEditor({ showId }: { showId: string }) {
     <div className="space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-text-primary">Episode Template</h3>
-        <p className="mt-0.5 text-xs text-text-tertiary">
+        <p className="mt-0.5 text-xs text-text-secondary">
           Default values auto-filled when creating new episodes for this show.
         </p>
       </div>
@@ -89,7 +89,7 @@ export function EpisodeTemplateEditor({ showId }: { showId: string }) {
           className={inputClass}
           placeholder={"## Timestamps\n- 00:00 Intro\n- ...\n\n## Links\n- \n\n## Sponsors\n- "}
         />
-        <p className="mt-1 text-xs text-text-tertiary">
+        <p className="mt-1 text-xs text-text-secondary">
           Use this for recurring segments, sponsor reads, links sections, etc.
         </p>
       </div>

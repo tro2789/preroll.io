@@ -68,7 +68,7 @@ function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: 
         <p className="text-xs font-medium text-text-primary group-hover:text-accent transition-colors truncate min-w-0">
           {episode.title}
         </p>
-        <span className="text-[10px] text-text-tertiary truncate shrink-0 max-w-[80px]">{episode.shows?.name}</span>
+        <span className="text-[10px] text-text-secondary truncate shrink-0 max-w-[80px]">{episode.shows?.name}</span>
         {episode.tags && episode.tags.length > 0 && (
           <div className="flex gap-0.5 shrink-0">
             {episode.tags.map((tag) => (
@@ -77,7 +77,7 @@ function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: 
           </div>
         )}
         {episode.scheduled_publish_date && (
-          <span className={`shrink-0 text-[10px] tabular-nums ml-auto ${isOverdue ? 'text-red-400 font-medium' : 'text-text-tertiary'}`}>
+          <span className={`shrink-0 text-[10px] tabular-nums ml-auto ${isOverdue ? 'text-red-400 font-medium' : 'text-text-secondary'}`}>
             {formatDate(episode.scheduled_publish_date)}
           </span>
         )}
@@ -93,9 +93,9 @@ function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: 
           {episode.title}
         </p>
         <div className="mt-1.5 flex items-center justify-between gap-2">
-          <span className="text-[11px] text-text-tertiary truncate">{episode.shows?.name}</span>
+          <span className="text-[11px] text-text-secondary truncate">{episode.shows?.name}</span>
           {episode.scheduled_publish_date && (
-            <span className={`shrink-0 text-[11px] tabular-nums ${isOverdue ? 'text-red-400 font-medium' : 'text-text-tertiary'}`}>
+            <span className={`shrink-0 text-[11px] tabular-nums ${isOverdue ? 'text-red-400 font-medium' : 'text-text-secondary'}`}>
               {formatDate(episode.scheduled_publish_date)}
             </span>
           )}
@@ -319,7 +319,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
               ))}
               {activeEpisodes.length === 0 && (
                 <div className="rounded-lg border border-dashed border-border-subtle px-3 py-8 text-center">
-                  <p className="text-xs text-text-tertiary">
+                  <p className="text-xs text-text-secondary">
                     No episodes in {activeColumn?.name}
               </p>
             </div>

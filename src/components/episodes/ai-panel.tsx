@@ -175,7 +175,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-medium text-text-primary">AI Assistant</h3>
-            <p className="mt-1 text-xs text-text-tertiary">
+            <p className="mt-1 text-xs text-text-secondary">
               Transcribe episodes and generate show notes, descriptions, and social copy with AI.
             </p>
           </div>
@@ -211,7 +211,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
         </div>
         <div className="flex items-center gap-3">
           {!addon.selfHosted && (
-            <span className="text-xs text-text-tertiary">
+            <span className="text-xs text-text-secondary">
               {addon.addon.credits_balance} credits
             </span>
           )}
@@ -263,7 +263,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
 
               {/* Generation Buttons */}
               <div className="border-t border-border-subtle pt-4">
-                <p className="text-xs text-text-tertiary mb-3">Generate from transcript:</p>
+                <p className="text-xs text-text-secondary mb-3">Generate from transcript:</p>
                 <div className="flex flex-wrap gap-2">
                   {(Object.entries(GENERATION_LABELS) as [GenerationType, string][]).map(([type, label]) => (
                     <button
@@ -314,7 +314,7 @@ function TranscribeButton({
   if (!hasAudioFiles && !showUrlInput) {
     return (
       <div className="space-y-2">
-        <p className="text-xs text-text-tertiary">No audio files detected. Paste an audio URL to transcribe:</p>
+        <p className="text-xs text-text-secondary">No audio files detected. Paste an audio URL to transcribe:</p>
         <button
           onClick={() => setShowUrlInput(true)}
           className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"

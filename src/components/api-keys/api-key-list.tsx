@@ -59,10 +59,10 @@ export function ApiKeyList({ keys }: { keys: ApiKey[] }) {
 
   return (
     <div>
-      <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+      <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
         API Keys
       </h2>
-      <p className="mt-1 text-xs text-text-tertiary">
+      <p className="mt-1 text-xs text-text-secondary">
         Use API keys to authenticate with the preroll.io API from scripts, the MCP server, or other tools.
       </p>
 
@@ -112,7 +112,7 @@ export function ApiKeyList({ keys }: { keys: ApiKey[] }) {
             <div key={k.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg border border-border-subtle bg-surface-raised px-4 sm:px-5 py-3">
               <div>
                 <p className="text-sm font-medium text-text-primary">{k.name}</p>
-                <p className="text-xs text-text-tertiary">
+                <p className="text-xs text-text-secondary">
                   Created {formatDate(k.created_at)}
                   {k.last_used_at && <> · Last used {formatDate(k.last_used_at)}</>}
                 </p>

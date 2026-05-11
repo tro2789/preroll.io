@@ -154,7 +154,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
 
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-raised p-5">
-      <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+      <h3 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
         Distribution
       </h3>
 
@@ -200,7 +200,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
           </div>
           <button
             onClick={() => { setShowPicker(null); setPickerProvider(null); setApiKey('') }}
-            className="mt-3 text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+            className="mt-3 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             Cancel
           </button>
@@ -233,7 +233,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
                 </div>
                 <button
                   onClick={() => { setActiveProvider(null); setApiKey('') }}
-                  className="mt-2 text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+                  className="mt-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
                 >
                   Cancel
                 </button>
@@ -244,7 +244,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
                 className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5"
               >
                 <span className="font-medium text-text-primary">Transistor.fm</span>
-                <span className="text-text-tertiary">Podcast hosting</span>
+                <span className="text-text-secondary">Podcast hosting</span>
               </button>
             )
           )}
@@ -257,7 +257,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
                 className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5 disabled:opacity-50"
               >
                 <span className="font-medium text-text-primary">YouTube</span>
-                <span className="text-text-tertiary">
+                <span className="text-text-secondary">
                   {connecting && activeProvider !== 'transistor' ? 'Connecting...' : 'Video publishing'}
                 </span>
               </button>
@@ -267,13 +267,13 @@ export function DistributionSettings({ showId }: { showId: string }) {
                 className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5"
               >
                 <span className="font-medium text-text-primary">YouTube</span>
-                <span className="text-text-tertiary">Connect account first &rarr;</span>
+                <span className="text-text-secondary">Connect account first &rarr;</span>
               </a>
             )
           )}
 
           {connectedProviders.has('transistor') && connectedProviders.has('youtube') && (
-            <p className="text-sm text-text-tertiary">All distribution providers connected.</p>
+            <p className="text-sm text-text-secondary">All distribution providers connected.</p>
           )}
         </div>
       )}
