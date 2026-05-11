@@ -77,43 +77,44 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
 
   return (
     <div className="rounded-lg bg-surface-raised border border-border-subtle overflow-hidden">
-      {thumb && !thumbFailed && (
-        <div className="relative aspect-video overflow-hidden">
-          {reviewUrl ? (
-            <a href={reviewUrl} className="block relative group/thumb">
-              <img src={thumb} alt="" className="h-full w-full object-cover" onError={() => setThumbFailed(true)} />
+      <div className="flex gap-3 p-3">
+        {thumb && !thumbFailed ? (
+          <a
+            href={reviewUrl || '#'}
+            className="shrink-0 relative w-28 aspect-video rounded-md overflow-hidden group/thumb"
+          >
+            <img src={thumb} alt="" className="h-full w-full object-cover" onError={() => setThumbFailed(true)} />
+            {reviewUrl && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover/thumb:opacity-100 transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-white">
                   <path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" />
                 </svg>
               </div>
-            </a>
-          ) : (
-            <img src={thumb} alt="" className="h-full w-full object-cover" onError={() => setThumbFailed(true)} />
-          )}
-          <span className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.bg}`}>
-            {status.label}
-          </span>
-          {versionCount != null && versionCount > 1 && (
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowVersionPicker(true) }}
-              className="absolute top-2 right-2 rounded bg-surface-raised/90 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary backdrop-blur-sm hover:bg-surface-raised hover:text-text-primary transition-colors"
-            >
-              {versionCount} versions
-            </button>
-          )}
-        </div>
-      )}
+            )}
+            {versionCount != null && versionCount > 1 && (
+              <span
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowVersionPicker(true) }}
+                className="absolute top-1 right-1 rounded bg-surface-raised/90 px-1 py-0.5 text-[9px] font-medium text-text-secondary backdrop-blur-sm cursor-pointer hover:bg-surface-raised hover:text-text-primary transition-colors"
+              >
+                v{versionCount}
+              </span>
+            )}
+          </a>
+        ) : null}
 
-      <div className="p-4 space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 flex flex-col justify-between">
+          <div>
             {episodeContext && (
               <p className="text-[11px] text-text-secondary mb-0.5">{episodeContext}</p>
             )}
-            <h3 className="text-sm font-medium text-text-primary">{deliverable.title}</h3>
-            <div className="flex items-center gap-2 mt-1">
+            <h3 className="text-sm font-medium text-text-primary truncate">{deliverable.title}</h3>
+            <div className="flex items-center gap-2 mt-0.5">
               <span className="text-xs text-text-secondary">{TYPE_LABELS[deliverable.type] || deliverable.type}</span>
+              <span className="text-text-tertiary">&middot;</span>
+              <span className={`inline-flex items-center gap-1 text-xs`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
+                {status.label}
+              </span>
               {versionCount != null && versionCount > 1 && !thumb && (
                 <>
                   <span className="text-text-tertiary">&middot;</span>
@@ -125,30 +126,28 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
                   </button>
                 </>
               )}
-              {!thumb && (
-                <>
-                  <span className="text-text-tertiary">&middot;</span>
-                  <span className={`inline-flex items-center gap-1.5 text-xs`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                    {status.label}
-                  </span>
-                </>
-              )}
-              {deliverable.status === 'approved' && deliverable.reviewed_at && (
-                <>
-                  <span className="text-text-tertiary">&middot;</span>
-                  <span className="text-xs text-text-secondary">
-                    {new Date(deliverable.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  </span>
-                </>
-              )}
             </div>
-            {deliverable.description && (
-              <p className="text-xs text-text-secondary mt-1.5">{deliverable.description}</p>
-            )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 mt-2">
+            {isPending && (
+              <>
+                <button
+                  onClick={() => handleAction('approved')}
+                  disabled={loading}
+                  className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => setShowRevisionForm(!showRevisionForm)}
+                  disabled={loading}
+                  className={btnSecondary}
+                >
+                  Request Revision
+                </button>
+              </>
+            )}
             {reviewUrl && (
               <a href={reviewUrl} className={btnSecondary}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
@@ -168,67 +167,48 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
             )}
           </div>
         </div>
+      </div>
 
-        {deliverable.producer_notes && (
-          <div className="rounded-md bg-accent/5 border border-accent/15 px-3 py-2">
-            <p className="text-[11px] font-medium text-text-secondary mb-0.5">Producer notes</p>
-            <p className="text-xs text-text-secondary whitespace-pre-wrap">{deliverable.producer_notes}</p>
-          </div>
-        )}
+      {deliverable.producer_notes && (
+        <div className="mx-3 mb-3 rounded-md bg-accent/5 border border-accent/15 px-3 py-2">
+          <p className="text-[11px] font-medium text-text-secondary mb-0.5">Producer notes</p>
+          <p className="text-xs text-text-secondary whitespace-pre-wrap">{deliverable.producer_notes}</p>
+        </div>
+      )}
 
-        {deliverable.status === 'revision_requested' && deliverable.reviewer_notes && (
-          <div className="rounded-md bg-red-500/5 border border-red-500/20 px-3 py-2">
-            <p className="text-[11px] font-medium text-text-secondary mb-0.5">Your feedback</p>
-            <p className="text-xs text-text-secondary">{deliverable.reviewer_notes}</p>
-          </div>
-        )}
+      {deliverable.status === 'revision_requested' && deliverable.reviewer_notes && (
+        <div className="mx-3 mb-3 rounded-md bg-red-500/5 border border-red-500/20 px-3 py-2">
+          <p className="text-[11px] font-medium text-text-secondary mb-0.5">Your feedback</p>
+          <p className="text-xs text-text-secondary">{deliverable.reviewer_notes}</p>
+        </div>
+      )}
 
-        {isPending && (
-          <div className="flex items-center gap-2 pt-1 border-t border-border-subtle">
+      {showRevisionForm && (
+        <div className="mx-3 mb-3 space-y-2">
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="What needs to change?"
+            rows={2}
+            className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none resize-none"
+          />
+          <div className="flex gap-2">
             <button
-              onClick={() => handleAction('approved')}
-              disabled={loading}
-              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+              onClick={() => handleAction('revision_requested')}
+              disabled={loading || !notes.trim()}
+              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
             >
-              Approve
+              {loading ? 'Sending...' : 'Submit'}
             </button>
             <button
-              onClick={() => setShowRevisionForm(!showRevisionForm)}
-              disabled={loading}
+              onClick={() => { setShowRevisionForm(false); setNotes('') }}
               className={btnSecondary}
             >
-              Request Revision
+              Cancel
             </button>
           </div>
-        )}
-
-        {showRevisionForm && (
-          <div className="space-y-2">
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="What needs to change?"
-              rows={3}
-              className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none resize-none"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleAction('revision_requested')}
-                disabled={loading || !notes.trim()}
-                className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Sending...' : 'Submit'}
-              </button>
-              <button
-                onClick={() => { setShowRevisionForm(false); setNotes('') }}
-                className={btnSecondary}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {showVersionPicker && reviewUrl && (
         <VersionPickerModal

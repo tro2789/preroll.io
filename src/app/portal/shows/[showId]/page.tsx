@@ -152,7 +152,7 @@ export default async function PortalShowPage({
       {activities && activities.length > 0 && (
         <section>
           <h2 className="text-sm font-medium text-text-secondary mb-3">Recent Activity</h2>
-          <div className="rounded-lg bg-surface-raised border border-border-subtle p-4">
+          <div className="rounded-lg bg-surface-raised border border-border-subtle p-4 max-h-72 overflow-y-auto">
             <ActivityFeed activities={activities} />
           </div>
         </section>
