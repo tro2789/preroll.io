@@ -147,13 +147,19 @@ export function DeliveryPanel({
 
   const thumbnailTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
 
-  const pipelineTriggeredRef = useRef(false)
-
   const handleUploadComplete = useCallback(() => {
     fetchFiles()
     thumbnailTimersRef.current.forEach(clearTimeout)
     thumbnailTimersRef.current = []
-    pipelineTriggeredRef.current = false
+
+    // Trigger AI pipeline after a short delay for provider processing
+    setTimeout(() => {
+      fetch(`/api/v1/episodes/${episodeId}/pipeline`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      }).catch(err => console.error('AI pipeline trigger failed:', err))
+    }, 5000)
 
     const pollDelays = [5000, 15000, 30000, 60000]
     for (const delay of pollDelays) {
@@ -174,20 +180,6 @@ export function DeliveryPanel({
             })
             thumbnailTimersRef.current.forEach(clearTimeout)
             thumbnailTimersRef.current = []
-          }
-
-          if (!pipelineTriggeredRef.current) {
-            const hasAudio = items.some(f =>
-              f.mimeType?.startsWith('audio/') || f.mimeType?.startsWith('video/')
-            )
-            if (hasAudio) {
-              pipelineTriggeredRef.current = true
-              fetch(`/api/v1/episodes/${episodeId}/pipeline`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({}),
-              }).catch(err => console.error('AI pipeline trigger failed:', err))
-            }
           }
         } catch { /* ignore */ }
       }, delay)

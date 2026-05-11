@@ -115,10 +115,13 @@ export async function POST(
 
     if (integration.provider === 'frame_io') {
       const frameRes = await fetch(
-        `https://api.frame.io/v4/accounts/${accountId}/files/${externalId}?include=media_links.high_quality,media_links.efficient`,
+        `https://api.frame.io/v4/accounts/${accountId}/files/${externalId}?include=media_links`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      if (!frameRes.ok) return errorResponse(`Frame.io API error: ${frameRes.status}`, 502)
+      if (!frameRes.ok) {
+        const body = await frameRes.text()
+        return errorResponse(`Frame.io API error ${frameRes.status}: ${body}`, 502)
+      }
       const frameData = await frameRes.json()
       const fileData = frameData.data || frameData
 
@@ -127,10 +130,14 @@ export async function POST(
         return errorResponse('File is still processing on Frame.io. Try again in a minute.', 409)
       }
 
-      const hq = fileData.media_links?.high_quality
-      const eff = fileData.media_links?.efficient
-      audioUrl = hq?.url || hq?.download_url || eff?.url || eff?.download_url || null
-      if (!audioUrl) return errorResponse('No download URL available from Frame.io', 502)
+      const ml = fileData.media_links || {}
+      audioUrl = ml.high_quality?.url || ml.efficient?.url || ml.source?.url
+        || ml.high_quality?.download_url || ml.efficient?.download_url || ml.source?.download_url
+        || fileData.original || null
+
+      if (!audioUrl) {
+        return errorResponse(`No download URL from Frame.io. Available media_links: ${Object.keys(ml).join(', ') || 'none'}. File status: ${fileData.status || 'unknown'}`, 502)
+      }
     } else {
       const details = await provider.getFileDetails(token, accountId, externalId)
       audioUrl = details.viewUrl
