@@ -76,7 +76,7 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
 
       if (!res.ok) {
         const json = await res.json()
-        throw new Error(json.error || 'Failed to create deliverable')
+        throw new Error(json.error || 'Failed to share file')
       }
 
       const { data: deliverable } = await res.json()
@@ -126,8 +126,8 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-raised p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
-          Deliverables
+        <h3 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
+          Shared Files
           {deliverables.length > 0 && (
             <span className="ml-1 normal-case tracking-normal">({deliverables.length})</span>
           )}
@@ -217,12 +217,12 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
               disabled={loading || !title.trim()}
               className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
-              {loading ? 'Submitting...' : 'Submit for Review'}
+              {loading ? 'Sharing...' : 'Share for Review'}
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+              className="text-xs text-text-secondary hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
@@ -233,8 +233,8 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
       <DeliverableList deliverables={deliverables} />
 
       {deliverables.length === 0 && !showManualForm && (
-        <p className="text-xs text-text-tertiary text-center py-2">
-          No deliverables submitted yet.
+        <p className="text-xs text-text-secondary text-center py-2">
+          No files shared yet.
         </p>
       )}
 

@@ -351,7 +351,7 @@ export function DeliveryPanel({
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({ error: 'Failed to submit' }))
-        throw new Error(json.error || 'Failed to submit deliverable')
+        throw new Error(json.error || 'Failed to share file')
       }
       router.refresh()
     } catch (err) {
@@ -385,7 +385,7 @@ export function DeliveryPanel({
       })
       if (!res.ok) {
         const json = await res.json().catch(() => ({ error: 'Failed to create' }))
-        throw new Error(json.error || 'Failed to create deliverable')
+        throw new Error(json.error || 'Failed to share file')
       }
       resetManualForm()
       router.refresh()
@@ -457,7 +457,7 @@ export function DeliveryPanel({
                 disabled={submitting === file.id}
                 className="shrink-0 rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
               >
-                {submitting === file.id ? '...' : 'Submit'}
+                {submitting === file.id ? '...' : 'Share'}
               </button>
             </div>
           )}
@@ -580,7 +580,7 @@ export function DeliveryPanel({
                         disabled={submitting === file.id}
                         className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 whitespace-nowrap"
                       >
-                        {submitting === file.id ? '...' : 'Submit'}
+                        {submitting === file.id ? '...' : 'Share'}
                       </button>
                     </div>
                   )}
@@ -906,7 +906,7 @@ export function DeliveryPanel({
                     onClick={() => setShowManualForm(true)}
                     className="mt-4 text-xs text-text-secondary hover:text-text-primary transition-colors"
                   >
-                    or add deliverables manually
+                    or share files manually
                   </button>
                 )}
               </div>
@@ -968,7 +968,7 @@ export function DeliveryPanel({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-medium text-text-secondary">
-                      {manualDeliverables.length > 0 ? `Deliverables (${manualDeliverables.length})` : 'Deliverables'}
+                      {manualDeliverables.length > 0 ? `Shared Files (${manualDeliverables.length})` : 'Shared Files'}
                     </h4>
                     {!showManualForm && (
                       <button onClick={() => setShowManualForm(true)} className="text-xs text-text-secondary hover:text-text-primary transition-colors">
@@ -1017,7 +1017,7 @@ export function DeliveryPanel({
                           disabled={manualLoading || !manualTitle.trim()}
                           className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
                         >
-                          {manualLoading ? '...' : 'Submit'}
+                          {manualLoading ? '...' : 'Share'}
                         </button>
                         <button type="button" onClick={resetManualForm} className="text-xs text-text-secondary hover:text-text-primary transition-colors">
                           Cancel
@@ -1029,7 +1029,7 @@ export function DeliveryPanel({
                   <DeliverableList deliverables={manualDeliverables} />
 
                   {manualDeliverables.length === 0 && !showManualForm && (
-                    <p className="text-xs text-text-secondary">No manual deliverables.</p>
+                    <p className="text-xs text-text-secondary">No shared files.</p>
                   )}
                 </div>
               </>
@@ -1037,7 +1037,7 @@ export function DeliveryPanel({
               <>
                 <div className="border-t border-border-subtle" />
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-text-secondary">{totalLinked} deliverable{totalLinked !== 1 ? 's' : ''} linked above</p>
+                  <p className="text-xs text-text-secondary">{totalLinked} shared file{totalLinked !== 1 ? 's' : ''} linked above</p>
                   <button onClick={() => setShowManualForm(true)} className="text-xs text-text-secondary hover:text-text-primary transition-colors">
                     + Add
                   </button>
