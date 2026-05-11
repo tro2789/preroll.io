@@ -70,6 +70,39 @@ export async function PATCH(
   if (error) return error
 
   const body = await request.json()
+
+  if (body.unstack) {
+    const { data: current } = await supabase!
+      .from('file_references')
+      .select('id, version_group_id, version_number')
+      .eq('id', referenceId)
+      .single()
+
+    if (!current) return errorResponse('File reference not found', 404)
+
+    const newGroupId = crypto.randomUUID()
+    await supabase!
+      .from('file_references')
+      .update({ version_group_id: newGroupId, version_number: 1, is_latest: true })
+      .eq('id', referenceId)
+
+    const { data: remaining } = await supabase!
+      .from('file_references')
+      .select('id, version_number')
+      .eq('version_group_id', current.version_group_id)
+      .order('version_number', { ascending: false })
+      .limit(1)
+
+    if (remaining && remaining.length > 0) {
+      await supabase!
+        .from('file_references')
+        .update({ is_latest: true })
+        .eq('id', remaining[0].id)
+    }
+
+    return jsonResponse({ unstacked: true, new_group_id: newGroupId })
+  }
+
   const allowed = ['provider_metadata', 'thumbnail_url', 'external_url', 'name']
   const updates: Record<string, unknown> = {}
   for (const field of allowed) {
