@@ -60,6 +60,7 @@ interface DeliveryPanelProps {
   deliverables: Deliverable[]
   connectedProviders: IntegrationProvider[]
   episode: EpisodeMeta
+  hideSidebar?: boolean
 }
 
 const deliverableTypes = [
@@ -104,7 +105,7 @@ const typeLabels: Record<string, string> = {
 
 export function DeliveryPanel({
   episodeId, showId, integration: initialIntegration,
-  deliverables, connectedProviders, episode,
+  deliverables, connectedProviders, episode, hideSidebar,
 }: DeliveryPanelProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -690,7 +691,7 @@ export function DeliveryPanel({
         />
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]">
+      <div className={hideSidebar ? '' : 'grid grid-cols-1 gap-6 lg:grid-cols-[1fr_260px]'}>
         {/* Main: files */}
         <div className="min-w-0 space-y-4">
           {/* Header bar */}
@@ -897,7 +898,7 @@ export function DeliveryPanel({
         </div>
 
         {/* Sidebar: metadata + deliverables */}
-        <aside className="space-y-5 lg:sticky lg:top-4 lg:self-start">
+        {!hideSidebar && <aside className="space-y-5 lg:sticky lg:top-4 lg:self-start">
           {/* Episode metadata */}
           <div className="space-y-3">
             {episode.stage && (
@@ -1030,7 +1031,7 @@ export function DeliveryPanel({
 
           <div className="border-t border-border-subtle" />
           <EpisodeAssets episodeId={episodeId} />
-        </aside>
+        </aside>}
       </div>
     </>
   )
