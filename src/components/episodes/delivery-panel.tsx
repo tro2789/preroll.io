@@ -732,47 +732,64 @@ export function DeliveryPanel({
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Files</h3>
-                    {files.length > 0 && <span className="text-xs text-text-tertiary">{files.length}</span>}
-                  </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center rounded-md border border-border-subtle overflow-hidden">
-                      <button
-                        onClick={() => setViewMode('grid')}
-                        className={`px-2 py-1 transition-colors ${viewMode === 'grid' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
-                        title="Grid view"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-                          <path d="M1 2.75A1.75 1.75 0 0 1 2.75 1h2.5A1.75 1.75 0 0 1 7 2.75v2.5A1.75 1.75 0 0 1 5.25 7h-2.5A1.75 1.75 0 0 1 1 5.25v-2.5ZM9 2.75A1.75 1.75 0 0 1 10.75 1h2.5A1.75 1.75 0 0 1 15 2.75v2.5A1.75 1.75 0 0 1 13.25 7h-2.5A1.75 1.75 0 0 1 9 5.25v-2.5ZM1 10.75A1.75 1.75 0 0 1 2.75 9h2.5A1.75 1.75 0 0 1 7 10.75v2.5A1.75 1.75 0 0 1 5.25 15h-2.5A1.75 1.75 0 0 1 1 13.25v-2.5ZM9 10.75A1.75 1.75 0 0 1 10.75 9h2.5A1.75 1.75 0 0 1 15 10.75v2.5A1.75 1.75 0 0 1 13.25 15h-2.5A1.75 1.75 0 0 1 9 13.25v-2.5Z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setViewMode('list')}
-                        className={`px-2 py-1 transition-colors ${viewMode === 'list' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary'}`}
-                        title="List view"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
-                          <path fillRule="evenodd" d="M2 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 8Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 12Z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
+                    <h3 className="text-sm font-medium text-text-primary">Files</h3>
+                    {files.length > 0 && (
+                      <span className="rounded-full bg-surface-overlay px-2 py-0.5 text-xs font-medium text-text-secondary">{files.length}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
+                      className="inline-flex items-center gap-1.5 rounded-md border border-border-default bg-surface-overlay px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"
                     >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
                       Upload
                     </button>
                     <button
                       onClick={fetchFiles}
                       disabled={filesLoading}
-                      className="text-xs text-text-tertiary hover:text-text-primary transition-colors disabled:opacity-50"
+                      className="inline-flex items-center rounded-md border border-border-default bg-surface-overlay px-2.5 py-1.5 text-sm text-text-secondary hover:bg-surface-input hover:text-text-primary transition-colors disabled:opacity-50"
+                      title="Refresh files"
                     >
-                      Refresh
+                      <svg className={`h-4 w-4 ${filesLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
                     </button>
+                    <div className="ml-1 flex items-center rounded-md border border-border-default overflow-hidden">
+                      <button
+                        onClick={() => setViewMode('grid')}
+                        className={`px-2.5 py-1.5 transition-colors ${viewMode === 'grid' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-input'}`}
+                        title="Grid view"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                          <path d="M1 2.75A1.75 1.75 0 0 1 2.75 1h2.5A1.75 1.75 0 0 1 7 2.75v2.5A1.75 1.75 0 0 1 5.25 7h-2.5A1.75 1.75 0 0 1 1 5.25v-2.5ZM9 2.75A1.75 1.75 0 0 1 10.75 1h2.5A1.75 1.75 0 0 1 15 2.75v2.5A1.75 1.75 0 0 1 13.25 7h-2.5A1.75 1.75 0 0 1 9 5.25v-2.5ZM1 10.75A1.75 1.75 0 0 1 2.75 9h2.5A1.75 1.75 0 0 1 7 10.75v2.5A1.75 1.75 0 0 1 5.25 15h-2.5A1.75 1.75 0 0 1 1 13.25v-2.5ZM9 10.75A1.75 1.75 0 0 1 10.75 9h2.5A1.75 1.75 0 0 1 15 10.75v2.5A1.75 1.75 0 0 1 13.25 15h-2.5A1.75 1.75 0 0 1 9 13.25v-2.5Z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setViewMode('list')}
+                        className={`px-2.5 py-1.5 transition-colors ${viewMode === 'list' ? 'bg-surface-overlay text-text-primary' : 'text-text-tertiary hover:text-text-secondary hover:bg-surface-input'}`}
+                        title="List view"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+                          <path fillRule="evenodd" d="M2 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 4Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 8Zm0 4a.75.75 0 0 1 .75-.75h10.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 12Z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    </div>
                     {integration?.externalViewUrl && (
-                      <a href={integration.externalViewUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover transition-colors">
+                      <a
+                        href={integration.externalViewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1 inline-flex items-center gap-1 rounded-md border border-border-default bg-surface-overlay px-2.5 py-1.5 text-sm text-text-secondary hover:bg-surface-input hover:text-text-primary transition-colors"
+                        title={`Open in ${providerDisplayName}`}
+                      >
                         {providerDisplayName}
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
                       </a>
                     )}
                   </div>
