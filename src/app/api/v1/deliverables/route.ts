@@ -67,6 +67,20 @@ export async function POST(request: Request) {
       episode_id: body.episode_id,
       deliverable_id: data.id,
     })
+
+    // Link the deliverable to the file_reference's version group
+    const { data: fileRef } = await supabase!
+      .from('file_references')
+      .select('id, version_group_id')
+      .eq('deliverable_id', data.id)
+      .single()
+
+    if (fileRef) {
+      await supabase!
+        .from('deliverables')
+        .update({ version_group_id: fileRef.version_group_id, file_reference_id: fileRef.id })
+        .eq('id', data.id)
+    }
   }
 
   await supabase!.from('activity_log').insert({
