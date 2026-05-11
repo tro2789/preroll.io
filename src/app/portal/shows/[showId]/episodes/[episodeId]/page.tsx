@@ -72,21 +72,21 @@ export default async function PortalEpisodePage({
       <div>
         <Link
           href={`/portal/shows/${showId}`}
-          className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          className="text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
           &larr; {show.name}
         </Link>
 
         <div className="mt-3 flex items-center gap-3">
           {episode.episode_number != null && (
-            <span className="text-sm font-mono text-text-tertiary">#{episode.episode_number}</span>
+            <span className="text-sm font-mono text-text-secondary">#{episode.episode_number}</span>
           )}
           <h1 className="text-lg font-semibold text-text-primary">{episode.title}</h1>
         </div>
 
         <div className="flex items-center gap-3 mt-2">
           {episode.scheduled_publish_date && (
-            <span className="text-xs text-text-tertiary">
+            <span className="text-xs text-text-secondary">
               Scheduled: {new Date(episode.scheduled_publish_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </span>
           )}
@@ -101,15 +101,15 @@ export default async function PortalEpisodePage({
 
       <div className="space-y-3">
         <h2 className="text-sm font-medium text-text-secondary">
-          Deliverables
+          Shared Files
           {deliverables && deliverables.length > 0 && (
-            <span className="ml-2 text-text-tertiary font-normal">({deliverables.length})</span>
+            <span className="ml-2 text-text-secondary font-normal">({deliverables.length})</span>
           )}
         </h2>
 
         {!deliverables || deliverables.length === 0 ? (
-          <p className="text-sm text-text-tertiary py-4 text-center">
-            No deliverables yet for this episode.
+          <p className="text-sm text-text-secondary py-4 text-center">
+            No shared files yet for this episode.
           </p>
         ) : (
           <div className="space-y-3">
