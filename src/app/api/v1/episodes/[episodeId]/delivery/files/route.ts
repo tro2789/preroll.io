@@ -60,22 +60,28 @@ export async function GET(
       }
 
       const latestByExternalId = new Map<string, { version_number: number; version_count: number }>()
+      const hiddenExternalIds = new Set<string>()
       for (const ref of allRefs) {
-        if (ref.is_latest && ref.external_id) {
+        if (ref.external_id && ref.is_latest) {
           latestByExternalId.set(ref.external_id, {
             version_number: ref.version_number,
             version_count: groupCounts.get(ref.version_group_id) || 1,
           })
         }
+        if (ref.external_id && !ref.is_latest) {
+          hiddenExternalIds.add(ref.external_id)
+        }
       }
 
-      result.items = result.items.map((item) => {
-        const info = latestByExternalId.get(item.id)
-        if (info && info.version_count > 1) {
-          return { ...item, version_number: info.version_number, version_count: info.version_count }
-        }
-        return item
-      })
+      result.items = result.items
+        .filter((item) => !hiddenExternalIds.has(item.id))
+        .map((item) => {
+          const info = latestByExternalId.get(item.id)
+          if (info && info.version_count > 1) {
+            return { ...item, version_number: info.version_number, version_count: info.version_count }
+          }
+          return item
+        })
     }
 
     return jsonResponse(result)
