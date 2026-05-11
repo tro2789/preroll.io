@@ -38,10 +38,10 @@ export function PortalHeader({ clientName, email, orgDisplayName, logoUrl }: Por
           <span className="text-sm text-text-secondary">{clientName}</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-text-tertiary hidden sm:block">{email}</span>
+          <span className="text-xs text-text-secondary hidden sm:block">{email}</span>
           <button
             onClick={handleSignOut}
-            className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             Sign out
           </button>

@@ -216,13 +216,13 @@ export function CalendarView() {
         <div className="flex items-center gap-2 sm:gap-3">
           <h2 className="text-base sm:text-lg font-semibold text-text-primary">{heading}</h2>
           <div className="flex items-center gap-1">
-            <button onClick={prev} className="rounded-md p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors">
+            <button onClick={prev} className="rounded-md p-1.5 text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors">
               <ChevronLeftIcon />
             </button>
-            <button onClick={goToday} className="rounded-md px-2.5 py-1 text-xs font-medium text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors">
+            <button onClick={goToday} className="rounded-md px-2.5 py-1 text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors">
               Today
             </button>
-            <button onClick={next} className="rounded-md p-1.5 text-text-tertiary hover:text-text-primary hover:bg-surface-raised transition-colors">
+            <button onClick={next} className="rounded-md p-1.5 text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors">
               <ChevronRightIcon />
             </button>
           </div>
@@ -245,7 +245,7 @@ export function CalendarView() {
             <button
               onClick={() => setView('week')}
               className={`px-3 py-1 text-xs font-medium transition-colors ${
-                view === 'week' ? 'bg-accent text-white' : 'text-text-tertiary hover:text-text-secondary bg-surface-input'
+                view === 'week' ? 'bg-accent text-white' : 'text-text-secondary hover:text-text-primary bg-surface-input'
               }`}
             >
               Week
@@ -253,7 +253,7 @@ export function CalendarView() {
             <button
               onClick={() => setView('month')}
               className={`px-3 py-1 text-xs font-medium transition-colors ${
-                view === 'month' ? 'bg-accent text-white' : 'text-text-tertiary hover:text-text-secondary bg-surface-input'
+                view === 'month' ? 'bg-accent text-white' : 'text-text-secondary hover:text-text-primary bg-surface-input'
               }`}
             >
               Month
@@ -266,7 +266,7 @@ export function CalendarView() {
         style={{ gridTemplateRows: `auto repeat(${rowCount}, 1fr)` }}
       >
         {DAY_NAMES.map((day, idx) => (
-          <div key={day + idx} className="py-2 text-center text-xs font-medium text-text-tertiary border-b border-border-subtle">
+          <div key={day + idx} className="py-2 text-center text-xs font-medium text-text-secondary border-b border-border-subtle">
             <span className="hidden sm:inline">{day}</span>
             <span className="sm:hidden">{DAY_NAMES_SHORT[idx]}</span>
           </div>
@@ -321,7 +321,7 @@ export function CalendarView() {
                 className="inline-block h-2.5 w-2.5 rounded-full"
                 style={{ backgroundColor: showColorMap.get(id) }}
               />
-              <span className="text-xs text-text-tertiary">{name}</span>
+              <span className="text-xs text-text-secondary">{name}</span>
             </div>
           ))}
         </div>

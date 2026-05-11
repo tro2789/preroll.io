@@ -33,12 +33,12 @@ function Nav() {
           PREROLL.IO
         </Link>
         <nav className="hidden sm:flex items-center gap-6">
-          <a href="#features" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Features</a>
-          <a href="#pricing" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Pricing</a>
-          <Link href="/docs" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">Docs</Link>
+          <a href="#features" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Features</a>
+          <a href="#pricing" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Pricing</a>
+          <Link href="/docs" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Docs</Link>
         </nav>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
+          <Link href="/login" className="text-sm text-text-secondary hover:text-text-primary transition-colors">
             Sign in
           </Link>
           <Link
@@ -85,7 +85,7 @@ function Hero() {
             </Link>
             <Link
               href="/docs/developer/api-reference"
-              className="text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
+              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
               View API Docs &rarr;
             </Link>
@@ -169,7 +169,7 @@ function ApiFirst() {
             ].map((ep) => (
               <div key={ep.name} className="rounded-lg border border-border-subtle bg-surface-base px-4 py-3">
                 <span className="font-mono text-xs text-accent">/api/v1/{ep.name.toLowerCase()}</span>
-                <p className="mt-1 text-xs text-text-tertiary">{ep.desc}</p>
+                <p className="mt-1 text-xs text-text-secondary">{ep.desc}</p>
               </div>
             ))}
           </div>
@@ -262,7 +262,7 @@ function McpSection() {
             preroll.io ships an MCP server. Connect it to Claude, ChatGPT, or any AI
             assistant and manage your production pipeline in natural language.
           </p>
-          <p className="mt-6 text-sm text-text-tertiary max-w-lg">
+          <p className="mt-6 text-sm text-text-secondary max-w-lg">
             No tab-switching. No searching Slack threads. Just ask.
           </p>
           <div className="mt-6">
@@ -325,7 +325,7 @@ function Integrations() {
         </div>
 
         <div className="mt-6 flex items-center gap-6">
-          <p className="text-sm text-text-tertiary">
+          <p className="text-sm text-text-secondary">
             Also: Google Drive, Vimeo, n8n, Zapier.
           </p>
           <Link href="/docs" className="text-sm text-accent hover:text-accent-hover transition-colors">
@@ -383,7 +383,7 @@ function FinalCta() {
           </Link>
           <Link
             href="/docs/developer/api-reference"
-            className="text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
+            className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
           >
             Read the API Docs &rarr;
           </Link>
@@ -401,7 +401,7 @@ function Footer() {
       <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-start justify-between gap-8">
         <div className="grid grid-cols-3 gap-8 sm:gap-12">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Product</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-text-secondary">Product</p>
             <ul className="mt-3 space-y-2">
               <li><a href="#features" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Features</a></li>
               <li><a href="#pricing" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Pricing</a></li>
@@ -409,7 +409,7 @@ function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Developers</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-text-secondary">Developers</p>
             <ul className="mt-3 space-y-2">
               <li><Link href="/docs/developer/api-reference" className="text-sm text-text-secondary hover:text-text-primary transition-colors">API</Link></li>
               <li><Link href="/docs/developer/mcp-server" className="text-sm text-text-secondary hover:text-text-primary transition-colors">MCP Server</Link></li>
@@ -417,14 +417,14 @@ function Footer() {
             </ul>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Account</p>
+            <p className="text-xs font-medium uppercase tracking-wider text-text-secondary">Account</p>
             <ul className="mt-3 space-y-2">
               <li><Link href="/login" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Sign In</Link></li>
               <li><Link href="/signup" className="text-sm text-text-secondary hover:text-text-primary transition-colors">Sign Up</Link></li>
             </ul>
           </div>
         </div>
-        <p className="text-xs text-text-tertiary">&copy; {new Date().getFullYear()} preroll.io</p>
+        <p className="text-xs text-text-secondary">&copy; {new Date().getFullYear()} preroll.io</p>
       </div>
     </footer>
   )

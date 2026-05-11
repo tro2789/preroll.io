@@ -20,7 +20,7 @@ const actionIcons: Record<string, string> = {
 export function ActivityFeed({ activities }: ActivityFeedProps) {
   if (activities.length === 0) {
     return (
-      <p className="text-xs text-text-tertiary text-center py-4">
+      <p className="text-xs text-text-secondary text-center py-4">
         No activity yet.
       </p>
     )
@@ -40,7 +40,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
           </div>
           <div className="min-w-0 flex-1 pb-1">
             <p className="text-sm text-text-secondary">{entry.description}</p>
-            <p className="text-xs text-text-tertiary mt-0.5">
+            <p className="text-xs text-text-secondary mt-0.5">
               {new Date(entry.created_at).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',

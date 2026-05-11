@@ -26,7 +26,7 @@ interface EpisodeTimelineProps {
 export function EpisodeTimeline({ episodes, stages, showId }: EpisodeTimelineProps) {
   if (episodes.length === 0) {
     return (
-      <p className="text-sm text-text-tertiary py-8 text-center">
+      <p className="text-sm text-text-secondary py-8 text-center">
         No episodes yet.
       </p>
     )
@@ -44,7 +44,7 @@ export function EpisodeTimeline({ episodes, stages, showId }: EpisodeTimelinePro
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 {ep.episode_number != null && (
-                  <span className="text-xs font-mono text-text-tertiary shrink-0">
+                  <span className="text-xs font-mono text-text-secondary shrink-0">
                     {String(ep.episode_number).padStart(2, '0')}
                   </span>
                 )}
@@ -70,7 +70,7 @@ export function EpisodeTimeline({ episodes, stages, showId }: EpisodeTimelinePro
                 </span>
               )}
               {ep.scheduled_publish_date && (
-                <span className="text-[11px] text-text-tertiary">
+                <span className="text-[11px] text-text-secondary">
                   {new Date(ep.scheduled_publish_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               )}

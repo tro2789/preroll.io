@@ -109,11 +109,11 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             {episodeContext && (
-              <p className="text-[11px] text-text-tertiary mb-0.5">{episodeContext}</p>
+              <p className="text-[11px] text-text-secondary mb-0.5">{episodeContext}</p>
             )}
             <h3 className="text-sm font-medium text-text-primary">{deliverable.title}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs text-text-tertiary">{typeLabels[deliverable.type] || deliverable.type}</span>
+              <span className="text-xs text-text-secondary">{typeLabels[deliverable.type] || deliverable.type}</span>
               {!thumb && (
                 <>
                   <span className="text-text-tertiary">&middot;</span>
@@ -126,7 +126,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
               {deliverable.status === 'approved' && deliverable.reviewed_at && (
                 <>
                   <span className="text-text-tertiary">&middot;</span>
-                  <span className="text-xs text-text-tertiary">
+                  <span className="text-xs text-text-secondary">
                     {new Date(deliverable.reviewed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                 </>
@@ -160,14 +160,14 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
 
         {deliverable.producer_notes && (
           <div className="rounded-md bg-accent/5 border border-accent/15 px-3 py-2">
-            <p className="text-[11px] font-medium text-text-tertiary mb-0.5">Producer notes</p>
+            <p className="text-[11px] font-medium text-text-secondary mb-0.5">Producer notes</p>
             <p className="text-xs text-text-secondary whitespace-pre-wrap">{deliverable.producer_notes}</p>
           </div>
         )}
 
         {deliverable.status === 'revision_requested' && deliverable.reviewer_notes && (
           <div className="rounded-md bg-red-500/5 border border-red-500/20 px-3 py-2">
-            <p className="text-[11px] font-medium text-text-tertiary mb-0.5">Your feedback</p>
+            <p className="text-[11px] font-medium text-text-secondary mb-0.5">Your feedback</p>
             <p className="text-xs text-text-secondary">{deliverable.reviewer_notes}</p>
           </div>
         )}
