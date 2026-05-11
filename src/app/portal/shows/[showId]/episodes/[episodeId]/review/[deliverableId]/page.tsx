@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { ReviewPlayer } from '@/components/portal/review-player'
 import { CommentsSidebar } from '@/components/portal/comments-sidebar'
 import { VersionPickerModal } from '@/components/portal/version-picker-modal'
@@ -27,7 +27,9 @@ interface Comment {
 interface Deliverable {
   title: string
   type: string
+  status: string
   file_url: string | null
+  reviewer_notes: string | null
 }
 
 export default function ReviewPage() {
@@ -47,8 +49,12 @@ export default function ReviewPage() {
   const [currentTime, setCurrentTime] = useState(0)
   const [seekToTime, setSeekToTime] = useState<number | null>(null)
 
+  const router = useRouter()
   const [versions, setVersions] = useState<FileVersion[]>([])
   const [showVersionPicker, setShowVersionPicker] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [showRevisionForm, setShowRevisionForm] = useState(false)
+  const [revisionNotes, setRevisionNotes] = useState('')
 
   const mediaApiUrl = versionFileRefId
     ? `/api/v1/deliverables/${deliverableId}/media?file_reference_id=${versionFileRefId}`
@@ -150,6 +156,24 @@ export default function ReviewPage() {
     setTimeout(() => setSeekToTime(null), 100)
   }, [])
 
+  async function handleAction(newStatus: 'approved' | 'revision_requested') {
+    setActionLoading(true)
+    await fetch(`/api/v1/deliverables/${deliverableId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: newStatus,
+        reviewer_notes: newStatus === 'revision_requested' ? revisionNotes : null,
+      }),
+    })
+    setActionLoading(false)
+    setShowRevisionForm(false)
+    router.push(`/portal/shows/${showId}/episodes/${episodeId}`)
+    router.refresh()
+  }
+
+  const isPending = deliverable?.status === 'pending'
+
   const backUrl = `/portal/shows/${showId}/episodes/${episodeId}`
   const reviewBaseUrl = `/portal/shows/${showId}/episodes/${episodeId}/review/${deliverableId}`
 
@@ -210,6 +234,54 @@ export default function ReviewPage() {
               currentTime={currentTime}
               onSeek={handleSeek}
               onSubmit={handleCommentSubmit}
+              actionBar={isPending ? (
+                <div className="px-3 py-3 space-y-2">
+                  {!showRevisionForm ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleAction('approved')}
+                        disabled={actionLoading}
+                        className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors disabled:opacity-50"
+                      >
+                        {actionLoading ? 'Approving...' : 'Approve'}
+                      </button>
+                      <button
+                        onClick={() => setShowRevisionForm(true)}
+                        disabled={actionLoading}
+                        className="flex-1 rounded-md border border-border-default bg-surface-overlay px-3 py-2 text-xs font-medium text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
+                      >
+                        Request Revision
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <textarea
+                        value={revisionNotes}
+                        onChange={(e) => setRevisionNotes(e.target.value)}
+                        placeholder="What needs to change?"
+                        rows={2}
+                        autoFocus
+                        className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleAction('revision_requested')}
+                          disabled={actionLoading || !revisionNotes.trim()}
+                          className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading ? 'Sending...' : 'Submit Revision'}
+                        </button>
+                        <button
+                          onClick={() => { setShowRevisionForm(false); setRevisionNotes('') }}
+                          className="rounded-md border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-input transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : undefined}
             />
           </div>
         </div>

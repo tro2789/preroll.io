@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { TYPE_LABELS } from '@/lib/constants/deliverables'
 import { VersionPickerModal } from '@/components/portal/version-picker-modal'
 
@@ -36,10 +35,6 @@ const statusConfig: Record<string, { dot: string; bg: string; label: string }> =
 const btnSecondary = 'inline-flex items-center gap-1.5 rounded-md border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50'
 
 export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbnailUrl: initialThumb, allowDownload, versionCount }: DeliverableCardProps) {
-  const router = useRouter()
-  const [showRevisionForm, setShowRevisionForm] = useState(false)
-  const [notes, setNotes] = useState('')
-  const [loading, setLoading] = useState(false)
   const [thumb, setThumb] = useState(initialThumb)
   const [thumbFailed, setThumbFailed] = useState(false)
   const [showVersionPicker, setShowVersionPicker] = useState(false)
@@ -58,22 +53,6 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
   }, [deliverable.id, initialThumb, reviewUrl, thumbFailed])
 
   const status = statusConfig[deliverable.status] || statusConfig.pending
-  const isPending = deliverable.status === 'pending'
-
-  async function handleAction(newStatus: 'approved' | 'revision_requested') {
-    setLoading(true)
-    await fetch(`/api/v1/deliverables/${deliverable.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        status: newStatus,
-        reviewer_notes: newStatus === 'revision_requested' ? notes : null,
-      }),
-    })
-    setLoading(false)
-    setShowRevisionForm(false)
-    router.refresh()
-  }
 
   return (
     <div className="rounded-lg bg-surface-raised border border-border-subtle overflow-hidden">
@@ -130,30 +109,12 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
           </div>
 
           <div className="flex items-center gap-2 mt-2">
-            {isPending && (
-              <>
-                <button
-                  onClick={() => handleAction('approved')}
-                  disabled={loading}
-                  className="rounded-md bg-accent px-2.5 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => setShowRevisionForm(!showRevisionForm)}
-                  disabled={loading}
-                  className={btnSecondary}
-                >
-                  Request Revision
-                </button>
-              </>
-            )}
             {reviewUrl && (
               <a href={reviewUrl} className={btnSecondary}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3">
                   <path d="M3.05 3.05a7 7 0 1 1 9.9 9.9 7 7 0 0 1-9.9-9.9Zm1.627 8.273A5.5 5.5 0 1 0 12.323 4.677L4.677 12.323ZM6.75 6a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.105.66l2.255-1.25a.75.75 0 0 0 0-1.32l-2.255-1.25A.75.75 0 0 0 6.75 6Z" />
                 </svg>
-                {isPending ? 'Review' : 'Watch'}
+                Review
               </a>
             )}
             {allowDownload && deliverable.file_url && (
@@ -173,40 +134,6 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
         <div className="mx-3 mb-3 rounded-md bg-accent/5 border border-accent/15 px-3 py-2">
           <p className="text-[11px] font-medium text-text-secondary mb-0.5">Producer notes</p>
           <p className="text-xs text-text-secondary whitespace-pre-wrap">{deliverable.producer_notes}</p>
-        </div>
-      )}
-
-      {deliverable.status === 'revision_requested' && deliverable.reviewer_notes && (
-        <div className="mx-3 mb-3 rounded-md bg-red-500/5 border border-red-500/20 px-3 py-2">
-          <p className="text-[11px] font-medium text-text-secondary mb-0.5">Your feedback</p>
-          <p className="text-xs text-text-secondary">{deliverable.reviewer_notes}</p>
-        </div>
-      )}
-
-      {showRevisionForm && (
-        <div className="mx-3 mb-3 space-y-2">
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="What needs to change?"
-            rows={2}
-            className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none resize-none"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleAction('revision_requested')}
-              disabled={loading || !notes.trim()}
-              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-500 transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Sending...' : 'Submit'}
-            </button>
-            <button
-              onClick={() => { setShowRevisionForm(false); setNotes('') }}
-              className={btnSecondary}
-            >
-              Cancel
-            </button>
-          </div>
         </div>
       )}
 

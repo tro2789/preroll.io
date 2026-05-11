@@ -17,6 +17,7 @@ interface CommentsSidebarProps {
   currentTime: number
   onSeek: (seconds: number) => void
   onSubmit: (text: string, timestampSecs: number) => Promise<void>
+  actionBar?: React.ReactNode
 }
 
 function timeAgo(dateStr: string): string {
@@ -76,6 +77,7 @@ export function CommentsSidebar({
   currentTime,
   onSeek,
   onSubmit,
+  actionBar,
 }: CommentsSidebarProps) {
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -136,6 +138,11 @@ export function CommentsSidebar({
 
   return (
     <div className="flex flex-col h-full">
+      {actionBar && (
+        <div className="shrink-0 border-b border-border-subtle">
+          {actionBar}
+        </div>
+      )}
       {/* Comment list */}
       <div ref={listRef} className="flex-1 overflow-y-auto">
         {!hasComments ? (
