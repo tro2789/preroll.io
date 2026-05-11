@@ -72,7 +72,7 @@ export async function POST(
   if (!audioUrl) {
     const { data: integration } = await supabase!
       .from('episode_integrations')
-      .select('provider')
+      .select('provider, external_folder_id')
       .eq('episode_id', episodeId)
       .maybeSingle()
 
@@ -89,66 +89,52 @@ export async function POST(
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false })
 
+    let externalId: string | null = null
+
     const audioRef = refs?.find(r =>
       r.mime_type?.startsWith('audio/') || r.mime_type?.startsWith('video/')
     )
 
-    if (!audioRef) {
-      if (!provider.listFolderContents) return errorResponse('No audio files found on this episode', 400)
-
-      const { data: epIntegration } = await supabase!
-        .from('episode_integrations')
-        .select('external_folder_id')
-        .eq('episode_id', episodeId)
-        .single()
-
-      if (!epIntegration?.external_folder_id) return errorResponse('No folder linked', 400)
-
-      const listing = await provider.listFolderContents(token, accountId, epIntegration.external_folder_id)
+    if (audioRef) {
+      fileReferenceId = audioRef.id
+      durationSeconds = audioRef.duration_seconds ?? undefined
+      externalId = audioRef.external_id
+    } else if (provider.listFolderContents && integration.external_folder_id) {
+      const listing = await provider.listFolderContents(token, accountId, integration.external_folder_id)
       const audioFile = listing.items.find(f =>
         f.mimeType?.startsWith('audio/') || f.mimeType?.startsWith('video/')
       )
+      if (audioFile) {
+        externalId = audioFile.id
+        fileReferenceId = audioFile.id
+        durationSeconds = audioFile.durationSeconds
+      }
+    }
 
-      if (!audioFile) return errorResponse('No audio or video files found in the delivery folder', 400)
+    if (!externalId) return errorResponse('No audio or video files found on this episode', 400)
 
-      const details = await provider.getFileDetails(token, accountId, audioFile.id)
+    if (integration.provider === 'frame_io') {
+      const frameRes = await fetch(
+        `https://api.frame.io/v4/accounts/${accountId}/files/${externalId}?include=media_links.high_quality,media_links.efficient`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (!frameRes.ok) return errorResponse(`Frame.io API error: ${frameRes.status}`, 502)
+      const frameData = await frameRes.json()
+      const fileData = frameData.data || frameData
 
-      if (integration.provider === 'frame_io') {
-        const frameRes = await fetch(
-          `https://api.frame.io/v4/accounts/${accountId}/files/${audioFile.id}?include=media_links.original`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (!frameRes.ok) return errorResponse('Failed to get file download URL from Frame.io', 502)
-        const frameData = await frameRes.json()
-        const fileData = frameData.data || frameData
-        audioUrl = fileData.media_links?.original?.url || fileData.original
-        if (!audioUrl) return errorResponse('No download URL available for this file', 502)
-      } else {
-        audioUrl = details.viewUrl
-        if (!audioUrl) return errorResponse('No URL available for this file', 400)
+      const notReady = ['uploading', 'processing', 'transcoding']
+      if (fileData.status && notReady.includes(fileData.status)) {
+        return errorResponse('File is still processing on Frame.io. Try again in a minute.', 409)
       }
 
-      fileReferenceId = audioFile.id
-      durationSeconds = audioFile.durationSeconds
+      const hq = fileData.media_links?.high_quality
+      const eff = fileData.media_links?.efficient
+      audioUrl = hq?.url || hq?.download_url || eff?.url || eff?.download_url || null
+      if (!audioUrl) return errorResponse('No download URL available from Frame.io', 502)
     } else {
-      fileReferenceId = audioRef.id
-      durationSeconds = audioRef.duration_seconds ?? undefined
-
-      if (integration.provider === 'frame_io') {
-        const frameRes = await fetch(
-          `https://api.frame.io/v4/accounts/${accountId}/files/${audioRef.external_id}?include=media_links.original`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
-        if (!frameRes.ok) return errorResponse('Failed to get file download URL from Frame.io', 502)
-        const frameData = await frameRes.json()
-        const fileData = frameData.data || frameData
-        audioUrl = fileData.media_links?.original?.url || fileData.original
-        if (!audioUrl) return errorResponse('No download URL available for this file', 502)
-      } else {
-        const details = await provider.getFileDetails(token, accountId, audioRef.external_id)
-        audioUrl = details.viewUrl
-        if (!audioUrl) return errorResponse('No URL available for this file', 400)
-      }
+      const details = await provider.getFileDetails(token, accountId, externalId)
+      audioUrl = details.viewUrl
+      if (!audioUrl) return errorResponse('No download URL available for this file', 400)
     }
   }
 
