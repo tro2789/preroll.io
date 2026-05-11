@@ -45,11 +45,8 @@ export default async function EpisodeDetailPage({
   if (error || !episode) {
     return (
       <div className="text-center py-12">
-        <p className="text-text-secondary">Episode not found.</p>
-        <Link
-          href={`/app/shows/${showId}`}
-          className="mt-4 inline-block text-sm text-accent hover:text-accent-hover"
-        >
+        <p className="text-text-primary">Episode not found.</p>
+        <Link href={`/app/shows/${showId}`} className="mt-4 inline-block text-sm text-accent hover:text-accent-hover">
           Back to Show
         </Link>
       </div>
@@ -77,26 +74,35 @@ export default async function EpisodeDetailPage({
     acceptedMimeTypes: providerMeta[episodeIntegration.provider]?.acceptedMimeTypes,
   } : null
 
-  const statusColors: Record<string, string> = {
-    planning: 'bg-sky-500/15 text-sky-400',
-    recording: 'bg-violet-500/15 text-violet-400',
-    editing: 'bg-amber-500/15 text-amber-400',
-    review: 'bg-orange-500/15 text-orange-400',
-    approved: 'bg-emerald-500/15 text-emerald-400',
-    published: 'bg-emerald-500/15 text-emerald-400',
+  const formatDate = (d: string | null) => {
+    if (!d) return null
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <Link
-          href={`/app/shows/${showId}`}
-          className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
-        >
-          &larr; {showData?.name || 'Back to Show'}
-        </Link>
-        <div className="flex shrink-0 items-center gap-2">
+    <div className="mx-auto max-w-4xl">
+      {/* Breadcrumb */}
+      <Link
+        href={`/app/shows/${showId}`}
+        className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary transition-colors"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        {showData?.name || 'Show'}
+      </Link>
+
+      {/* Title row */}
+      <div className="mt-4 flex items-start justify-between gap-4">
+        <div>
+          {episode.episode_number != null && (
+            <p className="text-sm font-medium text-text-secondary mb-1">
+              Episode {episode.episode_number}
+            </p>
+          )}
+          <h1 className="text-2xl font-bold text-text-primary">{episode.title}</h1>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 pt-1">
           {(distributionConnections || []).map((dc: any) => (
             <PublishButton
               key={dc.id}
@@ -114,7 +120,7 @@ export default async function EpisodeDetailPage({
           ))}
           <Link
             href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
-            className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
+            className="rounded-md bg-surface-overlay border border-border-default px-3 py-1.5 text-sm font-medium text-text-primary transition-colors hover:bg-surface-input"
           >
             Edit
           </Link>
@@ -122,44 +128,69 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
-      {/* Title + badges */}
-      <div className="mt-3">
-        <div className="flex items-baseline gap-3">
-          {episode.episode_number != null && (
-            <span className="text-sm font-medium text-text-tertiary">
-              EP {String(episode.episode_number).padStart(2, '0')}
-            </span>
+      {/* Property rows */}
+      <div className="mt-5 rounded-lg border border-border-default bg-surface-raised">
+        <div className="divide-y divide-border-subtle">
+          <PropertyRow label="Stage" value={stage?.name || 'Not set'}>
+            {episode.distribution_status === 'published' && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
+                Published
+              </span>
+            )}
+            {episode.distribution_status === 'scheduled' && (
+              <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
+                Scheduled
+              </span>
+            )}
+          </PropertyRow>
+
+          {episode.scheduled_publish_date && (
+            <PropertyRow label="Scheduled" value={formatDate(episode.scheduled_publish_date)!} />
           )}
-          <h1 className="text-xl font-bold text-text-primary leading-tight">{episode.title}</h1>
-        </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[episode.status] || 'bg-surface-overlay text-text-secondary'}`}>
-            {stage?.name || episode.status}
-          </span>
-          {episode.distribution_status === 'published' && (
-            <span className="inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
-              Published
-            </span>
+
+          {episode.published_at && (
+            <PropertyRow label="Published" value={formatDate(episode.published_at)!}>
+              {(episode.distribution_metadata as any)?.share_url && (
+                <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
+                  Transistor
+                </a>
+              )}
+              {(episode.distribution_metadata as any)?.view_url && (
+                <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
+                  YouTube
+                </a>
+              )}
+            </PropertyRow>
           )}
-          {episode.distribution_status === 'scheduled' && (
-            <span className="inline-flex items-center rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
-              Scheduled
-            </span>
+
+          {client && (
+            <PropertyRow label="Client" value={client.name}>
+              <span className={`ml-2 text-xs font-medium ${client.onboarded_at ? 'text-emerald-400' : 'text-amber-400'}`}>
+                {client.onboarded_at ? 'Active' : 'Pending'}
+              </span>
+              <Link
+                href={`/portal?preview=${client.id}`}
+                target="_blank"
+                className="ml-2 text-xs text-accent hover:text-accent-hover"
+              >
+                Portal
+              </Link>
+            </PropertyRow>
           )}
-          {(episode.distribution_metadata as any)?.share_url && (
-            <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover">
-              Transistor &rarr;
-            </a>
-          )}
-          {(episode.distribution_metadata as any)?.view_url && (
-            <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:text-accent-hover">
-              YouTube &rarr;
-            </a>
+
+          {integration && (
+            <PropertyRow label="Provider" value={integration.displayName}>
+              {integration.externalViewUrl && (
+                <a href={integration.externalViewUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
+                  Open
+                </a>
+              )}
+            </PropertyRow>
           )}
         </div>
       </div>
 
-      {/* Tabs + Sidebar layout */}
+      {/* Tabs */}
       <div className="mt-6">
         <EpisodeDetailTabs
           episodeId={episodeId}
@@ -174,11 +205,19 @@ export default async function EpisodeDetailPage({
             notes: episode.notes,
             stage: stage ? { name: stage.name } : null,
           }}
-          imageUrl={episode.image_url}
-          client={client}
           hasIntegration={!!episodeIntegration}
         />
       </div>
+    </div>
+  )
+}
+
+function PropertyRow({ label, value, children }: { label: string; value: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex items-center px-4 py-2.5">
+      <span className="w-28 shrink-0 text-sm text-text-secondary">{label}</span>
+      <span className="text-sm font-medium text-text-primary">{value}</span>
+      {children}
     </div>
   )
 }
