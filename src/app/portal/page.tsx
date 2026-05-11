@@ -28,7 +28,7 @@ export default async function PortalDashboard() {
     )
   }
 
-  if (shows.length === 1 && client.portal_welcome_dismissed_at) {
+  if (shows.length === 1) {
     redirect(`/portal/shows/${shows[0].id}`)
   }
 
