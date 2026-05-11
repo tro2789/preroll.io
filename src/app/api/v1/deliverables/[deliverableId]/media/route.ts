@@ -51,6 +51,15 @@ export async function GET(
     }
   }
 
+  if (!fileRef && deliverable.file_reference_id) {
+    const { data: ref } = await supabase!
+      .from('file_references')
+      .select('id, external_id, mime_type, duration_seconds, provider')
+      .eq('id', deliverable.file_reference_id)
+      .single()
+    fileRef = ref
+  }
+
   if (!fileRef) {
     const { data: ref, error: refError } = await supabase!
       .from('file_references')
