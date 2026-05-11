@@ -131,10 +131,17 @@ export async function POST(
       }
 
       const ml = fileData.media_links || {}
-      audioUrl = ml.original?.url || ml.high_quality?.url || ml.efficient?.url || null
+      audioUrl = ml.original?.url || ml.high_quality?.url || ml.efficient?.url
+        || ml.original?.download_url || ml.high_quality?.download_url || ml.efficient?.download_url
+        || null
+
+      if (typeof ml.original === 'string') audioUrl = ml.original
+      if (!audioUrl && typeof ml.high_quality === 'string') audioUrl = ml.high_quality
+      if (!audioUrl && typeof ml.efficient === 'string') audioUrl = ml.efficient
 
       if (!audioUrl) {
-        return errorResponse(`No download URL from Frame.io. Available media_links: ${Object.keys(ml).join(', ') || 'none'}. File status: ${fileData.status || 'unknown'}`, 502)
+        const sample = ml.original || ml.high_quality || ml.efficient
+        return errorResponse(`No download URL from Frame.io. media_links.original shape: ${JSON.stringify(sample)?.slice(0, 300)}`, 502)
       }
     } else {
       const details = await provider.getFileDetails(token, accountId, externalId)
