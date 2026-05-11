@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { formatFileSize } from '@/lib/format'
+import { TYPE_LABELS } from '@/lib/constants/deliverables'
 
 const ASSET_TYPES = [
   { value: 'thumbnail', label: 'Thumbnail' },
@@ -25,19 +27,6 @@ interface Asset {
 
 interface EpisodeAssetsProps {
   episodeId: string
-}
-
-function formatFileSize(bytes?: number): string {
-  if (bytes == null) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-}
-
-const typeLabels: Record<string, string> = {
-  thumbnail: 'Thumbnail', show_notes: 'Show Notes', clip: 'Social Clip',
-  cover_art: 'Cover Art', intro: 'Intro', outro: 'Outro',
-  music_bed: 'Music Bed', other: 'Other',
 }
 
 export function EpisodeAssets({ episodeId }: EpisodeAssetsProps) {
@@ -177,7 +166,7 @@ export function EpisodeAssets({ episodeId }: EpisodeAssetsProps) {
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-text-primary truncate">{asset.name}</p>
                   <div className="flex items-center gap-1.5 text-[10px] text-text-secondary">
-                    <span>{typeLabels[asset.asset_type] || asset.asset_type}</span>
+                    <span>{TYPE_LABELS[asset.asset_type] || asset.asset_type}</span>
                     {asset.file_size && <span>&middot; {formatFileSize(asset.file_size)}</span>}
                   </div>
                 </div>

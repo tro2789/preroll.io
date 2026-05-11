@@ -10,18 +10,9 @@ import { getGradient } from '@/lib/ui/gradient'
 import { ProviderLogo } from '@/components/integrations/provider-logo'
 import { ProjectPickerModal } from '@/components/integrations/project-picker-modal'
 import type { IntegrationProvider } from '@/lib/integrations/types'
-
-interface Deliverable {
-  id: string
-  type: string
-  title: string
-  description: string | null
-  file_url: string | null
-  status: string
-  reviewer_notes: string | null
-  reviewed_at: string | null
-  created_at: string
-}
+import { formatFileSize, formatDuration } from '@/lib/format'
+import { DELIVERABLE_TYPES, TYPE_LABELS, STATUS_STYLES } from '@/lib/constants/deliverables'
+import type { Deliverable } from '@/lib/constants/deliverables'
 
 interface BrowseItem {
   id: string
@@ -63,45 +54,6 @@ interface DeliveryPanelProps {
   hideSidebar?: boolean
 }
 
-const deliverableTypes = [
-  { value: 'rough_cut', label: 'Rough Cut' },
-  { value: 'final_cut', label: 'Final Cut' },
-  { value: 'thumbnail', label: 'Thumbnail' },
-  { value: 'show_notes', label: 'Show Notes' },
-  { value: 'cover_art', label: 'Cover Art' },
-  { value: 'intro', label: 'Intro' },
-  { value: 'outro', label: 'Outro' },
-  { value: 'social_clip', label: 'Social Clip' },
-  { value: 'other', label: 'Other' },
-]
-
-function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  const value = bytes / Math.pow(1024, i)
-  return `${value.toFixed(i === 0 ? 0 : 1)} ${units[i]}`
-}
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  return `${m}:${String(s).padStart(2, '0')}`
-}
-
-const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
-  pending: { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Pending' },
-  approved: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Approved' },
-  revision_requested: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Revision' },
-}
-
-const typeLabels: Record<string, string> = {
-  rough_cut: 'Rough Cut', final_cut: 'Final Cut', thumbnail: 'Thumbnail',
-  show_notes: 'Show Notes', cover_art: 'Cover Art', intro: 'Intro',
-  outro: 'Outro', social_clip: 'Social Clip', other: 'Other',
-}
 
 export function DeliveryPanel({
   episodeId, showId, integration: initialIntegration,
@@ -407,7 +359,7 @@ export function DeliveryPanel({
 
   function renderFileCard(file: BrowseItem) {
     const linked = isFileLinkedAsDeliverable(file)
-    const style = linked ? statusStyles[linked.status] || statusStyles.pending : null
+    const style = linked ? STATUS_STYLES[linked.status] || STATUS_STYLES.pending : null
     const reviewUrl = getReviewUrl(file, linked)
 
     return (
@@ -438,7 +390,7 @@ export function DeliveryPanel({
               {file.createdAt && (
                 <span>&middot; {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
               )}
-              {linked && <span className="text-text-secondary">&middot; {typeLabels[linked.type] || linked.type}</span>}
+              {linked && <span className="text-text-secondary">&middot; {TYPE_LABELS[linked.type] || linked.type}</span>}
             </div>
           </div>
           {!linked && (
@@ -448,7 +400,7 @@ export function DeliveryPanel({
                 onChange={(e) => setSelectedTypes((prev) => ({ ...prev, [file.id]: e.target.value }))}
                 className="min-w-0 flex-1 rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
               >
-                {deliverableTypes.map((t) => (
+                {DELIVERABLE_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
@@ -533,7 +485,7 @@ export function DeliveryPanel({
         <tbody className="divide-y divide-border-subtle">
           {sorted.map((file) => {
             const linked = isFileLinkedAsDeliverable(file)
-            const style = linked ? statusStyles[linked.status] || statusStyles.pending : null
+            const style = linked ? STATUS_STYLES[linked.status] || STATUS_STYLES.pending : null
 
             return (
               <tr key={file.id} className="group">
@@ -548,7 +500,7 @@ export function DeliveryPanel({
                     </a>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
-                      {linked && <p className="text-xs text-text-secondary">{typeLabels[linked.type] || linked.type}</p>}
+                      {linked && <p className="text-xs text-text-secondary">{TYPE_LABELS[linked.type] || linked.type}</p>}
                     </div>
                   </div>
                 </td>
@@ -571,7 +523,7 @@ export function DeliveryPanel({
                         onChange={(e) => setSelectedTypes((prev) => ({ ...prev, [file.id]: e.target.value }))}
                         className="rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
                       >
-                        {deliverableTypes.map((t) => (
+                        {DELIVERABLE_TYPES.map((t) => (
                           <option key={t.value} value={t.value}>{t.label}</option>
                         ))}
                       </select>
@@ -993,7 +945,7 @@ export function DeliveryPanel({
                         onChange={(e) => setManualType(e.target.value)}
                         className="block w-full rounded border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
                       >
-                        {deliverableTypes.map((t) => (
+                        {DELIVERABLE_TYPES.map((t) => (
                           <option key={t.value} value={t.value}>{t.label}</option>
                         ))}
                       </select>

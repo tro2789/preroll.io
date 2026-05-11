@@ -1,5 +1,7 @@
 'use client'
 
+import { formatFileSize } from '@/lib/format'
+
 type AssetType =
   | 'cover_art'
   | 'intro'
@@ -45,13 +47,6 @@ const ASSET_TYPE_LABELS: Record<AssetType, string> = {
   show_notes: 'Show Notes',
   clip: 'Clip',
   other: 'Other',
-}
-
-function formatFileSize(bytes?: number): string {
-  if (bytes == null) return '--'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export function AssetGrid({ assets, onDelete }: AssetGridProps) {
@@ -116,7 +111,7 @@ export function AssetGrid({ assets, onDelete }: AssetGridProps) {
                       {ASSET_TYPE_LABELS[asset.asset_type as AssetType]}
                     </span>
                     <span className="text-xs text-text-secondary">
-                      {formatFileSize(asset.file_size)}
+                      {asset.file_size != null ? formatFileSize(asset.file_size) : '--'}
                     </span>
                   </div>
                   {onDelete && (

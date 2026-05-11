@@ -1,3 +1,5 @@
+import { formatFileSize, formatDuration } from '@/lib/format'
+
 interface FilePickerItemProps {
   id: string
   name: string
@@ -8,20 +10,6 @@ interface FilePickerItemProps {
   selected?: boolean
   onNavigate?: () => void
   onSelect?: () => void
-}
-
-function formatSize(bytes?: number): string {
-  if (!bytes) return ''
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
-}
-
-function formatDuration(seconds?: number): string {
-  if (!seconds) return ''
-  const m = Math.floor(seconds / 60)
-  const s = Math.floor(seconds % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
 }
 
 const typeIcons: Record<string, string> = {
@@ -72,7 +60,7 @@ export function FilePickerItem({
           </p>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-text-tertiary capitalize">{type}</span>
-            {fileSize ? <span className="text-xs text-text-tertiary">{formatSize(fileSize)}</span> : null}
+            {fileSize ? <span className="text-xs text-text-tertiary">{formatFileSize(fileSize)}</span> : null}
             {durationSeconds ? <span className="text-xs text-text-tertiary">{formatDuration(durationSeconds)}</span> : null}
           </div>
         </div>

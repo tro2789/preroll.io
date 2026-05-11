@@ -2,41 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-
-interface Deliverable {
-  id: string
-  type: string
-  title: string
-  description: string | null
-  file_url: string | null
-  status: string
-  reviewer_notes: string | null
-  reviewed_at: string | null
-  created_at: string
-}
+import type { Deliverable } from '@/lib/constants/deliverables'
+import { TYPE_LABELS, STATUS_STYLES } from '@/lib/constants/deliverables'
 
 interface DeliverableListProps {
   deliverables: Deliverable[]
   reviewBaseUrl?: string
   reviewableIds?: Set<string>
-}
-
-const typeLabels: Record<string, string> = {
-  rough_cut: 'Rough Cut',
-  final_cut: 'Final Cut',
-  thumbnail: 'Thumbnail',
-  show_notes: 'Show Notes',
-  cover_art: 'Cover Art',
-  intro: 'Intro',
-  outro: 'Outro',
-  social_clip: 'Social Clip',
-  other: 'Other',
-}
-
-const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
-  pending: { bg: 'bg-amber-500/15', text: 'text-amber-400', label: 'Pending' },
-  approved: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', label: 'Approved' },
-  revision_requested: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Needs Revision' },
 }
 
 export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: DeliverableListProps) {
@@ -59,13 +31,13 @@ export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: 
   return (
     <div className="space-y-2">
       {deliverables.map((d) => {
-        const style = statusStyles[d.status] || statusStyles.pending
+        const style = STATUS_STYLES[d.status] || STATUS_STYLES.pending
         return (
           <div key={d.id} className="rounded-lg border border-border-subtle bg-surface-raised p-3 space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-text-secondary">{typeLabels[d.type] || d.type}</span>
+                  <span className="text-xs text-text-secondary">{TYPE_LABELS[d.type] || d.type}</span>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>
                     {style.label}
                   </span>

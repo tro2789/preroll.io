@@ -4,18 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DeliverableList } from './deliverable-list'
 import { FilePickerModal } from '@/components/integrations/file-picker-modal'
-
-interface Deliverable {
-  id: string
-  type: string
-  title: string
-  description: string | null
-  file_url: string | null
-  status: string
-  reviewer_notes: string | null
-  reviewed_at: string | null
-  created_at: string
-}
+import type { Deliverable } from '@/lib/constants/deliverables'
+import { DELIVERABLE_TYPES } from '@/lib/constants/deliverables'
 
 interface EpisodeDeliverablesProps {
   showId: string
@@ -23,18 +13,6 @@ interface EpisodeDeliverablesProps {
   deliverables: Deliverable[]
   hasFrameIo: boolean
 }
-
-const deliverableTypes = [
-  { value: 'rough_cut', label: 'Rough Cut' },
-  { value: 'final_cut', label: 'Final Cut' },
-  { value: 'thumbnail', label: 'Thumbnail' },
-  { value: 'show_notes', label: 'Show Notes' },
-  { value: 'cover_art', label: 'Cover Art' },
-  { value: 'intro', label: 'Intro' },
-  { value: 'outro', label: 'Outro' },
-  { value: 'social_clip', label: 'Social Clip' },
-  { value: 'other', label: 'Other' },
-]
 
 export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameIo }: EpisodeDeliverablesProps) {
   const router = useRouter()
@@ -139,7 +117,7 @@ export function EpisodeDeliverables({ showId, episodeId, deliverables, hasFrameI
               onChange={(e) => setSelectedType(e.target.value)}
               className="rounded-md border border-border-default bg-surface-input px-2 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
             >
-              {deliverableTypes.map((t) => (
+              {DELIVERABLE_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>

@@ -19,7 +19,6 @@ export default async function PortalEpisodePage({
     { data: episode },
     { data: stages },
     { data: deliverables },
-    { data: allFileRefs },
   ] = await Promise.all([
     supabase
       .from('shows')
@@ -42,11 +41,15 @@ export default async function PortalEpisodePage({
       .select('*')
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false }),
-    supabase
-      .from('file_references')
-      .select('id, deliverable_id, mime_type, thumbnail_url, provider')
-      .not('deliverable_id', 'is', null),
   ])
+
+  const deliverableIds = (deliverables ?? []).map((d: any) => d.id)
+  const { data: fileRefs } = deliverableIds.length > 0
+    ? await supabase
+        .from('file_references')
+        .select('id, deliverable_id, mime_type, thumbnail_url, provider')
+        .in('deliverable_id', deliverableIds)
+    : { data: [] }
 
   if (!show) redirect('/portal')
   if (!episode) redirect(`/portal/shows/${showId}`)
@@ -55,11 +58,9 @@ export default async function PortalEpisodePage({
   const orgDownloads = clientRow?.organizations?.allow_client_downloads ?? true
   const allowDownloads = show.allow_client_downloads !== null ? show.allow_client_downloads : orgDownloads
 
-  const deliverableIds = new Set((deliverables ?? []).map((d) => d.id))
-  const fileRefs = (allFileRefs ?? []).filter((fr) => fr.deliverable_id && deliverableIds.has(fr.deliverable_id))
   const reviewUrlMap = new Map<string, string>()
   const thumbnailMap = new Map<string, string>()
-  for (const fr of fileRefs) {
+  for (const fr of fileRefs ?? []) {
     if (!fr.deliverable_id) continue
     if (fr.thumbnail_url) thumbnailMap.set(fr.deliverable_id, fr.thumbnail_url)
     if (fr.mime_type && (fr.mime_type.startsWith('video/') || fr.mime_type.startsWith('audio/'))) {

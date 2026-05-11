@@ -4,18 +4,7 @@ import { DeliveryPanel } from '@/components/episodes/delivery-panel'
 import { AiPanel } from '@/components/episodes/ai-panel'
 import { Separator } from '@/components/ui/separator'
 import type { IntegrationProvider } from '@/lib/integrations/types'
-
-interface Deliverable {
-  id: string
-  type: string
-  title: string
-  description: string | null
-  file_url: string | null
-  status: string
-  reviewer_notes: string | null
-  reviewed_at: string | null
-  created_at: string
-}
+import type { Deliverable } from '@/lib/constants/deliverables'
 
 interface EpisodeMeta {
   scheduled_publish_date: string | null
@@ -86,14 +75,11 @@ export function EpisodeDetailContent({
 
       <Separator />
 
-      {/* Details Section */}
-      <section>
-        <AiPanel
-          episodeId={episodeId}
-          showId={showId}
-          hasAudioFiles={hasIntegration}
-        />
-      </section>
+      <AiPanel
+        episodeId={episodeId}
+        showId={showId}
+        hasAudioFiles={hasIntegration}
+      />
     </div>
   )
 }
