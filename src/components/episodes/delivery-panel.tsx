@@ -25,6 +25,8 @@ interface BrowseItem {
   durationSeconds?: number
   createdAt?: string
   metadata?: Record<string, unknown>
+  version_number?: number
+  version_count?: number
 }
 
 interface EpisodeMeta {
@@ -380,6 +382,11 @@ export function DeliveryPanel({
               {style.label}
             </span>
           )}
+          {file.version_count != null && file.version_count > 1 && (
+            <span className="absolute top-1.5 right-1.5 rounded bg-surface-raised/90 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary backdrop-blur-sm">
+              v{file.version_number}
+            </span>
+          )}
         </a>
         <div className="p-2.5 space-y-2">
           <div>
@@ -499,7 +506,14 @@ export function DeliveryPanel({
                       )}
                     </a>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="truncate text-sm font-medium text-text-primary">{file.name}</p>
+                        {file.version_count != null && file.version_count > 1 && (
+                          <span className="shrink-0 rounded bg-surface-raised px-1.5 py-0.5 text-[10px] font-medium text-text-secondary">
+                            v{file.version_number}
+                          </span>
+                        )}
+                      </div>
                       {linked && <p className="text-xs text-text-secondary">{TYPE_LABELS[linked.type] || linked.type}</p>}
                     </div>
                   </div>
