@@ -4,6 +4,7 @@ import { PortalHeader } from '@/components/portal/portal-header'
 import { PortalPreviewBanner } from '@/components/portal/preview-banner'
 import { getOrgEntitlements, isSelfHosted } from '@/lib/entitlements'
 import { resolvePortalClient } from '@/lib/portal/resolve'
+import { resolveImageUrl } from '@/lib/r2/client'
 
 export default async function PortalLayout({
   children,
@@ -33,7 +34,7 @@ export default async function PortalLayout({
     const hasWhiteLabel = isSelfHosted() || (await getOrgEntitlements(client.org_id)).can('white_label')
     if (hasWhiteLabel) {
       orgDisplayName = org.display_name || undefined
-      logoUrl = org.logo_url || undefined
+      logoUrl = resolveImageUrl(org.logo_url) || undefined
       accentColor = org.accent_color || undefined
     }
   }
