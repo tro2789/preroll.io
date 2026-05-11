@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
 import { AiPanel } from '@/components/episodes/ai-panel'
 import { DeliverablesTab } from '@/components/episodes/deliverables-tab'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 interface Deliverable {
@@ -45,82 +46,58 @@ interface EpisodeDetailTabsProps {
   hasIntegration: boolean
 }
 
-const TABS = [
-  { id: 'media', label: 'Media' },
-  { id: 'content', label: 'Content' },
-  { id: 'deliverables', label: 'Deliverables' },
-] as const
-
 export function EpisodeDetailTabs({
   episodeId, showId, integration, deliverables,
   connectedProviders, episode, hasIntegration,
 }: EpisodeDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState<string>('media')
-
   const revisionsCount = deliverables.filter(d => d.status === 'revision_requested').length
 
   return (
-    <div>
-      <div className="flex gap-1 border-b border-border-default">
-        {TABS.map((tab) => {
-          const badge = tab.id === 'deliverables' && deliverables.length > 0
-            ? deliverables.length
-            : null
+    <Tabs defaultValue="media">
+      <TabsList variant="line" className="w-full justify-start gap-0">
+        <TabsTrigger value="media" className="px-4 py-2.5 text-sm">
+          Media
+        </TabsTrigger>
+        <TabsTrigger value="content" className="px-4 py-2.5 text-sm">
+          Content
+        </TabsTrigger>
+        <TabsTrigger value="deliverables" className="px-4 py-2.5 text-sm">
+          Deliverables
+          {deliverables.length > 0 && (
+            <Badge variant={revisionsCount > 0 ? 'destructive' : 'secondary'} className="ml-1.5">
+              {deliverables.length}
+            </Badge>
+          )}
+        </TabsTrigger>
+      </TabsList>
 
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors -mb-px ${
-                activeTab === tab.id
-                  ? 'text-text-primary border-b-2 border-accent'
-                  : 'text-text-secondary hover:text-text-primary'
-              }`}
-            >
-              {tab.label}
-              {badge != null && (
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
-                  revisionsCount > 0 && tab.id === 'deliverables'
-                    ? 'bg-red-500/15 text-red-400'
-                    : 'bg-surface-overlay text-text-secondary'
-                }`}>
-                  {badge}
-                </span>
-              )}
-            </button>
-          )
-        })}
-      </div>
+      <TabsContent value="media" className="mt-5">
+        <DeliveryPanel
+          episodeId={episodeId}
+          showId={showId}
+          integration={integration}
+          deliverables={deliverables}
+          connectedProviders={connectedProviders}
+          episode={episode}
+          hideSidebar
+        />
+      </TabsContent>
 
-      <div className="mt-5">
-        {activeTab === 'media' && (
-          <DeliveryPanel
-            episodeId={episodeId}
-            showId={showId}
-            integration={integration}
-            deliverables={deliverables}
-            connectedProviders={connectedProviders}
-            episode={episode}
-            hideSidebar
-          />
-        )}
+      <TabsContent value="content" className="mt-5">
+        <AiPanel
+          episodeId={episodeId}
+          showId={showId}
+          hasAudioFiles={hasIntegration}
+        />
+      </TabsContent>
 
-        {activeTab === 'content' && (
-          <AiPanel
-            episodeId={episodeId}
-            showId={showId}
-            hasAudioFiles={hasIntegration}
-          />
-        )}
-
-        {activeTab === 'deliverables' && (
-          <DeliverablesTab
-            episodeId={episodeId}
-            showId={showId}
-            deliverables={deliverables}
-          />
-        )}
-      </div>
-    </div>
+      <TabsContent value="deliverables" className="mt-5">
+        <DeliverablesTab
+          episodeId={episodeId}
+          showId={showId}
+          deliverables={deliverables}
+        />
+      </TabsContent>
+    </Tabs>
   )
 }
