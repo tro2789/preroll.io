@@ -47,6 +47,37 @@ export async function GET(
     const cursor = request.nextUrl.searchParams.get('cursor') || undefined
     const result = await provider.listFolderContents(token, accountId, integration.external_folder_id, cursor)
 
+    // Overlay versioning data from file_references
+    const { data: allRefs } = await supabase!
+      .from('file_references')
+      .select('external_id, version_group_id, version_number, is_latest')
+      .eq('episode_id', episodeId)
+
+    if (allRefs && allRefs.length > 0) {
+      const groupCounts = new Map<string, number>()
+      for (const ref of allRefs) {
+        groupCounts.set(ref.version_group_id, (groupCounts.get(ref.version_group_id) || 0) + 1)
+      }
+
+      const latestByExternalId = new Map<string, { version_number: number; version_count: number }>()
+      for (const ref of allRefs) {
+        if (ref.is_latest && ref.external_id) {
+          latestByExternalId.set(ref.external_id, {
+            version_number: ref.version_number,
+            version_count: groupCounts.get(ref.version_group_id) || 1,
+          })
+        }
+      }
+
+      result.items = result.items.map((item) => {
+        const info = latestByExternalId.get(item.id)
+        if (info && info.version_count > 1) {
+          return { ...item, version_number: info.version_number, version_count: info.version_count }
+        }
+        return item
+      })
+    }
+
     return jsonResponse(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to list files'
