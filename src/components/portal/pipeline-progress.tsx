@@ -34,15 +34,15 @@ export function PipelineProgress({
           return (
             <div key={stage.id} className="flex items-center" role="listitem">
               {i > 0 && (
-                <div className={`w-4 h-px ${isCompleted || isCurrent ? 'bg-accent/50' : 'bg-border-subtle'}`} />
+                <div className={`w-4 h-px ${isCompleted || isCurrent ? 'bg-text-secondary' : 'bg-text-tertiary/40'}`} />
               )}
               <div
                 className={`rounded-full shrink-0 ${
                   isCurrent
-                    ? 'h-3 w-3 bg-accent ring-2 ring-accent/25'
+                    ? 'h-3 w-3 bg-text-primary ring-2 ring-text-primary/25'
                     : isCompleted
-                      ? 'h-2.5 w-2.5 bg-accent'
-                      : 'h-2.5 w-2.5 border border-border-subtle bg-transparent'
+                      ? 'h-2.5 w-2.5 bg-text-secondary'
+                      : 'h-2.5 w-2.5 border-2 border-text-tertiary/50 bg-transparent'
                 }`}
                 aria-current={isCurrent ? 'step' : undefined}
               />
@@ -61,35 +61,32 @@ export function PipelineProgress({
 
         return (
           <div key={stage.id} className="relative flex flex-col items-center flex-1" role="listitem">
-            {/* Connector line — spans from previous dot center to this dot center */}
             {i > 0 && (
               <div
                 className={`absolute top-[7px] right-1/2 w-full h-px ${
-                  isCompleted || isCurrent ? 'bg-accent/50' : 'bg-border-subtle'
+                  isCompleted || isCurrent ? 'bg-text-secondary' : 'bg-text-tertiary/40'
                 }`}
               />
             )}
 
-            {/* Dot */}
             <div
               className={`relative z-10 rounded-full shrink-0 ${
                 isCurrent
-                  ? 'h-4 w-4 bg-accent ring-2 ring-accent/25'
+                  ? 'h-4 w-4 bg-text-primary ring-2 ring-text-primary/25'
                   : isCompleted
-                    ? 'h-3.5 w-3.5 bg-accent'
-                    : 'h-3.5 w-3.5 border border-border-default bg-transparent'
+                    ? 'h-3.5 w-3.5 bg-text-secondary'
+                    : 'h-3.5 w-3.5 border-2 border-text-tertiary/50 bg-transparent'
               }`}
               aria-current={isCurrent ? 'step' : undefined}
             />
 
-            {/* Label */}
             <span
               className={`mt-1.5 text-[11px] leading-tight whitespace-nowrap ${
                 isCurrent
-                  ? 'text-accent font-medium'
+                  ? 'text-text-primary font-medium'
                   : isCompleted
                     ? 'text-text-secondary'
-                    : 'text-text-tertiary'
+                    : 'text-text-secondary'
               }`}
             >
               {stage.name}
