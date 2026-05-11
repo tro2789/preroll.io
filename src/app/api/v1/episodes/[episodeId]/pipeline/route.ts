@@ -115,7 +115,7 @@ export async function POST(
 
     if (integration.provider === 'frame_io') {
       const frameRes = await fetch(
-        `https://api.frame.io/v4/accounts/${accountId}/files/${externalId}?include=media_links`,
+        `https://api.frame.io/v4/accounts/${accountId}/files/${externalId}?include=media_links.original,media_links.high_quality,media_links.efficient`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       if (!frameRes.ok) {
@@ -131,9 +131,7 @@ export async function POST(
       }
 
       const ml = fileData.media_links || {}
-      audioUrl = ml.high_quality?.url || ml.efficient?.url || ml.source?.url
-        || ml.high_quality?.download_url || ml.efficient?.download_url || ml.source?.download_url
-        || fileData.original || null
+      audioUrl = ml.original?.url || ml.high_quality?.url || ml.efficient?.url || null
 
       if (!audioUrl) {
         return errorResponse(`No download URL from Frame.io. Available media_links: ${Object.keys(ml).join(', ') || 'none'}. File status: ${fileData.status || 'unknown'}`, 502)

@@ -110,7 +110,7 @@ async function resolveFrameIo(producerOrgId: string, fileRef: FileRef) {
   }
 
   const frameRes = await fetch(
-    `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.high_quality,media_links.efficient`,
+    `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.original,media_links.high_quality,media_links.efficient`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
 
@@ -124,9 +124,8 @@ async function resolveFrameIo(producerOrgId: string, fileRef: FileRef) {
     return jsonResponse({ status: 'processing', mime_type: fileRef.mime_type })
   }
 
-  const hq = fileData.media_links?.high_quality
-  const eff = fileData.media_links?.efficient
-  const url = hq?.url || hq?.download_url || eff?.url || eff?.download_url || null
+  const ml = fileData.media_links || {}
+  const url = ml.original?.url || ml.high_quality?.url || ml.efficient?.url || null
 
   if (!url) return errorResponse('No playback URL available from Frame.io', 502)
 
