@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TranscriptViewer } from './transcript-viewer'
+import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS } from '@/lib/ai/constants'
 
 interface AiPanelProps {
   episodeId: string
@@ -22,36 +23,54 @@ interface Transcription {
 }
 
 interface AddonStatus {
-  addon: { enabled: boolean; credits_balance: number }
+  addon: {
+    enabled: boolean
+    credits_balance: number
+    monthly_allowance: number
+    monthly_used: number
+    monthly_remaining: number
+    cycle_reset_at: string | null
+  }
   selfHosted: boolean
 }
 
-type GenerationType = 'show_notes' | 'description' | 'social_twitter' | 'social_linkedin' | 'social_instagram' | 'title_suggestions'
-
-const GENERATION_LABELS: Record<GenerationType, string> = {
-  show_notes: 'Show Notes',
-  description: 'Description',
-  social_twitter: 'X / Twitter',
-  social_linkedin: 'LinkedIn',
-  social_instagram: 'Instagram',
-  title_suggestions: 'Title Ideas',
+interface PipelineJob {
+  id: string
+  status: 'pending' | 'transcribing' | 'generating' | 'completed' | 'failed' | 'skipped' | 'partial'
+  trigger_source: string
+  error_message: string | null
+  skipped_reason: string | null
+  created_at: string
+  completed_at: string | null
 }
+
+interface Generation {
+  id: string
+  generation_type: string
+  result: string
+  credits_consumed: number
+  created_at: string
+}
+
+const GENERATION_ORDER = ALL_GENERATION_TYPES
 
 export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const [addon, setAddon] = useState<AddonStatus | null>(null)
   const [transcription, setTranscription] = useState<Transcription | null>(null)
+  const [pipeline, setPipeline] = useState<PipelineJob | null>(null)
+  const [generations, setGenerations] = useState<Generation[]>([])
   const [loading, setLoading] = useState(true)
   const [transcribing, setTranscribing] = useState(false)
   const [generating, setGenerating] = useState<GenerationType | null>(null)
-  const [generatedContent, setGeneratedContent] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
-      const [addonRes, transcriptionRes] = await Promise.all([
+      const [addonRes, transcriptionRes, pipelineRes] = await Promise.all([
         fetch('/api/v1/ai/addon'),
         fetch(`/api/v1/episodes/${episodeId}/transcription`),
+        fetch(`/api/v1/episodes/${episodeId}/pipeline`),
       ])
 
       if (addonRes.ok) {
@@ -62,6 +81,12 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
       if (transcriptionRes.ok) {
         const transcriptionData = await transcriptionRes.json()
         setTranscription(transcriptionData.data.transcription)
+      }
+
+      if (pipelineRes.ok) {
+        const pipelineData = await pipelineRes.json()
+        setPipeline(pipelineData.data.pipeline)
+        setGenerations(pipelineData.data.generations || [])
       }
     } finally {
       setLoading(false)
@@ -76,7 +101,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     const supabase = createClient()
 
     const channel = supabase
-      .channel(`transcriptions:${episodeId}`)
+      .channel(`ai:${episodeId}`)
       .on(
         'postgres_changes',
         {
@@ -93,12 +118,41 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ai_pipeline_jobs',
+          filter: `episode_id=eq.${episodeId}`,
+        },
+        (payload) => {
+          const updated = payload.new as unknown as PipelineJob
+          setPipeline(updated)
+          if (updated.status === 'completed' || updated.status === 'partial') {
+            fetchData()
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ai_generations',
+          filter: `episode_id=eq.${episodeId}`,
+        },
+        (payload) => {
+          const gen = payload.new as unknown as Generation
+          setGenerations(prev => [gen, ...prev])
+        }
+      )
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [episodeId])
+  }, [episodeId, fetchData])
 
   const handleTranscribe = async (audioUrl: string, sourceType: string, sourceRef: string, durationSeconds?: number) => {
     setTranscribing(true)
@@ -147,16 +201,19 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
         return
       }
 
-      setGeneratedContent(prev => ({ ...prev, [type]: data.data.generation.result }))
+      setGenerations(prev => [{
+        id: data.data.generation.id,
+        generation_type: type,
+        result: data.data.generation.result,
+        credits_consumed: data.data.generation.credits_consumed,
+        created_at: new Date().toISOString(),
+      }, ...prev])
     } finally {
       setGenerating(null)
     }
   }
 
-  const handleApply = async (type: GenerationType) => {
-    const content = generatedContent[type]
-    if (!content) return
-
+  const handleApply = async (type: GenerationType, content: string) => {
     const field = type === 'show_notes' ? 'notes' : type === 'description' ? 'description' : null
     if (!field) return
 
@@ -176,18 +233,33 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           <div>
             <h3 className="text-sm font-medium text-text-primary">AI Assistant</h3>
             <p className="mt-1 text-xs text-text-secondary">
-              Transcribe episodes and generate show notes, descriptions, and social copy with AI.
+              Upgrade to Pro or Studio to auto-transcribe episodes and generate show notes, descriptions, and social copy.
             </p>
           </div>
           <a
-            href="/app/settings/ai"
+            href="/app/settings/billing"
             className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
           >
-            Enable AI
+            Upgrade
           </a>
         </div>
       </div>
     )
+  }
+
+  const totalAvailable = addon.selfHosted
+    ? Infinity
+    : addon.addon.monthly_remaining + addon.addon.credits_balance
+
+  const isRunning = pipeline?.status === 'transcribing' || pipeline?.status === 'generating' || pipeline?.status === 'pending'
+  const hasTranscript = transcription?.status === 'completed' && transcription.full_text
+  const isTranscribing = transcribing || transcription?.status === 'pending' || transcription?.status === 'processing'
+
+  const latestGenByType = new Map<string, Generation>()
+  for (const g of generations) {
+    if (!latestGenByType.has(g.generation_type)) {
+      latestGenByType.set(g.generation_type, g)
+    }
   }
 
   return (
@@ -198,21 +270,30 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
       >
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-medium text-text-primary">AI Assistant</h3>
-          {transcription?.status === 'completed' && (
-            <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs">
-              Transcript ready
+          {isRunning && (
+            <span className="flex items-center gap-1.5 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Processing
             </span>
           )}
-          {(transcription?.status === 'pending' || transcription?.status === 'processing') && (
+          {pipeline?.status === 'completed' && (
+            <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs">
+              Complete
+            </span>
+          )}
+          {pipeline?.status === 'partial' && (
             <span className="rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
-              Transcribing...
+              Partial
             </span>
           )}
         </div>
         <div className="flex items-center gap-3">
           {!addon.selfHosted && (
-            <span className="text-xs text-text-secondary">
-              {addon.addon.credits_balance} credits
+            <span className="text-xs text-text-secondary tabular-nums">
+              {addon.addon.monthly_remaining}/{addon.addon.monthly_allowance}
+              {addon.addon.credits_balance > 0 && (
+                <> + {addon.addon.credits_balance}</>
+              )}
             </span>
           )}
           <svg
@@ -232,14 +313,12 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             </div>
           )}
 
-          {/* Transcription Section */}
-          {!transcription || transcription.status === 'failed' ? (
-            <div>
-              {transcription?.status === 'failed' && (
-                <p className="text-xs text-red-400 mb-2">
-                  Previous transcription failed: {transcription.error_message}
-                </p>
-              )}
+          {/* No audio yet */}
+          {!hasTranscript && !isTranscribing && !isRunning && (
+            <div className="space-y-3">
+              <p className="text-xs text-text-secondary">
+                Upload or link audio to this episode to automatically generate show notes, descriptions, and social posts.
+              </p>
               <TranscribeButton
                 episodeId={episodeId}
                 transcribing={transcribing}
@@ -247,52 +326,168 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                 onTranscribe={handleTranscribe}
               />
             </div>
-          ) : transcription.status === 'pending' || transcription.status === 'processing' ? (
-            <div className="flex items-center gap-3 py-4">
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-              <span className="text-sm text-text-secondary">Transcribing episode audio...</span>
-            </div>
-          ) : transcription.status === 'completed' && transcription.full_text ? (
-            <>
-              <TranscriptViewer
-                segments={transcription.segments || []}
-                fullText={transcription.full_text}
-                speakerCount={transcription.speaker_count || 0}
-                wordCount={transcription.word_count || 0}
+          )}
+
+          {/* Pipeline status steps */}
+          {(isTranscribing || hasTranscript || isRunning) && (
+            <div className="space-y-3">
+              {/* Transcription step */}
+              <PipelineStep
+                label="Transcription"
+                status={
+                  hasTranscript ? 'completed'
+                    : transcription?.status === 'failed' ? 'failed'
+                    : isTranscribing ? 'running'
+                    : 'queued'
+                }
+                detail={
+                  hasTranscript
+                    ? `${transcription!.word_count?.toLocaleString()} words · ${transcription!.speaker_count} speaker${transcription!.speaker_count !== 1 ? 's' : ''}`
+                    : transcription?.status === 'failed'
+                    ? transcription.error_message || 'Failed'
+                    : undefined
+                }
               />
 
-              {/* Generation Buttons */}
-              <div className="border-t border-border-subtle pt-4">
-                <p className="text-xs text-text-secondary mb-3">Generate from transcript:</p>
-                <div className="flex flex-wrap gap-2">
-                  {(Object.entries(GENERATION_LABELS) as [GenerationType, string][]).map(([type, label]) => (
-                    <button
-                      key={type}
-                      onClick={() => handleGenerate(type)}
-                      disabled={generating !== null}
-                      className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-primary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
-                    >
-                      {generating === type ? 'Generating...' : label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Generation steps */}
+              {hasTranscript && GENERATION_ORDER.map((type) => {
+                const gen = latestGenByType.get(type)
+                const isGenerating = pipeline?.status === 'generating'
+                const stepStatus: PipelineStepStatus = gen
+                  ? 'completed'
+                  : generating === type
+                  ? 'running'
+                  : isGenerating && !gen
+                  ? 'queued'
+                  : 'idle'
 
-              {/* Generated Content */}
-              {Object.entries(generatedContent).map(([type, content]) => (
-                <GeneratedResult
-                  key={type}
-                  type={type as GenerationType}
-                  content={content}
-                  onApply={() => handleApply(type as GenerationType)}
-                  onCopy={() => navigator.clipboard.writeText(content)}
-                  onRegenerate={() => handleGenerate(type as GenerationType)}
-                />
-              ))}
-            </>
-          ) : null}
+                return (
+                  <PipelineStep
+                    key={type}
+                    label={GENERATION_LABELS[type]}
+                    status={stepStatus}
+                  />
+                )
+              })}
+
+              {/* Transcript viewer */}
+              {hasTranscript && (
+                <div className="border-t border-border-subtle pt-3">
+                  <TranscriptViewer
+                    segments={transcription!.segments || []}
+                    fullText={transcription!.full_text!}
+                    speakerCount={transcription!.speaker_count || 0}
+                    wordCount={transcription!.word_count || 0}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Failed transcription — retry */}
+          {transcription?.status === 'failed' && (
+            <div className="border-t border-border-subtle pt-3">
+              <TranscribeButton
+                episodeId={episodeId}
+                transcribing={transcribing}
+                hasAudioFiles={hasAudioFiles}
+                onTranscribe={handleTranscribe}
+              />
+            </div>
+          )}
+
+          {/* Generated content cards */}
+          {latestGenByType.size > 0 && (
+            <div className="space-y-2">
+              {GENERATION_ORDER.map((type) => {
+                const gen = latestGenByType.get(type)
+                if (!gen) return null
+                return (
+                  <GeneratedResult
+                    key={gen.id}
+                    type={type}
+                    content={gen.result}
+                    onApply={() => handleApply(type, gen.result)}
+                    onCopy={() => navigator.clipboard.writeText(gen.result)}
+                    onRegenerate={() => handleGenerate(type)}
+                  />
+                )
+              })}
+            </div>
+          )}
+
+          {/* Manual regenerate buttons when pipeline is done */}
+          {hasTranscript && !isRunning && (
+            <div className="border-t border-border-subtle pt-3">
+              <p className="text-xs text-text-secondary mb-2">
+                {latestGenByType.size > 0 ? 'Regenerate:' : 'Generate from transcript:'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {GENERATION_ORDER.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => handleGenerate(type)}
+                    disabled={generating !== null || totalAvailable < 1}
+                    className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-primary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+                  >
+                    {generating === type ? 'Generating...' : GENERATION_LABELS[type]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
+    </div>
+  )
+}
+
+type PipelineStepStatus = 'queued' | 'running' | 'completed' | 'failed' | 'idle'
+
+const STEP_TEXT_COLOR: Record<PipelineStepStatus, string> = {
+  completed: 'text-text-primary',
+  running: 'text-text-primary',
+  failed: 'text-red-400',
+  queued: 'text-text-tertiary',
+  idle: 'text-text-tertiary',
+}
+
+function PipelineStep({ label, status, detail }: {
+  label: string
+  status: PipelineStepStatus
+  detail?: string
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="flex-shrink-0">
+        {status === 'completed' && (
+          <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        )}
+        {status === 'running' && (
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        )}
+        {status === 'failed' && (
+          <svg className="h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        )}
+        {(status === 'queued' || status === 'idle') && (
+          <div className={`h-4 w-4 rounded-full border-2 ${status === 'queued' ? 'border-text-tertiary' : 'border-border-subtle'}`} />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <span className={`text-sm ${STEP_TEXT_COLOR[status]}`}>
+          {label}
+        </span>
+        {detail && (
+          <span className="ml-2 text-xs text-text-secondary">{detail}</span>
+        )}
+        {status === 'running' && (
+          <span className="ml-2 text-xs text-text-secondary">Processing...</span>
+        )}
+      </div>
     </div>
   )
 }
@@ -311,39 +506,30 @@ function TranscribeButton({
   const [showUrlInput, setShowUrlInput] = useState(false)
   const [url, setUrl] = useState('')
 
-  if (!hasAudioFiles && !showUrlInput) {
-    return (
-      <div className="space-y-2">
-        <p className="text-xs text-text-secondary">No audio files detected. Paste an audio URL to transcribe:</p>
-        <button
-          onClick={() => setShowUrlInput(true)}
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
-        >
-          Transcribe from URL
-        </button>
-      </div>
-    )
-  }
-
   if (showUrlInput || !hasAudioFiles) {
     return (
-      <div className="flex gap-2">
-        <input
-          type="url"
-          placeholder="https://example.com/episode.mp3"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="flex-1 rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-        />
-        <button
-          onClick={() => {
-            if (url) onTranscribe(url, 'url', url)
-          }}
-          disabled={!url || transcribing}
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-        >
-          {transcribing ? 'Starting...' : 'Transcribe'}
-        </button>
+      <div className="space-y-2">
+        {!hasAudioFiles && !showUrlInput && (
+          <p className="text-xs text-text-secondary">No audio files detected.</p>
+        )}
+        <div className="flex gap-2">
+          <input
+            type="url"
+            placeholder="https://example.com/episode.mp3"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="flex-1 rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+          />
+          <button
+            onClick={() => {
+              if (url) onTranscribe(url, 'url', url)
+            }}
+            disabled={!url || transcribing}
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+          >
+            {transcribing ? 'Starting...' : 'Go'}
+          </button>
+        </div>
       </div>
     )
   }

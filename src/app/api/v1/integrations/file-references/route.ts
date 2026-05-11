@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { persistExternalThumbnail } from '@/lib/r2/client'
+import { isAudioMimeType, triggerAiPipeline } from '@/lib/ai/pipeline'
 
 export async function GET(request: NextRequest) {
   const { supabase, error } = await getAuthenticatedClient()
@@ -81,6 +82,17 @@ export async function POST(request: Request) {
         description: `${body.provider} file linked: ${body.name}`,
         metadata: { file_reference_id: data.id, provider: body.provider },
       })
+
+      if (isAudioMimeType(body.mime_type) && (body.external_url || body.audio_url)) {
+        triggerAiPipeline({
+          orgId: org!.id,
+          episodeId: body.episode_id,
+          fileReferenceId: data.id,
+          audioUrl: body.external_url || body.audio_url,
+          durationSeconds: body.duration_seconds,
+          triggerSource: 'auto_upload',
+        }).catch(err => console.error('AI pipeline trigger failed:', err))
+      }
     }
   }
 

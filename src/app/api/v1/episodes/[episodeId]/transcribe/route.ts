@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getAiAddonStatus, consumeCredits, getDeepgramApiKey } from '@/lib/ai/entitlements'
+import { getAiAddonStatus, consumeCredits, refundCredits, getDeepgramApiKey, totalAvailableCredits } from '@/lib/ai/entitlements'
 import { submitTranscription, buildCallbackUrl } from '@/lib/ai/deepgram'
+import { MAX_CONCURRENT_TRANSCRIPTIONS } from '@/lib/ai/constants'
 
 const MAX_DURATION_SECONDS = 180 * 60
-const MAX_CONCURRENT = 3
 
 export async function POST(
   request: NextRequest,
@@ -28,7 +28,7 @@ export async function POST(
 
   const addon = await getAiAddonStatus(org!.id)
   if (!addon.enabled) {
-    return errorResponse('AI add-on is not enabled. Enable it in Settings → AI.', 403)
+    return errorResponse('AI is not available on your current plan. Upgrade to Pro or Studio.', 403)
   }
 
   const body = await request.json()
@@ -55,14 +55,15 @@ export async function POST(
     .eq('org_id', org!.id)
     .in('status', ['pending', 'processing'])
 
-  if ((count ?? 0) >= MAX_CONCURRENT) {
-    return errorResponse(`Maximum ${MAX_CONCURRENT} concurrent transcriptions. Wait for existing jobs to complete.`)
+  if ((count ?? 0) >= MAX_CONCURRENT_TRANSCRIPTIONS) {
+    return errorResponse(`Maximum ${MAX_CONCURRENT_TRANSCRIPTIONS} concurrent transcriptions. Wait for existing jobs to complete.`)
   }
 
   const estimatedMinutes = Math.ceil((duration_seconds || 3600) / 60)
 
-  if (!addon.selfHosted && addon.creditsBalance < estimatedMinutes) {
-    return errorResponse(`Insufficient credits. Need ~${estimatedMinutes}, have ${addon.creditsBalance}. Purchase more in Settings → AI.`, 403)
+  const available = totalAvailableCredits(addon)
+  if (!addon.selfHosted && available < estimatedMinutes) {
+    return errorResponse(`Insufficient credits. Need ~${estimatedMinutes}, have ${available}. Purchase more in Settings → AI.`, 403)
   }
 
   const { data: transcription, error: insertError } = await service
@@ -111,9 +112,7 @@ export async function POST(
       .update({ status: 'failed', error_message: (err as Error).message })
       .eq('id', transcription.id)
 
-    await import('@/lib/ai/entitlements').then(m =>
-      m.refundCredits(org!.id, estimatedMinutes, 'transcription_failed', transcription.id)
-    )
+    await refundCredits(org!.id, estimatedMinutes, 'transcription_failed', transcription.id)
 
     return errorResponse(`Transcription submission failed: ${(err as Error).message}`, 500)
   }

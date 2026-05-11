@@ -6,10 +6,9 @@ import {
   socialPrompt,
   titleSuggestionsPrompt,
 } from './prompts'
+import type { GenerationType } from './constants'
 
 const MAX_TRANSCRIPT_CHARS = 200_000
-
-type GenerationType = 'show_notes' | 'description' | 'social_twitter' | 'social_linkedin' | 'social_instagram' | 'title_suggestions'
 
 function truncateTranscript(transcript: string): string {
   if (transcript.length <= MAX_TRANSCRIPT_CHARS) return transcript

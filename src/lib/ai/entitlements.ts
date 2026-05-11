@@ -5,6 +5,10 @@ import { decrypt } from '@/lib/integrations/crypto'
 export interface AiAddonStatus {
   enabled: boolean
   creditsBalance: number
+  monthlyAllowance: number
+  monthlyUsed: number
+  monthlyRemaining: number
+  cycleResetAt: string | null
   selfHosted: boolean
   deepgramApiKey: string | null
   anthropicApiKey: string | null
@@ -13,6 +17,10 @@ export interface AiAddonStatus {
 const UNLIMITED: AiAddonStatus = {
   enabled: true,
   creditsBalance: Infinity,
+  monthlyAllowance: Infinity,
+  monthlyUsed: 0,
+  monthlyRemaining: Infinity,
+  cycleResetAt: null,
   selfHosted: true,
   deepgramApiKey: null,
   anthropicApiKey: null,
@@ -35,23 +43,57 @@ export async function getAiAddonStatus(orgId: string): Promise<AiAddonStatus> {
   }
 
   const supabase = createServiceClient()
-  const { data } = await supabase
-    .from('ai_addon')
-    .select('enabled, credits_balance')
-    .eq('org_id', orgId)
-    .single()
 
-  if (!data) {
-    return { enabled: false, creditsBalance: 0, selfHosted: false, deepgramApiKey: null, anthropicApiKey: null }
+  const [{ data: addon }, { data: org }] = await Promise.all([
+    supabase
+      .from('ai_addon')
+      .select('credits_balance, monthly_credits_used, cycle_reset_at')
+      .eq('org_id', orgId)
+      .single(),
+    supabase
+      .from('organizations')
+      .select('plan_id, trial_ends_at')
+      .eq('id', orgId)
+      .single(),
+  ])
+
+  const planId = org?.plan_id || 'free'
+  const trialActive = org?.trial_ends_at && new Date(org.trial_ends_at) > new Date() && planId === 'free'
+
+  let monthlyAllowance = 0
+  if (trialActive) {
+    monthlyAllowance = 50
+  } else {
+    const { data: entitlement } = await supabase
+      .from('plan_entitlements')
+      .select('ai_credits_monthly')
+      .eq('plan_id', planId)
+      .limit(1)
+      .single()
+    monthlyAllowance = entitlement?.ai_credits_monthly || 0
   }
 
+  const isEnabled = planId === 'pro' || planId === 'studio' || !!trialActive
+  const monthlyUsed = addon?.monthly_credits_used || 0
+  const monthlyRemaining = Math.max(0, monthlyAllowance - monthlyUsed)
+  const creditsBalance = addon?.credits_balance || 0
+
   return {
-    enabled: data.enabled,
-    creditsBalance: data.credits_balance,
+    enabled: isEnabled,
+    creditsBalance,
+    monthlyAllowance,
+    monthlyUsed,
+    monthlyRemaining,
+    cycleResetAt: addon?.cycle_reset_at || null,
     selfHosted: false,
     deepgramApiKey: null,
     anthropicApiKey: null,
   }
+}
+
+export function totalAvailableCredits(addon: AiAddonStatus): number {
+  if (addon.selfHosted) return Infinity
+  return addon.monthlyRemaining + addon.creditsBalance
 }
 
 export async function consumeCredits(
@@ -59,12 +101,12 @@ export async function consumeCredits(
   amount: number,
   reason: string,
   referenceId: string
-): Promise<{ success: boolean; balance: number }> {
+): Promise<{ success: boolean; balance: number; fromMonthly?: number; fromPurchased?: number }> {
   if (isSelfHosted()) return { success: true, balance: Infinity }
 
   const supabase = createServiceClient()
 
-  const { data, error } = await supabase.rpc('consume_ai_credits', {
+  const { data, error } = await supabase.rpc('consume_ai_credits_v2', {
     p_org_id: orgId,
     p_amount: amount,
     p_reason: reason,
@@ -75,7 +117,12 @@ export async function consumeCredits(
     return { success: false, balance: 0 }
   }
 
-  return { success: data.success, balance: data.balance_after }
+  return {
+    success: data.success,
+    balance: (data.monthly_remaining ?? 0) + (data.purchased_remaining ?? 0),
+    fromMonthly: data.from_monthly,
+    fromPurchased: data.from_purchased,
+  }
 }
 
 export async function refundCredits(

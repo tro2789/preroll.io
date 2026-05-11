@@ -3,6 +3,26 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe/client'
 import { isSelfHosted } from '@/lib/entitlements'
 
+async function ensureAiAddon(supabase: ReturnType<typeof createServiceClient>, orgId: string) {
+  const { data: existing } = await supabase
+    .from('ai_addon')
+    .select('id')
+    .eq('org_id', orgId)
+    .single()
+
+  if (!existing) {
+    await supabase
+      .from('ai_addon')
+      .insert({
+        org_id: orgId,
+        enabled: true,
+        credits_balance: 0,
+        monthly_credits_used: 0,
+        cycle_reset_at: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString(),
+      })
+  }
+}
+
 function planFromPriceId(priceId: string): string {
   const map: Record<string, string> = {
     [process.env.STRIPE_PRO_MONTHLY_PRICE_ID || '']: 'pro',
@@ -58,22 +78,7 @@ export async function POST(request: Request) {
         if (credits > 0) {
           const paymentIntentId = session.payment_intent as string
 
-          const { data: existing } = await supabase
-            .from('ai_addon')
-            .select('id')
-            .eq('org_id', orgId)
-            .single()
-
-          if (!existing) {
-            await supabase
-              .from('ai_addon')
-              .insert({ org_id: orgId, enabled: true, credits_balance: 0 })
-          } else {
-            await supabase
-              .from('ai_addon')
-              .update({ enabled: true })
-              .eq('org_id', orgId)
-          }
+          await ensureAiAddon(supabase, orgId)
 
           await supabase.rpc('refund_ai_credits', {
             p_org_id: orgId,
@@ -114,6 +119,10 @@ export async function POST(request: Request) {
           .from('organizations')
           .update({ plan_id: planId, plan_status: subscription.status })
           .eq('id', orgId)
+
+        if (planId === 'pro' || planId === 'studio') {
+          await ensureAiAddon(supabase, orgId)
+        }
       }
       break
     }
@@ -151,6 +160,10 @@ export async function POST(request: Request) {
         .from('organizations')
         .update({ plan_id: planId, plan_status: subscription.status })
         .eq('id', sub.org_id)
+
+      if (planId === 'pro' || planId === 'studio') {
+        await ensureAiAddon(supabase, sub.org_id)
+      }
 
       break
     }

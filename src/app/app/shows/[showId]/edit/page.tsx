@@ -7,11 +7,14 @@ import { ShowForm } from '@/components/shows/show-form'
 import { DistributionSettings } from '@/components/shows/distribution-settings'
 import { EpisodeTemplateEditor } from '@/components/shows/episode-template-editor'
 import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
+import { ShowAiSettings } from '@/components/shows/show-ai-settings'
+import { ALL_GENERATION_TYPES } from '@/lib/ai/constants'
 
 const TABS = [
   { key: 'details', label: 'Details' },
   { key: 'template', label: 'Episode Template' },
   { key: 'distribution', label: 'Distribution' },
+  { key: 'ai', label: 'AI Pipeline' },
 ] as const
 
 type Tab = (typeof TABS)[number]['key']
@@ -26,7 +29,7 @@ export default function EditShowPage({
   const searchParams = useSearchParams()
   const initialTab = TABS.find((t) => t.key === searchParams.get('tab'))?.key || 'details'
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
-  const [show, setShow] = useState<Record<string, string> | null>(null)
+  const [show, setShow] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -84,7 +87,7 @@ export default function EditShowPage({
   }
 
   if (loading) {
-    return <p className="text-text-tertiary">Loading...</p>
+    return <p className="text-sm text-text-secondary">Loading...</p>
   }
 
   if (error || !show) {
@@ -111,7 +114,7 @@ export default function EditShowPage({
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-text-primary">Edit Show</h1>
       <p className="mt-1 text-sm text-text-secondary">
-        Update {show.name}&apos;s details.
+        Update {String(show.name)}&apos;s details.
       </p>
 
       <nav className="mt-6 flex gap-1 border-b border-border-default">
@@ -135,7 +138,7 @@ export default function EditShowPage({
           <div className="flex flex-col sm:flex-row gap-6 items-start">
             <ThumbnailUpload
               id={showId}
-              imageUrl={show.cover_art_url || null}
+              imageUrl={(show.cover_art_url as string) || null}
               showId={showId}
               onUploaded={handleImageUploaded}
               aspect="square"
@@ -143,12 +146,12 @@ export default function EditShowPage({
             />
             <div className="flex-1 w-full max-w-lg">
               <ShowForm
-                clientId={show.client_id || ''}
+                clientId={(show.client_id as string) || ''}
                 defaultValues={{
-                  name: show.name || '',
-                  description: show.description || '',
-                  format: show.format || '',
-                  schedule: show.schedule || '',
+                  name: (show.name as string) || '',
+                  description: (show.description as string) || '',
+                  format: (show.format as string) || '',
+                  schedule: (show.schedule as string) || '',
                 }}
                 onSubmit={handleSubmit}
                 submitLabel="Save Changes"
@@ -193,6 +196,16 @@ export default function EditShowPage({
         {activeTab === 'distribution' && (
           <div className="max-w-lg">
             <DistributionSettings showId={showId} />
+          </div>
+        )}
+
+        {activeTab === 'ai' && (
+          <div className="max-w-lg">
+            <ShowAiSettings
+              showId={showId}
+              autoTranscribe={show.ai_auto_transcribe !== false}
+              autoGenerate={(show.ai_auto_generate as string[]) || [...ALL_GENERATION_TYPES]}
+            />
           </div>
         )}
       </div>

@@ -16,6 +16,7 @@ export type Feature =
   | 'multi_user'
   | 'white_label'
   | 'reporting'
+  | 'ai'
 
 export interface TrialInfo {
   active: boolean

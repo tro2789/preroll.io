@@ -1,25 +1,10 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getAiAddonStatus, consumeCredits, getAnthropicApiKey } from '@/lib/ai/entitlements'
+import { getAiAddonStatus, consumeCredits, getAnthropicApiKey, totalAvailableCredits } from '@/lib/ai/entitlements'
 import { generate } from '@/lib/ai/generate'
 import type { GenerationContext } from '@/lib/ai/prompts'
-
-type GenerationType = 'show_notes' | 'description' | 'social_twitter' | 'social_linkedin' | 'social_instagram' | 'title_suggestions'
-
-const VALID_TYPES: GenerationType[] = [
-  'show_notes', 'description', 'social_twitter',
-  'social_linkedin', 'social_instagram', 'title_suggestions',
-]
-
-const CREDIT_COSTS: Record<GenerationType, number> = {
-  show_notes: 3,
-  description: 2,
-  social_twitter: 1,
-  social_linkedin: 1,
-  social_instagram: 1,
-  title_suggestions: 1,
-}
+import { type GenerationType, ALL_GENERATION_TYPES, CREDIT_COSTS } from '@/lib/ai/constants'
 
 export async function POST(
   request: NextRequest,
@@ -42,14 +27,14 @@ export async function POST(
 
   const addon = await getAiAddonStatus(org!.id)
   if (!addon.enabled) {
-    return errorResponse('AI add-on is not enabled. Enable it in Settings → AI.', 403)
+    return errorResponse('AI is not available on your current plan. Upgrade to Pro or Studio.', 403)
   }
 
   const body = await request.json()
   const { type, apply } = body as { type: GenerationType; apply?: boolean }
 
-  if (!VALID_TYPES.includes(type)) {
-    return errorResponse(`Invalid generation type. Must be one of: ${VALID_TYPES.join(', ')}`)
+  if (!ALL_GENERATION_TYPES.includes(type)) {
+    return errorResponse(`Invalid generation type. Must be one of: ${ALL_GENERATION_TYPES.join(', ')}`)
   }
 
   const service = createServiceClient()
@@ -68,8 +53,9 @@ export async function POST(
   }
 
   const creditCost = CREDIT_COSTS[type]
-  if (!addon.selfHosted && addon.creditsBalance < creditCost) {
-    return errorResponse(`Insufficient credits. Need ${creditCost}, have ${addon.creditsBalance}.`, 403)
+  const available = totalAvailableCredits(addon)
+  if (!addon.selfHosted && available < creditCost) {
+    return errorResponse(`Insufficient credits. Need ${creditCost}, have ${available}.`, 403)
   }
 
   const ctx: GenerationContext = {
