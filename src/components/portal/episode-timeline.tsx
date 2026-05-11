@@ -48,7 +48,7 @@ export function EpisodeTimeline({ episodes, stages, showId }: EpisodeTimelinePro
                     {String(ep.episode_number).padStart(2, '0')}
                   </span>
                 )}
-                <span className="text-sm text-text-primary group-hover:text-accent transition-colors truncate">
+                <span className="text-sm text-text-primary truncate">
                   {ep.title}
                 </span>
               </div>
