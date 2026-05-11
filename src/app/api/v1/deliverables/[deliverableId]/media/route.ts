@@ -28,15 +28,41 @@ export async function GET(
   const producerOrgId = show?.clients?.org_id
   if (!producerOrgId) return errorResponse('Could not resolve producer for this deliverable', 404)
 
-  const { data: fileRef, error: refError } = await supabase!
-    .from('file_references')
-    .select('id, external_id, mime_type, duration_seconds, provider')
-    .eq('deliverable_id', deliverableId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
+  // Support loading a specific version via file_reference_id query param
+  const specificFileRefId = request.nextUrl.searchParams.get('file_reference_id')
 
-  if (refError || !fileRef) return errorResponse('No file linked to this deliverable', 404)
+  let fileRef: FileRef | null = null
+  if (specificFileRefId) {
+    // Verify the requested file_reference belongs to the same version group as the deliverable
+    const { data: deliverableData } = await supabase!
+      .from('deliverables')
+      .select('version_group_id')
+      .eq('id', deliverableId)
+      .single()
+
+    if (deliverableData?.version_group_id) {
+      const { data: ref } = await supabase!
+        .from('file_references')
+        .select('id, external_id, mime_type, duration_seconds, provider')
+        .eq('id', specificFileRefId)
+        .eq('version_group_id', deliverableData.version_group_id)
+        .single()
+      fileRef = ref
+    }
+  }
+
+  if (!fileRef) {
+    const { data: ref, error: refError } = await supabase!
+      .from('file_references')
+      .select('id, external_id, mime_type, duration_seconds, provider')
+      .eq('deliverable_id', deliverableId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (refError || !ref) return errorResponse('No file linked to this deliverable', 404)
+    fileRef = ref
+  }
 
   ensureProvidersRegistered()
 
