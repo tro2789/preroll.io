@@ -11,6 +11,8 @@ export interface Deliverable {
   reviewed_at: string | null
   created_at: string
   updated_at: string
+  version_group_id?: string | null
+  file_reference_id?: string | null
 }
 
 export interface FileVersion {

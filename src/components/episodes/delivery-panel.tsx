@@ -28,6 +28,7 @@ interface BrowseItem {
   metadata?: Record<string, unknown>
   version_number?: number
   version_count?: number
+  version_group_id?: string
 }
 
 interface EpisodeMeta {
@@ -292,6 +293,10 @@ export function DeliveryPanel({
   }
 
   function isFileLinkedAsDeliverable(file: BrowseItem): Deliverable | null {
+    if (file.version_group_id) {
+      const match = deliverables.find((d) => d.version_group_id === file.version_group_id)
+      if (match) return match
+    }
     return deliverables.find(
       (d) => d.file_url && (d.file_url.includes(file.id) || (file.viewUrl && d.file_url === file.viewUrl))
     ) || null

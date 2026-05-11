@@ -59,13 +59,14 @@ export async function GET(
         groupCounts.set(ref.version_group_id, (groupCounts.get(ref.version_group_id) || 0) + 1)
       }
 
-      const latestByExternalId = new Map<string, { version_number: number; version_count: number }>()
+      const latestByExternalId = new Map<string, { version_number: number; version_count: number; version_group_id: string }>()
       const hiddenExternalIds = new Set<string>()
       for (const ref of allRefs) {
         if (ref.external_id && ref.is_latest) {
           latestByExternalId.set(ref.external_id, {
             version_number: ref.version_number,
             version_count: groupCounts.get(ref.version_group_id) || 1,
+            version_group_id: ref.version_group_id,
           })
         }
         if (ref.external_id && !ref.is_latest) {
@@ -78,7 +79,7 @@ export async function GET(
         .map((item) => {
           const info = latestByExternalId.get(item.id)
           if (info && info.version_count > 1) {
-            return { ...item, version_number: info.version_number, version_count: info.version_count }
+            return { ...item, version_number: info.version_number, version_count: info.version_count, version_group_id: info.version_group_id }
           }
           return item
         })
