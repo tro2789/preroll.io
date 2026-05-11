@@ -90,17 +90,17 @@ export async function POST(
 
   const autoResharedIds: string[] = []
   if (autoUpdated && autoUpdated.length > 0) {
+    const logEntries = autoUpdated.map((d) => ({
+      show_id: d.show_id,
+      episode_id: d.episode_id,
+      action: 'deliverable_resubmitted',
+      description: `New version (v${result.version_number}) of "${d.title}" automatically shared with client`,
+      metadata: { deliverable_id: d.id, version_number: result.version_number },
+    }))
+    await supabase!.from('activity_log').insert(logEntries)
+
     for (const deliverable of autoUpdated) {
       autoResharedIds.push(deliverable.id)
-
-      await supabase!.from('activity_log').insert({
-        show_id: deliverable.show_id,
-        episode_id: deliverable.episode_id,
-        action: 'deliverable_resubmitted',
-        description: `New version (v${result.version_number}) of "${deliverable.title}" automatically shared with client`,
-        metadata: { deliverable_id: deliverable.id, version_number: result.version_number },
-      })
-
       dispatchWebhooks(org!.id, 'deliverable.resubmitted', {
         deliverable_id: deliverable.id,
         show_id: deliverable.show_id,

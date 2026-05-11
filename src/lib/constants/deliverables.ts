@@ -13,6 +13,19 @@ export interface Deliverable {
   updated_at: string
 }
 
+export interface FileVersion {
+  id: string
+  name: string
+  version_number: number
+  is_latest: boolean
+  thumbnail_url: string | null
+  mime_type: string | null
+  file_size: number | null
+  duration_seconds: number | null
+  external_url: string | null
+  created_at: string
+}
+
 export const DELIVERABLE_TYPES = [
   { value: 'rough_cut', label: 'Rough Cut' },
   { value: 'final_cut', label: 'Final Cut' },

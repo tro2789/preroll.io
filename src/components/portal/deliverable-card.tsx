@@ -232,7 +232,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
 
       {showVersionPicker && reviewUrl && (
         <VersionPickerModal
-          deliverableId={deliverable.id}
+          fetchUrl={`/api/v1/portal/deliverables/${deliverable.id}/versions`}
           reviewBaseUrl={reviewUrl}
           onClose={() => setShowVersionPicker(false)}
         />
