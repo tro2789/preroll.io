@@ -313,12 +313,23 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             </div>
           )}
 
-          {/* No audio yet */}
+          {/* No audio yet or waiting for processing */}
           {!hasTranscript && !isTranscribing && !isRunning && (
             <div className="space-y-3">
-              <p className="text-xs text-text-secondary">
-                Upload or link audio to this episode to automatically generate show notes, descriptions, and social posts.
-              </p>
+              {hasAudioFiles ? (
+                <div className="flex items-center gap-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                    <p className="text-xs text-text-secondary">
+                      Waiting for audio to finish processing. AI transcription and content generation will start automatically.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-text-secondary">
+                  Upload or link audio to this episode to automatically generate show notes, descriptions, and social posts.
+                </p>
+              )}
               <TranscribeButton
                 episodeId={episodeId}
                 transcribing={transcribing}

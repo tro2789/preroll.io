@@ -387,12 +387,13 @@ export function DeliveryPanel({
   }
 
   function getReviewUrl(file: BrowseItem, linked: Deliverable | null): string | null {
-    if (!linked) return null
     const mime = file.mimeType || ''
-    if (mime.startsWith('video/') || mime.startsWith('audio/')) {
+    if (!mime.startsWith('video/') && !mime.startsWith('audio/')) return null
+
+    if (linked) {
       return `/app/shows/${showId}/episodes/${episodeId}/review/${linked.id}`
     }
-    return null
+    return `/app/shows/${showId}/episodes/${episodeId}/preview/${file.id}`
   }
 
   async function openVersionHistory(fileExternalId: string) {
