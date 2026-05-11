@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation'
 import { ReviewPlayer } from '@/components/portal/review-player'
 import { CommentsSidebar } from '@/components/portal/comments-sidebar'
 import { VersionPickerModal } from '@/components/portal/version-picker-modal'
+import type { FileVersion } from '@/lib/constants/deliverables'
 
 interface Media {
   url: string
@@ -29,13 +30,6 @@ interface Deliverable {
   file_url: string | null
 }
 
-interface Version {
-  id: string
-  name: string
-  version_number: number
-  is_latest: boolean
-}
-
 export default function ReviewPage() {
   const { showId, episodeId, deliverableId } = useParams<{
     showId: string
@@ -53,8 +47,12 @@ export default function ReviewPage() {
   const [currentTime, setCurrentTime] = useState(0)
   const [seekToTime, setSeekToTime] = useState<number | null>(null)
 
-  const [versions, setVersions] = useState<Version[]>([])
+  const [versions, setVersions] = useState<FileVersion[]>([])
   const [showVersionPicker, setShowVersionPicker] = useState(false)
+
+  const mediaApiUrl = versionFileRefId
+    ? `/api/v1/deliverables/${deliverableId}/media?file_reference_id=${versionFileRefId}`
+    : `/api/v1/deliverables/${deliverableId}/media`
 
   useEffect(() => {
     if (!deliverableId) return
@@ -64,14 +62,9 @@ export default function ReviewPage() {
       setError(null)
 
       try {
-        // Build media URL with optional version param
-        const mediaUrl = versionFileRefId
-          ? `/api/v1/deliverables/${deliverableId}/media?file_reference_id=${versionFileRefId}`
-          : `/api/v1/deliverables/${deliverableId}/media`
-
         const [delRes, mediaRes, commentsRes, versionsRes] = await Promise.all([
           fetch(`/api/v1/deliverables/${deliverableId}`),
-          fetch(mediaUrl),
+          fetch(mediaApiUrl),
           fetch(`/api/v1/deliverables/${deliverableId}/comments`),
           fetch(`/api/v1/portal/deliverables/${deliverableId}/versions`),
         ])
@@ -113,10 +106,7 @@ export default function ReviewPage() {
 
   const fetchMedia = useCallback(async (): Promise<string | null> => {
     try {
-      const url = versionFileRefId
-        ? `/api/v1/deliverables/${deliverableId}/media?file_reference_id=${versionFileRefId}`
-        : `/api/v1/deliverables/${deliverableId}/media`
-      const res = await fetch(url)
+      const res = await fetch(mediaApiUrl)
       const json = await res.json()
       if (res.ok && json.data?.url) {
         setMedia(json.data)
@@ -126,7 +116,7 @@ export default function ReviewPage() {
       // ignore
     }
     return null
-  }, [deliverableId, versionFileRefId])
+  }, [mediaApiUrl])
 
   const handleCommentSubmit = useCallback(
     async (text: string, timestampSecs: number) => {
@@ -235,7 +225,7 @@ export default function ReviewPage() {
       {/* Version picker modal */}
       {showVersionPicker && (
         <VersionPickerModal
-          deliverableId={deliverableId}
+          fetchUrl={`/api/v1/portal/deliverables/${deliverableId}/versions`}
           currentFileReferenceId={versionFileRefId || media?.file_reference_id}
           reviewBaseUrl={reviewBaseUrl}
           onClose={() => setShowVersionPicker(false)}

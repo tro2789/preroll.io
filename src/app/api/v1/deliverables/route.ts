@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
   if (externalFileId && fileProvider && body.episode_id) {
     const { data: { user } } = await supabase!.auth.getUser()
-    await supabase!.from('file_references').insert({
+    const { data: fileRef } = await supabase!.from('file_references').insert({
       user_id: user!.id,
       org_id: org!.id,
       provider: fileProvider,
@@ -66,14 +66,7 @@ export async function POST(request: Request) {
       external_url: body.file_url || null,
       episode_id: body.episode_id,
       deliverable_id: data.id,
-    })
-
-    // Link the deliverable to the file_reference's version group
-    const { data: fileRef } = await supabase!
-      .from('file_references')
-      .select('id, version_group_id')
-      .eq('deliverable_id', data.id)
-      .single()
+    }).select('id, version_group_id').single()
 
     if (fileRef) {
       await supabase!

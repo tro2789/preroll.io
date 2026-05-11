@@ -51,23 +51,11 @@ export default async function PortalEpisodePage({
         .in('deliverable_id', deliverableIds)
     : { data: [] }
 
-  // Build version count map for deliverables that have version groups
-  const versionGroupIds = [...new Set(
-    (fileRefs ?? []).map((fr: any) => fr.version_group_id).filter(Boolean)
-  )]
-  let versionCountMap = new Map<string, number>()
-  if (versionGroupIds.length > 0) {
-    const { data: versionCounts } = await supabase
-      .from('file_references')
-      .select('version_group_id')
-      .in('version_group_id', versionGroupIds)
-    if (versionCounts) {
-      const counts = new Map<string, number>()
-      for (const vc of versionCounts) {
-        counts.set(vc.version_group_id, (counts.get(vc.version_group_id) || 0) + 1)
-      }
-      versionCountMap = counts
-    }
+  // Count versions per group from the already-fetched file refs
+  const versionCountMap = new Map<string, number>()
+  for (const fr of fileRefs ?? []) {
+    const gid = (fr as any).version_group_id
+    if (gid) versionCountMap.set(gid, (versionCountMap.get(gid) || 0) + 1)
   }
 
   if (!show) redirect('/portal')

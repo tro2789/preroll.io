@@ -3,41 +3,35 @@
 import { useState, useEffect } from 'react'
 import { getGradient } from '@/lib/ui/gradient'
 import { formatFileSize, formatDuration } from '@/lib/format'
-
-interface Version {
-  id: string
-  name: string
-  version_number: number
-  is_latest: boolean
-  thumbnail_url: string | null
-  mime_type: string | null
-  file_size: number | null
-  duration_seconds: number | null
-  external_url: string | null
-  created_at: string
-}
+import type { FileVersion } from '@/lib/constants/deliverables'
 
 interface VersionPickerModalProps {
-  deliverableId: string
+  fetchUrl: string
   currentFileReferenceId?: string | null
-  reviewBaseUrl: string
+  reviewBaseUrl?: string
+  onVersionClick?: (version: FileVersion) => void
+  onUnstack?: (version: FileVersion) => void
+  unstacking?: boolean
   onClose: () => void
 }
 
 export function VersionPickerModal({
-  deliverableId,
+  fetchUrl,
   currentFileReferenceId,
   reviewBaseUrl,
+  onVersionClick,
+  onUnstack,
+  unstacking,
   onClose,
 }: VersionPickerModalProps) {
-  const [versions, setVersions] = useState<Version[]>([])
+  const [versions, setVersions] = useState<FileVersion[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch(`/api/v1/portal/deliverables/${deliverableId}/versions`)
+        const res = await fetch(fetchUrl)
         if (res.ok) {
           const json = await res.json()
           if (!cancelled) setVersions(json.data?.versions || [])
@@ -50,9 +44,9 @@ export function VersionPickerModal({
     }
     load()
     return () => { cancelled = true }
-  }, [deliverableId])
+  }, [fetchUrl])
 
-  const isCurrent = (v: Version) => {
+  const isCurrent = (v: FileVersion) => {
     if (currentFileReferenceId) return v.id === currentFileReferenceId
     return v.is_latest
   }
@@ -137,14 +131,21 @@ export function VersionPickerModal({
                           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                           Currently viewing
                         </span>
-                      ) : (
+                      ) : reviewBaseUrl ? (
                         <a
                           href={`${reviewBaseUrl}?version=${v.id}`}
                           className="mt-1 inline-block text-[10px] font-medium text-text-secondary hover:text-accent transition-colors"
                         >
                           View this version
                         </a>
-                      )}
+                      ) : onVersionClick ? (
+                        <button
+                          onClick={() => onVersionClick(v)}
+                          className="mt-1 inline-block text-[10px] font-medium text-text-secondary hover:text-accent transition-colors"
+                        >
+                          View this version
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 )
@@ -152,6 +153,17 @@ export function VersionPickerModal({
             </div>
           )}
         </div>
+        {onUnstack && versions.length > 1 && (
+          <div className="border-t border-border-subtle px-4 py-2.5">
+            <button
+              onClick={() => { const latest = versions.find((v) => v.is_latest); if (latest) onUnstack(latest) }}
+              disabled={unstacking}
+              className="text-xs text-text-secondary hover:text-error transition-colors disabled:opacity-50"
+            >
+              {unstacking ? 'Unstacking...' : 'Remove latest from stack'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
