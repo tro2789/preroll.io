@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { TYPE_LABELS } from '@/lib/constants/deliverables'
+import { VersionPickerModal } from '@/components/portal/version-picker-modal'
 
 interface Deliverable {
   id: string
@@ -23,6 +24,7 @@ interface DeliverableCardProps {
   reviewUrl?: string
   thumbnailUrl?: string
   allowDownload?: boolean
+  versionCount?: number
 }
 
 const statusConfig: Record<string, { dot: string; bg: string; label: string }> = {
@@ -33,13 +35,14 @@ const statusConfig: Record<string, { dot: string; bg: string; label: string }> =
 
 const btnSecondary = 'inline-flex items-center gap-1.5 rounded-md border border-border-default bg-surface-overlay px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50'
 
-export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbnailUrl: initialThumb, allowDownload }: DeliverableCardProps) {
+export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbnailUrl: initialThumb, allowDownload, versionCount }: DeliverableCardProps) {
   const router = useRouter()
   const [showRevisionForm, setShowRevisionForm] = useState(false)
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [thumb, setThumb] = useState(initialThumb)
   const [thumbFailed, setThumbFailed] = useState(false)
+  const [showVersionPicker, setShowVersionPicker] = useState(false)
 
   useEffect(() => {
     if (initialThumb || thumbFailed || !reviewUrl) return
@@ -91,6 +94,14 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
           <span className={`absolute top-2 left-2 rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.bg}`}>
             {status.label}
           </span>
+          {versionCount != null && versionCount > 1 && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowVersionPicker(true) }}
+              className="absolute top-2 right-2 rounded bg-surface-raised/90 px-1.5 py-0.5 text-[10px] font-medium text-text-secondary backdrop-blur-sm hover:bg-surface-raised hover:text-text-primary transition-colors"
+            >
+              {versionCount} versions
+            </button>
+          )}
         </div>
       )}
 
@@ -103,6 +114,17 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
             <h3 className="text-sm font-medium text-text-primary">{deliverable.title}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-text-secondary">{TYPE_LABELS[deliverable.type] || deliverable.type}</span>
+              {versionCount != null && versionCount > 1 && !thumb && (
+                <>
+                  <span className="text-text-tertiary">&middot;</span>
+                  <button
+                    onClick={() => setShowVersionPicker(true)}
+                    className="text-xs text-text-secondary hover:text-accent transition-colors"
+                  >
+                    {versionCount} versions
+                  </button>
+                </>
+              )}
               {!thumb && (
                 <>
                   <span className="text-text-tertiary">&middot;</span>
@@ -207,6 +229,14 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
           </div>
         )}
       </div>
+
+      {showVersionPicker && reviewUrl && (
+        <VersionPickerModal
+          deliverableId={deliverable.id}
+          reviewBaseUrl={reviewUrl}
+          onClose={() => setShowVersionPicker(false)}
+        />
+      )}
     </div>
   )
 }

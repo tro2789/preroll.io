@@ -47,9 +47,28 @@ export default async function PortalEpisodePage({
   const { data: fileRefs } = deliverableIds.length > 0
     ? await supabase
         .from('file_references')
-        .select('id, deliverable_id, mime_type, thumbnail_url, provider')
+        .select('id, deliverable_id, mime_type, thumbnail_url, provider, version_group_id')
         .in('deliverable_id', deliverableIds)
     : { data: [] }
+
+  // Build version count map for deliverables that have version groups
+  const versionGroupIds = [...new Set(
+    (fileRefs ?? []).map((fr: any) => fr.version_group_id).filter(Boolean)
+  )]
+  let versionCountMap = new Map<string, number>()
+  if (versionGroupIds.length > 0) {
+    const { data: versionCounts } = await supabase
+      .from('file_references')
+      .select('version_group_id')
+      .in('version_group_id', versionGroupIds)
+    if (versionCounts) {
+      const counts = new Map<string, number>()
+      for (const vc of versionCounts) {
+        counts.set(vc.version_group_id, (counts.get(vc.version_group_id) || 0) + 1)
+      }
+      versionCountMap = counts
+    }
+  }
 
   if (!show) redirect('/portal')
   if (!episode) redirect(`/portal/shows/${showId}`)
@@ -60,11 +79,16 @@ export default async function PortalEpisodePage({
 
   const reviewUrlMap = new Map<string, string>()
   const thumbnailMap = new Map<string, string>()
+  const versionCountForDeliverable = new Map<string, number>()
   for (const fr of fileRefs ?? []) {
     if (!fr.deliverable_id) continue
     if (fr.thumbnail_url) thumbnailMap.set(fr.deliverable_id, fr.thumbnail_url)
     if (fr.mime_type && (fr.mime_type.startsWith('video/') || fr.mime_type.startsWith('audio/'))) {
       reviewUrlMap.set(fr.deliverable_id, `/portal/shows/${showId}/episodes/${episodeId}/review/${fr.deliverable_id}`)
+    }
+    if ((fr as any).version_group_id) {
+      const count = versionCountMap.get((fr as any).version_group_id) || 0
+      if (count > 1) versionCountForDeliverable.set(fr.deliverable_id, count)
     }
   }
 
@@ -115,7 +139,7 @@ export default async function PortalEpisodePage({
         ) : (
           <div className="space-y-3">
             {deliverables.map((d) => (
-              <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} allowDownload={allowDownloads} />
+              <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} allowDownload={allowDownloads} versionCount={versionCountForDeliverable.get(d.id)} />
             ))}
           </div>
         )}
