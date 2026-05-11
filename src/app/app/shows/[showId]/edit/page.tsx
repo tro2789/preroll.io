@@ -105,7 +105,7 @@ export default function EditShowPage({
     <div>
       <Link
         href={`/app/shows/${showId}`}
-        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+        className="text-sm text-text-secondary hover:text-text-primary transition-colors"
       >
         &larr; Back to Show
       </Link>
@@ -122,7 +122,7 @@ export default function EditShowPage({
             className={`px-4 py-2 text-sm font-medium transition-colors -mb-px ${
               activeTab === tab.key
                 ? 'text-accent-hover border-b-2 border-accent'
-                : 'text-text-tertiary hover:text-text-secondary'
+                : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             {tab.label}

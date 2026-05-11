@@ -58,7 +58,7 @@ export default async function ShowDetailPage({
         {client && (
           <Link
             href={`/app/clients/${client.id}`}
-            className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             &larr; {client.name}
           </Link>
@@ -116,7 +116,7 @@ export default async function ShowDetailPage({
 
       <section className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium uppercase tracking-wider text-text-tertiary">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-text-secondary">
             Episodes
             <span className="ml-2 text-sm font-normal">({totalEpisodes})</span>
           </h2>

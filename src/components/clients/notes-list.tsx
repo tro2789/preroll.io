@@ -99,7 +99,7 @@ export function NotesList({ clientId }: { clientId: string }) {
       )}
 
       <div className="flex items-center justify-between">
-        <p className="text-sm text-text-tertiary">
+        <p className="text-sm text-text-secondary">
           {notes.length} {notes.length === 1 ? 'note' : 'notes'}
         </p>
         <button
@@ -192,18 +192,18 @@ export function NotesList({ clientId }: { clientId: string }) {
                       {note.title || 'Untitled'}
                     </p>
                     {note.meeting_date && (
-                      <p className="text-xs text-text-tertiary mt-0.5">
+                      <p className="text-xs text-text-secondary mt-0.5">
                         {new Date(note.meeting_date).toLocaleDateString()}
                       </p>
                     )}
                     {!isExpanded && (
-                      <p className="text-xs text-text-tertiary mt-1 truncate">
+                      <p className="text-xs text-text-secondary mt-1 truncate">
                         {note.content.slice(0, 100)}
                         {note.content.length > 100 ? '...' : ''}
                       </p>
                     )}
                   </div>
-                  <span className="ml-2 text-text-tertiary text-xs shrink-0">
+                  <span className="ml-2 text-text-secondary text-xs shrink-0">
                     {isExpanded ? 'Collapse' : 'Expand'}
                   </span>
                 </button>

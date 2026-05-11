@@ -76,7 +76,7 @@ export default async function ClientDetailPage({
     <div>
       <Link
         href="/app/clients"
-        className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+        className="text-xs text-text-secondary hover:text-text-primary transition-colors"
       >
         &larr; Clients
       </Link>
@@ -108,7 +108,7 @@ export default async function ClientDetailPage({
             {/* Contact fields */}
             <dl className="mt-4 space-y-2.5">
               <div>
-                <dt className="text-[11px] text-text-tertiary uppercase tracking-wider">Email</dt>
+                <dt className="text-[11px] text-text-secondary uppercase tracking-wider">Email</dt>
                 {client.email ? (
                   <dd className="text-sm text-text-secondary mt-0.5">
                     <a href={`mailto:${client.email}`} className="hover:text-accent transition-colors">{client.email}</a>
@@ -119,19 +119,19 @@ export default async function ClientDetailPage({
               </div>
               {client.phone && (
                 <div>
-                  <dt className="text-[11px] text-text-tertiary uppercase tracking-wider">Phone</dt>
+                  <dt className="text-[11px] text-text-secondary uppercase tracking-wider">Phone</dt>
                   <dd className="text-sm text-text-secondary mt-0.5">{client.phone}</dd>
                 </div>
               )}
               {client.service_terms && (
                 <div>
-                  <dt className="text-[11px] text-text-tertiary uppercase tracking-wider">Service Terms</dt>
+                  <dt className="text-[11px] text-text-secondary uppercase tracking-wider">Service Terms</dt>
                   <dd className="text-sm text-text-secondary mt-0.5 whitespace-pre-wrap">{client.service_terms}</dd>
                 </div>
               )}
               {client.notes && (
                 <div>
-                  <dt className="text-[11px] text-text-tertiary uppercase tracking-wider">Notes</dt>
+                  <dt className="text-[11px] text-text-secondary uppercase tracking-wider">Notes</dt>
                   <dd className="text-sm text-text-secondary mt-0.5 whitespace-pre-wrap">{client.notes}</dd>
                 </div>
               )}
@@ -190,7 +190,7 @@ export default async function ClientDetailPage({
                         {show.name}
                       </p>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-xs text-text-tertiary">
+                        <span className="text-xs text-text-secondary">
                           {activeEps} episode{activeEps !== 1 ? 's' : ''}
                         </span>
                         {pending > 0 && (

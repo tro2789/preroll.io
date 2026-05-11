@@ -104,7 +104,7 @@ export default function ReportsPage() {
                   className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
                     period === p.value
                       ? 'bg-accent text-white'
-                      : 'text-text-tertiary hover:text-text-primary'
+                      : 'text-text-secondary hover:text-text-primary'
                   }`}
                 >
                   {p.label}
@@ -129,7 +129,7 @@ export default function ReportsPage() {
       ) : loading ? (
         <div className="text-sm text-text-tertiary py-12 text-center">Loading reports...</div>
       ) : !data ? (
-        <div className="text-sm text-text-tertiary py-12 text-center">Failed to load reports.</div>
+        <div className="text-sm text-text-secondary py-12 text-center">Failed to load reports.</div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -171,7 +171,7 @@ export default function ReportsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border-subtle text-left text-text-tertiary">
+                      <tr className="border-b border-border-subtle text-left text-text-secondary">
                         <th className="px-5 py-3 font-medium">Show</th>
                         <th className="px-5 py-3 font-medium">Client</th>
                         <th className="px-5 py-3 font-medium text-right">Total</th>
@@ -213,15 +213,15 @@ export default function ReportsPage() {
                   <div className="grid grid-cols-3 divide-x divide-border-subtle">
                     <div className="px-5 py-4 text-center">
                       <div className="text-2xl font-bold text-text-primary">{data.deliverables.approved}</div>
-                      <div className="text-xs text-text-tertiary mt-1">Approved</div>
+                      <div className="text-xs text-text-secondary mt-1">Approved</div>
                     </div>
                     <div className="px-5 py-4 text-center">
                       <div className="text-2xl font-bold text-text-primary">{data.deliverables.revision_requested}</div>
-                      <div className="text-xs text-text-tertiary mt-1">Revisions</div>
+                      <div className="text-xs text-text-secondary mt-1">Revisions</div>
                     </div>
                     <div className="px-5 py-4 text-center">
                       <div className="text-2xl font-bold text-text-primary">{data.deliverables.pending}</div>
-                      <div className="text-xs text-text-tertiary mt-1">Pending</div>
+                      <div className="text-xs text-text-secondary mt-1">Pending</div>
                     </div>
                   </div>
                 </div>
@@ -245,9 +245,9 @@ function StatCard({
 }) {
   return (
     <div className="rounded-xl border border-border-default bg-surface-raised p-5">
-      <div className="text-xs font-medium text-text-tertiary uppercase tracking-wider">{label}</div>
+      <div className="text-xs font-medium text-text-secondary uppercase tracking-wider">{label}</div>
       <div className="mt-2 text-2xl font-bold text-text-primary">{value}</div>
-      <div className="mt-1 text-xs text-text-tertiary">{sub}</div>
+      <div className="mt-1 text-xs text-text-secondary">{sub}</div>
     </div>
   )
 }
@@ -257,7 +257,7 @@ function MonthChart({ data }: { data: { month: string; created: number; publishe
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-4 text-xs text-text-tertiary">
+      <div className="flex items-center gap-4 text-xs text-text-secondary">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-accent/40" />
           Created
@@ -271,7 +271,7 @@ function MonthChart({ data }: { data: { month: string; created: number; publishe
         const label = formatMonth(row.month)
         return (
           <div key={row.month} className="flex items-center gap-3">
-            <span className="w-16 text-xs text-text-tertiary text-right shrink-0">{label}</span>
+            <span className="w-16 text-xs text-text-secondary text-right shrink-0">{label}</span>
             <div className="flex-1 flex flex-col gap-1">
               <div className="flex items-center gap-2">
                 <div

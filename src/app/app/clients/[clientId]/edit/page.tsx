@@ -74,7 +74,7 @@ export default function EditClientPage({
     <div>
       <Link
         href={`/app/clients/${clientId}`}
-        className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+        className="text-sm text-text-secondary hover:text-text-primary transition-colors"
       >
         &larr; Back to Client
       </Link>
