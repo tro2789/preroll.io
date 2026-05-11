@@ -120,7 +120,7 @@ export default function AiSettingsPage() {
   }
 
   if (loading) {
-    return <div className="text-sm text-text-tertiary">Loading...</div>
+    return <div className="text-sm text-text-secondary">Loading...</div>
   }
 
   return (
@@ -143,7 +143,7 @@ export default function AiSettingsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-medium text-text-primary">Add-on Status</h3>
-            <p className="mt-1 text-xs text-text-tertiary">
+            <p className="mt-1 text-xs text-text-secondary">
               {addon?.addon.enabled ? 'AI features are enabled for your workspace.' : 'Enable AI features to get started.'}
             </p>
           </div>
@@ -187,7 +187,7 @@ export default function AiSettingsPage() {
                       className="rounded-md border border-border-subtle bg-surface-default p-3 text-center hover:border-accent transition-colors disabled:opacity-50"
                     >
                       <div className="text-sm font-medium text-text-primary">{pack.credits} credits</div>
-                      <div className="text-xs text-text-tertiary mt-1">{pack.price}</div>
+                      <div className="text-xs text-text-secondary mt-1">{pack.price}</div>
                       {purchasing === pack.id && (
                         <div className="text-xs text-accent mt-1">Redirecting...</div>
                       )}
@@ -204,10 +204,10 @@ export default function AiSettingsPage() {
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="border-b border-border-subtle bg-surface-raised">
-                          <th className="px-3 py-2 text-left text-text-tertiary font-medium">Type</th>
-                          <th className="px-3 py-2 text-right text-text-tertiary font-medium">Credits</th>
-                          <th className="px-3 py-2 text-right text-text-tertiary font-medium">Balance</th>
-                          <th className="px-3 py-2 text-right text-text-tertiary font-medium">Date</th>
+                          <th className="px-3 py-2 text-left text-text-secondary font-medium">Type</th>
+                          <th className="px-3 py-2 text-right text-text-secondary font-medium">Credits</th>
+                          <th className="px-3 py-2 text-right text-text-secondary font-medium">Balance</th>
+                          <th className="px-3 py-2 text-right text-text-secondary font-medium">Date</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -219,10 +219,10 @@ export default function AiSettingsPage() {
                             <td className={`px-3 py-2 text-right tabular-nums ${u.credits_used > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                               {u.credits_used > 0 ? `-${u.credits_used}` : `+${Math.abs(u.credits_used)}`}
                             </td>
-                            <td className="px-3 py-2 text-right text-text-tertiary tabular-nums">
+                            <td className="px-3 py-2 text-right text-text-secondary tabular-nums">
                               {u.balance_after}
                             </td>
-                            <td className="px-3 py-2 text-right text-text-tertiary">
+                            <td className="px-3 py-2 text-right text-text-secondary">
                               {new Date(u.created_at).toLocaleDateString()}
                             </td>
                           </tr>
@@ -240,7 +240,7 @@ export default function AiSettingsPage() {
             <div className="rounded-lg border border-border-subtle bg-surface-raised p-5 space-y-4">
               <div>
                 <h3 className="text-sm font-medium text-text-primary">API Keys</h3>
-                <p className="mt-1 text-xs text-text-tertiary">
+                <p className="mt-1 text-xs text-text-secondary">
                   Provide your own API keys for transcription and AI generation.
                 </p>
               </div>

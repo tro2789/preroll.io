@@ -138,16 +138,16 @@ export default function TeamPage() {
   }
 
   if (loading) {
-    return <div className="text-sm text-text-tertiary">Loading team...</div>
+    return <div className="text-sm text-text-secondary">Loading team...</div>
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+        <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
           Team Members
         </h2>
-        <p className="mt-1 text-xs text-text-tertiary">
+        <p className="mt-1 text-xs text-text-secondary">
           Manage who has access to your organization.
         </p>
 
@@ -177,11 +177,11 @@ export default function TeamPage() {
                     <p className="text-sm font-medium text-text-primary truncate">
                       {m.name || m.email || 'Unknown'}
                       {m.user_id === currentUserId && (
-                        <span className="ml-1.5 text-xs text-text-tertiary">(you)</span>
+                        <span className="ml-1.5 text-xs text-text-secondary">(you)</span>
                       )}
                     </p>
                     {m.name && m.email && (
-                      <p className="text-xs text-text-tertiary truncate">{m.email}</p>
+                      <p className="text-xs text-text-secondary truncate">{m.email}</p>
                     )}
                   </div>
                   <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_COLORS[m.role] || ROLE_COLORS.member}`}>
@@ -189,7 +189,7 @@ export default function TeamPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs text-text-tertiary">
+                  <span className="text-xs text-text-secondary">
                     Joined {formatDate(m.created_at)}
                   </span>
                   {isAdmin && m.role !== 'owner' && m.user_id !== currentUserId && (
@@ -205,7 +205,7 @@ export default function TeamPage() {
                           </button>
                           <button
                             onClick={() => setConfirmRemoveId(null)}
-                            className="text-xs text-text-tertiary hover:text-text-secondary"
+                            className="text-xs text-text-secondary hover:text-text-secondary"
                           >
                             Cancel
                           </button>
@@ -213,7 +213,7 @@ export default function TeamPage() {
                       ) : (
                         <button
                           onClick={() => setConfirmRemoveId(m.id)}
-                          className="text-xs text-text-tertiary hover:text-red-400 transition-colors"
+                          className="text-xs text-text-secondary hover:text-red-400 transition-colors"
                         >
                           Remove
                         </button>
@@ -242,10 +242,10 @@ export default function TeamPage() {
 
       {isAdmin && canInvite && (
         <div>
-          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
             Invite Team Member
           </h2>
-          <p className="mt-1 text-xs text-text-tertiary">
+          <p className="mt-1 text-xs text-text-secondary">
             Send an email invitation to add someone to your organization.
           </p>
 
@@ -293,7 +293,7 @@ export default function TeamPage() {
 
       {invites.length > 0 && (
         <div>
-          <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+          <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
             Pending Invites
           </h2>
           <div className="mt-4 space-y-2">
@@ -302,7 +302,7 @@ export default function TeamPage() {
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-text-primary truncate">{inv.email}</p>
-                    <p className="text-xs text-text-tertiary">
+                    <p className="text-xs text-text-secondary">
                       Expires {formatDate(inv.expires_at)}
                     </p>
                   </div>
@@ -314,7 +314,7 @@ export default function TeamPage() {
                   <button
                     onClick={() => handleCancelInvite(inv.id)}
                     disabled={cancelingId === inv.id}
-                    className="text-xs text-text-tertiary hover:text-red-400 transition-colors disabled:opacity-50"
+                    className="text-xs text-text-secondary hover:text-red-400 transition-colors disabled:opacity-50"
                   >
                     {cancelingId === inv.id ? 'Canceling...' : 'Cancel'}
                   </button>
