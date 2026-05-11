@@ -147,7 +147,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
                             href={`/portal/shows/${showId}/episodes/${ep.id}`}
                             className="block rounded-lg border border-border-subtle bg-surface-raised p-3 hover:border-border-default transition-colors group"
                           >
-                            <p className="text-sm font-medium text-text-primary leading-snug">
+                            <p className="text-sm font-medium text-text-primary leading-snug line-clamp-1">
                               {ep.title}
                             </p>
                             <div className="mt-1.5 flex items-center gap-2 text-[11px] text-text-secondary">
