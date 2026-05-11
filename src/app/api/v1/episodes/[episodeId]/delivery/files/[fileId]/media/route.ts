@@ -57,7 +57,8 @@ export async function GET(
     }
 
     const ml = fileData.media_links || {}
-    const url = ml.original?.url || ml.high_quality?.url || ml.efficient?.url || null
+    const url = ml.original?.download_url || ml.original?.inline_url
+      || ml.high_quality?.download_url || ml.efficient?.download_url || null
 
     if (!url) return errorResponse('No playback URL available', 502)
 
