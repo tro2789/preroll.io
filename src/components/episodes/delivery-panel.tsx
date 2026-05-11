@@ -432,7 +432,7 @@ export function DeliveryPanel({
         <div className="p-2.5 space-y-2">
           <div>
             <p className="text-sm font-medium text-text-primary truncate" title={file.name}>{file.name}</p>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-text-tertiary">
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
               {file.fileSize != null && file.fileSize > 0 && <span>{formatFileSize(file.fileSize)}</span>}
               <span>&middot; {getFileExt(file.name)}</span>
               {file.createdAt && (
@@ -527,7 +527,7 @@ export function DeliveryPanel({
             <SortHeader label="Size" column="size" width="w-20" />
             <SortHeader label="Type" column="type" width="w-16" />
             <SortHeader label="Uploaded" column="date" width="w-20" />
-            <th className="pb-2 font-medium w-48 text-right text-text-tertiary">Action</th>
+            <th className="pb-2 font-medium w-48 text-right text-text-secondary">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border-subtle">
@@ -552,13 +552,13 @@ export function DeliveryPanel({
                     </div>
                   </div>
                 </td>
-                <td className="py-2 pr-3 text-xs text-text-tertiary tabular-nums">
+                <td className="py-2 pr-3 text-xs text-text-secondary tabular-nums">
                   {file.fileSize != null && file.fileSize > 0 ? formatFileSize(file.fileSize) : '—'}
                 </td>
-                <td className="py-2 pr-3 text-xs text-text-tertiary">
+                <td className="py-2 pr-3 text-xs text-text-secondary">
                   {getFileExt(file.name)}
                 </td>
-                <td className="py-2 pr-3 text-xs text-text-tertiary">
+                <td className="py-2 pr-3 text-xs text-text-secondary">
                   {file.createdAt ? new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
                 </td>
                 <td className="py-2 text-right">
@@ -630,14 +630,14 @@ export function DeliveryPanel({
                     <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">
                       {p.name}
                     </p>
-                    <p className="mt-0.5 text-xs text-text-tertiary">{p.desc}</p>
+                    <p className="mt-0.5 text-xs text-text-secondary">{p.desc}</p>
                   </div>
                 </Link>
               ))}
             </div>
             <button
               onClick={() => setShowConnectModal(false)}
-              className="mt-4 w-full text-center text-sm text-text-tertiary hover:text-text-primary transition-colors"
+              className="mt-4 w-full text-center text-sm text-text-secondary hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
@@ -673,7 +673,7 @@ export function DeliveryPanel({
             </div>
             <button
               onClick={() => setShowProviderPicker(false)}
-              className="mt-3 w-full rounded-md px-4 py-2 text-sm font-medium text-text-tertiary hover:text-text-primary transition-colors"
+              className="mt-3 w-full rounded-md px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
@@ -705,7 +705,7 @@ export function DeliveryPanel({
                       <p className="text-sm font-medium text-text-primary">
                         Set up delivery
                       </p>
-                      <p className="mt-0.5 text-xs text-text-tertiary">
+                      <p className="mt-0.5 text-xs text-text-secondary">
                         Create a new {connectedProviders[0] === 'google_drive' ? 'folder' : 'project'} for this episode, or link one you already have.
                       </p>
                     </div>
@@ -850,16 +850,16 @@ export function DeliveryPanel({
           {/* Empty state — project linked and provider connected */}
           {isLive && !projectMissing && !filesLoading && files.length === 0 && !filesError && (
             <div className="py-12 text-center">
-              <p className="text-sm text-text-tertiary">No files yet.</p>
-              <p className="mt-1 text-xs text-text-tertiary">Drag files anywhere on this page to upload, or click Upload above.</p>
+              <p className="text-sm text-text-primary">No files yet.</p>
+              <p className="mt-1 text-xs text-text-secondary">Drag files anywhere on this page to upload, or click Upload above.</p>
             </div>
           )}
 
           {/* Project linked but provider disconnected */}
           {hasProject && !providerConnected && (
             <div className="py-12 text-center">
-              <p className="text-sm text-text-tertiary">This episode has a {providerDisplayName} project linked, but {providerDisplayName} is disconnected.</p>
-              <p className="mt-1 text-xs text-text-tertiary">Reconnect in Settings to view files and upload.</p>
+              <p className="text-sm text-text-primary">This episode has a {providerDisplayName} project linked, but {providerDisplayName} is disconnected.</p>
+              <p className="mt-1 text-xs text-text-secondary">Reconnect in Settings to view files and upload.</p>
             </div>
           )}
 
@@ -896,7 +896,7 @@ export function DeliveryPanel({
                         <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">
                           {p.name}
                         </p>
-                        <p className="mt-0.5 text-xs text-text-tertiary">{p.desc}</p>
+                        <p className="mt-0.5 text-xs text-text-secondary">{p.desc}</p>
                       </div>
                     </Link>
                   ))}
@@ -904,7 +904,7 @@ export function DeliveryPanel({
                 {!showManualForm && (
                   <button
                     onClick={() => setShowManualForm(true)}
-                    className="mt-4 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                    className="mt-4 text-xs text-text-secondary hover:text-text-primary transition-colors"
                   >
                     or add deliverables manually
                   </button>
@@ -920,19 +920,19 @@ export function DeliveryPanel({
           <div className="space-y-3">
             {episode.stage && (
               <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Stage</h4>
+                <h4 className="text-xs font-medium text-text-secondary">Stage</h4>
                 <p className="mt-0.5 text-sm text-text-primary">{episode.stage.name}</p>
               </div>
             )}
             {episode.scheduled_publish_date && (
               <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Publish Date</h4>
+                <h4 className="text-xs font-medium text-text-secondary">Publish Date</h4>
                 <p className="mt-0.5 text-sm text-text-primary">{episode.scheduled_publish_date}</p>
               </div>
             )}
             {episode.published_at && (
               <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Published</h4>
+                <h4 className="text-xs font-medium text-text-secondary">Published</h4>
                 <p className="mt-0.5 text-sm text-text-primary">
                   {new Date(episode.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
@@ -940,13 +940,13 @@ export function DeliveryPanel({
             )}
             {episode.description && (
               <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Description</h4>
+                <h4 className="text-xs font-medium text-text-secondary">Description</h4>
                 <p className="mt-1 text-xs text-text-secondary leading-relaxed whitespace-pre-wrap line-clamp-4">{episode.description}</p>
               </div>
             )}
             {episode.notes && (
               <div>
-                <h4 className="text-xs font-medium text-text-tertiary">Notes</h4>
+                <h4 className="text-xs font-medium text-text-secondary">Notes</h4>
                 <p className="mt-1 text-xs text-text-secondary leading-relaxed whitespace-pre-wrap line-clamp-4">{episode.notes}</p>
               </div>
             )}
@@ -967,11 +967,11 @@ export function DeliveryPanel({
                 <div className="border-t border-border-subtle" />
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-medium text-text-tertiary">
+                    <h4 className="text-xs font-medium text-text-secondary">
                       {manualDeliverables.length > 0 ? `Deliverables (${manualDeliverables.length})` : 'Deliverables'}
                     </h4>
                     {!showManualForm && (
-                      <button onClick={() => setShowManualForm(true)} className="text-xs text-text-tertiary hover:text-text-primary transition-colors">
+                      <button onClick={() => setShowManualForm(true)} className="text-xs text-text-secondary hover:text-text-primary transition-colors">
                         + Add
                       </button>
                     )}
@@ -1019,7 +1019,7 @@ export function DeliveryPanel({
                         >
                           {manualLoading ? '...' : 'Submit'}
                         </button>
-                        <button type="button" onClick={resetManualForm} className="text-xs text-text-tertiary hover:text-text-secondary transition-colors">
+                        <button type="button" onClick={resetManualForm} className="text-xs text-text-secondary hover:text-text-primary transition-colors">
                           Cancel
                         </button>
                       </div>
@@ -1029,7 +1029,7 @@ export function DeliveryPanel({
                   <DeliverableList deliverables={manualDeliverables} />
 
                   {manualDeliverables.length === 0 && !showManualForm && (
-                    <p className="text-xs text-text-tertiary">No manual deliverables.</p>
+                    <p className="text-xs text-text-secondary">No manual deliverables.</p>
                   )}
                 </div>
               </>
@@ -1037,8 +1037,8 @@ export function DeliveryPanel({
               <>
                 <div className="border-t border-border-subtle" />
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-text-tertiary">{totalLinked} deliverable{totalLinked !== 1 ? 's' : ''} linked above</p>
-                  <button onClick={() => setShowManualForm(true)} className="text-xs text-text-tertiary hover:text-text-primary transition-colors">
+                  <p className="text-xs text-text-secondary">{totalLinked} deliverable{totalLinked !== 1 ? 's' : ''} linked above</p>
+                  <button onClick={() => setShowManualForm(true)} className="text-xs text-text-secondary hover:text-text-primary transition-colors">
                     + Add
                   </button>
                 </div>
