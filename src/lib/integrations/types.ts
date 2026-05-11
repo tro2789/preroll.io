@@ -103,4 +103,6 @@ export interface IntegrationProviderClient {
   }>
 
   listFolderContents?(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult>
+
+  deleteFile?(accessToken: string, accountId: string, fileId: string): Promise<void>
 }

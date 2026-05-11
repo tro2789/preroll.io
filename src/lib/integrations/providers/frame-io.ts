@@ -283,6 +283,10 @@ class FrameIoClient implements IntegrationProviderClient {
     }
   }
 
+  async deleteFile(accessToken: string, _accountId: string, fileId: string): Promise<void> {
+    await frameioFetch(`/assets/${fileId}`, accessToken, { method: 'DELETE' })
+  }
+
   async listFolderContents(accessToken: string, accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
     let url = `/accounts/${accountId}/folders/${folderId}/children?page_size=50&include=media_links.thumbnail`
     if (cursor) url += `&after=${cursor}`

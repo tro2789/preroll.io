@@ -257,6 +257,10 @@ class GoogleDriveClient implements IntegrationProviderClient {
     }
   }
 
+  async deleteFile(accessToken: string, _accountId: string, fileId: string): Promise<void> {
+    await driveJson(`/files/${fileId}`, accessToken, { method: 'DELETE' })
+  }
+
   async listFolderContents(accessToken: string, _accountId: string, folderId: string, cursor?: string): Promise<BrowseResult> {
     const folderMeta = await driveJson(`/files/${folderId}?fields=trashed`, accessToken)
     if (folderMeta.trashed) {

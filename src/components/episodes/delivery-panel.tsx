@@ -105,6 +105,8 @@ export function DeliveryPanel({
   const [linkProvider, setLinkProvider] = useState<IntegrationProvider | null>(null)
   const [linking, setLinking] = useState(false)
   const [pickerIntent, setPickerIntent] = useState<'create' | 'link'>('create')
+  const [deleting, setDeleting] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<BrowseItem | null>(null)
 
   const providerDisplayNames: Record<string, string> = {
     frame_io: 'Frame.io',
@@ -330,6 +332,25 @@ export function DeliveryPanel({
     }
   }
 
+  async function handleDeleteFile(file: BrowseItem) {
+    setDeleting(file.id)
+    try {
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files/${file.id}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok && res.status !== 204) {
+        const json = await res.json().catch(() => ({ error: 'Failed to delete' }))
+        throw new Error(json.error || 'Failed to delete file')
+      }
+      setFiles(prev => prev.filter(f => f.id !== file.id))
+      setConfirmDelete(null)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to delete file')
+    } finally {
+      setDeleting(null)
+    }
+  }
+
   function resetManualForm() {
     setManualTitle('')
     setManualType('rough_cut')
@@ -522,16 +543,27 @@ export function DeliveryPanel({
           )}
         </a>
         <div className="p-2.5 space-y-2">
-          <div>
-            <p className="text-sm font-medium text-text-primary truncate" title={file.name}>{file.name}</p>
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
-              {file.fileSize != null && file.fileSize > 0 && <span>{formatFileSize(file.fileSize)}</span>}
-              <span>&middot; {getFileExt(file.name)}</span>
-              {file.createdAt && (
-                <span>&middot; {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-              )}
-              {linked && <span className="text-text-secondary">&middot; {TYPE_LABELS[linked.type] || linked.type}</span>}
+          <div className="flex items-start justify-between gap-1">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-text-primary truncate" title={file.name}>{file.name}</p>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-text-secondary">
+                {file.fileSize != null && file.fileSize > 0 && <span>{formatFileSize(file.fileSize)}</span>}
+                <span>&middot; {getFileExt(file.name)}</span>
+                {file.createdAt && (
+                  <span>&middot; {new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                )}
+                {linked && <span className="text-text-secondary">&middot; {TYPE_LABELS[linked.type] || linked.type}</span>}
+              </div>
             </div>
+            <button
+              onClick={(e) => { e.preventDefault(); setConfirmDelete(file) }}
+              className="shrink-0 rounded p-1 text-text-tertiary hover:text-red-400 hover:bg-red-400/10 transition-colors"
+              title="Delete file"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
           {!linked && (
             <div className="flex items-center gap-1.5">
@@ -679,28 +711,39 @@ export function DeliveryPanel({
                   {file.createdAt ? new Date(file.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
                 </td>
                 <td className="py-2 text-right">
-                  {linked && style ? (
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>{style.label}</span>
-                  ) : (
-                    <div className="flex items-center justify-end gap-1.5">
-                      <select
-                        value={selectedTypes[file.id] || 'rough_cut'}
-                        onChange={(e) => setSelectedTypes((prev) => ({ ...prev, [file.id]: e.target.value }))}
-                        className="rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
-                      >
-                        {DELIVERABLE_TYPES.map((t) => (
-                          <option key={t.value} value={t.value}>{t.label}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => handleSubmitForReview(file)}
-                        disabled={submitting === file.id}
-                        className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 whitespace-nowrap"
-                      >
-                        {submitting === file.id ? '...' : 'Share'}
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-end gap-1.5">
+                    {linked && style ? (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${style.bg} ${style.text}`}>{style.label}</span>
+                    ) : (
+                      <>
+                        <select
+                          value={selectedTypes[file.id] || 'rough_cut'}
+                          onChange={(e) => setSelectedTypes((prev) => ({ ...prev, [file.id]: e.target.value }))}
+                          className="rounded border border-border-default bg-surface-input px-1.5 py-1 text-xs text-text-primary focus:border-accent focus:outline-none"
+                        >
+                          {DELIVERABLE_TYPES.map((t) => (
+                            <option key={t.value} value={t.value}>{t.label}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => handleSubmitForReview(file)}
+                          disabled={submitting === file.id}
+                          className="rounded bg-accent px-2 py-1 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 whitespace-nowrap"
+                        >
+                          {submitting === file.id ? '...' : 'Share'}
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => setConfirmDelete(file)}
+                      className="rounded p-1 text-text-tertiary opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                      title="Delete file"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             )
@@ -1194,6 +1237,33 @@ export function DeliveryPanel({
           unstacking={unstacking}
           onClose={() => { setVersionHistoryFileId(null); setVersionHistoryFetchUrl(null) }}
         />
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) setConfirmDelete(null) }}>
+          <div className="w-full max-w-sm rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-text-primary">Delete file</h3>
+            <p className="mt-2 text-sm text-text-secondary">
+              This will permanently delete <span className="font-medium text-text-primary">{confirmDelete.name}</span> from {integration?.displayName || 'the provider'}. This cannot be undone.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                disabled={deleting !== null}
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeleteFile(confirmDelete)}
+                disabled={deleting !== null}
+                className="rounded-md bg-red-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )
