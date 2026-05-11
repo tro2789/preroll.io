@@ -84,7 +84,7 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
         )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-text-primary truncate">{activeOrg.name}</p>
-          <p className="text-xs text-text-tertiary">
+          <p className="text-xs text-text-secondary">
             {PLAN_LABELS[activeOrg.planId] || activeOrg.planId} &middot; {activeOrg.role}
           </p>
         </div>
@@ -109,7 +109,7 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-text-primary truncate">{org.name}</p>
-                <p className="text-xs text-text-tertiary">
+                <p className="text-xs text-text-secondary">
                   {PLAN_LABELS[org.planId] || org.planId} &middot; {org.role}
                 </p>
               </div>
@@ -174,14 +174,14 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: Sideb
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
                       ? 'bg-accent-muted text-accent-hover'
-                      : 'text-text-tertiary hover:text-text-primary hover:bg-surface-raised'
+                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
                   }`}
                 >
                   <item.icon
                     className={`mr-3 h-5 w-5 flex-shrink-0 ${
                       isActive
                         ? 'text-accent'
-                        : 'text-text-tertiary group-hover:text-text-secondary'
+                        : 'text-text-secondary group-hover:text-text-primary'
                     }`}
                   />
                   {item.label}
@@ -198,15 +198,15 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: Sideb
                 {userDisplayName || userEmail}
               </p>
               {userDisplayName && (
-                <p className="text-xs text-text-tertiary truncate">{userEmail}</p>
+                <p className="text-xs text-text-secondary truncate">{userEmail}</p>
               )}
             </div>
             <form action="/auth/signout" method="POST">
               <button
                 type="submit"
-                className="w-full flex items-center px-3 py-2 text-sm font-medium text-text-tertiary hover:text-text-primary hover:bg-surface-raised rounded-md transition-colors"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-raised rounded-md transition-colors"
               >
-                <SignOutIcon className="mr-3 h-5 w-5 flex-shrink-0 text-text-tertiary" />
+                <SignOutIcon className="mr-3 h-5 w-5 flex-shrink-0 text-text-secondary" />
                 Sign out
               </button>
             </form>
@@ -272,7 +272,7 @@ function MobileBottomNav({ navItems, pathname }: { navItems: NavItem[]; pathname
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
               className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] px-2 text-[0.625rem] transition-colors ${
-                isActive ? 'text-accent-hover' : 'text-text-tertiary'
+                isActive ? 'text-accent-hover' : 'text-text-secondary'
               }`}
             >
               <item.icon className="h-5 w-5 mb-1" />
@@ -284,7 +284,7 @@ function MobileBottomNav({ navItems, pathname }: { navItems: NavItem[]; pathname
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] px-2 text-[0.625rem] transition-colors ${
-              menuOpen || menuItemActive ? 'text-accent-hover' : 'text-text-tertiary'
+              menuOpen || menuItemActive ? 'text-accent-hover' : 'text-text-secondary'
             }`}
           >
             <MenuIcon className="h-5 w-5 mb-1" />
