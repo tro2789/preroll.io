@@ -27,9 +27,9 @@ interface ReviewQueueProps {
 export function ReviewQueue({ deliverables, allowDownload }: ReviewQueueProps) {
   if (deliverables.length === 0) {
     return (
-      <div className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-6 text-center">
+      <div className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-10 text-center">
         <p className="text-sm font-medium text-text-primary">You're all caught up</p>
-        <p className="text-xs text-text-tertiary mt-1">Deliverables needing your review will appear here.</p>
+        <p className="text-sm text-text-secondary mt-1">Deliverables needing your review will appear here.</p>
       </div>
     )
   }

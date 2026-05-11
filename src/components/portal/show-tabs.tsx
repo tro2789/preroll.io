@@ -98,12 +98,12 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
 
   return (
     <div>
-      <div className="flex items-center gap-1 border-b border-border-subtle mb-4 overflow-x-auto">
+      <div className="flex items-center gap-1 border-b border-border-subtle mb-5 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActive(tab.id)}
-            className={`relative shrink-0 px-3 py-2 text-sm font-medium transition-colors ${
+            className={`relative shrink-0 px-3 py-2.5 text-sm font-medium transition-colors ${
               active === tab.id
                 ? 'text-text-primary'
                 : 'text-text-secondary hover:text-text-primary'
@@ -111,7 +111,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
           >
             {tab.label}
             {tab.count != null && (
-              <span className={`ml-1.5 text-xs ${active === tab.id ? 'text-accent' : 'text-text-tertiary'}`}>
+              <span className={`ml-1.5 ${active === tab.id ? 'text-text-secondary' : 'text-text-tertiary'}`}>
                 {tab.count}
               </span>
             )}
@@ -129,37 +129,39 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
       {active === 'episodes' && (
         <div>
           {episodes.length === 0 ? (
-            <p className="text-sm text-text-secondary py-8 text-center">No episodes yet.</p>
+            <div className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-10 text-center">
+              <p className="text-sm text-text-secondary">No episodes yet.</p>
+            </div>
           ) : (
             <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(activeStages.length, 4)}, minmax(0, 1fr))` }}>
               {activeStages.map((stage) => {
                 const stageEps = episodesByStage.get(stage.id) || []
                 return (
                   <div key={stage.id} className="min-w-0">
-                    <div className="flex items-center gap-2 mb-2 px-1">
-                      <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{stage.name}</h3>
-                      <span className="text-xs text-text-tertiary">{stageEps.length}</span>
+                    <div className="flex items-center justify-between mb-2.5 px-1">
+                      <h3 className="text-sm font-semibold text-text-primary">{stage.name}</h3>
+                      <span className="text-sm text-text-secondary">{stageEps.length}</span>
                     </div>
                     <div className="space-y-2">
                       {stageEps.map((ep) => (
                           <Link
                             key={ep.id}
                             href={`/portal/shows/${showId}/episodes/${ep.id}`}
-                            className="block rounded-lg border border-border-subtle bg-surface-raised p-3 hover:border-border-default transition-colors group"
+                            className="block rounded-lg border border-border-subtle bg-surface-raised p-3 hover:border-border-default transition-colors"
                           >
                             <p className="text-sm font-medium text-text-primary leading-snug line-clamp-1">
                               {ep.title}
                             </p>
-                            <div className="mt-1.5 flex items-center gap-2 text-xs text-text-secondary">
+                            <div className="mt-1 flex items-center gap-2 text-sm text-text-secondary">
                               {ep.episode_number != null && (
-                                <span className="font-mono">EP {String(ep.episode_number).padStart(2, '0')}</span>
+                                <span className="font-mono">#{ep.episode_number}</span>
                               )}
                               {ep.scheduled_publish_date && (
                                 <span>{new Date(ep.scheduled_publish_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                               )}
                             </div>
                             {ep.pendingCount > 0 && (
-                              <span className="mt-1.5 inline-block text-xs font-medium text-accent">
+                              <span className="mt-1.5 inline-block text-sm font-medium text-accent">
                                 {ep.pendingCount} to review
                               </span>
                             )}
@@ -177,21 +179,21 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
       {active === 'assets' && (
         <div>
           {assets.length === 0 ? (
-            <div className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-6 text-center">
+            <div className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-10 text-center">
               <p className="text-sm text-text-secondary">No brand assets yet.</p>
             </div>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2">
               {assets.map((asset) => (
-                <div key={asset.id} className="rounded-lg bg-surface-raised border border-border-subtle p-3 flex items-center gap-3">
-                  <div className="shrink-0 w-8 h-8 rounded bg-surface-overlay flex items-center justify-center">
+                <div key={asset.id} className="rounded-lg bg-surface-raised border border-border-subtle p-3.5 flex items-center gap-3">
+                  <div className="shrink-0 w-9 h-9 rounded bg-surface-overlay flex items-center justify-center">
                     <span className="text-xs font-semibold text-text-secondary uppercase">
                       {asset.mimeType?.split('/')[1]?.slice(0, 3) || '?'}
                     </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-text-primary truncate">{asset.name}</p>
-                    <p className="text-xs text-text-secondary">{assetTypeLabels[asset.assetType] || asset.assetType}</p>
+                    <p className="text-sm text-text-secondary">{assetTypeLabels[asset.assetType] || asset.assetType}</p>
                   </div>
                 </div>
               ))}
