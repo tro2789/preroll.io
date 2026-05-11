@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
-import { EpisodeDetailTabs } from './episode-detail-tabs'
+import { EpisodeDetailContent } from './episode-detail-content'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -190,9 +190,9 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mt-6">
-        <EpisodeDetailTabs
+      {/* Content */}
+      <div className="mt-8">
+        <EpisodeDetailContent
           episodeId={episodeId}
           showId={showId}
           integration={integration}
