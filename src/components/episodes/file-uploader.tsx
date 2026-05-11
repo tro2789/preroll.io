@@ -241,23 +241,31 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
   useEffect(() => {
     if (!listenForDrags) return
 
+    function isExternalFileDrag(e: DragEvent): boolean {
+      return e.dataTransfer?.types?.includes('Files') ?? false
+    }
+
     function handleDragEnter(e: DragEvent) {
+      if (!isExternalFileDrag(e)) return
       e.preventDefault()
       dragCountRef.current++
       if (dragCountRef.current === 1) setIsDragging(true)
     }
 
     function handleDragLeave(e: DragEvent) {
+      if (!isExternalFileDrag(e)) return
       e.preventDefault()
       dragCountRef.current--
       if (dragCountRef.current === 0) setIsDragging(false)
     }
 
     function handleDragOver(e: DragEvent) {
+      if (!isExternalFileDrag(e)) return
       e.preventDefault()
     }
 
     function handleDrop(e: DragEvent) {
+      if (!isExternalFileDrag(e)) return
       e.preventDefault()
       dragCountRef.current = 0
       setIsDragging(false)
