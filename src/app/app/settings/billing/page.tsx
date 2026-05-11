@@ -156,7 +156,7 @@ export default function BillingPage() {
   }
 
   if (loading) {
-    return <div className="text-sm text-text-tertiary">Loading billing...</div>
+    return <div className="text-sm text-text-secondary">Loading billing...</div>
   }
 
   const currentPlan = billing?.plan_id || 'free'
@@ -189,7 +189,7 @@ export default function BillingPage() {
               Every feature in preroll.io is unlocked right now — multi-user access, white-label portal, reporting, and more.
               You have <span className="font-semibold text-accent">{trial.days_left} {trial.days_left === 1 ? 'day' : 'days'}</span> left to explore.
             </p>
-            <p className="mt-3 text-xs text-text-tertiary">
+            <p className="mt-3 text-xs text-text-secondary">
               Pick a plan below to keep everything when your trial ends.
             </p>
           </div>
@@ -262,7 +262,7 @@ export default function BillingPage() {
                     )}
                   </div>
                   {isPaid && (
-                    <p className="mt-0.5 text-sm text-text-tertiary">
+                    <p className="mt-0.5 text-sm text-text-secondary">
                       {cardVariant === 'success'
                         ? "Your subscription is active — you're all set."
                         : PLAN_PRICE[currentPlan] && (
@@ -276,7 +276,7 @@ export default function BillingPage() {
                     </p>
                   )}
                   {!isPaid && (
-                    <p className="mt-0.5 text-sm text-text-tertiary">
+                    <p className="mt-0.5 text-sm text-text-secondary">
                       1 client, 1 show — upgrade below to unlock more.
                     </p>
                   )}
@@ -293,7 +293,7 @@ export default function BillingPage() {
             </div>
             {isPaid && PLAN_FEATURES[currentPlan] && (
               <div className="mt-5 border-t border-border-default/50 pt-5">
-                <p className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">What&apos;s included</p>
+                <p className="text-xs font-medium uppercase tracking-wider text-text-secondary mb-3">What&apos;s included</p>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {PLAN_FEATURES[currentPlan].map((f) => (
                     <div key={f} className="flex items-center gap-2 text-sm text-text-secondary">
@@ -324,20 +324,20 @@ export default function BillingPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-text-primary">Registered</p>
-                    <p className="text-xs text-text-tertiary">All features unlocked</p>
+                    <p className="text-xs text-text-secondary">All features unlocked</p>
                   </div>
                 </div>
                 <div className="mt-5 space-y-3">
                   <div>
-                    <p className="text-xs font-medium text-text-tertiary">Email</p>
+                    <p className="text-xs font-medium text-text-secondary">Email</p>
                     <p className="text-sm text-text-secondary">{licenseStatus.info.email}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-text-tertiary">Organization</p>
+                    <p className="text-xs font-medium text-text-secondary">Organization</p>
                     <p className="text-sm text-text-secondary">{licenseStatus.info.orgName}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-text-tertiary">Registered</p>
+                    <p className="text-xs font-medium text-text-secondary">Registered</p>
                     <p className="text-sm text-text-secondary">
                       {new Date(licenseStatus.info.issuedAt).toLocaleDateString()}
                     </p>
@@ -345,9 +345,9 @@ export default function BillingPage() {
                 </div>
                 {licenseKey && (
                   <div className="mt-5 rounded-lg border border-border-default bg-surface-overlay p-3">
-                    <p className="text-xs font-medium text-text-tertiary">License Key</p>
+                    <p className="text-xs font-medium text-text-secondary">License Key</p>
                     <p className="mt-1 break-all font-mono text-xs text-text-secondary">{licenseKey}</p>
-                    <p className="mt-2 text-xs text-text-tertiary">
+                    <p className="mt-2 text-xs text-text-secondary">
                       Save this key. You can set it as <code className="text-text-secondary">PREROLL_LICENSE_KEY</code> in your environment for validation at startup.
                     </p>
                   </div>
@@ -360,7 +360,7 @@ export default function BillingPage() {
                 </p>
                 <form onSubmit={handleLicenseRegister} className="mt-5 space-y-4">
                   <div>
-                    <label htmlFor="license-email" className="block text-xs font-medium text-text-tertiary">
+                    <label htmlFor="license-email" className="block text-xs font-medium text-text-secondary">
                       Email
                     </label>
                     <input
@@ -374,7 +374,7 @@ export default function BillingPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="license-org" className="block text-xs font-medium text-text-tertiary">
+                    <label htmlFor="license-org" className="block text-xs font-medium text-text-secondary">
                       Organization Name
                     </label>
                     <input
@@ -409,7 +409,7 @@ export default function BillingPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-text-primary">Upgrade</h2>
             <div className="flex items-center gap-3">
-              <span className={`text-sm ${!annual ? 'text-text-primary font-medium' : 'text-text-tertiary'}`}>
+              <span className={`text-sm ${!annual ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
                 Monthly
               </span>
               <button
@@ -421,7 +421,7 @@ export default function BillingPage() {
               >
                 <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${annual ? 'translate-x-6' : 'translate-x-1'}`} />
               </button>
-              <span className={`text-sm ${annual ? 'text-text-primary font-medium' : 'text-text-tertiary'}`}>
+              <span className={`text-sm ${annual ? 'text-text-primary font-medium' : 'text-text-secondary'}`}>
                 Annual
               </span>
               <span className={`rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success transition-opacity ${annual ? 'opacity-100' : 'opacity-0'}`}>
@@ -451,7 +451,7 @@ export default function BillingPage() {
                     <span className="text-3xl font-bold text-text-primary">
                       ${price}
                     </span>
-                    <span className="text-sm text-text-tertiary">{period}</span>
+                    <span className="text-sm text-text-secondary">{period}</span>
                   </div>
                   <ul className="mt-5 space-y-2.5 flex-1">
                     {tier.features.map((f) => (

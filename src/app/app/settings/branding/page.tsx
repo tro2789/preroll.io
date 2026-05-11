@@ -100,7 +100,7 @@ export default function BrandingPage() {
   }
 
   if (loading) {
-    return <div className="text-sm text-text-tertiary">Loading branding...</div>
+    return <div className="text-sm text-text-secondary">Loading branding...</div>
   }
 
   if (!entitled) {
@@ -144,7 +144,7 @@ export default function BrandingPage() {
           <label htmlFor="display-name" className="block text-sm font-medium text-text-primary">
             Display Name
           </label>
-          <p className="mt-1 text-xs text-text-tertiary">
+          <p className="mt-1 text-xs text-text-secondary">
             Replaces &quot;preroll.io&quot; in the portal header.
           </p>
           <input
@@ -161,7 +161,7 @@ export default function BrandingPage() {
           <label className="block text-sm font-medium text-text-primary">
             Portal Logo
           </label>
-          <p className="mt-1 text-xs text-text-tertiary">
+          <p className="mt-1 text-xs text-text-secondary">
             Displayed at 24px height in the portal header. Uses your workspace logo by default.
           </p>
           <div className="mt-3 flex items-center gap-4">
@@ -175,7 +175,7 @@ export default function BrandingPage() {
               </div>
             ) : (
               <div className="flex items-center gap-2 rounded-lg border border-border-subtle border-dashed bg-surface-base px-4 py-3">
-                <span className="text-xs text-text-tertiary">No logo set</span>
+                <span className="text-xs text-text-secondary">No logo set</span>
               </div>
             )}
             <div>
@@ -202,7 +202,7 @@ export default function BrandingPage() {
           <label htmlFor="accent-color" className="block text-sm font-medium text-text-primary">
             Accent Color
           </label>
-          <p className="mt-1 text-xs text-text-tertiary">
+          <p className="mt-1 text-xs text-text-secondary">
             Primary brand color used for links, buttons, and highlights in the portal.
           </p>
           <div className="mt-2 flex items-center gap-3">
@@ -250,9 +250,9 @@ export default function BrandingPage() {
               <span className="text-border-default">/</span>
               <span className="text-sm text-text-secondary">Client Name</span>
             </div>
-            <span className="text-xs text-text-tertiary">client@example.com</span>
+            <span className="text-xs text-text-secondary">client@example.com</span>
           </div>
-          <div className="px-4 py-6 text-xs text-text-tertiary text-center">
+          <div className="px-4 py-6 text-xs text-text-secondary text-center">
             Portal content area
           </div>
         </div>

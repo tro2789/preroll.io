@@ -131,7 +131,7 @@ export default function AccountPage() {
   }
 
   if (loading) {
-    return <div className="text-sm text-text-tertiary">Loading account settings...</div>
+    return <div className="text-sm text-text-secondary">Loading account settings...</div>
   }
 
   return (
@@ -150,7 +150,7 @@ export default function AccountPage() {
             <div>
               <label
                 htmlFor="display_name"
-                className="text-xs font-medium uppercase tracking-wider text-text-tertiary"
+                className="text-xs font-medium uppercase tracking-wider text-text-secondary"
               >
                 Display Name
               </label>
@@ -166,11 +166,11 @@ export default function AccountPage() {
             </div>
 
             <div>
-              <label className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+              <label className="text-xs font-medium uppercase tracking-wider text-text-secondary">
                 Email
               </label>
               <p className="mt-2 text-sm text-text-secondary">{profile.email}</p>
-              <p className="mt-1 text-xs text-text-tertiary">
+              <p className="mt-1 text-xs text-text-secondary">
                 Email is managed through your authentication provider.
               </p>
             </div>
@@ -216,7 +216,7 @@ export default function AccountPage() {
             <div>
               <label
                 htmlFor="workspace_name"
-                className="text-xs font-medium uppercase tracking-wider text-text-tertiary"
+                className="text-xs font-medium uppercase tracking-wider text-text-secondary"
               >
                 Workspace Name
               </label>
@@ -256,11 +256,11 @@ export default function AccountPage() {
           <div className="border-t border-border-default" />
 
           <section>
-            <h3 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">Client Portal</h3>
+            <h3 className="text-xs font-medium uppercase tracking-wider text-text-secondary">Client Portal</h3>
             <div className="mt-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-text-primary">Allow clients to download deliverables</p>
-                <p className="mt-0.5 text-xs text-text-tertiary">When enabled, clients can download files from deliverable cards in their portal.</p>
+                <p className="mt-0.5 text-xs text-text-secondary">When enabled, clients can download files from deliverable cards in their portal.</p>
               </div>
               <button
                 type="button"
