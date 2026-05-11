@@ -80,6 +80,10 @@ export function DeliveryPanel({
   const [sortKey, setSortKey] = useState<'name' | 'size' | 'type' | 'date'>('date')
   const [sortAsc, setSortAsc] = useState(false)
 
+  const [dragSourceId, setDragSourceId] = useState<string | null>(null)
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+  const [versioningFileId, setVersioningFileId] = useState<string | null>(null)
+
   const [showManualForm, setShowManualForm] = useState(false)
   const [manualTitle, setManualTitle] = useState('')
   const [manualType, setManualType] = useState('rough_cut')
@@ -359,13 +363,80 @@ export function DeliveryPanel({
     return null
   }
 
+  function getMimePrefix(mimeType?: string): string {
+    if (!mimeType) return ''
+    return mimeType.split('/')[0]
+  }
+
+  function canStack(source: BrowseItem, target: BrowseItem): boolean {
+    if (source.id === target.id) return false
+    if (!source.mimeType || !target.mimeType) return true
+    return getMimePrefix(source.mimeType) === getMimePrefix(target.mimeType)
+  }
+
+  async function handleVersionDrop(sourceId: string, targetId: string) {
+    const source = files.find((f) => f.id === sourceId)
+    const target = files.find((f) => f.id === targetId)
+    if (!source || !target) return
+
+    setVersioningFileId(sourceId)
+    try {
+      const res = await fetch(`/api/v1/episodes/${episodeId}/delivery/files/version`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          source_external_id: sourceId,
+          target_external_id: targetId,
+          source_name: source.name,
+          target_name: target.name,
+          source_mime_type: source.mimeType,
+          target_mime_type: target.mimeType,
+          source_view_url: source.viewUrl,
+          target_view_url: target.viewUrl,
+        }),
+      })
+      if (res.ok) {
+        fetchFiles()
+      }
+    } catch { /* ignore */ }
+    setVersioningFileId(null)
+  }
+
   function renderFileCard(file: BrowseItem) {
     const linked = isFileLinkedAsDeliverable(file)
     const style = linked ? STATUS_STYLES[linked.status] || STATUS_STYLES.pending : null
     const reviewUrl = getReviewUrl(file, linked)
 
+    const isDragOver = dragOverId === file.id && dragSourceId !== file.id
+    const source = dragSourceId ? files.find((f) => f.id === dragSourceId) : null
+    const stackable = isDragOver && source ? canStack(source, file) : false
+
     return (
-      <div key={file.id} className="rounded-lg border border-border-subtle bg-surface-overlay overflow-hidden">
+      <div
+        key={file.id}
+        draggable
+        onDragStart={(e) => { e.dataTransfer.setData('text/plain', file.id); setDragSourceId(file.id) }}
+        onDragEnd={() => { setDragSourceId(null); setDragOverId(null) }}
+        onDragOver={(e) => { e.preventDefault(); setDragOverId(file.id) }}
+        onDragLeave={() => setDragOverId(null)}
+        onDrop={(e) => {
+          e.preventDefault()
+          setDragOverId(null)
+          const srcId = e.dataTransfer.getData('text/plain')
+          if (srcId && srcId !== file.id) handleVersionDrop(srcId, file.id)
+        }}
+        className={`rounded-lg border bg-surface-overlay overflow-hidden transition-all ${
+          isDragOver && stackable ? 'border-accent ring-2 ring-accent/30' :
+          isDragOver && !stackable ? 'border-red-400 ring-2 ring-red-400/30' :
+          dragSourceId === file.id ? 'opacity-50 border-border-subtle' :
+          'border-border-subtle'
+        }`}
+      >
+        {isDragOver && stackable && (
+          <div className="bg-accent/10 px-2 py-1 text-center text-xs font-medium text-accent">
+            Drop to create version stack
+          </div>
+        )}
         <a href={reviewUrl || file.viewUrl || '#'} target={reviewUrl ? undefined : '_blank'} rel={reviewUrl ? undefined : 'noopener noreferrer'} className="block relative aspect-video overflow-hidden">
           {file.thumbnailUrl ? (
             <img src={file.thumbnailUrl} alt="" className="h-full w-full object-cover" />
@@ -494,8 +565,30 @@ export function DeliveryPanel({
             const linked = isFileLinkedAsDeliverable(file)
             const style = linked ? STATUS_STYLES[linked.status] || STATUS_STYLES.pending : null
 
+            const trDragOver = dragOverId === file.id && dragSourceId !== file.id
+            const trSource = dragSourceId ? files.find((f) => f.id === dragSourceId) : null
+            const trStackable = trDragOver && trSource ? canStack(trSource, file) : false
+
             return (
-              <tr key={file.id} className="group">
+              <tr
+                key={file.id}
+                draggable
+                onDragStart={(e) => { e.dataTransfer.setData('text/plain', file.id); setDragSourceId(file.id) }}
+                onDragEnd={() => { setDragSourceId(null); setDragOverId(null) }}
+                onDragOver={(e) => { e.preventDefault(); setDragOverId(file.id) }}
+                onDragLeave={() => setDragOverId(null)}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  setDragOverId(null)
+                  const srcId = e.dataTransfer.getData('text/plain')
+                  if (srcId && srcId !== file.id) handleVersionDrop(srcId, file.id)
+                }}
+                className={`group ${
+                  trDragOver && trStackable ? 'bg-accent/10 outline outline-2 outline-accent/30' :
+                  trDragOver && !trStackable ? 'bg-red-400/10 outline outline-2 outline-red-400/30' :
+                  dragSourceId === file.id ? 'opacity-50' : ''
+                }`}
+              >
                 <td className="py-2 pr-3">
                   <div className="flex items-center gap-3">
                     <a href={getReviewUrl(file, linked) || file.viewUrl || '#'} target={getReviewUrl(file, linked) ? undefined : '_blank'} rel={getReviewUrl(file, linked) ? undefined : 'noopener noreferrer'} className="shrink-0 block w-14 aspect-video rounded overflow-hidden">
