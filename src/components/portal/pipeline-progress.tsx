@@ -81,7 +81,7 @@ export function PipelineProgress({
             />
 
             <span
-              className={`mt-1.5 text-[11px] leading-tight whitespace-nowrap ${
+              className={`mt-1.5 text-xs leading-tight whitespace-nowrap ${
                 isCurrent
                   ? 'text-text-primary font-medium'
                   : isCompleted

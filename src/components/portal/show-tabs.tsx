@@ -138,7 +138,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
                   <div key={stage.id} className="min-w-0">
                     <div className="flex items-center gap-2 mb-2 px-1">
                       <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-wide">{stage.name}</h3>
-                      <span className="text-[10px] text-text-tertiary">{stageEps.length}</span>
+                      <span className="text-xs text-text-tertiary">{stageEps.length}</span>
                     </div>
                     <div className="space-y-2">
                       {stageEps.map((ep) => (
@@ -150,7 +150,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
                             <p className="text-sm font-medium text-text-primary leading-snug line-clamp-1">
                               {ep.title}
                             </p>
-                            <div className="mt-1.5 flex items-center gap-2 text-[11px] text-text-secondary">
+                            <div className="mt-1.5 flex items-center gap-2 text-xs text-text-secondary">
                               {ep.episode_number != null && (
                                 <span className="font-mono">EP {String(ep.episode_number).padStart(2, '0')}</span>
                               )}
@@ -159,7 +159,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
                               )}
                             </div>
                             {ep.pendingCount > 0 && (
-                              <span className="mt-1.5 inline-block text-[10px] font-medium text-accent">
+                              <span className="mt-1.5 inline-block text-xs font-medium text-accent">
                                 {ep.pendingCount} to review
                               </span>
                             )}
@@ -185,7 +185,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
               {assets.map((asset) => (
                 <div key={asset.id} className="rounded-lg bg-surface-raised border border-border-subtle p-3 flex items-center gap-3">
                   <div className="shrink-0 w-8 h-8 rounded bg-surface-overlay flex items-center justify-center">
-                    <span className="text-[10px] font-semibold text-text-secondary uppercase">
+                    <span className="text-xs font-semibold text-text-secondary uppercase">
                       {asset.mimeType?.split('/')[1]?.slice(0, 3) || '?'}
                     </span>
                   </div>

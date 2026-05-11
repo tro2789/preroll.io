@@ -54,16 +54,16 @@ const CommentItem = memo(function CommentItem({
           {comment.author_name}
         </span>
         {comment.is_external && (
-          <span className="text-[10px] bg-surface-overlay border border-border-subtle rounded px-1 text-text-secondary">
+          <span className="text-xs bg-surface-overlay border border-border-subtle rounded px-1 text-text-secondary">
             Editor
           </span>
         )}
         {hasTc && (
-          <span className="text-[11px] font-mono bg-surface-overlay border border-border-subtle rounded px-1.5 py-0.5 text-accent">
+          <span className="text-xs font-mono bg-surface-overlay border border-border-subtle rounded px-1.5 py-0.5 text-accent">
             {formatTimecode(comment.timestamp_secs!)}
           </span>
         )}
-        <span className="ml-auto text-[10px] text-text-secondary">
+        <span className="ml-auto text-xs text-text-secondary">
           {timeAgo(comment.created_at)}
         </span>
       </div>
@@ -156,7 +156,7 @@ export function CommentsSidebar({
           <div className="space-y-1 py-2">
             {generalComments.length > 0 && (
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-text-secondary px-3 pt-1 pb-1.5">
+                <p className="text-xs uppercase tracking-wider text-text-secondary px-3 pt-1 pb-1.5">
                   General
                 </p>
                 {generalComments.map((c) => (

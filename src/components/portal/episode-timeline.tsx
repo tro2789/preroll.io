@@ -70,7 +70,7 @@ export function EpisodeTimeline({ episodes, stages, showId }: EpisodeTimelinePro
                 </span>
               )}
               {ep.scheduled_publish_date && (
-                <span className="text-[11px] text-text-secondary">
+                <span className="text-xs text-text-secondary">
                   {new Date(ep.scheduled_publish_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                 </span>
               )}

@@ -73,7 +73,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
             {versionCount != null && versionCount > 1 && (
               <span
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowVersionPicker(true) }}
-                className="absolute top-1 right-1 rounded bg-surface-raised/90 px-1 py-0.5 text-[9px] font-medium text-text-secondary backdrop-blur-sm cursor-pointer hover:bg-surface-raised hover:text-text-primary transition-colors"
+                className="absolute top-1 right-1 rounded bg-surface-raised/90 px-1 py-0.5 text-xs font-medium text-text-secondary backdrop-blur-sm cursor-pointer hover:bg-surface-raised hover:text-text-primary transition-colors"
               >
                 v{versionCount}
               </span>
@@ -84,7 +84,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
         <div className="min-w-0 flex-1 flex flex-col justify-between">
           <div>
             {episodeContext && (
-              <p className="text-[11px] text-text-secondary mb-0.5">{episodeContext}</p>
+              <p className="text-xs text-text-secondary mb-0.5">{episodeContext}</p>
             )}
             <h3 className="text-sm font-medium text-text-primary truncate">{deliverable.title}</h3>
             <div className="flex items-center gap-2 mt-0.5">
@@ -132,7 +132,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
 
       {deliverable.producer_notes && (
         <div className="mx-3 mb-3 rounded-md bg-accent/5 border border-accent/15 px-3 py-2">
-          <p className="text-[11px] font-medium text-text-secondary mb-0.5">Producer notes</p>
+          <p className="text-xs font-medium text-text-secondary mb-0.5">Producer notes</p>
           <p className="text-xs text-text-secondary whitespace-pre-wrap">{deliverable.producer_notes}</p>
         </div>
       )}

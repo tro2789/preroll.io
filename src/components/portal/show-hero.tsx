@@ -18,7 +18,7 @@ export function ShowHero({ show }: ShowHeroProps) {
         className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl"
       />
       <div className="min-w-0">
-        <h1 className="text-xl font-bold text-text-primary">{show.name}</h1>
+        <h1 className="text-lg font-bold text-text-primary">{show.name}</h1>
         {show.description && (
           <p className="text-sm text-text-secondary leading-relaxed line-clamp-2 mt-2">
             {show.description}

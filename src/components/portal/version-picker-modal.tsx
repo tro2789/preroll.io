@@ -100,7 +100,7 @@ export function VersionPickerModal({
                         <div className="h-full w-full" style={{ background: getGradient(v.id) }} />
                       )}
                       {v.duration_seconds != null && v.duration_seconds > 0 && (
-                        <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 py-0.5 text-[9px] font-medium text-white tabular-nums">
+                        <span className="absolute bottom-0.5 right-0.5 rounded bg-black/70 px-1 py-0.5 text-xs font-medium text-white tabular-nums">
                           {formatDuration(v.duration_seconds)}
                         </span>
                       )}
@@ -108,7 +108,7 @@ export function VersionPickerModal({
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <span className="rounded bg-surface-overlay px-1.5 py-0.5 text-[10px] font-semibold text-text-primary">
+                        <span className="rounded bg-surface-overlay px-1.5 py-0.5 text-xs font-semibold text-text-primary">
                           v{v.version_number}
                         </span>
                         <p className="truncate text-sm font-medium text-text-primary">{v.name}</p>
@@ -127,21 +127,21 @@ export function VersionPickerModal({
                         </span>
                       </div>
                       {current ? (
-                        <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium text-accent">
+                        <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-accent">
                           <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                           Currently viewing
                         </span>
                       ) : reviewBaseUrl ? (
                         <a
                           href={`${reviewBaseUrl}?version=${v.id}`}
-                          className="mt-1 inline-block text-[10px] font-medium text-text-secondary hover:text-accent transition-colors"
+                          className="mt-1 inline-block text-xs font-medium text-text-secondary hover:text-accent transition-colors"
                         >
                           View this version
                         </a>
                       ) : onVersionClick ? (
                         <button
                           onClick={() => onVersionClick(v)}
-                          className="mt-1 inline-block text-[10px] font-medium text-text-secondary hover:text-accent transition-colors"
+                          className="mt-1 inline-block text-xs font-medium text-text-secondary hover:text-accent transition-colors"
                         >
                           View this version
                         </button>
