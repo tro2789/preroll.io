@@ -1,11 +1,8 @@
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { ShowHero } from '@/components/portal/show-hero'
-import { ReviewQueue } from '@/components/portal/review-queue'
-import { EpisodeTimeline } from '@/components/portal/episode-timeline'
-import { ActivityFeed } from '@/components/portal/activity-feed'
+import { ShowTabs } from '@/components/portal/show-tabs'
 
 export default async function PortalShowPage({
   params,
@@ -112,7 +109,7 @@ export default async function PortalShowPage({
   }))
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       <ShowHero
         show={{
           id: show.id,
@@ -122,41 +119,14 @@ export default async function PortalShowPage({
         }}
       />
 
-      <section>
-        <h2 className="text-sm font-medium text-text-secondary mb-3">
-          Needs Your Review
-          {reviewItems.length > 0 && (
-            <span className="ml-2 text-accent font-medium">({reviewItems.length})</span>
-          )}
-        </h2>
-        <ReviewQueue deliverables={reviewItems} allowDownload={allowDownloads} />
-      </section>
-
-      <section>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-text-secondary">Episodes</h2>
-          <Link
-            href={`/portal/shows/${showId}/assets`}
-            className="text-xs text-accent hover:text-accent-hover transition-colors"
-          >
-            Brand assets
-          </Link>
-        </div>
-        <EpisodeTimeline
-          episodes={episodesWithPending}
-          stages={stages ?? []}
-          showId={showId}
-        />
-      </section>
-
-      {activities && activities.length > 0 && (
-        <section>
-          <h2 className="text-sm font-medium text-text-secondary mb-3">Recent Activity</h2>
-          <div className="rounded-lg bg-surface-raised border border-border-subtle p-4 max-h-72 overflow-y-auto">
-            <ActivityFeed activities={activities} />
-          </div>
-        </section>
-      )}
+      <ShowTabs
+        showId={showId}
+        reviewItems={reviewItems}
+        allowDownload={allowDownloads}
+        episodes={episodesWithPending}
+        stages={stages ?? []}
+        activities={activities ?? []}
+      />
     </div>
   )
 }
