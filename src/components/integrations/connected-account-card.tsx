@@ -48,10 +48,10 @@ export function ConnectedAccountCard({
               Connected
             </span>
           </div>
-          <p className="text-xs text-text-tertiary truncate mt-0.5">
+          <p className="text-xs text-text-secondary truncate mt-0.5">
             {subtitle ? `${subtitle} · ${connectedDate}` : connectedDate}
           </p>
-          {note && <p className="text-xs text-text-tertiary mt-0.5">{note}</p>}
+          {note && <p className="text-xs text-text-secondary mt-0.5">{note}</p>}
         </div>
       </div>
       <div className="shrink-0 ml-4">
@@ -66,7 +66,7 @@ export function ConnectedAccountCard({
             </button>
             <button
               onClick={() => setConfirmOpen(false)}
-              className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+              className="text-xs text-text-secondary hover:text-text-primary transition-colors"
             >
               Cancel
             </button>

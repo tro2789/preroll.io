@@ -44,13 +44,13 @@ export function TranscriptViewer({ segments, fullText, speakerCount, wordCount }
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 text-xs text-text-tertiary">
+        <div className="flex items-center gap-3 text-xs text-text-secondary">
           <span>{wordCount.toLocaleString()} words</span>
           <span>{speakerCount} speaker{speakerCount !== 1 ? 's' : ''}</span>
         </div>
         <button
           onClick={() => navigator.clipboard.writeText(fullText)}
-          className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          className="text-xs text-text-secondary hover:text-text-primary transition-colors"
         >
           Copy full transcript
         </button>
@@ -69,7 +69,7 @@ export function TranscriptViewer({ segments, fullText, speakerCount, wordCount }
       <div className="space-y-1.5 max-h-96 overflow-y-auto">
         {displaySegments.map((segment, i) => (
           <div key={i} className="flex gap-2 text-sm">
-            <span className="shrink-0 w-12 text-xs text-text-tertiary tabular-nums pt-0.5">
+            <span className="shrink-0 w-12 text-xs text-text-secondary tabular-nums pt-0.5">
               {formatTimestamp(segment.start)}
             </span>
             {speakerCount > 1 && (

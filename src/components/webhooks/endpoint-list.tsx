@@ -75,7 +75,7 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-medium uppercase tracking-wider text-text-tertiary">
+        <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
           Webhook Endpoints
         </h2>
         <button
@@ -114,7 +114,7 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
       {endpoints.length === 0 && !showForm ? (
         <div className="mt-4 rounded-lg border border-border-subtle bg-surface-raised p-8 text-center">
           <p className="text-sm text-text-secondary">No webhook endpoints configured.</p>
-          <p className="mt-1 text-xs text-text-tertiary">
+          <p className="mt-1 text-xs text-text-secondary">
             Add an endpoint to receive notifications when episodes or deliverables change.
           </p>
         </div>
@@ -139,22 +139,22 @@ export function WebhookEndpointList({ endpoints }: { endpoints: Endpoint[] }) {
                       <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
                         ep.is_active
                           ? 'bg-success/10 text-success'
-                          : 'bg-surface-overlay text-text-tertiary'
+                          : 'bg-surface-overlay text-text-secondary'
                       }`}>
                         {ep.is_active ? 'Active' : 'Paused'}
                       </span>
                     </div>
                     {ep.description && (
-                      <p className="mt-1 text-xs text-text-tertiary">{ep.description}</p>
+                      <p className="mt-1 text-xs text-text-secondary">{ep.description}</p>
                     )}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {ep.events.length === 0 ? (
-                        <span className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-tertiary">
+                        <span className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-secondary">
                           All events
                         </span>
                       ) : (
                         ep.events.map((evt) => (
-                          <span key={evt} className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-tertiary">
+                          <span key={evt} className="rounded bg-surface-overlay px-2 py-0.5 text-xs text-text-secondary">
                             {evt}
                           </span>
                         ))

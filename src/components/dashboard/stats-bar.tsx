@@ -23,7 +23,7 @@ export function StatsBar({ stats }: { stats: Stats }) {
           <p className={`text-2xl font-bold ${item.accent ? 'text-accent' : 'text-text-primary'}`}>
             {item.value}
           </p>
-          <p className="text-xs text-text-tertiary mt-0.5">{item.label}</p>
+          <p className="text-xs text-text-secondary mt-0.5">{item.label}</p>
         </div>
       ))}
     </div>

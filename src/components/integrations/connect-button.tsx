@@ -37,12 +37,12 @@ export function ConnectButton({ provider, displayName, comingSoon, note, autoCon
         <ProviderLogo provider={provider} className="w-9 h-9" />
         <div className="min-w-0">
           <span className="text-sm font-medium text-text-primary">{displayName}</span>
-          {note && <p className="text-xs text-text-tertiary mt-0.5">{note}</p>}
+          {note && <p className="text-xs text-text-secondary mt-0.5">{note}</p>}
         </div>
       </div>
       <div className="shrink-0 ml-4">
         {comingSoon ? (
-          <span className="text-xs text-text-tertiary">Coming soon</span>
+          <span className="text-xs text-text-secondary">Coming soon</span>
         ) : (
           <button
             onClick={handleConnect}

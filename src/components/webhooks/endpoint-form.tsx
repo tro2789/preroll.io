@@ -138,7 +138,7 @@ export function EndpointForm({ defaultValues, onSubmit, onCancel, submitLabel }:
         <button
           type="button"
           onClick={onCancel}
-          className="text-sm text-text-tertiary hover:text-text-secondary transition-colors"
+          className="text-sm text-text-secondary hover:text-text-primary transition-colors"
         >
           Cancel
         </button>

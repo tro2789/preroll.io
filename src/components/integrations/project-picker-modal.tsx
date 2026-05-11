@@ -141,13 +141,13 @@ export function ProjectPickerModal({ provider, providerDisplayName, open, onClos
 
           {loading && items.length === 0 && (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-text-tertiary">Loading...</p>
+              <p className="text-sm text-text-secondary">Loading...</p>
             </div>
           )}
 
           {!loading && items.length === 0 && !error && (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-text-tertiary">Nothing here.</p>
+              <p className="text-sm text-text-secondary">Nothing here.</p>
             </div>
           )}
 
@@ -180,7 +180,7 @@ export function ProjectPickerModal({ provider, providerDisplayName, open, onClos
                       <p className={`text-sm truncate transition-colors ${isSelected ? 'text-accent' : 'text-text-primary group-hover:text-accent'}`}>
                         {item.name}
                       </p>
-                      <span className="text-xs text-text-tertiary capitalize">{item.type}</span>
+                      <span className="text-xs text-text-secondary capitalize">{item.type}</span>
                     </div>
                     {!isSelectable && (
                       <span className="text-text-tertiary text-sm shrink-0">&rarr;</span>
@@ -213,7 +213,7 @@ export function ProjectPickerModal({ provider, providerDisplayName, open, onClos
         </div>
 
         <div className="px-5 py-3 border-t border-border-subtle flex items-center justify-end gap-3">
-          <button onClick={onClose} className="text-xs text-text-tertiary hover:text-text-secondary transition-colors">
+          <button onClick={onClose} className="text-xs text-text-secondary hover:text-text-primary transition-colors">
             Cancel
           </button>
           <button

@@ -353,7 +353,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
                       ) : u.status === 'error' ? (
                         <span className="text-red-400">Failed</span>
                       ) : (
-                        <span className="text-text-tertiary tabular-nums">{pct}%</span>
+                        <span className="text-text-secondary tabular-nums">{pct}%</span>
                       )}
                     </span>
                   </div>

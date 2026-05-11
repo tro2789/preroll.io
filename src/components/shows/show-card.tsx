@@ -18,7 +18,7 @@ export function ShowCard({ show }: { show: Show }) {
       <div className="p-4">
         <h3 className="text-base font-semibold text-text-primary">{show.name}</h3>
         {typeof show.episode_count === 'number' && (
-          <p className="mt-2 text-xs text-text-tertiary">
+          <p className="mt-2 text-xs text-text-secondary">
             {show.episode_count} {show.episode_count === 1 ? 'episode' : 'episodes'}
           </p>
         )}

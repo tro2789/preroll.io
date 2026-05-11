@@ -32,7 +32,7 @@ export function DashboardActivityFeed({ activities }: DashboardActivityFeedProps
   if (activities.length === 0) {
     return (
       <div className="rounded-lg border border-border-subtle bg-surface-raised px-4 py-6 text-center">
-        <p className="text-sm text-text-tertiary">No recent activity.</p>
+        <p className="text-sm text-text-secondary">No recent activity.</p>
       </div>
     )
   }
@@ -51,8 +51,8 @@ export function DashboardActivityFeed({ activities }: DashboardActivityFeedProps
             <div className="min-w-0 flex-1">
               <p className="text-sm text-text-secondary">{a.description}</p>
               <div className="flex items-center gap-2 mt-0.5">
-                {showName && <span className="text-xs text-text-tertiary">{showName}</span>}
-                <span className="text-xs text-text-tertiary">{timeAgo(a.created_at)}</span>
+                {showName && <span className="text-xs text-text-secondary">{showName}</span>}
+                <span className="text-xs text-text-secondary">{timeAgo(a.created_at)}</span>
               </div>
             </div>
           </div>

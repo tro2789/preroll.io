@@ -283,7 +283,7 @@ export function QuickCreate() {
                     {i < stepIndex ? '✓' : i + 1}
                   </div>
                   <span className={`text-xs font-medium capitalize ${
-                    i === stepIndex ? 'text-text-primary' : 'text-text-tertiary'
+                    i === stepIndex ? 'text-text-primary' : 'text-text-secondary'
                   }`}>
                     {s}
                   </span>
@@ -313,7 +313,7 @@ export function QuickCreate() {
               </p>
 
               {clientsLoading ? (
-                <div className="py-6 text-center text-xs text-text-tertiary">Loading clients...</div>
+                <div className="py-6 text-center text-xs text-text-secondary">Loading clients...</div>
               ) : (
                 <>
                   {!creatingClient && clients.length > 0 && (
@@ -330,7 +330,7 @@ export function QuickCreate() {
                       )}
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {filteredClients.length === 0 ? (
-                          <div className="py-3 text-center text-xs text-text-tertiary">No clients match &ldquo;{clientSearch}&rdquo;</div>
+                          <div className="py-3 text-center text-xs text-text-secondary">No clients match &ldquo;{clientSearch}&rdquo;</div>
                         ) : (
                           filteredClients.map(c => (
                             <button
@@ -344,7 +344,7 @@ export function QuickCreate() {
                             >
                               <span className="font-medium">{c.name}</span>
                               {c.company && (
-                                <span className="text-text-tertiary ml-1.5 text-xs">— {c.company}</span>
+                                <span className="text-text-secondary ml-1.5 text-xs">— {c.company}</span>
                               )}
                             </button>
                           ))
@@ -376,7 +376,7 @@ export function QuickCreate() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-text-tertiary mb-1">Name</label>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Name</label>
                         <input
                           type="text"
                           value={newClientName}
@@ -387,7 +387,7 @@ export function QuickCreate() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-text-tertiary mb-1">
+                        <label className="block text-xs font-medium text-text-secondary mb-1">
                           Company <span className="font-normal">(optional)</span>
                         </label>
                         <input
@@ -404,7 +404,7 @@ export function QuickCreate() {
               )}
 
               <div className="flex items-center justify-between pt-2">
-                <button onClick={reset} className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
+                <button onClick={reset} className="text-sm text-text-secondary hover:text-text-primary transition-colors">
                   Cancel
                 </button>
                 <button
@@ -426,7 +426,7 @@ export function QuickCreate() {
               </p>
 
               {showsLoading ? (
-                <div className="py-6 text-center text-xs text-text-tertiary">Loading shows...</div>
+                <div className="py-6 text-center text-xs text-text-secondary">Loading shows...</div>
               ) : (
                 <>
                   {!creatingShow && shows.length > 0 && (
@@ -443,7 +443,7 @@ export function QuickCreate() {
                       )}
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {filteredShows.length === 0 ? (
-                          <div className="py-3 text-center text-xs text-text-tertiary">No shows match &ldquo;{showSearch}&rdquo;</div>
+                          <div className="py-3 text-center text-xs text-text-secondary">No shows match &ldquo;{showSearch}&rdquo;</div>
                         ) : (
                           filteredShows.map(s => (
                             <button
@@ -486,7 +486,7 @@ export function QuickCreate() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-text-tertiary mb-1">Show Name</label>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Show Name</label>
                         <input
                           type="text"
                           value={newShowName}
@@ -502,7 +502,7 @@ export function QuickCreate() {
               )}
 
               <div className="flex items-center justify-between pt-2">
-                <button onClick={goBack} className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
+                <button onClick={goBack} className="text-sm text-text-secondary hover:text-text-primary transition-colors">
                   ← Back
                 </button>
                 <button
@@ -523,7 +523,7 @@ export function QuickCreate() {
                 Create an episode for <span className="font-medium text-text-primary">{shows.find(s => s.id === selectedShowId)?.name}</span>
               </p>
               <div>
-                <label className="block text-xs font-medium text-text-tertiary mb-1">Episode Title</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">Episode Title</label>
                 <input
                   type="text"
                   value={episodeTitle}
@@ -535,7 +535,7 @@ export function QuickCreate() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-text-tertiary mb-1">
+                <label className="block text-xs font-medium text-text-secondary mb-1">
                   Episode Number <span className="font-normal">(optional)</span>
                 </label>
                 <input
@@ -547,7 +547,7 @@ export function QuickCreate() {
                 />
               </div>
               <div className="flex items-center justify-between pt-2">
-                <button type="button" onClick={goBack} className="text-sm text-text-tertiary hover:text-text-primary transition-colors">
+                <button type="button" onClick={goBack} className="text-sm text-text-secondary hover:text-text-primary transition-colors">
                   ← Back
                 </button>
                 <button
