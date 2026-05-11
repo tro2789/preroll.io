@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
+import { resolvePortalClient } from '@/lib/portal/resolve'
 import { ShowHero } from '@/components/portal/show-hero'
 import { ShowTabs } from '@/components/portal/show-tabs'
+import { WelcomeCard } from '@/components/portal/welcome-card'
 
 export default async function PortalShowPage({
   params,
@@ -13,6 +15,10 @@ export default async function PortalShowPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  const { client: portalClient } = await resolvePortalClient(supabase, user.id)
+  const showWelcome = portalClient && !portalClient.portal_welcome_dismissed_at
+  const orgDisplayName = portalClient?.organizations?.display_name || undefined
 
   const { data: show } = await supabase
     .from('shows')
@@ -117,6 +123,7 @@ export default async function PortalShowPage({
 
   return (
     <div className="space-y-6">
+      {showWelcome && <WelcomeCard orgDisplayName={orgDisplayName} />}
       <ShowHero
         show={{
           id: show.id,
