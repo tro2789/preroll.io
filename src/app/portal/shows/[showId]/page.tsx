@@ -32,6 +32,7 @@ export default async function PortalShowPage({
     { data: reviewDeliverables },
     { data: activities },
     { data: allFileRefs },
+    { data: assets },
   ] = await Promise.all([
     supabase
       .from('pipeline_stages')
@@ -60,6 +61,12 @@ export default async function PortalShowPage({
       .from('file_references')
       .select('id, deliverable_id, mime_type, thumbnail_url, provider')
       .not('deliverable_id', 'is', null),
+    supabase
+      .from('assets')
+      .select('id, name, asset_type, mime_type, file_key')
+      .eq('show_id', showId)
+      .is('episode_id', null)
+      .order('created_at', { ascending: false }),
   ])
 
   const deliverableIds = new Set((reviewDeliverables ?? []).map((d) => d.id))
@@ -126,6 +133,12 @@ export default async function PortalShowPage({
         episodes={episodesWithPending}
         stages={stages ?? []}
         activities={activities ?? []}
+        assets={(assets ?? []).map((a) => ({
+          id: a.id,
+          name: a.name,
+          assetType: a.asset_type,
+          mimeType: a.mime_type,
+        }))}
       />
     </div>
   )
