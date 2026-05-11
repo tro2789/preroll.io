@@ -1,17 +1,58 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 
+async function findOrCreateFileRef(
+  supabase: NonNullable<Awaited<ReturnType<typeof getAuthenticatedClient>>['supabase']>,
+  externalId: string,
+  episodeId: string,
+  orgId: string,
+  userId: string,
+  meta: { name?: string; mimeType?: string; viewUrl?: string; provider?: string }
+) {
+  const { data: existing } = await supabase
+    .from('file_references')
+    .select('id, version_group_id, episode_id')
+    .eq('external_id', externalId)
+    .eq('episode_id', episodeId)
+    .maybeSingle()
+
+  if (existing) return existing
+
+  const { data: integration } = await supabase
+    .from('episode_integrations')
+    .select('provider')
+    .eq('episode_id', episodeId)
+    .maybeSingle()
+
+  const { data: created } = await supabase
+    .from('file_references')
+    .insert({
+      user_id: userId,
+      org_id: orgId,
+      provider: meta.provider || integration?.provider || 'frame_io',
+      external_id: externalId,
+      name: meta.name || externalId,
+      mime_type: meta.mimeType || null,
+      external_url: meta.viewUrl || null,
+      episode_id: episodeId,
+    })
+    .select('id, version_group_id, episode_id')
+    .single()
+
+  return created
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ episodeId: string }> }
 ) {
   const { episodeId } = await params
-  const { supabase, org, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
-  if (!body.file_id) return errorResponse('file_id is required')
-  if (!body.target_file_id) return errorResponse('target_file_id is required')
+  if (!body.source_external_id) return errorResponse('source_external_id is required')
+  if (!body.target_external_id) return errorResponse('target_external_id is required')
 
   const { data: episode } = await supabase!
     .from('episodes')
@@ -23,27 +64,19 @@ export async function POST(
   const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
   if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
-  const { data: targetFile } = await supabase!
-    .from('file_references')
-    .select('id, version_group_id, episode_id')
-    .eq('id', body.target_file_id)
-    .single()
+  const targetFile = await findOrCreateFileRef(supabase!, body.target_external_id, episodeId, org!.id, user!.id, {
+    name: body.target_name, mimeType: body.target_mime_type, viewUrl: body.target_view_url, provider: body.provider,
+  })
+  if (!targetFile) return errorResponse('Failed to resolve target file', 500)
 
-  if (!targetFile) return errorResponse('Target file not found', 404)
-  if (targetFile.episode_id !== episodeId) return errorResponse('Target file does not belong to this episode', 400)
-
-  const { data: sourceFile } = await supabase!
-    .from('file_references')
-    .select('id, episode_id')
-    .eq('id', body.file_id)
-    .single()
-
-  if (!sourceFile) return errorResponse('Source file not found', 404)
-  if (sourceFile.episode_id !== episodeId) return errorResponse('Source file does not belong to this episode', 400)
+  const sourceFile = await findOrCreateFileRef(supabase!, body.source_external_id, episodeId, org!.id, user!.id, {
+    name: body.source_name, mimeType: body.source_mime_type, viewUrl: body.source_view_url, provider: body.provider,
+  })
+  if (!sourceFile) return errorResponse('Failed to resolve source file', 500)
 
   const { data: result, error: rpcError } = await supabase!
     .rpc('add_file_to_version_group', {
-      p_file_id: body.file_id,
+      p_file_id: sourceFile.id,
       p_target_group_id: targetFile.version_group_id,
     })
 
