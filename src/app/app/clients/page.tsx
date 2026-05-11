@@ -58,12 +58,12 @@ export default async function ClientsPage() {
         <table className="w-full mt-5">
           <thead>
             <tr className="border-b border-border-subtle text-left">
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary">Name</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary hidden sm:table-cell">Company</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary hidden md:table-cell">Email</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary text-center w-16">Shows</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary text-center w-20 hidden sm:table-cell">Review</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-tertiary text-center w-20">Portal</th>
+              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary">Name</th>
+              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary hidden sm:table-cell">Company</th>
+              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary hidden md:table-cell">Email</th>
+              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary text-center w-16">Shows</th>
+              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary text-center w-20 hidden sm:table-cell">Review</th>
+              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary text-center w-20">Portal</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
@@ -83,11 +83,11 @@ export default async function ClientsPage() {
                     </Link>
                   </td>
                   <td className="py-2.5 pr-4 hidden sm:table-cell">
-                    <span className="text-sm text-text-tertiary">{client.company || '—'}</span>
+                    <span className="text-sm text-text-secondary">{client.company || '—'}</span>
                   </td>
                   <td className="py-2.5 pr-4 hidden md:table-cell">
                     {client.email ? (
-                      <span className="text-sm text-text-tertiary">{client.email}</span>
+                      <span className="text-sm text-text-secondary">{client.email}</span>
                     ) : (
                       <span className="text-sm text-text-tertiary">{'—'}</span>
                     )}

@@ -18,7 +18,7 @@ export function ClientCard({ client }: { client: Client }) {
         <p className="mt-1 text-sm text-text-secondary">{client.company}</p>
       )}
       {client.email && (
-        <p className="mt-1 text-sm text-text-tertiary">{client.email}</p>
+        <p className="mt-1 text-sm text-text-secondary">{client.email}</p>
       )}
     </Link>
   )
