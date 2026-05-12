@@ -133,49 +133,29 @@ export default async function EpisodeDetailPage({
         {/* Title */}
         <h1 className="text-xl font-bold text-text-primary">
           {episode.episode_number != null && (
-            <span className="text-text-secondary font-semibold">Ep. {episode.episode_number} · </span>
+            <span className="text-text-secondary font-semibold">EP {episode.episode_number} · </span>
           )}
           {episode.title}
         </h1>
 
-        {/* Metadata row */}
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="inline-flex items-center rounded-full bg-accent/20 text-text-primary px-2.5 py-0.5 text-xs font-medium">
-            {stage?.name || 'Not set'}
-          </span>
-          {episode.distribution_status === 'published' && (
+        {/* Published info */}
+        {episode.published_at && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 text-xs font-medium">
-              Published
+              Published {formatDate(episode.published_at)}
             </span>
-          )}
-          {episode.distribution_status === 'scheduled' && (
-            <span className="inline-flex items-center rounded-full bg-amber-500/20 text-amber-300 px-2.5 py-0.5 text-xs font-medium">
-              Scheduled
-            </span>
-          )}
-          {client && (
-            <>
-              <span className="text-text-tertiary">·</span>
-              <span className="text-text-secondary">{client.name}</span>
-            </>
-          )}
-          {episode.published_at && (
-            <>
-              <span className="text-text-tertiary">·</span>
-              <span className="text-text-secondary">{formatDate(episode.published_at)}</span>
-              {(episode.distribution_metadata as any)?.share_url && (
-                <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
-                  Transistor
-                </a>
-              )}
-              {(episode.distribution_metadata as any)?.view_url && (
-                <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
-                  YouTube
-                </a>
-              )}
-            </>
-          )}
-        </div>
+            {(episode.distribution_metadata as any)?.share_url && (
+              <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
+                Transistor
+              </a>
+            )}
+            {(episode.distribution_metadata as any)?.view_url && (
+              <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
+                YouTube
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
