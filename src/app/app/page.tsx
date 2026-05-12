@@ -5,6 +5,7 @@ import { getActiveOrgId } from '@/lib/org/server'
 import { QuickCreate } from '@/components/dashboard/quick-create'
 import { KanbanBoard } from '@/components/dashboard/kanban-board'
 import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
+import { PageHeader } from '@/components/layout/page-header'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -90,10 +91,11 @@ export default async function DashboardPage() {
     <div className="space-y-4">
       <OnboardingChecklist />
 
-      <div className="flex items-center justify-between">
-        <div />
-        <QuickCreate />
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="All episodes across all shows"
+        actions={<QuickCreate />}
+      />
 
       {!hasAnyEpisodes ? (
         <p className="text-sm text-text-tertiary py-12 text-center">No episodes yet. Create a show and add your first episode to get started.</p>

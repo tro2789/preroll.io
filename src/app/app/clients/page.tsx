@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { getActiveOrgId } from '@/lib/org/server'
+import { PageHeader } from '@/components/layout/page-header'
 
 export default async function ClientsPage() {
   const supabase = await createClient()
@@ -44,15 +45,17 @@ export default async function ClientsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-text-primary">Clients</h1>
-        <Link
-          href="/app/clients/new"
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-hover"
-        >
-          + Add Client
-        </Link>
-      </div>
+      <PageHeader
+        title="Clients"
+        actions={
+          <Link
+            href="/app/clients/new"
+            className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-fg transition-colors hover:bg-accent-hover"
+          >
+            + Add Client
+          </Link>
+        }
+      />
 
       {clients && clients.length > 0 ? (
         <table className="w-full mt-5">

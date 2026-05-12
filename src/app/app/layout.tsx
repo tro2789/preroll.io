@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { Sidebar } from '@/components/layout/sidebar'
+import { Topbar } from '@/components/layout/topbar'
 import { NoOrgsPrompt } from '@/components/layout/no-orgs-prompt'
 import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -45,6 +46,19 @@ export default async function AppLayout({
     return <NoOrgsPrompt />
   }
 
+  const orgId = activeOrg?.id
+  let navCounts: { shows?: number; clients?: number; inFlight?: number } = {}
+  if (orgId) {
+    const [{ count: showCount }, { count: clientCount }, { count: inFlightCount }] = await Promise.all([
+      service.from('shows').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
+      service.from('clients').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
+      service.from('episodes').select('id', { count: 'exact', head: true })
+        .in('show_id', (await service.from('shows').select('id').eq('org_id', orgId)).data?.map(s => s.id) || [])
+        .not('status', 'eq', 'published'),
+    ])
+    navCounts = { shows: showCount ?? 0, clients: clientCount ?? 0, inFlight: inFlightCount ?? 0 }
+  }
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-surface-base overflow-x-hidden">
@@ -53,9 +67,11 @@ export default async function AppLayout({
           activeOrgId={activeOrg?.id}
           userEmail={user.email ?? ''}
           userDisplayName={profile?.display_name || null}
+          counts={navCounts}
         />
-        <div className="md:pl-64 flex flex-col min-h-screen">
-          <main className="flex-1 p-4 sm:p-6 pb-20 md:pb-6">
+        <div className="md:pl-[244px] flex flex-col min-h-screen">
+          <Topbar />
+          <main className="flex-1 p-4 sm:p-6 pt-2 pb-20 md:pb-6">
             {children}
           </main>
         </div>

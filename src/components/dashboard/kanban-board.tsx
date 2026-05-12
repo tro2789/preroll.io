@@ -86,23 +86,30 @@ function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: 
   }
 
   return (
-    <div className="rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-default group">
-      <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9]" />
-      <div className="px-3 py-2.5">
-        <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors leading-snug">
+    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-strong group">
+      <div className="relative">
+        <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9]" />
+        {episode.episode_number != null && (
+          <span className="absolute top-1.5 left-2 font-mono text-[9px] text-text-secondary">
+            EP {String(episode.episode_number).padStart(3, '0')}
+          </span>
+        )}
+      </div>
+      <div className="px-2.5 py-2">
+        <p className="text-[11.5px] font-medium text-text-primary group-hover:text-accent transition-colors leading-[1.32]">
           {episode.title}
         </p>
-        <div className="mt-1.5 flex items-center justify-between gap-2">
-          <span className="text-[11px] text-text-secondary truncate">{episode.shows?.name}</span>
+        <div className="text-[10px] text-text-tertiary mt-0.5 truncate">{episode.shows?.name}</div>
+        <div className="flex items-center gap-[5px] mt-2">
+          {episode.tags && episode.tags.length > 0 && (
+            <CardTagPills tags={episode.tags} />
+          )}
           {episode.scheduled_publish_date && (
-            <span className={`shrink-0 text-[11px] tabular-nums ${isOverdue ? 'text-red-400 font-medium' : 'text-text-secondary'}`}>
+            <span className={`shrink-0 text-[9.5px] font-mono tabular-nums ml-auto ${isOverdue ? 'text-error font-medium' : 'text-text-tertiary'}`}>
               {formatDate(episode.scheduled_publish_date)}
             </span>
           )}
         </div>
-        {episode.tags && episode.tags.length > 0 && (
-          <CardTagPills tags={episode.tags} />
-        )}
       </div>
     </div>
   )

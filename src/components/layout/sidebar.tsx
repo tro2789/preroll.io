@@ -133,22 +133,42 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
   )
 }
 
+export interface NavCounts {
+  shows?: number
+  clients?: number
+  inFlight?: number
+}
+
 interface SidebarProps {
   orgs: OrgMembership[]
   activeOrgId?: string
   userEmail: string
   userDisplayName?: string | null
+  counts?: NavCounts
 }
 
-export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: SidebarProps) {
+export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts }: SidebarProps) {
   const pathname = usePathname()
   const showSwitcher = orgs.length > 0
+
+  const mainNav = navItems.filter((item) => !item.desktopOnly && !item.mobileMenu)
+  const resourceNav = navItems.filter((item) => item.desktopOnly || item.mobileMenu)
+
+  function countFor(label: string): number | undefined {
+    if (!counts) return undefined
+    if (label === 'Dashboard') return counts.inFlight
+    if (label === 'Shows') return counts.shows
+    if (label === 'Clients') return counts.clients
+    return undefined
+  }
+
+  const initials = (userDisplayName || userEmail).slice(0, 2).toUpperCase()
 
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-        <div className="flex flex-col flex-grow bg-surface-base border-r border-border-default pt-6 pb-4 overflow-y-auto">
+      <aside className="hidden md:flex md:w-[244px] md:flex-col md:fixed md:inset-y-0">
+        <div className="flex flex-col flex-grow bg-bg-deeper border-r border-border-default pt-6 pb-4 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-6 mb-2">
             <span className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
               PREROLL.IO
@@ -160,17 +180,17 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: Sideb
             </div>
           )}
           <nav className="flex-1 px-3 space-y-0.5">
-            {navItems.map((item) => {
+            {mainNav.map((item) => {
               const isActive =
                 item.href === '/app'
                   ? pathname === '/app'
                   : pathname.startsWith(item.href)
+              const badge = countFor(item.label)
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   aria-current={isActive ? 'page' : undefined}
-                  {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive
                       ? 'bg-accent-muted text-accent-hover'
@@ -185,31 +205,71 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName }: Sideb
                     }`}
                   />
                   {item.label}
-                  {item.external && (
-                    <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {badge !== undefined && badge > 0 && (
+                    <span className="ml-auto text-xs font-mono text-fg-faint">{badge}</span>
                   )}
                 </Link>
               )
             })}
+            {resourceNav.length > 0 && (
+              <>
+                <div className="pt-4 pb-1 px-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-faint">Resources</span>
+                </div>
+                {resourceNav.map((item) => {
+                  const isActive = pathname.startsWith(item.href)
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      aria-current={isActive ? 'page' : undefined}
+                      {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive
+                          ? 'bg-accent-muted text-accent-hover'
+                          : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
+                      }`}
+                    >
+                      <item.icon
+                        className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                          isActive
+                            ? 'text-accent'
+                            : 'text-text-secondary group-hover:text-text-primary'
+                        }`}
+                      />
+                      {item.label}
+                      {item.external && (
+                        <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </Link>
+                  )
+                })}
+              </>
+            )}
           </nav>
           <div className="px-3 pt-3 mt-auto border-t border-border-subtle">
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium text-text-primary truncate">
-                {userDisplayName || userEmail}
-              </p>
-              {userDisplayName && (
-                <p className="text-xs text-text-secondary truncate">{userEmail}</p>
-              )}
+            <div className="flex items-center gap-3 px-3 py-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-overlay text-text-secondary text-xs font-semibold shrink-0">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-text-primary truncate">
+                  {userDisplayName || userEmail}
+                </p>
+                {userDisplayName && (
+                  <p className="text-xs text-text-secondary truncate">{userEmail}</p>
+                )}
+              </div>
+              <form action="/auth/signout" method="POST">
+                <button
+                  type="submit"
+                  className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors"
+                  title="Sign out"
+                >
+                  <SignOutIcon className="h-4 w-4" />
+                </button>
+              </form>
             </div>
-            <form action="/auth/signout" method="POST">
-              <button
-                type="submit"
-                className="w-full flex items-center px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-raised rounded-md transition-colors"
-              >
-                <SignOutIcon className="mr-3 h-5 w-5 flex-shrink-0 text-text-secondary" />
-                Sign out
-              </button>
-            </form>
           </div>
         </div>
       </aside>

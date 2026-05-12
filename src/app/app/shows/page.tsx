@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { getActiveOrgId } from '@/lib/org/server'
 import { Thumbnail } from '@/components/ui/thumbnail'
+import { PageHeader } from '@/components/layout/page-header'
 
 export default async function ShowsPage() {
   const supabase = await createClient()
@@ -17,9 +18,7 @@ export default async function ShowsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">Shows</h1>
-      </div>
+      <PageHeader title="Shows" description="All shows across your clients" />
 
       {shows && shows.length > 0 ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
