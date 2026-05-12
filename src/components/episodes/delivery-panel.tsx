@@ -146,20 +146,35 @@ export function DeliveryPanel({
   }, [episodeId, isLive, projectMissing])
 
   const thumbnailTimersRef = useRef<ReturnType<typeof setTimeout>[]>([])
+  const pipelineRetryRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleUploadComplete = useCallback(() => {
     fetchFiles()
     thumbnailTimersRef.current.forEach(clearTimeout)
     thumbnailTimersRef.current = []
 
-    // Trigger AI pipeline after a short delay for provider processing
-    setTimeout(() => {
-      fetch(`/api/v1/episodes/${episodeId}/pipeline`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      }).catch(err => console.error('AI pipeline trigger failed:', err))
-    }, 5000)
+    const retryDelays = [5000, 15000, 30000, 60000]
+    let attempt = 0
+
+    const tryTriggerPipeline = async () => {
+      try {
+        const res = await fetch(`/api/v1/episodes/${episodeId}/pipeline`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        })
+        if (res.ok) return
+        if ((res.status === 409 || res.status === 400) && attempt < retryDelays.length) {
+          pipelineRetryRef.current = setTimeout(tryTriggerPipeline, retryDelays[attempt++])
+        }
+      } catch {
+        if (attempt < retryDelays.length) {
+          pipelineRetryRef.current = setTimeout(tryTriggerPipeline, retryDelays[attempt++])
+        }
+      }
+    }
+
+    pipelineRetryRef.current = setTimeout(tryTriggerPipeline, retryDelays[attempt++])
 
     const pollDelays = [5000, 15000, 30000, 60000]
     for (const delay of pollDelays) {
@@ -189,7 +204,10 @@ export function DeliveryPanel({
 
   useEffect(() => {
     if (isLive) fetchFiles()
-    return () => { thumbnailTimersRef.current.forEach(clearTimeout) }
+    return () => {
+      thumbnailTimersRef.current.forEach(clearTimeout)
+      if (pipelineRetryRef.current) clearTimeout(pipelineRetryRef.current)
+    }
   }, [isLive, fetchFiles])
 
   function handleCreateProject() {

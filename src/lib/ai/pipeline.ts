@@ -82,6 +82,19 @@ export async function triggerAiPipeline(params: PipelineParams): Promise<Pipelin
     return { jobId, status: 'pending' }
   }
 
+  const { data: existingTranscription } = await supabase
+    .from('transcriptions')
+    .select('id')
+    .eq('episode_id', params.episodeId)
+    .in('status', ['pending', 'processing'])
+    .limit(1)
+    .maybeSingle()
+
+  if (existingTranscription) {
+    const jobId = await insertPipelineJob(supabase, params, 'skipped', { skipped_reason: 'already_transcribing' })
+    return { jobId, status: 'skipped', skippedReason: 'already_transcribing' }
+  }
+
   const { data: transcription } = await supabase
     .from('transcriptions')
     .insert({

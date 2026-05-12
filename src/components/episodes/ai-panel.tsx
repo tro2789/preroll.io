@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TranscriptViewer } from './transcript-viewer'
 import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS } from '@/lib/ai/constants'
@@ -65,6 +66,8 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const [error, setError] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(false)
   const [startingPipeline, setStartingPipeline] = useState(false)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const router = useRouter()
 
   const fetchData = useCallback(async () => {
     try {
@@ -106,7 +109,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'transcriptions',
           filter: `episode_id=eq.${episodeId}`,
@@ -132,6 +135,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           setPipeline(updated)
           if (updated.status === 'completed' || updated.status === 'partial') {
             fetchData()
+            router.refresh()
           }
         }
       )
@@ -153,7 +157,20 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [episodeId, fetchData])
+  }, [episodeId, fetchData, router])
+
+  useEffect(() => {
+    const active = pipeline?.status === 'transcribing' || pipeline?.status === 'generating' || pipeline?.status === 'pending'
+    if (!pipeline || !active) {
+      setElapsedSeconds(0)
+      return
+    }
+    const startTime = new Date(pipeline.created_at).getTime()
+    const tick = () => setElapsedSeconds(Math.floor((Date.now() - startTime) / 1000))
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [pipeline])
 
   const handleTranscribe = async (audioUrl: string, sourceType: string, sourceRef: string, durationSeconds?: number) => {
     setTranscribing(true)
@@ -293,6 +310,20 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     }
   }
 
+  let currentGenerationType: GenerationType | null = null
+  if (pipeline?.status === 'generating') {
+    for (const type of GENERATION_ORDER) {
+      if (!latestGenByType.has(type)) {
+        currentGenerationType = type
+        break
+      }
+    }
+  }
+
+  const totalSteps = 1 + GENERATION_ORDER.length
+  const completedSteps = (hasTranscript ? 1 : 0) + latestGenByType.size
+  const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
+
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-raised">
       <button
@@ -304,7 +335,14 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           {isRunning && (
             <span className="flex items-center gap-1.5 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              Processing
+              {pipeline?.status === 'transcribing' || isTranscribing
+                ? 'Transcribing'
+                : pipeline?.status === 'generating' && currentGenerationType
+                ? GENERATION_LABELS[currentGenerationType]
+                : 'Processing'}
+              {elapsedSeconds > 0 && (
+                <span className="tabular-nums opacity-70">{formatElapsedTime(elapsedSeconds)}</span>
+              )}
             </span>
           )}
           {pipeline?.status === 'completed' && (
@@ -387,13 +425,26 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           {/* Pipeline status steps */}
           {(isTranscribing || hasTranscript || isRunning) && (
             <div className="space-y-3">
+              {/* Progress bar */}
+              {isRunning && (
+                <div className="flex items-center gap-2 text-xs text-text-secondary">
+                  <div className="flex-1 h-1 rounded-full bg-surface-overlay overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-accent transition-all duration-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                  <span className="tabular-nums shrink-0">{completedSteps}/{totalSteps}</span>
+                </div>
+              )}
+
               {/* Transcription step */}
               <PipelineStep
                 label="Transcription"
                 status={
                   hasTranscript ? 'completed'
                     : transcription?.status === 'failed' ? 'failed'
-                    : isTranscribing ? 'running'
+                    : isTranscribing || pipeline?.status === 'transcribing' ? 'running'
                     : 'queued'
                 }
                 detail={
@@ -408,12 +459,13 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
               {/* Generation steps */}
               {hasTranscript && GENERATION_ORDER.map((type) => {
                 const gen = latestGenByType.get(type)
-                const isGenerating = pipeline?.status === 'generating'
                 const stepStatus: PipelineStepStatus = gen
                   ? 'completed'
                   : generating === type
                   ? 'running'
-                  : isGenerating && !gen
+                  : type === currentGenerationType
+                  ? 'running'
+                  : pipeline?.status === 'generating' && !gen
                   ? 'queued'
                   : 'idle'
 
@@ -498,6 +550,12 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   )
 }
 
+function formatElapsedTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
 type PipelineStepStatus = 'queued' | 'running' | 'completed' | 'failed' | 'idle'
 
 const STEP_TEXT_COLOR: Record<PipelineStepStatus, string> = {
@@ -540,8 +598,8 @@ function PipelineStep({ label, status, detail }: {
         {detail && (
           <span className="ml-2 text-xs text-text-secondary">{detail}</span>
         )}
-        {status === 'running' && (
-          <span className="ml-2 text-xs text-text-secondary">Processing...</span>
+        {status === 'running' && !detail && (
+          <span className="ml-2 text-xs text-accent animate-pulse">Processing...</span>
         )}
       </div>
     </div>
