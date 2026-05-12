@@ -78,12 +78,20 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (pipelineJob) {
-      runAutoGeneration({
-        orgId: transcription.org_id,
-        episodeId: transcription.episode_id,
-        transcriptionId,
-        pipelineJobId: pipelineJob.id,
-      }).catch(err => console.error('Auto-generation failed:', err))
+      try {
+        await runAutoGeneration({
+          orgId: transcription.org_id,
+          episodeId: transcription.episode_id,
+          transcriptionId,
+          pipelineJobId: pipelineJob.id,
+        })
+      } catch (genErr) {
+        console.error('Auto-generation failed:', genErr)
+        await supabase
+          .from('ai_pipeline_jobs')
+          .update({ status: 'failed', error_message: (genErr as Error).message })
+          .eq('id', pipelineJob.id)
+      }
     }
 
     return NextResponse.json({ received: true })

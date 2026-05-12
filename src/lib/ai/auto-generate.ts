@@ -28,7 +28,7 @@ export async function runAutoGeneration(params: {
 
   const { data: episodeRow } = await supabase
     .from('episodes')
-    .select('id, title, episode_number, description, notes, show_id, shows(id, name, description, format, ai_auto_generate, ai_tone, ai_length, episode_notes_template)')
+    .select('id, title, episode_number, description, notes, show_id, shows(id, name, description, format, ai_auto_generate, ai_tone, ai_length, episode_template)')
     .eq('id', params.episodeId)
     .single()
 
@@ -42,7 +42,7 @@ export async function runAutoGeneration(params: {
 
   const show = episodeRow.shows as unknown as {
     id: string; name: string; description: string; format: string; ai_auto_generate: string[] | null;
-    ai_tone: string | null; ai_length: string | null; episode_notes_template: string | null
+    ai_tone: string | null; ai_length: string | null; episode_template: string | null
   }
 
   const enabledTypes = (show.ai_auto_generate?.length ? show.ai_auto_generate : ALL_GENERATION_TYPES)
@@ -82,7 +82,7 @@ export async function runAutoGeneration(params: {
     format: show.format || undefined,
     existingNotes: episodeRow.notes || undefined,
     previousTitles: recentEpisodes?.map(e => e.title) || [],
-    showNotesTemplate: show.episode_notes_template || undefined,
+    showNotesTemplate: show.episode_template || undefined,
     tone: (show.ai_tone as GenerationContext['tone']) || undefined,
     length: (show.ai_length as GenerationContext['length']) || undefined,
   }
