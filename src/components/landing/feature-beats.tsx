@@ -18,7 +18,7 @@ function ArrowIcon() {
 
 function PanelShell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="relative border border-border-default rounded-[10px] bg-bg-deeper shadow-[0_30px_80px_-36px_oklch(0.05_0_0/0.7)] overflow-hidden">
+    <div className="relative border border-border-default rounded-[13px] bg-bg-deeper shadow-[0_30px_80px_-36px_oklch(0.05_0_0/0.7)] overflow-hidden">
       <div className="absolute -inset-px rounded-inherit pointer-events-none opacity-50" style={{ background: 'radial-gradient(60% 50% at 20% 0%, oklch(0.715 0.155 40 / 0.15), transparent 70%)' }} />
       <div className="flex items-center gap-2.5 px-3.5 py-2.5 border-b border-border-subtle bg-[oklch(0.155_0.006_264)] relative z-10">
         <span className="flex gap-[5px]">
@@ -44,12 +44,12 @@ function Beat({ kicker, title, lead, items, linkText, linkHref, flipped, childre
   children: React.ReactNode
 }) {
   return (
-    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center ${flipped ? '' : ''}`}>
+    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-[64px] items-center ${flipped ? '' : ''}`}>
       <div className={flipped ? 'lg:order-2' : ''}>
         <span className="font-mono text-xs tracking-[0.12em] uppercase text-accent">{kicker}</span>
-        <h3 className="font-[family-name:var(--font-display)] text-2xl sm:text-[31px] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3">{title}</h3>
+        <h3 className="font-[family-name:var(--font-display)] text-[clamp(24px,2.6vw,31px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3">{title}</h3>
         <p className="text-text-secondary mt-3.5 text-[16.5px] leading-relaxed">{lead}</p>
-        <ul className="mt-5 flex flex-col gap-3.5">
+        <ul className="mt-5 flex flex-col gap-[13px]">
           {items.map((item, i) => (
             <li key={i} className="flex gap-2.5 items-start text-[14.5px] text-text-secondary">
               <CheckIcon />

@@ -55,14 +55,14 @@ function Nav() {
             ['FAQ', '#faq'],
             ['Docs', '/docs'],
           ].map(([label, href]) => (
-            <a key={label} href={href} className="px-2.5 py-1.5 rounded-[5px] text-sm text-text-secondary font-[450] hover:text-text-primary hover:bg-surface-raised transition-colors">
+            <a key={label} href={href} className="px-[11px] py-[7px] rounded-[6px] text-sm text-text-secondary font-[450] hover:text-text-primary hover:bg-surface-raised transition-colors">
               {label}
             </a>
           ))}
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/login" className="text-sm text-text-secondary px-3 py-2 rounded-[5px] hover:text-text-primary transition-colors">
+          <Link href="/login" className="text-sm text-text-secondary px-3 py-2 rounded-[6px] hover:text-text-primary transition-colors">
             Sign in
           </Link>
           <Link href="/signup" className="inline-flex items-center gap-2 px-4 py-2 rounded-[7px] text-sm font-semibold bg-accent text-white hover:bg-accent-hover transition-colors shadow-[0_0_0_0_var(--color-accent-tint),0_8px_24px_-8px_oklch(0.715_0.155_40/0.55)] hover:shadow-[0_0_0_4px_var(--color-accent-tint),0_12px_32px_-8px_oklch(0.715_0.155_40/0.65)]">
@@ -123,11 +123,11 @@ function Hero() {
           PreRoll.io is the AI-native production tool for podcast agencies. It ships with a full REST API and a built-in MCP server, so Claude, your own agents, or a five-line script can read the pipeline, move episodes, pull transcripts, and publish.
         </p>
         <div className="reveal in flex gap-3 justify-center mt-7 flex-wrap" data-d="3">
-          <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-[9px] text-[15.5px] font-semibold bg-accent text-white hover:bg-accent-hover transition-colors shadow-[0_0_0_0_var(--color-accent-tint),0_8px_24px_-8px_oklch(0.715_0.155_40/0.55)] hover:shadow-[0_0_0_4px_var(--color-accent-tint),0_12px_32px_-8px_oklch(0.715_0.155_40/0.65)]">
+          <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-[13px] rounded-[9px] text-[15.5px] font-semibold bg-accent text-white hover:bg-accent-hover transition-colors shadow-[0_0_0_0_var(--color-accent-tint),0_8px_24px_-8px_oklch(0.715_0.155_40/0.55)] hover:shadow-[0_0_0_4px_var(--color-accent-tint),0_12px_32px_-8px_oklch(0.715_0.155_40/0.65)]">
             Start free trial
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </Link>
-          <a href="#developers" className="inline-flex items-center gap-2 px-6 py-3 rounded-[9px] text-[15.5px] font-medium border border-border-default bg-surface-raised text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors">
+          <a href="#developers" className="inline-flex items-center gap-2 px-6 py-[13px] rounded-[9px] text-[15.5px] font-medium border border-border-default bg-surface-raised text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M8 5v14l11-7z" /></svg>
             See the API & MCP server
           </a>
@@ -142,7 +142,7 @@ function Hero() {
         <div className="relative z-[2]">
           <div className="shot-aura" aria-hidden="true" />
           <div className="relative border border-border-default rounded-[20px] bg-bg-deeper overflow-hidden shadow-[0_1px_0_oklch(1_0_0/0.04)_inset,0_40px_120px_-40px_oklch(0.05_0_0/0.8),0_0_0_1px_oklch(0_0_0/0.3)] reveal" data-d="3">
-            <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-border-subtle bg-[oklch(0.155_0.006_264)]">
+            <div className="flex items-center gap-2.5 px-4 py-[11px] border-b border-border-subtle bg-[oklch(0.155_0.006_264)]">
               <span className="flex gap-1.5">
                 <i className="block w-2.5 h-2.5 rounded-full bg-surface-3" />
                 <i className="block w-2.5 h-2.5 rounded-full bg-surface-3" />

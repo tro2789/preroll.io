@@ -134,7 +134,7 @@ export default async function EpisodeDetailPage({
           <div className="flex items-center gap-2 shrink-0">
             <Link
               href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
-              className="inline-flex items-center gap-1.5 px-2.5 py-[5.5px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors"
+              className="inline-flex items-center gap-1.5 px-[11px] py-[5.5px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
               Edit
@@ -174,7 +174,8 @@ export default async function EpisodeDetailPage({
 
         <div className="flex gap-0.5 border-b border-border-subtle mt-5">
           <span className="px-2.5 py-2 text-[13px] font-medium text-text-primary border-b-2 border-accent -mb-px">Overview</span>
-          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Files <span className="font-mono text-[11px] text-fg-faint ml-1.5">{(deliverables || []).length}</span></span>
+          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Files <span className="font-mono text-[11px] text-fg-faint ml-1.5">{(audioFileRefs || []).length}</span></span>
+          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Deliverables <span className="font-mono text-[11px] text-fg-faint ml-1.5">{(deliverables || []).length}</span></span>
           <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Distribution</span>
           <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Activity</span>
         </div>
@@ -182,7 +183,7 @@ export default async function EpisodeDetailPage({
 
       <div className="mt-5 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
         {/* Working area: AI + files */}
-        <div className="flex flex-col lg:flex-row gap-5 items-start min-w-0">
+        <div className="flex flex-col lg:flex-row gap-[18px] items-start min-w-0">
           <div className="flex-[1.4] min-w-0">
             <AiPanel
               episodeId={episodeId}
@@ -210,7 +211,7 @@ export default async function EpisodeDetailPage({
         </div>
 
         {/* Peek pane: sticky metadata rail */}
-        <aside className="xl:sticky xl:top-16">
+        <aside className="xl:sticky xl:top-[60px]">
           <PeekPane
             episode={{
               episode_number: episode.episode_number,

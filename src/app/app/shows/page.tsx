@@ -18,7 +18,19 @@ export default async function ShowsPage() {
 
   return (
     <div>
-      <PageHeader title="Shows" description="All shows across your clients" />
+      <PageHeader
+        title="Shows"
+        description="Every show you produce, grouped by client."
+        actions={
+          <Link
+            href="/app/shows/new"
+            className="rounded-[7px] bg-accent text-white px-[11px] py-[5.5px] text-[13px] font-semibold hover:bg-accent-hover transition-colors inline-flex items-center gap-1.5"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New show
+          </Link>
+        }
+      />
 
       {shows && shows.length > 0 ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
