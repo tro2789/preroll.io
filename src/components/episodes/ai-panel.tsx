@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TranscriptViewer } from './transcript-viewer'
+import { formatDuration } from '@/lib/format'
 import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS } from '@/lib/ai/constants'
 
 interface AiPanelProps {
@@ -341,7 +342,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                 ? GENERATION_LABELS[currentGenerationType]
                 : 'Processing'}
               {elapsedSeconds > 0 && (
-                <span className="tabular-nums opacity-70">{formatElapsedTime(elapsedSeconds)}</span>
+                <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
               )}
             </span>
           )}
@@ -548,12 +549,6 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
       )}
     </div>
   )
-}
-
-function formatElapsedTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
-  return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
 type PipelineStepStatus = 'queued' | 'running' | 'completed' | 'failed' | 'idle'
