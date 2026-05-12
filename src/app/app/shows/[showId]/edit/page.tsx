@@ -205,6 +205,8 @@ export default function EditShowPage({
               showId={showId}
               autoTranscribe={show.ai_auto_transcribe !== false}
               autoGenerate={(show.ai_auto_generate as string[]) || [...ALL_GENERATION_TYPES]}
+              tone={(show.ai_tone as string) || null}
+              length={(show.ai_length as string) || null}
             />
           </div>
         )}

@@ -5,6 +5,7 @@ import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
 import { PipelineBoard } from '@/components/episodes/pipeline-board'
 import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
 import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
+import { BatchAiButton } from '@/components/shows/batch-ai-button'
 import { Thumbnail } from '@/components/ui/thumbnail'
 import { ClientPortalSection, type PortalClient } from '@/components/client-portal-section'
 
@@ -121,6 +122,7 @@ export default async function ShowDetailPage({
             <span className="ml-2 text-sm font-normal">({totalEpisodes})</span>
           </h2>
           <div className="flex items-center gap-2">
+            <BatchAiButton showId={showId} />
             <StageManagerTrigger showId={showId} stages={stages} />
             <QuickCreateEpisode showId={showId} />
           </div>

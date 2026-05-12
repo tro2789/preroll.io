@@ -43,19 +43,6 @@ export function TranscriptViewer({ segments, fullText, speakerCount, wordCount }
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3 text-xs text-text-secondary">
-          <span>{wordCount.toLocaleString()} words</span>
-          <span>{speakerCount} speaker{speakerCount !== 1 ? 's' : ''}</span>
-        </div>
-        <button
-          onClick={() => navigator.clipboard.writeText(fullText)}
-          className="text-xs text-text-secondary hover:text-text-primary transition-colors"
-        >
-          Copy full transcript
-        </button>
-      </div>
-
       {segments.length > 10 && (
         <input
           type="text"

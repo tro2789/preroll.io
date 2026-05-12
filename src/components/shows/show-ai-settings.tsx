@@ -1,21 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { ALL_GENERATION_TYPES, GENERATION_LABELS } from '@/lib/ai/constants'
+import { ALL_GENERATION_TYPES, GENERATION_LABELS, AI_TONES, AI_LENGTHS } from '@/lib/ai/constants'
 
 interface ShowAiSettingsProps {
   showId: string
   autoTranscribe: boolean
   autoGenerate: string[]
+  tone: string | null
+  length: string | null
 }
 
-export function ShowAiSettings({ showId, autoTranscribe: initialTranscribe, autoGenerate: initialGenerate }: ShowAiSettingsProps) {
+export function ShowAiSettings({
+  showId,
+  autoTranscribe: initialTranscribe,
+  autoGenerate: initialGenerate,
+  tone: initialTone,
+  length: initialLength,
+}: ShowAiSettingsProps) {
   const [autoTranscribe, setAutoTranscribe] = useState(initialTranscribe)
   const [autoGenerate, setAutoGenerate] = useState<string[]>(initialGenerate)
+  const [tone, setTone] = useState(initialTone || 'professional')
+  const [length, setLength] = useState(initialLength || 'standard')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  async function save(updates: { ai_auto_transcribe?: boolean; ai_auto_generate?: string[] }) {
+  async function save(updates: Record<string, unknown>) {
     setSaving(true)
     setSaved(false)
     try {
@@ -36,7 +46,13 @@ export function ShowAiSettings({ showId, autoTranscribe: initialTranscribe, auto
   function toggleTranscribe() {
     const next = !autoTranscribe
     setAutoTranscribe(next)
-    save({ ai_auto_transcribe: next })
+    if (next && autoGenerate.length === 0) {
+      const defaults: string[] = ['show_notes', 'description']
+      setAutoGenerate(defaults)
+      save({ ai_auto_transcribe: next, ai_auto_generate: defaults })
+    } else {
+      save({ ai_auto_transcribe: next })
+    }
   }
 
   function toggleGenType(key: string) {
@@ -99,6 +115,38 @@ export function ShowAiSettings({ showId, autoTranscribe: initialTranscribe, auto
             ))}
           </div>
         )}
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-text-secondary">Content style:</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Tone</label>
+            <select
+              value={tone}
+              onChange={(e) => { setTone(e.target.value); save({ ai_tone: e.target.value }) }}
+              disabled={saving}
+              className="w-full rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none"
+            >
+              {AI_TONES.map(t => (
+                <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Length</label>
+            <select
+              value={length}
+              onChange={(e) => { setLength(e.target.value); save({ ai_length: e.target.value }) }}
+              disabled={saving}
+              className="w-full rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-sm text-text-primary focus:border-accent focus:outline-none"
+            >
+              {AI_LENGTHS.map(l => (
+                <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {saved && (

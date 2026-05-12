@@ -33,4 +33,10 @@ export const CREDIT_COSTS: Record<GenerationType, number> = {
   title_suggestions: 1,
 }
 
+export const AI_TONES = ['professional', 'casual', 'energetic'] as const
+export type AiTone = (typeof AI_TONES)[number]
+
+export const AI_LENGTHS = ['brief', 'standard', 'detailed'] as const
+export type AiLength = (typeof AI_LENGTHS)[number]
+
 export const MAX_CONCURRENT_TRANSCRIPTIONS = 3

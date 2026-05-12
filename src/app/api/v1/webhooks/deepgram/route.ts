@@ -21,12 +21,16 @@ export async function POST(request: NextRequest) {
 
   const { data: transcription } = await supabase
     .from('transcriptions')
-    .select('id, org_id, episode_id, credits_consumed, audio_duration_seconds')
+    .select('id, org_id, episode_id, credits_consumed, audio_duration_seconds, status')
     .eq('id', transcriptionId)
     .single()
 
   if (!transcription) {
     return NextResponse.json({ error: 'Transcription not found' }, { status: 404 })
+  }
+
+  if (transcription.status === 'completed' || transcription.status === 'failed') {
+    return NextResponse.json({ received: true, skipped: 'already_processed' })
   }
 
   try {

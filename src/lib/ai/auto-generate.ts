@@ -28,7 +28,7 @@ export async function runAutoGeneration(params: {
 
   const { data: episodeRow } = await supabase
     .from('episodes')
-    .select('id, title, episode_number, description, notes, show_id, shows(id, name, description, format, ai_auto_generate)')
+    .select('id, title, episode_number, description, notes, show_id, shows(id, name, description, format, ai_auto_generate, ai_tone, ai_length, episode_notes_template)')
     .eq('id', params.episodeId)
     .single()
 
@@ -41,10 +41,11 @@ export async function runAutoGeneration(params: {
   }
 
   const show = episodeRow.shows as unknown as {
-    id: string; name: string; description: string; format: string; ai_auto_generate: string[] | null
+    id: string; name: string; description: string; format: string; ai_auto_generate: string[] | null;
+    ai_tone: string | null; ai_length: string | null; episode_notes_template: string | null
   }
 
-  const enabledTypes = (show.ai_auto_generate || ALL_GENERATION_TYPES)
+  const enabledTypes = (show.ai_auto_generate?.length ? show.ai_auto_generate : ALL_GENERATION_TYPES)
     .filter((t): t is GenerationType => ALL_GENERATION_TYPES.includes(t as GenerationType))
 
   if (enabledTypes.length === 0) {
@@ -60,7 +61,16 @@ export async function runAutoGeneration(params: {
     .update({ status: 'generating' })
     .eq('id', params.pipelineJobId)
 
-  const addon = await getAiAddonStatus(params.orgId)
+  const [addon, { data: recentEpisodes }] = await Promise.all([
+    getAiAddonStatus(params.orgId),
+    supabase
+      .from('episodes')
+      .select('title')
+      .eq('show_id', episodeRow.show_id)
+      .neq('id', params.episodeId)
+      .order('created_at', { ascending: false })
+      .limit(5),
+  ])
   const apiKey = getAnthropicApiKey(addon)
 
   const ctx: GenerationContext = {
@@ -71,6 +81,10 @@ export async function runAutoGeneration(params: {
     episodeNumber: episodeRow.episode_number || undefined,
     format: show.format || undefined,
     existingNotes: episodeRow.notes || undefined,
+    previousTitles: recentEpisodes?.map(e => e.title) || [],
+    showNotesTemplate: show.episode_notes_template || undefined,
+    tone: (show.ai_tone as GenerationContext['tone']) || undefined,
+    length: (show.ai_length as GenerationContext['length']) || undefined,
   }
 
   const generationIds: string[] = []

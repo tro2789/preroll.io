@@ -1,11 +1,15 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TranscriptViewer } from './transcript-viewer'
+import { MarkdownContent } from './markdown-content'
 import { formatDuration } from '@/lib/format'
-import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS } from '@/lib/ai/constants'
+import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS, CREDIT_COSTS } from '@/lib/ai/constants'
+
+const PRODUCTION_TYPES: GenerationType[] = ['show_notes', 'description', 'title_suggestions']
+const PROMOTION_TYPES: GenerationType[] = ['social_twitter', 'social_linkedin', 'social_instagram']
 
 interface AiPanelProps {
   episodeId: string
@@ -54,13 +58,12 @@ interface Generation {
   created_at: string
 }
 
-const GENERATION_ORDER = ALL_GENERATION_TYPES
-
 export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const [addon, setAddon] = useState<AddonStatus | null>(null)
   const [transcription, setTranscription] = useState<Transcription | null>(null)
   const [pipeline, setPipeline] = useState<PipelineJob | null>(null)
   const [generations, setGenerations] = useState<Generation[]>([])
+  const [enabledTypes, setEnabledTypes] = useState<GenerationType[]>(ALL_GENERATION_TYPES)
   const [loading, setLoading] = useState(true)
   const [transcribing, setTranscribing] = useState(false)
   const [generating, setGenerating] = useState<GenerationType | null>(null)
@@ -68,14 +71,19 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [startingPipeline, setStartingPipeline] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [notification, setNotification] = useState<string | null>(null)
+  const collapsedRef = useRef(collapsed)
   const router = useRouter()
+
+  useEffect(() => { collapsedRef.current = collapsed }, [collapsed])
 
   const fetchData = useCallback(async () => {
     try {
-      const [addonRes, transcriptionRes, pipelineRes] = await Promise.all([
+      const [addonRes, transcriptionRes, pipelineRes, showRes] = await Promise.all([
         fetch('/api/v1/ai/addon'),
         fetch(`/api/v1/episodes/${episodeId}/transcription`),
         fetch(`/api/v1/episodes/${episodeId}/pipeline`),
+        fetch(`/api/v1/shows/${showId}`),
       ])
 
       if (addonRes.ok) {
@@ -93,10 +101,22 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
         setPipeline(pipelineData.data.pipeline)
         setGenerations(pipelineData.data.generations || [])
       }
+
+      if (showRes.ok) {
+        const showData = await showRes.json()
+        const show = showData.data
+        if (show?.ai_auto_generate && Array.isArray(show.ai_auto_generate) && show.ai_auto_generate.length > 0) {
+          setEnabledTypes(
+            show.ai_auto_generate.filter((t: string): t is GenerationType =>
+              ALL_GENERATION_TYPES.includes(t as GenerationType)
+            )
+          )
+        }
+      }
     } finally {
       setLoading(false)
     }
-  }, [episodeId])
+  }, [episodeId, showId])
 
   useEffect(() => {
     fetchData()
@@ -137,6 +157,13 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           if (updated.status === 'completed' || updated.status === 'partial') {
             fetchData()
             router.refresh()
+            setNotification(
+              updated.status === 'completed'
+                ? 'AI content ready — review below'
+                : 'AI content partially generated — some types were skipped'
+            )
+            setTimeout(() => setNotification(null), 8000)
+            if (collapsedRef.current) setCollapsed(false)
           }
         }
       )
@@ -232,15 +259,23 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     }
   }
 
-  const handleApply = async (type: GenerationType, content: string) => {
+  const handleApply = async (type: GenerationType, content: string): Promise<boolean> => {
     const field = type === 'show_notes' ? 'notes' : type === 'description' ? 'description' : null
-    if (!field) return
+    if (!field) return false
 
-    await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [field]: content }),
-    })
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: content }),
+      })
+
+      if (!res.ok) return false
+      router.refresh()
+      return true
+    } catch {
+      return false
+    }
   }
 
   const handleRunPipeline = async () => {
@@ -313,7 +348,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
 
   let currentGenerationType: GenerationType | null = null
   if (pipeline?.status === 'generating') {
-    for (const type of GENERATION_ORDER) {
+    for (const type of enabledTypes) {
       if (!latestGenByType.has(type)) {
         currentGenerationType = type
         break
@@ -321,54 +356,71 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     }
   }
 
-  const totalSteps = 1 + GENERATION_ORDER.length
-  const completedSteps = (hasTranscript ? 1 : 0) + latestGenByType.size
+  const totalSteps = 1 + enabledTypes.length
+  const completedSteps = (hasTranscript ? 1 : 0) + enabledTypes.filter(t => latestGenByType.has(t)).length
   const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
+  const estimatedCost = useMemo(() => enabledTypes.reduce((sum, t) => sum + CREDIT_COSTS[t], 0), [enabledTypes])
+
+  const previousByType = useMemo(() => {
+    const map = new Map<string, Generation[]>()
+    for (const type of ALL_GENERATION_TYPES) {
+      const latest = latestGenByType.get(type)
+      map.set(type, generations.filter(g => g.generation_type === type && g.id !== latest?.id).slice(0, 4))
+    }
+    return map
+  }, [generations, latestGenByType])
 
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-raised">
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="flex w-full items-center justify-between p-4"
+        aria-expanded={!collapsed}
+        aria-label={`AI Assistant${isRunning ? ' — processing' : ''}`}
       >
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-medium text-text-primary">AI Assistant</h3>
-          {isRunning && (
-            <span className="flex items-center gap-1.5 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-              {pipeline?.status === 'transcribing' || isTranscribing
-                ? 'Transcribing'
-                : pipeline?.status === 'generating' && currentGenerationType
-                ? GENERATION_LABELS[currentGenerationType]
-                : 'Processing'}
-              {elapsedSeconds > 0 && (
-                <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
-              )}
-            </span>
-          )}
-          {pipeline?.status === 'completed' && (
-            <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs">
-              Complete
-            </span>
-          )}
-          {pipeline?.status === 'partial' && (
-            <span className="rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
-              Partial
-            </span>
-          )}
+          <span aria-live="polite" aria-atomic="true">
+            {isRunning && (
+              <span className="flex items-center gap-1.5 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+                {pipeline?.status === 'transcribing' || isTranscribing
+                  ? 'Transcribing'
+                  : pipeline?.status === 'generating' && currentGenerationType
+                  ? GENERATION_LABELS[currentGenerationType]
+                  : 'Processing'}
+                {elapsedSeconds > 0 && (
+                  <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
+                )}
+              </span>
+            )}
+            {pipeline?.status === 'completed' && (
+              <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs">
+                Complete
+              </span>
+            )}
+            {pipeline?.status === 'partial' && (
+              <span className="rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
+                Partial
+              </span>
+            )}
+          </span>
         </div>
         <div className="flex items-center gap-3">
           {!addon.selfHosted && (
-            <span className="text-xs text-text-secondary tabular-nums">
-              {addon.addon.monthly_remaining}/{addon.addon.monthly_allowance}
+            <span
+              className="text-xs text-text-secondary tabular-nums"
+              title={`${addon.addon.monthly_remaining} of ${addon.addon.monthly_allowance} monthly credits remaining${addon.addon.credits_balance > 0 ? `, plus ${addon.addon.credits_balance} purchased` : ''}`}
+            >
+              {addon.addon.monthly_remaining} monthly
               {addon.addon.credits_balance > 0 && (
-                <> + {addon.addon.credits_balance}</>
+                <> · {addon.addon.credits_balance} purchased</>
               )}
             </span>
           )}
           <svg
             className={`h-4 w-4 text-text-tertiary transition-transform ${collapsed ? '' : 'rotate-180'}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
@@ -380,6 +432,17 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           {error && (
             <div className="rounded-md bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
               {error}
+            </div>
+          )}
+
+          {notification && (
+            <div className="rounded-md bg-accent/10 border border-accent/20 p-3 text-xs text-accent flex items-center justify-between">
+              <span>{notification}</span>
+              <button onClick={() => setNotification(null)} className="text-accent/60 hover:text-accent" aria-label="Dismiss">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           )}
 
@@ -399,6 +462,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                     >
                       {startingPipeline ? 'Starting...' : 'Run AI Pipeline'}
                     </button>
+                    <span className="text-xs text-text-tertiary">~{estimatedCost} credits</span>
                     <TranscribeButton
                       episodeId={episodeId}
                       transcribing={transcribing}
@@ -457,8 +521,8 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                 }
               />
 
-              {/* Generation steps */}
-              {hasTranscript && GENERATION_ORDER.map((type) => {
+              {/* Generation steps — only show enabled types */}
+              {hasTranscript && enabledTypes.map((type) => {
                 const gen = latestGenByType.get(type)
                 const stepStatus: PipelineStepStatus = gen
                   ? 'completed'
@@ -478,18 +542,6 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                   />
                 )
               })}
-
-              {/* Transcript viewer */}
-              {hasTranscript && (
-                <div className="border-t border-border-subtle pt-3">
-                  <TranscriptViewer
-                    segments={transcription!.segments || []}
-                    fullText={transcription!.full_text!}
-                    speakerCount={transcription!.speaker_count || 0}
-                    wordCount={transcription!.word_count || 0}
-                  />
-                </div>
-              )}
             </div>
           )}
 
@@ -505,44 +557,102 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             </div>
           )}
 
-          {/* Generated content cards */}
-          {latestGenByType.size > 0 && (
-            <div className="space-y-2">
-              {GENERATION_ORDER.map((type) => {
-                const gen = latestGenByType.get(type)
-                if (!gen) return null
-                return (
-                  <GeneratedResult
-                    key={gen.id}
-                    type={type}
-                    content={gen.result}
-                    onApply={() => handleApply(type, gen.result)}
-                    onCopy={() => navigator.clipboard.writeText(gen.result)}
-                    onRegenerate={() => handleGenerate(type)}
-                  />
-                )
-              })}
+          {/* Transcript viewer — collapsible, above generated content */}
+          {hasTranscript && (
+            <TranscriptSection
+              segments={transcription!.segments || []}
+              fullText={transcription!.full_text!}
+              speakerCount={transcription!.speaker_count || 0}
+              wordCount={transcription!.word_count || 0}
+            />
+          )}
+
+          {/* Production Content */}
+          {latestGenByType.size > 0 && PRODUCTION_TYPES.some(t => latestGenByType.has(t)) && (
+            <div className="space-y-3">
+              <h4 className="text-xs font-medium text-text-secondary uppercase tracking-wider">Production</h4>
+              <div className="space-y-2">
+                {PRODUCTION_TYPES.map((type) => {
+                  const gen = latestGenByType.get(type)
+                  if (!gen) return null
+                  return (
+                    <GeneratedResult
+                      key={gen.id}
+                      type={type as GenerationType}
+                      content={gen.result}
+                      previousVersions={previousByType.get(type)}
+                      onApply={(content) => handleApply(type as GenerationType, content)}
+                      onCopy={(content) => navigator.clipboard.writeText(content)}
+                      onRegenerate={() => handleGenerate(type as GenerationType)}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Promotion Content */}
+          {latestGenByType.size > 0 && PROMOTION_TYPES.some(t => latestGenByType.has(t)) && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-medium text-text-secondary uppercase tracking-wider">Promotion</h4>
+                {PROMOTION_TYPES.filter(t => latestGenByType.has(t)).length > 1 && (
+                  <button
+                    onClick={() => {
+                      const all = PROMOTION_TYPES
+                        .map(t => {
+                          const gen = latestGenByType.get(t)
+                          return gen ? `--- ${GENERATION_LABELS[t]} ---\n${gen.result}` : null
+                        })
+                        .filter(Boolean)
+                        .join('\n\n')
+                      navigator.clipboard.writeText(all)
+                    }}
+                    className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                  >
+                    Copy all
+                  </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                {PROMOTION_TYPES.map((type) => {
+                  const gen = latestGenByType.get(type)
+                  if (!gen) return null
+                  return (
+                    <GeneratedResult
+                      key={gen.id}
+                      type={type as GenerationType}
+                      content={gen.result}
+                      previousVersions={previousByType.get(type)}
+                      onApply={(content) => handleApply(type as GenerationType, content)}
+                      onCopy={(content) => navigator.clipboard.writeText(content)}
+                      onRegenerate={() => handleGenerate(type as GenerationType)}
+                    />
+                  )
+                })}
+              </div>
             </div>
           )}
 
           {/* Manual regenerate buttons when pipeline is done */}
           {hasTranscript && !isRunning && (
-            <div className="border-t border-border-subtle pt-3">
-              <p className="text-xs text-text-secondary mb-2">
-                {latestGenByType.size > 0 ? 'Regenerate:' : 'Generate from transcript:'}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {GENERATION_ORDER.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => handleGenerate(type)}
-                    disabled={generating !== null || totalAvailable < 1}
-                    className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-primary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
-                  >
-                    {generating === type ? 'Generating...' : GENERATION_LABELS[type]}
-                  </button>
-                ))}
-              </div>
+            <div className="border-t border-border-subtle pt-3 space-y-4">
+              <RegenerateSection
+                label="production"
+                types={PRODUCTION_TYPES}
+                hasExisting={PRODUCTION_TYPES.some(t => latestGenByType.has(t))}
+                generating={generating}
+                totalAvailable={totalAvailable}
+                onGenerate={handleGenerate}
+              />
+              <RegenerateSection
+                label="promotion"
+                types={PROMOTION_TYPES}
+                hasExisting={PROMOTION_TYPES.some(t => latestGenByType.has(t))}
+                generating={generating}
+                totalAvailable={totalAvailable}
+                onGenerate={handleGenerate}
+              />
             </div>
           )}
         </div>
@@ -570,24 +680,27 @@ function PipelineStep({ label, status, detail }: {
     <div className="flex items-center gap-3">
       <div className="flex-shrink-0">
         {status === 'completed' && (
-          <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         )}
         {status === 'running' && (
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" aria-hidden="true" />
         )}
         {status === 'failed' && (
-          <svg className="h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="h-4 w-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         )}
         {(status === 'queued' || status === 'idle') && (
-          <div className={`h-4 w-4 rounded-full border-2 ${status === 'queued' ? 'border-text-tertiary' : 'border-border-subtle'}`} />
+          <div className={`h-4 w-4 rounded-full border-2 ${status === 'queued' ? 'border-text-tertiary' : 'border-border-subtle'}`} aria-hidden="true" />
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <span className={`text-sm ${STEP_TEXT_COLOR[status]}`}>
+        <span className="sr-only">
+          {label}: {status === 'completed' ? 'complete' : status === 'running' ? 'in progress' : status === 'failed' ? 'failed' : 'waiting'}
+        </span>
+        <span className={`text-sm ${STEP_TEXT_COLOR[status]}`} aria-hidden="true">
           {label}
         </span>
         {detail && (
@@ -596,6 +709,88 @@ function PipelineStep({ label, status, detail }: {
         {status === 'running' && !detail && (
           <span className="ml-2 text-xs text-accent animate-pulse">Processing...</span>
         )}
+      </div>
+    </div>
+  )
+}
+
+function TranscriptSection(props: {
+  segments: Array<{ start: number; end: number; text: string; speaker: number }>
+  fullText: string
+  speakerCount: number
+  wordCount: number
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="rounded-md border border-border-subtle bg-surface-default">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between px-3 py-2"
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-text-primary">Transcript</span>
+          <span className="text-xs text-text-secondary">
+            {props.wordCount.toLocaleString()} words · {props.speakerCount} speaker{props.speakerCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              navigator.clipboard.writeText(props.fullText)
+            }}
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            Copy
+          </button>
+          <svg
+            className={`h-3.5 w-3.5 text-text-tertiary transition-transform ${open ? 'rotate-180' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+      {open && (
+        <div className="border-t border-border-subtle px-3 py-2">
+          <TranscriptViewer
+            segments={props.segments}
+            fullText={props.fullText}
+            speakerCount={props.speakerCount}
+            wordCount={props.wordCount}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RegenerateSection({ label, types, hasExisting, generating, totalAvailable, onGenerate }: {
+  label: string
+  types: GenerationType[]
+  hasExisting: boolean
+  generating: GenerationType | null
+  totalAvailable: number
+  onGenerate: (type: GenerationType) => void
+}) {
+  return (
+    <div>
+      <p className="text-xs text-text-secondary mb-2">
+        {hasExisting ? `Regenerate ${label}:` : `Generate ${label} content:`}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {types.map((type) => (
+          <button
+            key={type}
+            onClick={() => onGenerate(type)}
+            disabled={generating !== null || totalAvailable < 1}
+            className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-primary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+          >
+            {generating === type ? 'Generating...' : `${GENERATION_LABELS[type]} (${CREDIT_COSTS[type]})`}
+          </button>
+        ))}
       </div>
     </div>
   )
@@ -628,6 +823,7 @@ function TranscribeButton({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             className="flex-1 rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+            aria-label="Audio URL"
           />
           <button
             onClick={() => {
@@ -650,16 +846,16 @@ function TranscribeButton({
           fetch(`/api/v1/episodes/${episodeId}/delivery/files`)
             .then(r => r.json())
             .then(data => {
-              const files = data.data?.files || []
-              const audioFile = files.find((f: { mime_type?: string }) =>
-                f.mime_type?.startsWith('audio/') || f.mime_type?.startsWith('video/')
+              const files = data.data?.files || data.data?.items || []
+              const audioFile = files.find((f: { mime_type?: string; mimeType?: string }) =>
+                (f.mime_type || f.mimeType || '').startsWith('audio/') || (f.mime_type || f.mimeType || '').startsWith('video/')
               )
               if (audioFile) {
                 onTranscribe(
-                  audioFile.download_url || audioFile.view_url,
+                  audioFile.download_url || audioFile.downloadUrl || audioFile.view_url || audioFile.viewUrl,
                   'file_reference',
-                  audioFile.external_id,
-                  audioFile.duration_seconds
+                  audioFile.external_id || audioFile.id,
+                  audioFile.duration_seconds || audioFile.durationSeconds
                 )
               }
             })
@@ -679,41 +875,185 @@ function TranscribeButton({
   )
 }
 
+function TitleSuggestions({ content, onRegenerate }: { content: string; onRegenerate: () => void }) {
+  const titles = content
+    .split('\n')
+    .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
+    .filter(Boolean)
+
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
+
+  return (
+    <div className="space-y-2">
+      <div className="space-y-1.5">
+        {titles.map((title, i) => (
+          <div key={i} className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-surface-raised px-3 py-2">
+            <span className="text-xs text-text-primary">{title}</span>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(title)
+                setCopiedIdx(i)
+                setTimeout(() => setCopiedIdx(null), 2000)
+              }}
+              className="shrink-0 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            >
+              {copiedIdx === i ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={onRegenerate}
+        className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+      >
+        Regenerate
+      </button>
+    </div>
+  )
+}
+
+function SocialMeta({ type, content }: { type: GenerationType; content: string }) {
+  if (type === 'social_twitter') {
+    return (
+      <div className={`text-xs tabular-nums ${content.length > 280 ? 'text-red-400' : 'text-text-tertiary'}`}>
+        {content.length}/280
+      </div>
+    )
+  }
+  if (type === 'social_linkedin') {
+    return (
+      <div className="text-xs text-text-tertiary tabular-nums">
+        {content.length} chars · {content.split(/\n\n+/).length} paragraphs
+      </div>
+    )
+  }
+  if (type === 'social_instagram') {
+    const hashtagCount = (content.match(/#\w+/g) || []).length
+    return (
+      <div className="text-xs text-text-tertiary tabular-nums">
+        {content.length} chars · {hashtagCount} hashtags
+      </div>
+    )
+  }
+  return null
+}
+
 function GeneratedResult({
   type,
   content,
+  previousVersions,
   onApply,
   onCopy,
   onRegenerate,
 }: {
   type: GenerationType
   content: string
-  onApply: () => void
-  onCopy: () => void
+  previousVersions?: Generation[]
+  onApply: (content: string) => Promise<boolean>
+  onCopy: (content: string) => void
   onRegenerate: () => void
 }) {
   const canApply = type === 'show_notes' || type === 'description'
-  const [applied, setApplied] = useState(false)
+  const [applyState, setApplyState] = useState<'idle' | 'applied' | 'failed'>('idle')
   const [copied, setCopied] = useState(false)
+  const [confirmApply, setConfirmApply] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editedContent, setEditedContent] = useState(content)
+  const [showHistory, setShowHistory] = useState(false)
+
+  if (type === 'title_suggestions') {
+    return (
+      <div className="rounded-md border border-border-subtle bg-surface-default p-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-text-primary">{GENERATION_LABELS[type]}</span>
+        </div>
+        <TitleSuggestions content={content} onRegenerate={onRegenerate} />
+        {previousVersions && previousVersions.length > 0 && (
+          <div className="mt-2">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            >
+              {showHistory ? 'Hide previous' : `${previousVersions.length} previous`}
+            </button>
+            {showHistory && (
+              <div className="mt-2 space-y-2 border-t border-border-subtle pt-2">
+                {previousVersions.map((pv) => (
+                  <div key={pv.id} className="rounded-md bg-surface-raised p-2 space-y-1">
+                    <span className="text-xs text-text-tertiary">
+                      {new Date(pv.created_at).toLocaleString()}
+                    </span>
+                    <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed line-clamp-3">
+                      {pv.result}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const activeContent = editing ? editedContent : content
 
   return (
     <div className="rounded-md border border-border-subtle bg-surface-default p-3 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-text-primary">{GENERATION_LABELS[type]}</span>
         <div className="flex items-center gap-2">
-          {canApply && (
+          {canApply && applyState === 'idle' && !confirmApply && (
             <button
-              onClick={() => { onApply(); setApplied(true); setTimeout(() => setApplied(false), 2000) }}
+              onClick={() => setConfirmApply(true)}
               className="text-xs text-accent hover:text-accent-hover transition-colors"
             >
-              {applied ? 'Applied!' : 'Apply to Episode'}
+              Apply to Episode
             </button>
           )}
+          {confirmApply && (
+            <>
+              <span className="text-xs text-text-secondary">Overwrite {type === 'show_notes' ? 'notes' : 'description'}?</span>
+              <button
+                onClick={async () => {
+                  const ok = await onApply(activeContent)
+                  setApplyState(ok ? 'applied' : 'failed')
+                  setConfirmApply(false)
+                  if (ok && editing) setEditing(false)
+                  setTimeout(() => setApplyState('idle'), 2000)
+                }}
+                className="text-xs text-accent hover:text-accent-hover transition-colors font-medium"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirmApply(false)}
+                className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+              >
+                Cancel
+              </button>
+            </>
+          )}
+          {applyState === 'applied' && (
+            <span className="text-xs text-emerald-400">Applied!</span>
+          )}
+          {applyState === 'failed' && (
+            <span className="text-xs text-red-400">Failed</span>
+          )}
           <button
-            onClick={() => { onCopy(); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+            onClick={() => { onCopy(activeContent); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
             className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
           >
             {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <button
+            onClick={() => {
+              if (editing) setEditedContent(content)
+              setEditing(!editing)
+            }}
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            {editing ? 'Cancel' : 'Edit'}
           </button>
           <button
             onClick={onRegenerate}
@@ -723,9 +1063,57 @@ function GeneratedResult({
           </button>
         </div>
       </div>
-      <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed">
-        {content}
-      </div>
+
+      {editing ? (
+        <textarea
+          value={editedContent}
+          onChange={(e) => setEditedContent(e.target.value)}
+          className="w-full rounded-md border border-border-subtle bg-surface-raised px-3 py-2 text-xs text-text-primary leading-relaxed focus:border-accent focus:outline-none resize-y"
+          rows={Math.min(20, editedContent.split('\n').length + 2)}
+          style={{ minHeight: '100px' }}
+        />
+      ) : type === 'show_notes' ? (
+        <MarkdownContent content={content} />
+      ) : (
+        <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed">
+          {content}
+        </div>
+      )}
+
+      <SocialMeta type={type} content={activeContent} />
+
+      {previousVersions && previousVersions.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            {showHistory ? 'Hide previous' : `${previousVersions.length} previous`}
+          </button>
+          {showHistory && (
+            <div className="mt-2 space-y-2 border-t border-border-subtle pt-2">
+              {previousVersions.map((pv) => (
+                <div key={pv.id} className="rounded-md bg-surface-raised p-2 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-tertiary">
+                      {new Date(pv.created_at).toLocaleString()}
+                    </span>
+                    <button
+                      onClick={() => onCopy(pv.result)}
+                      className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed line-clamp-3">
+                    {pv.result}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

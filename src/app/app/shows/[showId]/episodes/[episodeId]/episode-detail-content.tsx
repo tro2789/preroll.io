@@ -31,11 +31,12 @@ interface EpisodeDetailContentProps {
   connectedProviders: IntegrationProvider[]
   episode: EpisodeMeta
   hasIntegration: boolean
+  hasAudioFiles: boolean
 }
 
 export function EpisodeDetailContent({
   episodeId, showId, integration, deliverables,
-  connectedProviders, episode, hasIntegration,
+  connectedProviders, episode, hasIntegration, hasAudioFiles,
 }: EpisodeDetailContentProps) {
   const sharedCount = deliverables.length
   const pendingCount = deliverables.filter(d => d.status === 'pending').length
@@ -78,7 +79,7 @@ export function EpisodeDetailContent({
       <AiPanel
         episodeId={episodeId}
         showId={showId}
-        hasAudioFiles={hasIntegration}
+        hasAudioFiles={hasAudioFiles}
       />
     </div>
   )

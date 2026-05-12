@@ -34,7 +34,14 @@ function getPrompt(type: GenerationType, ctx: GenerationContext): { system: stri
   }
 }
 
-const MODEL = 'claude-haiku-4-5-20251001'
+const MODELS: Partial<Record<GenerationType, string>> & { default: string } = {
+  default: 'claude-haiku-4-5-20251001',
+  show_notes: 'claude-sonnet-4-5-20250514',
+}
+
+function getModel(type: GenerationType): string {
+  return MODELS[type] || MODELS.default
+}
 
 export async function generate(
   type: GenerationType,
@@ -45,7 +52,7 @@ export async function generate(
   const { system, user } = getPrompt(type, ctx)
 
   const response = await client.messages.create({
-    model: MODEL,
+    model: getModel(type),
     max_tokens: 2048,
     system,
     messages: [{ role: 'user', content: user }],

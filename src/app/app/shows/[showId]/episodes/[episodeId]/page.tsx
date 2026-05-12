@@ -15,7 +15,7 @@ export default async function EpisodeDetailPage({
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnections }] = await Promise.all([
+  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnections }, { data: audioFileRefs }] = await Promise.all([
     supabase
       .from('episodes')
       .select('*, pipeline_stages(id, name, position), shows(name, clients(id, name, email, invite_code, client_user_id, onboarded_at))')
@@ -40,6 +40,11 @@ export default async function EpisodeDetailPage({
       .from('distribution_connections')
       .select('id, provider')
       .eq('show_id', showId),
+    supabase
+      .from('file_references')
+      .select('id, mime_type')
+      .eq('episode_id', episodeId)
+      .limit(10),
   ])
 
   if (error || !episode) {
@@ -64,6 +69,10 @@ export default async function EpisodeDetailPage({
     youtube: { displayName: 'YouTube', acceptedMimeTypes: ['video/*'] },
     dropbox: { displayName: 'Dropbox' },
   }
+
+  const hasAudioFiles = !!episodeIntegration || (audioFileRefs || []).some(
+    (f: { mime_type: string | null }) => f.mime_type?.startsWith('audio/') || f.mime_type?.startsWith('video/')
+  )
 
   const integration = episodeIntegration ? {
     provider: episodeIntegration.provider as IntegrationProvider,
@@ -206,6 +215,7 @@ export default async function EpisodeDetailPage({
             stage: stage ? { name: stage.name } : null,
           }}
           hasIntegration={!!episodeIntegration}
+          hasAudioFiles={hasAudioFiles}
         />
       </div>
     </div>

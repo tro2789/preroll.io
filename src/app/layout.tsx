@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Inter } from "next/font/google";
+import { Sora, Inter, Geist } from "next/font/google";
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -9,11 +10,7 @@ const sora = Sora({
   display: "swap",
 });
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "preroll.io",
@@ -30,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sora.variable} ${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={cn(sora.variable, "font-sans", geist.variable)} suppressHydrationWarning>
       <body className="antialiased">
         <RootProvider
           theme={{
