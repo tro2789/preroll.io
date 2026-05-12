@@ -439,33 +439,37 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
 
           {/* No audio yet or ready to run */}
           {!hasTranscript && !isTranscribing && !isRunning && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {hasAudioFiles ? (
-                <div className="space-y-3">
-                  <p className="text-xs text-text-secondary">
-                    Audio detected. Run the AI pipeline to transcribe and generate show notes, descriptions, and social posts.
-                  </p>
+                <>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Show Notes', 'Description', 'Title Ideas', 'Social Posts'].map((label) => (
+                      <div key={label} className="rounded-md border border-border-subtle/50 bg-surface-default/50 px-3 py-2">
+                        <span className="text-xs text-text-secondary/50">{label}</span>
+                      </div>
+                    ))}
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleRunPipeline}
                       disabled={startingPipeline || totalAvailable < 1}
                       className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
                     >
-                      {startingPipeline ? 'Starting...' : 'Run AI Pipeline'}
+                      {startingPipeline ? 'Starting...' : 'Generate Content'}
                     </button>
-                    <span className="text-xs text-text-tertiary">~{estimatedCost} credits</span>
-                    <TranscribeButton
-                      episodeId={episodeId}
-                      transcribing={transcribing}
-                      hasAudioFiles={hasAudioFiles}
-                      onTranscribe={handleTranscribe}
-                    />
+                    <span className="text-xs text-text-secondary">~{estimatedCost} credits</span>
                   </div>
-                </div>
+                  <TranscribeButton
+                    episodeId={episodeId}
+                    transcribing={transcribing}
+                    hasAudioFiles={hasAudioFiles}
+                    onTranscribe={handleTranscribe}
+                  />
+                </>
               ) : (
                 <div className="space-y-3">
                   <p className="text-xs text-text-secondary">
-                    Upload or link audio to this episode to automatically generate show notes, descriptions, and social posts.
+                    Upload or link audio to generate show notes, descriptions, and social posts.
                   </p>
                   <TranscribeButton
                     episodeId={episodeId}
@@ -547,8 +551,8 @@ const STEP_TEXT_COLOR: Record<PipelineStepStatus, string> = {
   completed: 'text-text-primary',
   running: 'text-text-primary',
   failed: 'text-red-400',
-  queued: 'text-text-tertiary',
-  idle: 'text-text-tertiary',
+  queued: 'text-text-secondary',
+  idle: 'text-text-secondary',
 }
 
 function PipelineStep({ label, status, detail }: {
@@ -604,30 +608,33 @@ function TranscriptSection(props: {
 
   return (
     <div className="rounded-md border border-border-subtle bg-surface-default">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between px-3 py-2"
-        aria-expanded={open}
-      >
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3 py-2">
+        <button
+          onClick={() => setOpen(!open)}
+          className="flex items-center gap-2"
+          aria-expanded={open}
+          aria-label="Expand transcript"
+        >
+          <svg
+            className={`h-3.5 w-3.5 text-text-tertiary transition-transform ${open ? 'rotate-90' : ''}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
           <span className="text-xs font-medium text-text-primary">Transcript</span>
           <span className="text-xs text-text-secondary">
             {props.wordCount.toLocaleString()} words · {props.speakerCount} speaker{props.speakerCount !== 1 ? 's' : ''}
           </span>
-        </div>
+        </button>
         <div className="flex items-center gap-2">
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              navigator.clipboard.writeText(props.fullText)
-            }}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            onClick={() => navigator.clipboard.writeText(props.fullText)}
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             Copy
           </button>
           <button
-            onClick={(e) => {
-              e.stopPropagation()
+            onClick={() => {
               const blob = new Blob([props.fullText], { type: 'text/plain' })
               const url = URL.createObjectURL(blob)
               const a = document.createElement('a')
@@ -636,18 +643,12 @@ function TranscriptSection(props: {
               a.click()
               URL.revokeObjectURL(url)
             }}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             Download
           </button>
-          <svg
-            className={`h-3.5 w-3.5 text-text-tertiary transition-transform ${open ? 'rotate-180' : ''}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
         </div>
-      </button>
+      </div>
       {open && (
         <div className="border-t border-border-subtle px-3 py-2">
           <TranscriptViewer
@@ -717,7 +718,7 @@ function TranscribeButton({
             placeholder="https://example.com/episode.mp3"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="flex-1 rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+            className="flex-1 rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs text-text-primary placeholder:text-text-tertiary focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus:outline-none"
             aria-label="Audio URL"
           />
           <button
@@ -790,7 +791,7 @@ function TitleSuggestions({ content, onRegenerate }: { content: string; onRegene
                 setCopiedIdx(i)
                 setTimeout(() => setCopiedIdx(null), 2000)
               }}
-              className="shrink-0 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+              className="shrink-0 text-xs text-text-secondary hover:text-text-primary transition-colors"
             >
               {copiedIdx === i ? 'Copied!' : 'Copy'}
             </button>
@@ -799,7 +800,7 @@ function TitleSuggestions({ content, onRegenerate }: { content: string; onRegene
       </div>
       <button
         onClick={onRegenerate}
-        className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+        className="text-xs text-text-secondary hover:text-text-primary transition-colors"
       >
         Regenerate
       </button>
@@ -810,14 +811,14 @@ function TitleSuggestions({ content, onRegenerate }: { content: string; onRegene
 function SocialMeta({ type, content }: { type: GenerationType; content: string }) {
   if (type === 'social_twitter') {
     return (
-      <div className={`text-xs tabular-nums ${content.length > 280 ? 'text-red-400' : 'text-text-tertiary'}`}>
+      <div className={`text-xs tabular-nums ${content.length > 280 ? 'text-red-400' : 'text-text-secondary'}`}>
         {content.length}/280
       </div>
     )
   }
   if (type === 'social_linkedin') {
     return (
-      <div className="text-xs text-text-tertiary tabular-nums">
+      <div className="text-xs text-text-secondary tabular-nums">
         {content.length} chars · {content.split(/\n\n+/).length} paragraphs
       </div>
     )
@@ -825,7 +826,7 @@ function SocialMeta({ type, content }: { type: GenerationType; content: string }
   if (type === 'social_instagram') {
     const hashtagCount = (content.match(/#\w+/g) || []).length
     return (
-      <div className="text-xs text-text-tertiary tabular-nums">
+      <div className="text-xs text-text-secondary tabular-nums">
         {content.length} chars · {hashtagCount} hashtags
       </div>
     )
@@ -881,7 +882,7 @@ function GeneratedContentTabs({
                 .join('\n\n')
               navigator.clipboard.writeText(all)
             }}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             Copy all
           </button>
@@ -937,7 +938,7 @@ function GeneratedResult({
   onRegenerate: () => void
 }) {
   const canApply = type === 'show_notes' || type === 'description'
-  const [applyState, setApplyState] = useState<'idle' | 'applied' | 'failed'>('idle')
+  const [applyState, setApplyState] = useState<'idle' | 'confirm' | 'applying' | 'applied' | 'failed'>('idle')
   const [copied, setCopied] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editedContent, setEditedContent] = useState(content)
@@ -957,7 +958,7 @@ function GeneratedResult({
           <div className="mt-2">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+              className="text-xs text-text-secondary hover:text-text-primary transition-colors"
             >
               {showHistory ? 'Hide previous' : `${previousVersions.length} previous`}
             </button>
@@ -989,15 +990,36 @@ function GeneratedResult({
         <div className="flex items-center gap-2">
           {canApply && applyState === 'idle' && (
             <button
-              onClick={async () => {
-                const ok = await onApply(content)
-                setApplyState(ok ? 'applied' : 'failed')
-                setTimeout(() => setApplyState('idle'), 2000)
-              }}
-              className="text-xs text-accent hover:text-accent-hover transition-colors"
+              onClick={() => setApplyState('confirm')}
+              className="text-xs font-medium text-accent hover:text-accent-hover transition-colors"
             >
               Apply
             </button>
+          )}
+          {applyState === 'confirm' && (
+            <>
+              <span className="text-xs text-text-secondary">Overwrite?</span>
+              <button
+                onClick={async () => {
+                  setApplyState('applying')
+                  const ok = await onApply(content)
+                  setApplyState(ok ? 'applied' : 'failed')
+                  setTimeout(() => setApplyState('idle'), 2000)
+                }}
+                className="text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setApplyState('idle')}
+                className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+              >
+                Cancel
+              </button>
+            </>
+          )}
+          {applyState === 'applying' && (
+            <span className="text-xs text-text-secondary">Applying...</span>
           )}
           {applyState === 'applied' && (
             <span className="text-xs text-emerald-400">Applied!</span>
@@ -1007,19 +1029,19 @@ function GeneratedResult({
           )}
           <button
             onClick={() => { onCopy(content); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
           <button
             onClick={() => { setEditedContent(content); setEditOpen(true) }}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             Edit
           </button>
           <button
             onClick={onRegenerate}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             Regenerate
           </button>
@@ -1046,7 +1068,7 @@ function GeneratedResult({
         <div className="px-3 pb-3">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             {showHistory ? 'Hide previous' : `${previousVersions.length} previous`}
           </button>
@@ -1060,7 +1082,7 @@ function GeneratedResult({
                     </span>
                     <button
                       onClick={() => onCopy(pv.result)}
-                      className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                      className="text-xs text-text-secondary hover:text-text-primary transition-colors"
                     >
                       Copy
                     </button>
@@ -1123,14 +1145,14 @@ function EditContentDialog({
           <textarea
             value={content}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full h-full min-h-[300px] max-h-[50vh] rounded-md border border-border-subtle bg-surface-default px-3 py-2 text-xs text-text-primary leading-relaxed focus:border-accent focus:outline-none resize-y font-mono"
+            className="w-full h-full min-h-[300px] max-h-[50vh] rounded-md border border-border-subtle bg-surface-default px-3 py-2 text-xs text-text-primary leading-relaxed focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus:outline-none resize-y font-mono"
           />
         </div>
         <SocialMeta type={type} content={content} />
         <DialogFooter className="bg-transparent border-t-0 flex-row justify-between sm:justify-between">
           <button
             onClick={() => { onCopy(content); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
