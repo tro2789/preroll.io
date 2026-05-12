@@ -635,7 +635,16 @@ function TranscriptSection(props: {
           </button>
           <button
             onClick={() => {
-              const blob = new Blob([props.fullText], { type: 'text/plain' })
+              const fmt = (s: number) => {
+                const m = Math.floor(s / 60)
+                const sec = Math.floor(s % 60)
+                return `${m}:${sec.toString().padStart(2, '0')}`
+              }
+              const lines = props.segments.map(seg =>
+                `[${fmt(seg.start)}] Speaker ${seg.speaker + 1}: ${seg.text}`
+              )
+              const header = `Transcript — ${props.wordCount.toLocaleString()} words, ${props.speakerCount} speaker${props.speakerCount !== 1 ? 's' : ''}\n`
+              const blob = new Blob([header + '\n' + lines.join('\n\n')], { type: 'text/plain' })
               const url = URL.createObjectURL(blob)
               const a = document.createElement('a')
               a.href = url
