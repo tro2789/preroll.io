@@ -324,9 +324,15 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
 
   const previousByType = useMemo(() => {
     const map = new Map<string, Generation[]>()
-    for (const type of ALL_GENERATION_TYPES) {
-      const latest = latestGenByType.get(type)
-      map.set(type, generations.filter(g => g.generation_type === type && g.id !== latest?.id).slice(0, 4))
+    for (const g of generations) {
+      const latest = latestGenByType.get(g.generation_type)
+      if (g.id === latest?.id) continue
+      const arr = map.get(g.generation_type)
+      if (arr) {
+        if (arr.length < 4) arr.push(g)
+      } else {
+        map.set(g.generation_type, [g])
+      }
     }
     return map
   }, [generations, latestGenByType])
@@ -575,90 +581,16 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
 
           {/* Generated content tabs */}
           {(latestGenByType.size > 0 || (hasTranscript && !isRunning)) && (
-            <Tabs defaultValue={0}>
-              <div className="flex items-center justify-between">
-                <TabsList variant="line">
-                  <TabsTrigger value={0} className="text-xs">Production</TabsTrigger>
-                  <TabsTrigger value={1} className="text-xs">
-                    <span>Promotion</span>
-                    {PROMOTION_TYPES.filter(t => latestGenByType.has(t)).length > 1 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          const all = PROMOTION_TYPES
-                            .map(t => {
-                              const gen = latestGenByType.get(t)
-                              return gen ? `--- ${GENERATION_LABELS[t]} ---\n${gen.result}` : null
-                            })
-                            .filter(Boolean)
-                            .join('\n\n')
-                          navigator.clipboard.writeText(all)
-                        }}
-                        className="ml-2 text-text-tertiary hover:text-text-secondary transition-colors"
-                      >
-                        Copy all
-                      </button>
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
-              <TabsContent value={0} className="space-y-2">
-                {PRODUCTION_TYPES.map((type) => {
-                  const gen = latestGenByType.get(type)
-                  if (!gen) return null
-                  return (
-                    <GeneratedResult
-                      key={gen.id}
-                      type={type as GenerationType}
-                      content={gen.result}
-                      previousVersions={previousByType.get(type)}
-                      onApply={(content) => handleApply(type as GenerationType, content)}
-                      onCopy={(content) => navigator.clipboard.writeText(content)}
-                      onRegenerate={() => handleGenerate(type as GenerationType)}
-                    />
-                  )
-                })}
-                {hasTranscript && !isRunning && (
-                  <RegenerateSection
-                    label="production"
-                    types={PRODUCTION_TYPES}
-                    hasExisting={PRODUCTION_TYPES.some(t => latestGenByType.has(t))}
-                    generating={generating}
-                    totalAvailable={totalAvailable}
-                    onGenerate={handleGenerate}
-                  />
-                )}
-              </TabsContent>
-
-              <TabsContent value={1} className="space-y-2">
-                {PROMOTION_TYPES.map((type) => {
-                  const gen = latestGenByType.get(type)
-                  if (!gen) return null
-                  return (
-                    <GeneratedResult
-                      key={gen.id}
-                      type={type as GenerationType}
-                      content={gen.result}
-                      previousVersions={previousByType.get(type)}
-                      onApply={(content) => handleApply(type as GenerationType, content)}
-                      onCopy={(content) => navigator.clipboard.writeText(content)}
-                      onRegenerate={() => handleGenerate(type as GenerationType)}
-                    />
-                  )
-                })}
-                {hasTranscript && !isRunning && (
-                  <RegenerateSection
-                    label="promotion"
-                    types={PROMOTION_TYPES}
-                    hasExisting={PROMOTION_TYPES.some(t => latestGenByType.has(t))}
-                    generating={generating}
-                    totalAvailable={totalAvailable}
-                    onGenerate={handleGenerate}
-                  />
-                )}
-              </TabsContent>
-            </Tabs>
+            <GeneratedContentTabs
+              latestGenByType={latestGenByType}
+              previousByType={previousByType}
+              hasTranscript={!!hasTranscript}
+              isRunning={isRunning}
+              generating={generating}
+              totalAvailable={totalAvailable}
+              onApply={handleApply}
+              onGenerate={handleGenerate}
+            />
           )}
         </div>
       )}
@@ -941,6 +873,94 @@ function SocialMeta({ type, content }: { type: GenerationType; content: string }
     )
   }
   return null
+}
+
+const CONTENT_TABS = [
+  { value: 0, types: PRODUCTION_TYPES, label: 'production', name: 'Production' },
+  { value: 1, types: PROMOTION_TYPES, label: 'promotion', name: 'Promotion' },
+] as const
+
+function GeneratedContentTabs({
+  latestGenByType,
+  previousByType,
+  hasTranscript,
+  isRunning,
+  generating,
+  totalAvailable,
+  onApply,
+  onGenerate,
+}: {
+  latestGenByType: Map<string, Generation>
+  previousByType: Map<string, Generation[]>
+  hasTranscript: boolean
+  isRunning: boolean
+  generating: GenerationType | null
+  totalAvailable: number
+  onApply: (type: GenerationType, content: string) => Promise<boolean>
+  onGenerate: (type: GenerationType) => void
+}) {
+  const [activeTab, setActiveTab] = useState(0)
+
+  return (
+    <Tabs defaultValue={0} onValueChange={(v) => setActiveTab(v as number)}>
+      <div className="flex items-center justify-between">
+        <TabsList variant="line">
+          {CONTENT_TABS.map(tab => (
+            <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+              {tab.name}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        {activeTab === 1 && PROMOTION_TYPES.filter(t => latestGenByType.has(t)).length > 1 && (
+          <button
+            onClick={() => {
+              const all = PROMOTION_TYPES
+                .map(t => {
+                  const gen = latestGenByType.get(t)
+                  return gen ? `--- ${GENERATION_LABELS[t]} ---\n${gen.result}` : null
+                })
+                .filter(Boolean)
+                .join('\n\n')
+              navigator.clipboard.writeText(all)
+            }}
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            Copy all
+          </button>
+        )}
+      </div>
+
+      {CONTENT_TABS.map(tab => (
+        <TabsContent key={tab.value} value={tab.value} className="space-y-2">
+          {tab.types.map((type) => {
+            const gen = latestGenByType.get(type)
+            if (!gen) return null
+            return (
+              <GeneratedResult
+                key={gen.id}
+                type={type as GenerationType}
+                content={gen.result}
+                previousVersions={previousByType.get(type)}
+                onApply={(content) => onApply(type as GenerationType, content)}
+                onCopy={(content) => navigator.clipboard.writeText(content)}
+                onRegenerate={() => onGenerate(type as GenerationType)}
+              />
+            )
+          })}
+          {hasTranscript && !isRunning && (
+            <RegenerateSection
+              label={tab.label}
+              types={[...tab.types]}
+              hasExisting={tab.types.some(t => latestGenByType.has(t))}
+              generating={generating}
+              totalAvailable={totalAvailable}
+              onGenerate={onGenerate}
+            />
+          )}
+        </TabsContent>
+      ))}
+    </Tabs>
+  )
 }
 
 function GeneratedResult({
