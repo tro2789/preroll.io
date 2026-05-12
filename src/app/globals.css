@@ -20,7 +20,7 @@
   /* Text colors */
   --color-text-primary: oklch(0.93 0.005 260);
   --color-text-secondary: oklch(0.65 0.01 260);
-  --color-text-tertiary: oklch(0.55 0.01 260);
+  --color-text-tertiary: oklch(0.62 0.01 260);
 
   /* Accent — shifted from generic indigo to a warmer violet-blue */
   --color-accent: oklch(0.65 0.18 275);

@@ -140,16 +140,16 @@ export default async function EpisodeDetailPage({
 
         {/* Metadata row */}
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 text-accent px-2.5 py-0.5 text-xs font-medium">
+          <span className="inline-flex items-center rounded-full bg-accent/20 text-text-primary px-2.5 py-0.5 text-xs font-medium">
             {stage?.name || 'Not set'}
           </span>
           {episode.distribution_status === 'published' && (
-            <span className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/10 text-emerald-400 px-2.5 py-0.5 text-xs font-medium">
+            <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 text-xs font-medium">
               Published
             </span>
           )}
           {episode.distribution_status === 'scheduled' && (
-            <span className="inline-flex items-center rounded-full border border-amber-400/30 bg-amber-500/10 text-amber-400 px-2.5 py-0.5 text-xs font-medium">
+            <span className="inline-flex items-center rounded-full bg-amber-500/20 text-amber-300 px-2.5 py-0.5 text-xs font-medium">
               Scheduled
             </span>
           )}
