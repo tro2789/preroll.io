@@ -33,7 +33,8 @@ export function Topbar() {
 
   return (
     <div className="hidden md:flex items-center h-12 px-6 border-b border-border-subtle bg-surface-base/80 backdrop-blur-sm sticky top-0 z-30">
-      <nav className="flex items-center gap-1.5 text-sm min-w-0">
+      {/* Breadcrumbs — left */}
+      <nav className="flex items-center gap-1.5 text-[13px] min-w-0">
         {crumbs.map((crumb, i) => (
           <span key={crumb.href} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-fg-faint">/</span>}
@@ -48,23 +49,29 @@ export function Topbar() {
         ))}
       </nav>
 
-      <div className="flex-1 flex justify-center px-4">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-border-subtle bg-surface-input text-text-secondary text-sm w-full max-w-[280px] cursor-default">
-          <SearchIcon className="h-3.5 w-3.5 text-fg-faint shrink-0" />
-          <span className="text-fg-faint text-xs">Search...</span>
-          <kbd className="ml-auto text-[10px] font-mono text-fg-faint border border-border-subtle rounded px-1 py-0.5">⌘K</kbd>
-        </div>
-      </div>
+      {/* Spacer */}
+      <div className="flex-1" />
 
+      {/* Right group: search, new episode, bell */}
       <div className="flex items-center gap-2">
-        <Link
-          href="/app/shows"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover transition-colors"
-        >
+        {/* Search bar */}
+        <div className="flex items-center gap-2 bg-surface-input border border-border-subtle rounded-[7px] w-[220px] px-2.5 py-1.5 text-[13px] text-text-tertiary cursor-default">
+          <SearchIcon className="h-3.5 w-3.5 shrink-0" />
+          <span>Search episodes, shows&hellip;</span>
+          <kbd className="ml-auto bg-surface-overlay border border-border-subtle rounded px-1.5 py-0.5 text-[10.5px] font-mono text-fg-faint">⌘K</kbd>
+        </div>
+
+        {/* New episode button */}
+        <button className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-accent text-white hover:bg-accent-hover transition-colors">
           <PlusIcon className="h-3.5 w-3.5" />
           New episode
-        </Link>
-        <button className="p-2 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors" title="Notifications">
+        </button>
+
+        {/* Notification bell — icon button */}
+        <button
+          className="flex items-center justify-center w-[30px] h-[30px] rounded-[7px] border border-transparent text-text-secondary hover:bg-surface-raised hover:border-border-subtle hover:text-text-primary transition-colors"
+          title="Notifications"
+        >
           <BellIcon className="h-4 w-4" />
         </button>
       </div>

@@ -70,46 +70,46 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
   if (!activeOrg) return null
 
   return (
-    <div ref={ref} className="relative px-3">
+    <div ref={ref} className="relative mx-2 mt-[9px] mb-1">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-surface-raised cursor-pointer"
+        className="w-full flex items-center gap-[9px] rounded-[7px] px-[10px] py-[9px] text-left transition-colors border border-transparent hover:bg-surface-raised hover:border-border-subtle cursor-pointer"
       >
         {activeOrg.logoUrl ? (
-          <img src={activeOrg.logoUrl} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+          <img src={activeOrg.logoUrl} alt="" className="h-6 w-6 rounded-[5px] object-cover shrink-0" />
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent text-sm font-bold shrink-0">
+          <div className="flex h-6 w-6 items-center justify-center rounded-[5px] bg-gradient-to-br from-accent to-[oklch(0.6_0.16_18)] text-white text-xs font-bold shrink-0" style={{ fontFamily: 'var(--font-display, inherit)' }}>
             {activeOrg.name.charAt(0).toUpperCase()}
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-text-primary truncate">{activeOrg.name}</p>
-          <p className="text-xs text-text-secondary">
+          <p className="text-[13px] font-semibold text-text-primary truncate">{activeOrg.name}</p>
+          <p className="text-[11px] text-text-tertiary">
             {PLAN_LABELS[activeOrg.planId] || activeOrg.planId} &middot; {activeOrg.role}
           </p>
         </div>
-        <ChevronIcon className={`h-4 w-4 text-text-tertiary shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronsUpDownIcon className="h-4 w-4 text-fg-faint shrink-0" />
       </button>
 
       {open && (
-        <div className="absolute left-3 right-3 top-full mt-1 z-50 rounded-lg border border-border-default bg-surface-overlay shadow-lg py-1">
+        <div className="absolute left-0 right-0 top-full mt-1 z-50 rounded-[7px] border border-border-default bg-surface-overlay shadow-lg py-1">
           {otherOrgs.map((org) => (
             <button
               key={org.id}
               onClick={() => switchOrg(org.id)}
               disabled={switching}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-raised transition-colors disabled:opacity-50"
+              className="w-full flex items-center gap-[9px] px-[10px] py-2 text-left hover:bg-surface-raised transition-colors disabled:opacity-50"
             >
               {org.logoUrl ? (
-                <img src={org.logoUrl} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+                <img src={org.logoUrl} alt="" className="h-6 w-6 rounded-[5px] object-cover shrink-0" />
               ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-input text-text-secondary text-sm font-bold shrink-0">
+                <div className="flex h-6 w-6 items-center justify-center rounded-[5px] bg-surface-input text-text-secondary text-xs font-bold shrink-0">
                   {org.name.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">{org.name}</p>
-                <p className="text-xs text-text-secondary">
+                <p className="text-[13px] font-semibold text-text-primary truncate">{org.name}</p>
+                <p className="text-[11px] text-text-tertiary">
                   {PLAN_LABELS[org.planId] || org.planId} &middot; {org.role}
                 </p>
               </div>
@@ -118,12 +118,12 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
           <div className="border-t border-border-default mt-1 pt-1">
             <button
               onClick={() => { setOpen(false); setCreateOpen(true) }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-surface-raised transition-colors"
+              className="w-full flex items-center gap-[9px] px-[10px] py-2 text-left hover:bg-surface-raised transition-colors"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-border-default text-text-tertiary shrink-0">
-                <PlusIcon className="h-4 w-4" />
+              <div className="flex h-6 w-6 items-center justify-center rounded-[5px] border border-dashed border-border-default text-text-tertiary shrink-0">
+                <PlusIcon className="h-3.5 w-3.5" />
               </div>
-              <p className="text-sm font-medium text-text-secondary">New Organization</p>
+              <p className="text-[13px] font-medium text-text-secondary">New Organization</p>
             </button>
           </div>
         </div>
@@ -168,18 +168,11 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts 
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex md:w-[244px] md:flex-col md:fixed md:inset-y-0">
-        <div className="flex flex-col flex-grow bg-bg-deeper border-r border-border-default pt-6 pb-4 overflow-y-auto">
-          <div className="flex items-center flex-shrink-0 px-6 mb-2">
-            <span className="text-sm font-semibold text-text-secondary uppercase tracking-widest">
-              PREROLL.IO
-            </span>
-          </div>
+        <div className="flex flex-col flex-grow bg-bg-deeper border-r border-border-subtle overflow-y-auto">
           {showSwitcher && (
-            <div className="mb-4">
-              <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId} />
-            </div>
+            <OrgSwitcher orgs={orgs} activeOrgId={activeOrgId} />
           )}
-          <nav className="flex-1 px-3 space-y-0.5">
+          <nav className="flex-1 px-2 py-1.5 space-y-px">
             {mainNav.map((item) => {
               const isActive =
                 item.href === '/app'
@@ -191,30 +184,30 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts 
                   key={item.href}
                   href={item.href}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`group flex items-center gap-[9px] px-[10px] py-[6.5px] text-[13.5px] rounded-[7px] transition-colors ${
                     isActive
-                      ? 'bg-accent-muted text-accent-hover'
-                      : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
+                      ? 'bg-surface-overlay text-text-primary font-medium'
+                      : 'text-text-secondary font-[450] hover:text-text-primary hover:bg-surface-raised'
                   }`}
                 >
                   <item.icon
-                    className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                    className={`h-4 w-4 flex-shrink-0 ${
                       isActive
                         ? 'text-accent'
-                        : 'text-text-secondary group-hover:text-text-primary'
+                        : 'text-text-tertiary group-hover:text-text-secondary'
                     }`}
                   />
                   {item.label}
                   {badge !== undefined && badge > 0 && (
-                    <span className="ml-auto text-xs font-mono text-fg-faint">{badge}</span>
+                    <span className="ml-auto text-[10.5px] font-semibold font-mono bg-surface-3 text-text-secondary px-[5px] rounded-full leading-4">{badge}</span>
                   )}
                 </Link>
               )
             })}
             {resourceNav.length > 0 && (
               <>
-                <div className="pt-4 pb-1 px-3">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-faint">Resources</span>
+                <div className="pt-3 pb-[5px] px-[10px]">
+                  <span className="text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-faint">Resources</span>
                 </div>
                 {resourceNav.map((item) => {
                   const isActive = pathname.startsWith(item.href)
@@ -224,22 +217,22 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts 
                       href={item.href}
                       aria-current={isActive ? 'page' : undefined}
                       {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      className={`group flex items-center gap-[9px] px-[10px] py-[6.5px] text-[13.5px] rounded-[7px] transition-colors ${
                         isActive
-                          ? 'bg-accent-muted text-accent-hover'
-                          : 'text-text-secondary hover:text-text-primary hover:bg-surface-raised'
+                          ? 'bg-surface-overlay text-text-primary font-medium'
+                          : 'text-text-secondary font-[450] hover:text-text-primary hover:bg-surface-raised'
                       }`}
                     >
                       <item.icon
-                        className={`mr-3 h-5 w-5 flex-shrink-0 ${
+                        className={`h-4 w-4 flex-shrink-0 ${
                           isActive
                             ? 'text-accent'
-                            : 'text-text-secondary group-hover:text-text-primary'
+                            : 'text-text-tertiary group-hover:text-text-secondary'
                         }`}
                       />
                       {item.label}
                       {item.external && (
-                        <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-fg-faint opacity-0 group-hover:opacity-100 transition-opacity" />
                       )}
                     </Link>
                   )
@@ -247,23 +240,23 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts 
               </>
             )}
           </nav>
-          <div className="px-3 pt-3 mt-auto border-t border-border-subtle">
-            <div className="flex items-center gap-3 px-3 py-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-overlay text-text-secondary text-xs font-semibold shrink-0">
+          <div className="p-2 mt-auto border-t border-border-subtle">
+            <div className="flex items-center gap-[9px] px-2 py-[7px] rounded-[7px] hover:bg-surface-raised transition-colors">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-3 text-text-secondary text-[11px] font-semibold shrink-0">
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-text-primary truncate">
+                <p className="text-[12.5px] font-medium text-text-primary truncate">
                   {userDisplayName || userEmail}
                 </p>
                 {userDisplayName && (
-                  <p className="text-xs text-text-secondary truncate">{userEmail}</p>
+                  <p className="text-[11px] text-text-tertiary truncate">{userEmail}</p>
                 )}
               </div>
               <form action="/auth/signout" method="POST">
                 <button
                   type="submit"
-                  className="p-1.5 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors"
+                  className="p-1.5 rounded-[5px] text-fg-faint hover:text-text-secondary hover:bg-surface-overlay transition-colors"
                   title="Sign out"
                 >
                   <SignOutIcon className="h-4 w-4" />
@@ -433,10 +426,11 @@ function ChartIcon({ className }: { className?: string }) {
   )
 }
 
-function ChevronIcon({ className }: { className?: string }) {
+function ChevronsUpDownIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 15 3.75 3.75L15.75 15" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 9 3.75-3.75L15.75 9" />
     </svg>
   )
 }

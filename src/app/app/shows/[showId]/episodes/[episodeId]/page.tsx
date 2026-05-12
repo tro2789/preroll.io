@@ -4,6 +4,7 @@ import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { EpisodeDetailContent } from './episode-detail-content'
 import { AiPanel } from '@/components/episodes/ai-panel'
+import { PeekPane } from '@/components/episodes/peek-pane'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -89,22 +90,55 @@ export default async function EpisodeDetailPage({
     return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
+  const stageColor = stage ? {
+    planning: 'var(--color-status-planning)',
+    recording: 'var(--color-status-recording)',
+    editing: 'var(--color-status-editing)',
+    review: 'var(--color-status-review)',
+    approved: 'var(--color-status-approved)',
+    published: 'var(--color-status-published)',
+  }[stage.name.toLowerCase()] || undefined : undefined
+
   return (
-    <div className="mx-auto max-w-6xl">
-      {/* Episode header */}
-      <div className="rounded-lg border border-border-default bg-surface-raised p-4 space-y-3">
-        {/* Top row: back nav + actions */}
-        <div className="flex items-center justify-between">
-          <Link
-            href={`/app/shows/${showId}`}
-            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-            {showData?.name || 'Show'}
-          </Link>
-          <div className="flex items-center gap-2">
+    <div className="max-w-[1640px] mx-auto">
+      {/* Page header */}
+      <div className="pt-1">
+        <Link
+          href={`/app/shows/${showId}`}
+          className="inline-flex items-center gap-1 text-[12.5px] text-text-secondary hover:text-text-primary transition-colors"
+        >
+          <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m15 18-6-6 6-6" /></svg>
+          {showData?.name || 'Show'}
+        </Link>
+        <div className="flex items-start gap-4 mt-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2.5">
+              {episode.episode_number != null && (
+                <span className="font-mono text-xs text-text-tertiary">EP {String(episode.episode_number).padStart(3, '0')}</span>
+              )}
+              {stage && (
+                <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-0.5 rounded-full border border-border-subtle bg-surface-input text-text-secondary">
+                  <span className="w-[7px] h-[7px] rounded-full" style={{ background: stageColor }} />
+                  {stage.name}
+                </span>
+              )}
+            </div>
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary mt-1.5">
+              {episode.title}
+            </h1>
+            <p className="text-[13.5px] text-text-secondary mt-1">
+              {showData?.name}{client?.name ? ` · with ${client.name}` : ''}
+              {episode.scheduled_publish_date && <> — scheduled to publish <span className="font-mono">{formatDate(episode.scheduled_publish_date)}</span></>}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
+              className="inline-flex items-center gap-1.5 px-2.5 py-[5.5px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+              Edit
+            </Link>
             {(distributionConnections || []).map((dc: any) => (
               <PublishButton
                 key={dc.id}
@@ -120,70 +154,76 @@ export default async function EpisodeDetailPage({
                 deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, type: d.type }))}
               />
             ))}
-            <Link
-              href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
-              className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-sm font-medium text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
-            >
-              Edit
-            </Link>
             <EpisodeDetailActions showId={showId} episodeId={episodeId} />
           </div>
         </div>
 
-        {/* Title */}
-        <h1 className="text-xl font-bold text-text-primary">
-          {episode.episode_number != null && (
-            <span className="text-text-secondary font-semibold">EP {episode.episode_number} · </span>
-          )}
-          {episode.title}
-        </h1>
-
         {/* Published info */}
         {episode.published_at && (
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 text-xs font-medium">
+          <div className="flex flex-wrap items-center gap-2 mt-3 text-sm">
+            <span className="inline-flex items-center rounded-full bg-success/20 text-success px-2.5 py-0.5 text-xs font-medium">
               Published {formatDate(episode.published_at)}
             </span>
             {(episode.distribution_metadata as any)?.share_url && (
-              <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
+              <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="rounded-[5px] border border-border-subtle px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
                 Transistor
-              </a>
-            )}
-            {(episode.distribution_metadata as any)?.view_url && (
-              <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
-                YouTube
               </a>
             )}
           </div>
         )}
+
+        <div className="flex gap-0.5 border-b border-border-subtle mt-5">
+          <span className="px-2.5 py-2 text-[13px] font-medium text-text-primary border-b-2 border-accent -mb-px">Overview</span>
+          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Files <span className="font-mono text-[11px] text-fg-faint ml-1.5">{(deliverables || []).length}</span></span>
+          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Distribution</span>
+          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Activity</span>
+        </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
-        {/* Left column: files */}
-        <div>
-          <EpisodeDetailContent
-            episodeId={episodeId}
-            showId={showId}
-            integration={integration}
-            deliverables={deliverables || []}
-            connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
+      <div className="mt-5 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
+        {/* Working area: AI + files */}
+        <div className="flex flex-col lg:flex-row gap-5 items-start min-w-0">
+          <div className="flex-[1.4] min-w-0">
+            <AiPanel
+              episodeId={episodeId}
+              showId={showId}
+              hasAudioFiles={hasAudioFiles}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <EpisodeDetailContent
+              episodeId={episodeId}
+              showId={showId}
+              integration={integration}
+              deliverables={deliverables || []}
+              connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
+              episode={{
+                scheduled_publish_date: episode.scheduled_publish_date,
+                published_at: episode.published_at,
+                description: episode.description,
+                notes: episode.notes,
+                stage: stage ? { name: stage.name } : null,
+              }}
+              hasIntegration={!!episodeIntegration}
+            />
+          </div>
+        </div>
+
+        {/* Peek pane: sticky metadata rail */}
+        <aside className="xl:sticky xl:top-16">
+          <PeekPane
             episode={{
+              episode_number: episode.episode_number,
               scheduled_publish_date: episode.scheduled_publish_date,
               published_at: episode.published_at,
               description: episode.description,
               notes: episode.notes,
-              stage: stage ? { name: stage.name } : null,
             }}
-            hasIntegration={!!episodeIntegration}
-          />
-        </div>
-
-        {/* Right column: AI assistant */}
-        <aside className="lg:sticky lg:top-4 lg:self-start">
-          <AiPanel
-            episodeId={episodeId}
+            stage={stage ? { name: stage.name } : null}
+            showName={showData?.name || 'Show'}
+            clientName={client?.name || null}
             showId={showId}
-            hasAudioFiles={hasAudioFiles}
+            deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, status: d.status }))}
           />
         </aside>
       </div>

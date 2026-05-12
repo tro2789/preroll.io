@@ -274,13 +274,16 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
         wipLimit={col.wipLimit}
         collapsed={collapsed}
         header={
-          <div className="flex items-center gap-2 px-1 pb-3">
+          <div className="flex items-center gap-2 px-1 pb-2.5">
             <CollapseToggle collapsed={collapsed} onToggle={() => toggle(col.id)} />
-            <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
-            <h3 className={`text-xs font-semibold uppercase tracking-wider ${colors.header}`}>
+            <span className={`h-[7px] w-[7px] rounded-full ${colors.dot}`} />
+            <h3 className="text-[12.5px] font-semibold text-text-primary tracking-[0.01em]">
               {col.name}
             </h3>
-            <ColumnCount count={totalCount} wipLimit={col.wipLimit} />
+            <span className="font-mono text-[11px] text-fg-faint">{totalCount}</span>
+            {col.wipLimit != null && (
+              <span className="ml-auto font-mono text-[10.5px] text-fg-faint">{totalCount}/{col.wipLimit}</span>
+            )}
           </div>
         }
       >
@@ -369,8 +372,8 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
                   const colors = getColumnColor(i)
                   return (
                     <div key={col.id} className="flex items-center gap-2 px-1">
-                      <span className={`h-2 w-2 rounded-full ${colors.dot}`} />
-                      <h3 className={`text-xs font-semibold uppercase tracking-wider ${colors.header}`}>
+                      <span className={`h-[7px] w-[7px] rounded-full ${colors.dot}`} />
+                      <h3 className="text-[12.5px] font-semibold text-text-primary tracking-[0.01em]">
                         {col.name}
                       </h3>
                     </div>

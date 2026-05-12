@@ -93,7 +93,14 @@ export default async function DashboardPage() {
 
       <PageHeader
         title="Dashboard"
-        description="All episodes across all shows"
+        description="Every episode in flight across your shows, by pipeline stage. Drag a card to advance it."
+        tabs={
+          <div className="flex gap-0.5 border-b border-border-subtle">
+            <button className="px-2.5 py-2 text-[13px] font-medium text-text-primary border-b-2 border-accent -mb-px">Board</button>
+            <button className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px hover:text-text-primary">Table <span className="font-mono text-[11px] text-fg-faint ml-1.5">{episodes.length}</span></button>
+            <button className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px hover:text-text-primary">Activity</button>
+          </div>
+        }
         actions={<QuickCreate />}
       />
 
