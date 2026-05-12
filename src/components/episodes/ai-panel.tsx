@@ -70,6 +70,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const [startingPipeline, setStartingPipeline] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [notification, setNotification] = useState<string | null>(null)
+  const [hasAudio, setHasAudio] = useState(hasAudioFiles)
   const collapsedRef = useRef(collapsed)
   const router = useRouter()
 
@@ -178,6 +179,21 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           setGenerations(prev => [gen, ...prev])
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'file_references',
+          filter: `episode_id=eq.${episodeId}`,
+        },
+        (payload) => {
+          const ref = payload.new as { mime_type?: string | null }
+          if (ref.mime_type?.startsWith('audio/') || ref.mime_type?.startsWith('video/')) {
+            setHasAudio(true)
+          }
+        }
+      )
       .subscribe()
 
     return () => {
@@ -197,6 +213,48 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
   }, [pipeline])
+
+  // Poll for pipeline/transcription updates as fallback when Realtime misses events
+  useEffect(() => {
+    if (loading) return
+
+    const pipelineActive = pipeline?.status === 'pending' || pipeline?.status === 'transcribing' || pipeline?.status === 'generating'
+    const transcriptionActive = transcription?.status === 'pending' || transcription?.status === 'processing'
+    const awaitingAutoTrigger = hasAudio && !transcription && !pipeline
+
+    if (!pipelineActive && !transcriptionActive && !awaitingAutoTrigger) return
+
+    let ticks = 0
+    const maxTicks = pipelineActive || transcriptionActive ? 200 : 24
+
+    const poll = async () => {
+      ticks++
+      if (ticks > maxTicks) { clearInterval(id); return }
+
+      try {
+        const [tRes, pRes] = await Promise.all([
+          fetch(`/api/v1/episodes/${episodeId}/transcription`),
+          fetch(`/api/v1/episodes/${episodeId}/pipeline`),
+        ])
+        if (tRes.ok) {
+          const d = await tRes.json()
+          const t = d.data?.transcription
+          if (t) setTranscription(prev => (prev?.id === t.id && prev?.status === t.status) ? prev : t)
+        }
+        if (pRes.ok) {
+          const d = await pRes.json()
+          const p = d.data?.pipeline || null
+          setPipeline(prev => (prev?.id === p?.id && prev?.status === p?.status) ? prev : p)
+          const gens = d.data?.generations || []
+          if (gens.length) setGenerations(prev => (prev.length === gens.length && prev[0]?.id === gens[0]?.id) ? prev : gens)
+        }
+      } catch { /* network error, retry next tick */ }
+    }
+
+    const ms = pipelineActive || transcriptionActive ? 3000 : 5000
+    const id = setInterval(poll, ms)
+    return () => clearInterval(id)
+  }, [pipeline?.status, transcription?.status, hasAudio, loading, episodeId])
 
   const handleTranscribe = async (audioUrl: string, sourceType: string, sourceRef: string, durationSeconds?: number) => {
     setTranscribing(true)
@@ -451,8 +509,14 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
           {/* No audio yet or ready to run */}
           {!hasTranscript && !isTranscribing && !isRunning && (
             <div className="space-y-4">
-              {hasAudioFiles ? (
+              {hasAudio ? (
                 <>
+                  {!pipeline && (
+                    <div className="flex items-center gap-2 text-xs text-text-secondary">
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-accent/60 border-t-transparent" />
+                      AI pipeline starting...
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-2">
                     {['Show Notes', 'Description', 'Title Ideas', 'Social Posts'].map((label) => (
                       <div key={label} className="rounded-md border border-border-subtle/50 bg-surface-default/50 px-3 py-2">
@@ -473,7 +537,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                   <TranscribeButton
                     episodeId={episodeId}
                     transcribing={transcribing}
-                    hasAudioFiles={hasAudioFiles}
+                    hasAudioFiles={hasAudio}
                     onTranscribe={handleTranscribe}
                   />
                 </>
@@ -485,7 +549,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                   <TranscribeButton
                     episodeId={episodeId}
                     transcribing={transcribing}
-                    hasAudioFiles={hasAudioFiles}
+                    hasAudioFiles={hasAudio}
                     onTranscribe={handleTranscribe}
                   />
                 </div>
@@ -521,7 +585,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
               <TranscribeButton
                 episodeId={episodeId}
                 transcribing={transcribing}
-                hasAudioFiles={hasAudioFiles}
+                hasAudioFiles={hasAudio}
                 onTranscribe={handleTranscribe}
               />
             </div>
@@ -571,10 +635,15 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                     disabled={generating !== null || totalAvailable < 1}
                     className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-primary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
                   >
-                    {generating === type ? 'Generating...' : `${GENERATION_LABELS[type]} (${CREDIT_COSTS[type]})`}
+                    {generating === type ? 'Generating...' : GENERATION_LABELS[type]}
                   </button>
                 ))}
               </div>
+              {!addon?.selfHosted && (
+                <p className="text-xs text-text-secondary mt-2">
+                  {estimatedCost} credits per run · {Math.round(totalAvailable)} available
+                </p>
+              )}
             </div>
           )}
         </div>
