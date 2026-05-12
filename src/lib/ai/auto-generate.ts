@@ -88,7 +88,7 @@ export async function runAutoGeneration(params: {
   }
 
   const generationIds: string[] = []
-  const skippedTypes: string[] = []
+  const skippedReasons: Record<string, string> = {}
   let remainingCredits = totalAvailableCredits(addon)
   const episodeUpdates: Record<string, string> = {}
 
@@ -96,7 +96,7 @@ export async function runAutoGeneration(params: {
     const cost = CREDIT_COSTS[type]
 
     if (!addon.selfHosted && remainingCredits < cost) {
-      skippedTypes.push(type)
+      skippedReasons[type] = 'insufficient credits'
       continue
     }
 
@@ -125,8 +125,8 @@ export async function runAutoGeneration(params: {
 
       if (type === 'show_notes') episodeUpdates.notes = result
       if (type === 'description') episodeUpdates.description = result
-    } catch {
-      skippedTypes.push(type)
+    } catch (err) {
+      skippedReasons[type] = (err as Error).message?.slice(0, 200) || 'unknown error'
     }
   }
 
@@ -137,11 +137,16 @@ export async function runAutoGeneration(params: {
       .eq('id', params.episodeId)
   }
 
+  const skippedTypes = Object.keys(skippedReasons)
   const finalStatus = skippedTypes.length > 0 && generationIds.length > 0
     ? 'partial'
     : skippedTypes.length === enabledTypes.length
       ? 'failed'
       : 'completed'
+
+  const errorDetail = skippedTypes.length > 0
+    ? skippedTypes.map(t => `${t}: ${skippedReasons[t]}`).join('; ')
+    : null
 
   await supabase
     .from('ai_pipeline_jobs')
@@ -149,9 +154,7 @@ export async function runAutoGeneration(params: {
       status: finalStatus,
       generation_ids: generationIds,
       completed_at: new Date().toISOString(),
-      error_message: skippedTypes.length > 0
-        ? `Skipped: ${skippedTypes.join(', ')} (insufficient credits)`
-        : null,
+      error_message: errorDetail,
     })
     .eq('id', params.pipelineJobId)
 
@@ -164,7 +167,7 @@ export async function runAutoGeneration(params: {
     metadata: {
       pipeline_job_id: params.pipelineJobId,
       types_generated: enabledTypes.filter(t => !skippedTypes.includes(t)),
-      types_skipped: skippedTypes,
+      types_skipped: skippedReasons,
     },
   })
 }

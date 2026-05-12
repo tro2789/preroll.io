@@ -36,7 +36,7 @@ function getPrompt(type: GenerationType, ctx: GenerationContext): { system: stri
 
 const MODELS: Partial<Record<GenerationType, string>> & { default: string } = {
   default: 'claude-haiku-4-5-20251001',
-  show_notes: 'claude-sonnet-4-5-20250514',
+  show_notes: 'claude-sonnet-4-6',
 }
 
 function getModel(type: GenerationType): string {
