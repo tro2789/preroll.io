@@ -629,7 +629,7 @@ function TranscriptSection(props: {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigator.clipboard.writeText(props.fullText)}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             Copy
           </button>
@@ -643,7 +643,7 @@ function TranscriptSection(props: {
               a.click()
               URL.revokeObjectURL(url)
             }}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             Download
           </button>
@@ -791,7 +791,7 @@ function TitleSuggestions({ content, onRegenerate }: { content: string; onRegene
                 setCopiedIdx(i)
                 setTimeout(() => setCopiedIdx(null), 2000)
               }}
-              className="shrink-0 text-xs text-text-secondary hover:text-text-primary transition-colors"
+              className="shrink-0 rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
             >
               {copiedIdx === i ? 'Copied!' : 'Copy'}
             </button>
@@ -800,7 +800,7 @@ function TitleSuggestions({ content, onRegenerate }: { content: string; onRegene
       </div>
       <button
         onClick={onRegenerate}
-        className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+        className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
       >
         Regenerate
       </button>
@@ -882,7 +882,7 @@ function GeneratedContentTabs({
                 .join('\n\n')
               navigator.clipboard.writeText(all)
             }}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             Copy all
           </button>
@@ -958,7 +958,7 @@ function GeneratedResult({
           <div className="mt-2">
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+              className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
             >
               {showHistory ? 'Hide previous' : `${previousVersions.length} previous`}
             </button>
@@ -991,7 +991,7 @@ function GeneratedResult({
           {canApply && applyState === 'idle' && (
             <button
               onClick={() => setApplyState('confirm')}
-              className="text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+              className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
             >
               Apply
             </button>
@@ -1006,13 +1006,13 @@ function GeneratedResult({
                   setApplyState(ok ? 'applied' : 'failed')
                   setTimeout(() => setApplyState('idle'), 2000)
                 }}
-                className="text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+                className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
               >
                 Confirm
               </button>
               <button
                 onClick={() => setApplyState('idle')}
-                className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+                className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
               >
                 Cancel
               </button>
@@ -1029,19 +1029,19 @@ function GeneratedResult({
           )}
           <button
             onClick={() => { onCopy(content); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
           <button
             onClick={() => { setEditedContent(content); setEditOpen(true) }}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             Edit
           </button>
           <button
             onClick={onRegenerate}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             Regenerate
           </button>
@@ -1068,7 +1068,7 @@ function GeneratedResult({
         <div className="px-3 pb-3">
           <button
             onClick={() => setShowHistory(!showHistory)}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             {showHistory ? 'Hide previous' : `${previousVersions.length} previous`}
           </button>
@@ -1082,7 +1082,7 @@ function GeneratedResult({
                     </span>
                     <button
                       onClick={() => onCopy(pv.result)}
-                      className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+                      className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
                     >
                       Copy
                     </button>
@@ -1152,7 +1152,7 @@ function EditContentDialog({
         <DialogFooter className="bg-transparent border-t-0 flex-row justify-between sm:justify-between">
           <button
             onClick={() => { onCopy(content); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
