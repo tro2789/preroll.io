@@ -660,9 +660,6 @@ function TranscriptSection(props: {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
           <span className="text-xs font-medium text-text-primary">Transcript</span>
-          <span className="text-xs text-text-secondary">
-            {props.wordCount.toLocaleString()} words · {props.speakerCount} speaker{props.speakerCount !== 1 ? 's' : ''}
-          </span>
         </button>
         <div className="flex items-center gap-2">
           <button
