@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { EpisodeDetailContent } from './episode-detail-content'
+import { AiPanel } from '@/components/episodes/ai-panel'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -137,86 +138,95 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
-      {/* Property rows */}
-      <div className="mt-5 rounded-lg border border-border-default bg-surface-raised">
-        <div className="divide-y divide-border-subtle">
-          <PropertyRow label="Stage" value={stage?.name || 'Not set'}>
-            {episode.distribution_status === 'published' && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
-                Published
-              </span>
-            )}
-            {episode.distribution_status === 'scheduled' && (
-              <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
-                Scheduled
-              </span>
-            )}
-          </PropertyRow>
+      <div className="mt-5 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
+        {/* Left column: metadata + files */}
+        <div className="space-y-6">
+          <div className="rounded-lg border border-border-default bg-surface-raised">
+            <div className="divide-y divide-border-subtle">
+              <PropertyRow label="Stage" value={stage?.name || 'Not set'}>
+                {episode.distribution_status === 'published' && (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
+                    Published
+                  </span>
+                )}
+                {episode.distribution_status === 'scheduled' && (
+                  <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
+                    Scheduled
+                  </span>
+                )}
+              </PropertyRow>
 
-          {episode.scheduled_publish_date && (
-            <PropertyRow label="Scheduled" value={formatDate(episode.scheduled_publish_date)!} />
-          )}
-
-          {episode.published_at && (
-            <PropertyRow label="Published" value={formatDate(episode.published_at)!}>
-              {(episode.distribution_metadata as any)?.share_url && (
-                <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
-                  Transistor
-                </a>
+              {episode.scheduled_publish_date && (
+                <PropertyRow label="Scheduled" value={formatDate(episode.scheduled_publish_date)!} />
               )}
-              {(episode.distribution_metadata as any)?.view_url && (
-                <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
-                  YouTube
-                </a>
-              )}
-            </PropertyRow>
-          )}
 
-          {client && (
-            <PropertyRow label="Client" value={client.name}>
-              <span className={`ml-2 text-xs font-medium ${client.onboarded_at ? 'text-emerald-400' : 'text-amber-400'}`}>
-                {client.onboarded_at ? 'Active' : 'Pending'}
-              </span>
-              <Link
-                href={`/portal?preview=${client.id}`}
-                target="_blank"
-                className="ml-2 text-xs text-accent hover:text-accent-hover"
-              >
-                Portal
-              </Link>
-            </PropertyRow>
-          )}
-
-          {integration && (
-            <PropertyRow label="Provider" value={integration.displayName}>
-              {integration.externalViewUrl && (
-                <a href={integration.externalViewUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
-                  Open
-                </a>
+              {episode.published_at && (
+                <PropertyRow label="Published" value={formatDate(episode.published_at)!}>
+                  {(episode.distribution_metadata as any)?.share_url && (
+                    <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
+                      Transistor
+                    </a>
+                  )}
+                  {(episode.distribution_metadata as any)?.view_url && (
+                    <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
+                      YouTube
+                    </a>
+                  )}
+                </PropertyRow>
               )}
-            </PropertyRow>
-          )}
+
+              {client && (
+                <PropertyRow label="Client" value={client.name}>
+                  <span className={`ml-2 text-xs font-medium ${client.onboarded_at ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {client.onboarded_at ? 'Active' : 'Pending'}
+                  </span>
+                  <Link
+                    href={`/portal?preview=${client.id}`}
+                    target="_blank"
+                    className="ml-2 text-xs text-accent hover:text-accent-hover"
+                  >
+                    Portal
+                  </Link>
+                </PropertyRow>
+              )}
+
+              {integration && (
+                <PropertyRow label="Provider" value={integration.displayName}>
+                  {integration.externalViewUrl && (
+                    <a href={integration.externalViewUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs text-accent hover:text-accent-hover">
+                      Open
+                    </a>
+                  )}
+                </PropertyRow>
+              )}
+            </div>
+          </div>
+
+          <EpisodeDetailContent
+            episodeId={episodeId}
+            showId={showId}
+            integration={integration}
+            deliverables={deliverables || []}
+            connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
+            episode={{
+              scheduled_publish_date: episode.scheduled_publish_date,
+              published_at: episode.published_at,
+              description: episode.description,
+              notes: episode.notes,
+              stage: stage ? { name: stage.name } : null,
+            }}
+            hasIntegration={!!episodeIntegration}
+          />
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="mt-8">
-        <EpisodeDetailContent
-          episodeId={episodeId}
-          showId={showId}
-          integration={integration}
-          deliverables={deliverables || []}
-          connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
-          episode={{
-            scheduled_publish_date: episode.scheduled_publish_date,
-            published_at: episode.published_at,
-            description: episode.description,
-            notes: episode.notes,
-            stage: stage ? { name: stage.name } : null,
-          }}
-          hasIntegration={!!episodeIntegration}
-          hasAudioFiles={hasAudioFiles}
-        />
+        {/* Right column: AI assistant */}
+        <aside className="lg:sticky lg:top-4 lg:self-start">
+          <AiPanel
+            episodeId={episodeId}
+            showId={showId}
+            hasAudioFiles={hasAudioFiles}
+          />
+        </aside>
       </div>
     </div>
   )

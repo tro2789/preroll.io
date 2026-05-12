@@ -386,57 +386,46 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     <div className="rounded-lg border border-border-subtle bg-surface-raised">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center justify-between p-4"
+        className="flex w-full items-center justify-between p-3 gap-2"
         aria-expanded={!collapsed}
         aria-label={`AI Assistant${isRunning ? ' — processing' : ''}`}
       >
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium text-text-primary">AI Assistant</h3>
-          <span aria-live="polite" aria-atomic="true">
-            {isRunning && (
-              <span className="flex items-center gap-1.5 rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
-                {pipeline?.status === 'transcribing' || isTranscribing
-                  ? 'Transcribing'
-                  : pipeline?.status === 'generating' && currentGenerationType
-                  ? GENERATION_LABELS[currentGenerationType]
-                  : 'Processing'}
-                {elapsedSeconds > 0 && (
-                  <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
-                )}
-              </span>
-            )}
-            {pipeline?.status === 'completed' && (
-              <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs">
-                Complete
-              </span>
-            )}
-            {pipeline?.status === 'partial' && (
-              <span className="rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs">
-                Partial
-              </span>
-            )}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium text-text-primary shrink-0">AI Assistant</h3>
+            <span aria-live="polite" aria-atomic="true">
+              {isRunning && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs whitespace-nowrap">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+                  {pipeline?.status === 'transcribing' || isTranscribing ? 'Transcribing' : 'Generating'}
+                  {elapsedSeconds > 0 && (
+                    <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
+                  )}
+                </span>
+              )}
+              {pipeline?.status === 'completed' && (
+                <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 text-xs">Done</span>
+              )}
+              {pipeline?.status === 'partial' && (
+                <span className="rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs">Partial</span>
+              )}
+            </span>
+          </div>
           {!addon.selfHosted && (
             <span
               className="text-xs text-text-secondary tabular-nums"
               title={`${addon.addon.monthly_remaining} of ${addon.addon.monthly_allowance} monthly credits remaining${addon.addon.credits_balance > 0 ? `, plus ${addon.addon.credits_balance} purchased` : ''}`}
             >
-              {addon.addon.monthly_remaining} monthly
-              {addon.addon.credits_balance > 0 && (
-                <> · {addon.addon.credits_balance} purchased</>
-              )}
+              {addon.addon.monthly_remaining} monthly{addon.addon.credits_balance > 0 && <> · {addon.addon.credits_balance} purchased</>}
             </span>
           )}
-          <svg
-            className={`h-4 w-4 text-text-tertiary transition-transform ${collapsed ? '' : 'rotate-180'}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
         </div>
+        <svg
+          className={`h-4 w-4 shrink-0 text-text-tertiary transition-transform ${collapsed ? '' : 'rotate-180'}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
 
       {!collapsed && (
@@ -499,62 +488,26 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             </div>
           )}
 
-          {/* Pipeline status steps */}
-          {(isTranscribing || hasTranscript || isRunning) && (
-            <div className="space-y-3">
-              {/* Progress bar */}
-              {isRunning && (
-                <div className="flex items-center gap-2 text-xs text-text-secondary">
-                  <div className="flex-1 h-1 rounded-full bg-surface-overlay overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-accent transition-all duration-500"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
-                  <span className="tabular-nums shrink-0">{completedSteps}/{totalSteps}</span>
-                </div>
-              )}
-
-              {/* Transcription step */}
-              <PipelineStep
-                label="Transcription"
-                status={
-                  hasTranscript ? 'completed'
-                    : transcription?.status === 'failed' ? 'failed'
-                    : isTranscribing || pipeline?.status === 'transcribing' ? 'running'
-                    : 'queued'
-                }
-                detail={
-                  hasTranscript
-                    ? `${transcription!.word_count?.toLocaleString()} words · ${transcription!.speaker_count} speaker${transcription!.speaker_count !== 1 ? 's' : ''}`
-                    : transcription?.status === 'failed'
-                    ? transcription.error_message || 'Failed'
-                    : undefined
-                }
-              />
-
-              {/* Generation steps — only show enabled types */}
-              {hasTranscript && enabledTypes.map((type) => {
-                const gen = latestGenByType.get(type)
-                const stepStatus: PipelineStepStatus = gen
-                  ? 'completed'
-                  : generating === type
-                  ? 'running'
-                  : type === currentGenerationType
-                  ? 'running'
-                  : pipeline?.status === 'generating' && !gen
-                  ? 'queued'
-                  : 'idle'
-
-                return (
-                  <PipelineStep
-                    key={type}
-                    label={GENERATION_LABELS[type]}
-                    status={stepStatus}
-                  />
-                )
-              })}
+          {/* Pipeline progress — only visible while actively running */}
+          {isRunning && (
+            <div className="flex items-center gap-2 text-xs text-text-secondary">
+              <div className="flex-1 h-1 rounded-full bg-surface-overlay overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-accent transition-all duration-500"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <span className="tabular-nums shrink-0">{completedSteps}/{totalSteps}</span>
             </div>
+          )}
+
+          {/* Transcription-only progress (not full pipeline) */}
+          {!isRunning && (isTranscribing || transcription?.status === 'failed') && (
+            <PipelineStep
+              label="Transcription"
+              status={transcription?.status === 'failed' ? 'failed' : 'running'}
+              detail={transcription?.status === 'failed' ? (transcription.error_message || 'Failed') : undefined}
+            />
           )}
 
           {/* Failed transcription — retry */}

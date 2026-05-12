@@ -1,7 +1,6 @@
 'use client'
 
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
-import { AiPanel } from '@/components/episodes/ai-panel'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 import type { Deliverable } from '@/lib/constants/deliverables'
 
@@ -30,54 +29,43 @@ interface EpisodeDetailContentProps {
   connectedProviders: IntegrationProvider[]
   episode: EpisodeMeta
   hasIntegration: boolean
-  hasAudioFiles: boolean
 }
 
 export function EpisodeDetailContent({
   episodeId, showId, integration, deliverables,
-  connectedProviders, episode, hasIntegration, hasAudioFiles,
+  connectedProviders, episode,
 }: EpisodeDetailContentProps) {
   const sharedCount = deliverables.length
   const pendingCount = deliverables.filter(d => d.status === 'pending').length
   const revisionsCount = deliverables.filter(d => d.status === 'revision_requested').length
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
-      <section>
-        <DeliveryPanel
-          episodeId={episodeId}
-          showId={showId}
-          integration={integration}
-          deliverables={deliverables}
-          connectedProviders={connectedProviders}
-          episode={episode}
-          hideSidebar
-        />
+    <div>
+      <DeliveryPanel
+        episodeId={episodeId}
+        showId={showId}
+        integration={integration}
+        deliverables={deliverables}
+        connectedProviders={connectedProviders}
+        episode={episode}
+        hideSidebar
+      />
 
-        {sharedCount > 0 && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-text-secondary">
-            <span>{sharedCount} file{sharedCount !== 1 ? 's' : ''} shared</span>
-            {pendingCount > 0 && (
-              <span className="rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
-                {pendingCount} pending
-              </span>
-            )}
-            {revisionsCount > 0 && (
-              <span className="rounded-full bg-red-500/15 text-red-400 px-2 py-0.5 text-xs font-medium">
-                {revisionsCount} revision{revisionsCount !== 1 ? 's' : ''}
-              </span>
-            )}
-          </div>
-        )}
-      </section>
-
-      <aside className="lg:sticky lg:top-4 lg:self-start">
-        <AiPanel
-          episodeId={episodeId}
-          showId={showId}
-          hasAudioFiles={hasAudioFiles}
-        />
-      </aside>
+      {sharedCount > 0 && (
+        <div className="mt-4 flex items-center gap-2 text-sm text-text-secondary">
+          <span>{sharedCount} file{sharedCount !== 1 ? 's' : ''} shared</span>
+          {pendingCount > 0 && (
+            <span className="rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
+              {pendingCount} pending
+            </span>
+          )}
+          {revisionsCount > 0 && (
+            <span className="rounded-full bg-red-500/15 text-red-400 px-2 py-0.5 text-xs font-medium">
+              {revisionsCount} revision{revisionsCount !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   )
 }
