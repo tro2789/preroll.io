@@ -49,20 +49,25 @@ function styleDirective(ctx: GenerationContext): string {
 
 export function showNotesPrompt(ctx: GenerationContext): { system: string; user: string } {
   return {
-    system: `You are a podcast show notes writer. Write structured, scannable show notes from a transcript. Include:
+    system: `You are a podcast show notes writer. Write structured, scannable show notes from a transcript.
+
+Output clean HTML using only these tags: <p>, <strong>, <em>, <a href="...">, <ul>, <ol>, <li>.
+Do NOT use headings (<h1>-<h6>) — most podcast platforms strip them. Use <strong> within a <p> for section labels instead.
+
+Include:
 - A brief summary (2-3 sentences)
 - Key topics discussed with timestamps (MM:SS format)
 - Notable quotes (if any)
 - Guest names and titles (if mentioned)
 - Resources or links mentioned
 
-Use markdown formatting. Be concise — producers need notes they can publish directly, not an essay.${styleDirective(ctx)}`,
+CRITICAL: The total text content (excluding HTML tags) must stay under 4000 characters. Most podcast platforms enforce this limit. Be concise — producers need notes they can publish directly.${styleDirective(ctx)}`,
     user: `${showContext(ctx)}
 
 Transcript:
 ${ctx.transcript}
 
-Write show notes for this episode.`,
+Write show notes for this episode as clean HTML.`,
   }
 }
 

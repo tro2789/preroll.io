@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { RichTextEditor } from './rich-text-editor'
 
 interface Stage {
   id: string
@@ -173,17 +174,14 @@ export function EpisodeForm({
       </div>
 
       <div>
-        <label htmlFor="notes" className={labelClass}>
-          Notes
+        <label className={labelClass}>
+          Show Notes
         </label>
-        <textarea
-          id="notes"
-          name="notes"
-          rows={3}
-          value={formData.notes}
-          onChange={handleChange}
-          className={inputClass}
-          placeholder="Internal notes..."
+        <RichTextEditor
+          content={formData.notes}
+          onChange={(html) => setFormData(prev => ({ ...prev, notes: html }))}
+          limit={4000}
+          placeholder="Episode show notes..."
         />
       </div>
 

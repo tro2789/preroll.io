@@ -8,6 +8,11 @@ export type GenerationType =
 
 export const ALL_GENERATION_TYPES: GenerationType[] = [
   'show_notes',
+  'title_suggestions',
+]
+
+export const LEGACY_GENERATION_TYPES: GenerationType[] = [
+  'show_notes',
   'description',
   'title_suggestions',
   'social_twitter',

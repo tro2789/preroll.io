@@ -4,14 +4,10 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TranscriptViewer } from './transcript-viewer'
-import { MarkdownContent } from './markdown-content'
+import { RichTextEditor } from './rich-text-editor'
 import { formatDuration } from '@/lib/format'
 import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS, CREDIT_COSTS } from '@/lib/ai/constants'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-
-const PRODUCTION_TYPES: GenerationType[] = ['show_notes', 'description', 'title_suggestions']
-const PROMOTION_TYPES: GenerationType[] = ['social_twitter', 'social_linkedin', 'social_instagram']
 
 interface AiPanelProps {
   episodeId: string
@@ -280,6 +276,21 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     }
   }
 
+  const handleApplyTitle = async (title: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      })
+      if (!res.ok) return false
+      router.refresh()
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const handleRunPipeline = async () => {
     setStartingPipeline(true)
     setError(null)
@@ -526,18 +537,45 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             />
           )}
 
-          {/* Generated content tabs */}
-          {(latestGenByType.size > 0 || (hasTranscript && !isRunning)) && (
-            <GeneratedContentTabs
-              latestGenByType={latestGenByType}
-              previousByType={previousByType}
-              hasTranscript={!!hasTranscript}
-              isRunning={isRunning}
-              generating={generating}
-              totalAvailable={totalAvailable}
-              onApply={handleApply}
-              onGenerate={handleGenerate}
-            />
+          {/* Generated content */}
+          {latestGenByType.size > 0 && ALL_GENERATION_TYPES.map((type) => {
+            const gen = latestGenByType.get(type)
+            if (!gen) return null
+            return (
+              <GeneratedResult
+                key={gen.id}
+                type={type}
+                content={gen.result}
+                showId={showId}
+                episodeId={episodeId}
+                previousVersions={previousByType.get(type)}
+                onApply={(content) => handleApply(type, content)}
+                onApplyTitle={(title) => handleApplyTitle(title)}
+                onCopy={(content) => navigator.clipboard.writeText(content)}
+                onRegenerate={() => handleGenerate(type)}
+              />
+            )
+          })}
+
+          {/* Regenerate buttons */}
+          {hasTranscript && !isRunning && (
+            <div>
+              <p className="text-xs text-text-secondary mb-2">
+                {latestGenByType.size > 0 ? 'Regenerate:' : 'Generate content:'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_GENERATION_TYPES.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => handleGenerate(type)}
+                    disabled={generating !== null || totalAvailable < 1}
+                    className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-primary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+                  >
+                    {generating === type ? 'Generating...' : `${GENERATION_LABELS[type]} (${CREDIT_COSTS[type]})`}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -672,35 +710,6 @@ function TranscriptSection(props: {
   )
 }
 
-function RegenerateSection({ label, types, hasExisting, generating, totalAvailable, onGenerate }: {
-  label: string
-  types: GenerationType[]
-  hasExisting: boolean
-  generating: GenerationType | null
-  totalAvailable: number
-  onGenerate: (type: GenerationType) => void
-}) {
-  return (
-    <div>
-      <p className="text-xs text-text-secondary mb-2">
-        {hasExisting ? `Regenerate ${label}:` : `Generate ${label} content:`}
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {types.map((type) => (
-          <button
-            key={type}
-            onClick={() => onGenerate(type)}
-            disabled={generating !== null || totalAvailable < 1}
-            className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-primary hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
-          >
-            {generating === type ? 'Generating...' : `${GENERATION_LABELS[type]} (${CREDIT_COSTS[type]})`}
-          </button>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function TranscribeButton({
   episodeId,
   transcribing,
@@ -780,213 +789,109 @@ function TranscribeButton({
   )
 }
 
-function TitleSuggestions({ content, onRegenerate }: { content: string; onRegenerate: () => void }) {
+function TitleSuggestions({ content, onRegenerate, onApplyTitle }: {
+  content: string
+  onRegenerate: () => void
+  onApplyTitle: (title: string) => Promise<boolean>
+}) {
   const titles = content
     .split('\n')
     .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
     .filter(Boolean)
 
-  const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
+  const [appliedIdx, setAppliedIdx] = useState<number | null>(null)
 
   return (
-    <div className="space-y-2">
-      <div className="space-y-1.5">
-        {titles.map((title, i) => (
-          <div key={i} className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-surface-raised px-3 py-2">
-            <span className="text-xs text-text-primary">{title}</span>
+    <div className="space-y-1.5">
+      {titles.map((title, i) => (
+        <div key={i} className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-surface-raised px-3 py-2">
+          <span className="text-xs text-text-primary">{title}</span>
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(title)
-                setCopiedIdx(i)
-                setTimeout(() => setCopiedIdx(null), 2000)
+              onClick={async () => {
+                const ok = await onApplyTitle(title)
+                if (ok) { setAppliedIdx(i); setTimeout(() => setAppliedIdx(null), 2000) }
               }}
-              className="shrink-0 rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+              className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
             >
-              {copiedIdx === i ? 'Copied!' : 'Copy'}
+              {appliedIdx === i ? 'Applied!' : 'Use'}
+            </button>
+            <button
+              onClick={() => navigator.clipboard.writeText(title)}
+              className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+            >
+              Copy
             </button>
           </div>
-        ))}
-      </div>
-      <button
-        onClick={onRegenerate}
-        className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
-      >
-        Regenerate
-      </button>
+        </div>
+      ))}
     </div>
   )
 }
 
-function SocialMeta({ type, content }: { type: GenerationType; content: string }) {
-  if (type === 'social_twitter') {
-    return (
-      <div className={`text-xs tabular-nums ${content.length > 280 ? 'text-red-400' : 'text-text-secondary'}`}>
-        {content.length}/280
-      </div>
-    )
-  }
-  if (type === 'social_linkedin') {
-    return (
-      <div className="text-xs text-text-secondary tabular-nums">
-        {content.length} chars · {content.split(/\n\n+/).length} paragraphs
-      </div>
-    )
-  }
-  if (type === 'social_instagram') {
-    const hashtagCount = (content.match(/#\w+/g) || []).length
-    return (
-      <div className="text-xs text-text-secondary tabular-nums">
-        {content.length} chars · {hashtagCount} hashtags
-      </div>
-    )
-  }
-  return null
+const ALLOWED_HTML_TAGS = /^(p|strong|em|a|ul|ol|li|br)$/i
+
+function sanitizeHtml(html: string): string {
+  return html.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (match, tag) => {
+    if (!ALLOWED_HTML_TAGS.test(tag)) return ''
+    const lower = tag.toLowerCase()
+    if (match.startsWith('</')) return `</${lower}>`
+    if (lower === 'a') {
+      const href = match.match(/href="([^"]*)"/)
+      return href ? `<a href="${href[1]}" target="_blank" rel="noopener noreferrer">` : ''
+    }
+    return `<${lower}>`
+  })
 }
 
-const CONTENT_TABS = [
-  { value: 0, types: PRODUCTION_TYPES, label: 'production', name: 'Production' },
-  { value: 1, types: PROMOTION_TYPES, label: 'promotion', name: 'Promotion' },
-] as const
-
-function GeneratedContentTabs({
-  latestGenByType,
-  previousByType,
-  hasTranscript,
-  isRunning,
-  generating,
-  totalAvailable,
-  onApply,
-  onGenerate,
-}: {
-  latestGenByType: Map<string, Generation>
-  previousByType: Map<string, Generation[]>
-  hasTranscript: boolean
-  isRunning: boolean
-  generating: GenerationType | null
-  totalAvailable: number
-  onApply: (type: GenerationType, content: string) => Promise<boolean>
-  onGenerate: (type: GenerationType) => void
-}) {
-  const [activeTab, setActiveTab] = useState(0)
-
-  return (
-    <Tabs defaultValue={0} onValueChange={(v) => setActiveTab(v as number)}>
-      <div className="flex items-center justify-between">
-        <TabsList variant="line">
-          {CONTENT_TABS.map(tab => (
-            <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
-              {tab.name}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {activeTab === 1 && PROMOTION_TYPES.filter(t => latestGenByType.has(t)).length > 1 && (
-          <button
-            onClick={() => {
-              const all = PROMOTION_TYPES
-                .map(t => {
-                  const gen = latestGenByType.get(t)
-                  return gen ? `--- ${GENERATION_LABELS[t]} ---\n${gen.result}` : null
-                })
-                .filter(Boolean)
-                .join('\n\n')
-              navigator.clipboard.writeText(all)
-            }}
-            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
-          >
-            Copy all
-          </button>
-        )}
-      </div>
-
-      {CONTENT_TABS.map(tab => (
-        <TabsContent key={tab.value} value={tab.value} className="space-y-2">
-          {tab.types.map((type) => {
-            const gen = latestGenByType.get(type)
-            if (!gen) return null
-            return (
-              <GeneratedResult
-                key={gen.id}
-                type={type as GenerationType}
-                content={gen.result}
-                previousVersions={previousByType.get(type)}
-                onApply={(content) => onApply(type as GenerationType, content)}
-                onCopy={(content) => navigator.clipboard.writeText(content)}
-                onRegenerate={() => onGenerate(type as GenerationType)}
-              />
-            )
-          })}
-          {hasTranscript && !isRunning && (
-            <RegenerateSection
-              label={tab.label}
-              types={[...tab.types]}
-              hasExisting={tab.types.some(t => latestGenByType.has(t))}
-              generating={generating}
-              totalAvailable={totalAvailable}
-              onGenerate={onGenerate}
-            />
-          )}
-        </TabsContent>
-      ))}
-    </Tabs>
-  )
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '')
 }
 
 function GeneratedResult({
   type,
   content,
+  showId,
+  episodeId,
   previousVersions,
   onApply,
+  onApplyTitle,
   onCopy,
   onRegenerate,
 }: {
   type: GenerationType
   content: string
+  showId: string
+  episodeId: string
   previousVersions?: Generation[]
   onApply: (content: string) => Promise<boolean>
+  onApplyTitle: (title: string) => Promise<boolean>
   onCopy: (content: string) => void
   onRegenerate: () => void
 }) {
-  const canApply = type === 'show_notes' || type === 'description'
   const [applyState, setApplyState] = useState<'idle' | 'confirm' | 'applying' | 'applied' | 'failed'>('idle')
   const [copied, setCopied] = useState(false)
   const [editOpen, setEditOpen] = useState(false)
   const [editedContent, setEditedContent] = useState(content)
   const [showHistory, setShowHistory] = useState(false)
 
-  const maxHeight = type === 'show_notes' ? 'max-h-[160px]' : 'max-h-[200px]'
+  const isShowNotes = type === 'show_notes'
+  const charCount = isShowNotes ? stripHtml(content).length : 0
 
   if (type === 'title_suggestions') {
     return (
       <div className="rounded-md border border-border-subtle bg-surface-default">
         <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-surface-raised/50 rounded-t-md">
           <span className="text-xs font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
+          <button
+            onClick={onRegenerate}
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+          >
+            Regenerate
+          </button>
         </div>
         <div className="p-3">
-        <TitleSuggestions content={content} onRegenerate={onRegenerate} />
-        {previousVersions && previousVersions.length > 0 && (
-          <div className="mt-2">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
-            >
-              {showHistory ? 'Hide previous' : `${previousVersions.length} previous`}
-            </button>
-            {showHistory && (
-              <div className="mt-2 space-y-2 border-t border-border-subtle pt-2">
-                {previousVersions.map((pv) => (
-                  <div key={pv.id} className="rounded-md bg-surface-raised p-2 space-y-1">
-                    <span className="text-xs text-text-tertiary">
-                      {new Date(pv.created_at).toLocaleString()}
-                    </span>
-                    <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed line-clamp-3">
-                      {pv.result}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          <TitleSuggestions content={content} onRegenerate={onRegenerate} onApplyTitle={onApplyTitle} />
         </div>
       </div>
     )
@@ -995,9 +900,16 @@ function GeneratedResult({
   return (
     <div className="rounded-md border border-border-subtle bg-surface-default">
       <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-surface-raised/50 rounded-t-md">
-        <span className="text-xs font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
         <div className="flex items-center gap-2">
-          {canApply && applyState === 'idle' && (
+          <span className="text-xs font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
+          {isShowNotes && (
+            <span className={`text-xs tabular-nums ${charCount > 4000 ? 'text-red-400' : 'text-text-secondary'}`}>
+              {charCount.toLocaleString()} / 4,000
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {applyState === 'idle' && (
             <button
               onClick={() => setApplyState('confirm')}
               className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
@@ -1057,21 +969,18 @@ function GeneratedResult({
         </div>
       </div>
 
-      <div className={`${maxHeight} overflow-y-auto p-3`}>
-        {type === 'show_notes' ? (
-          <MarkdownContent content={content} />
+      <div className="max-h-[200px] overflow-y-auto p-3">
+        {isShowNotes ? (
+          <div
+            className="prose-sm text-xs text-text-secondary leading-relaxed [&_strong]:text-text-primary [&_strong]:font-medium [&_a]:text-accent [&_a]:underline [&_ul]:space-y-0.5 [&_li]:leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
+          />
         ) : (
           <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed">
             {content}
           </div>
         )}
       </div>
-
-      {type.startsWith('social_') && (
-        <div className="px-3 pb-2">
-          <SocialMeta type={type} content={content} />
-        </div>
-      )}
 
       {previousVersions && previousVersions.length > 0 && (
         <div className="px-3 pb-3">
@@ -1112,7 +1021,6 @@ function GeneratedResult({
         type={type}
         content={editedContent}
         onChange={setEditedContent}
-        canApply={canApply}
         onApply={onApply}
         onCopy={onCopy}
       />
@@ -1126,7 +1034,6 @@ function EditContentDialog({
   type,
   content,
   onChange,
-  canApply,
   onApply,
   onCopy,
 }: {
@@ -1135,12 +1042,12 @@ function EditContentDialog({
   type: GenerationType
   content: string
   onChange: (content: string) => void
-  canApply: boolean
   onApply: (content: string) => Promise<boolean>
   onCopy: (content: string) => void
 }) {
   const [applyState, setApplyState] = useState<'idle' | 'applying' | 'applied' | 'failed'>('idle')
   const [copied, setCopied] = useState(false)
+  const isShowNotes = type === 'show_notes'
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1151,13 +1058,16 @@ function EditContentDialog({
           </DialogTitle>
         </DialogHeader>
         <div className="flex-1 min-h-0">
-          <textarea
-            value={content}
-            onChange={(e) => onChange(e.target.value)}
-            className="w-full h-full min-h-[300px] max-h-[50vh] rounded-md border border-border-subtle bg-surface-default px-3 py-2 text-xs text-text-primary leading-relaxed focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus:outline-none resize-y font-mono"
-          />
+          {isShowNotes ? (
+            <RichTextEditor content={content} onChange={onChange} limit={4000} />
+          ) : (
+            <textarea
+              value={content}
+              onChange={(e) => onChange(e.target.value)}
+              className="w-full h-full min-h-[300px] max-h-[50vh] rounded-md border border-border-subtle bg-surface-default px-3 py-2 text-xs text-text-primary leading-relaxed focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus:outline-none resize-y font-mono"
+            />
+          )}
         </div>
-        <SocialMeta type={type} content={content} />
         <DialogFooter className="bg-transparent border-t-0 flex-row justify-between sm:justify-between">
           <button
             onClick={() => { onCopy(content); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
@@ -1172,27 +1082,25 @@ function EditContentDialog({
             >
               Cancel
             </button>
-            {canApply && (
-              <button
-                onClick={async () => {
-                  setApplyState('applying')
-                  const ok = await onApply(content)
-                  setApplyState(ok ? 'applied' : 'failed')
-                  if (ok) {
-                    setTimeout(() => { onOpenChange(false); setApplyState('idle') }, 1000)
-                  } else {
-                    setTimeout(() => setApplyState('idle'), 2000)
-                  }
-                }}
-                disabled={applyState === 'applying'}
-                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-              >
-                {applyState === 'applying' ? 'Applying...'
-                  : applyState === 'applied' ? 'Applied!'
-                  : applyState === 'failed' ? 'Failed'
-                  : 'Save & Apply to Episode'}
-              </button>
-            )}
+            <button
+              onClick={async () => {
+                setApplyState('applying')
+                const ok = await onApply(content)
+                setApplyState(ok ? 'applied' : 'failed')
+                if (ok) {
+                  setTimeout(() => { onOpenChange(false); setApplyState('idle') }, 1000)
+                } else {
+                  setTimeout(() => setApplyState('idle'), 2000)
+                }
+              }}
+              disabled={applyState === 'applying'}
+              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+            >
+              {applyState === 'applying' ? 'Applying...'
+                : applyState === 'applied' ? 'Applied!'
+                : applyState === 'failed' ? 'Failed'
+                : 'Save & Apply'}
+            </button>
           </div>
         </DialogFooter>
       </DialogContent>
