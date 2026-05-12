@@ -2,7 +2,6 @@
 
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
 import { AiPanel } from '@/components/episodes/ai-panel'
-import { Separator } from '@/components/ui/separator'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 import type { Deliverable } from '@/lib/constants/deliverables'
 
@@ -43,8 +42,7 @@ export function EpisodeDetailContent({
   const revisionsCount = deliverables.filter(d => d.status === 'revision_requested').length
 
   return (
-    <div className="space-y-8">
-      {/* Files Section */}
+    <div className="grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
       <section>
         <DeliveryPanel
           episodeId={episodeId}
@@ -56,7 +54,6 @@ export function EpisodeDetailContent({
           hideSidebar
         />
 
-        {/* Shared files status */}
         {sharedCount > 0 && (
           <div className="mt-4 flex items-center gap-2 text-sm text-text-secondary">
             <span>{sharedCount} file{sharedCount !== 1 ? 's' : ''} shared</span>
@@ -74,13 +71,13 @@ export function EpisodeDetailContent({
         )}
       </section>
 
-      <Separator />
-
-      <AiPanel
-        episodeId={episodeId}
-        showId={showId}
-        hasAudioFiles={hasAudioFiles}
-      />
+      <aside className="lg:sticky lg:top-4 lg:self-start">
+        <AiPanel
+          episodeId={episodeId}
+          showId={showId}
+          hasAudioFiles={hasAudioFiles}
+        />
+      </aside>
     </div>
   )
 }

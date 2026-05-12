@@ -89,7 +89,7 @@ export default async function EpisodeDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-6xl">
       {/* Breadcrumb */}
       <Link
         href={`/app/shows/${showId}`}
