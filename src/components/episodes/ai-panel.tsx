@@ -7,6 +7,8 @@ import { TranscriptViewer } from './transcript-viewer'
 import { MarkdownContent } from './markdown-content'
 import { formatDuration } from '@/lib/format'
 import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS, CREDIT_COSTS } from '@/lib/ai/constants'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 
 const PRODUCTION_TYPES: GenerationType[] = ['show_notes', 'description', 'title_suggestions']
 const PROMOTION_TYPES: GenerationType[] = ['social_twitter', 'social_linkedin', 'social_instagram']
@@ -571,11 +573,37 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             />
           )}
 
-          {/* Production Content */}
-          {latestGenByType.size > 0 && PRODUCTION_TYPES.some(t => latestGenByType.has(t)) && (
-            <div className="space-y-3">
-              <h4 className="text-xs font-medium text-text-secondary uppercase tracking-wider">Production</h4>
-              <div className="space-y-2">
+          {/* Generated content tabs */}
+          {(latestGenByType.size > 0 || (hasTranscript && !isRunning)) && (
+            <Tabs defaultValue={0}>
+              <div className="flex items-center justify-between">
+                <TabsList variant="line">
+                  <TabsTrigger value={0} className="text-xs">Production</TabsTrigger>
+                  <TabsTrigger value={1} className="text-xs">
+                    <span>Promotion</span>
+                    {PROMOTION_TYPES.filter(t => latestGenByType.has(t)).length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const all = PROMOTION_TYPES
+                            .map(t => {
+                              const gen = latestGenByType.get(t)
+                              return gen ? `--- ${GENERATION_LABELS[t]} ---\n${gen.result}` : null
+                            })
+                            .filter(Boolean)
+                            .join('\n\n')
+                          navigator.clipboard.writeText(all)
+                        }}
+                        className="ml-2 text-text-tertiary hover:text-text-secondary transition-colors"
+                      >
+                        Copy all
+                      </button>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value={0} className="space-y-2">
                 {PRODUCTION_TYPES.map((type) => {
                   const gen = latestGenByType.get(type)
                   if (!gen) return null
@@ -591,34 +619,19 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                     />
                   )
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Promotion Content */}
-          {latestGenByType.size > 0 && PROMOTION_TYPES.some(t => latestGenByType.has(t)) && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-medium text-text-secondary uppercase tracking-wider">Promotion</h4>
-                {PROMOTION_TYPES.filter(t => latestGenByType.has(t)).length > 1 && (
-                  <button
-                    onClick={() => {
-                      const all = PROMOTION_TYPES
-                        .map(t => {
-                          const gen = latestGenByType.get(t)
-                          return gen ? `--- ${GENERATION_LABELS[t]} ---\n${gen.result}` : null
-                        })
-                        .filter(Boolean)
-                        .join('\n\n')
-                      navigator.clipboard.writeText(all)
-                    }}
-                    className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
-                  >
-                    Copy all
-                  </button>
+                {hasTranscript && !isRunning && (
+                  <RegenerateSection
+                    label="production"
+                    types={PRODUCTION_TYPES}
+                    hasExisting={PRODUCTION_TYPES.some(t => latestGenByType.has(t))}
+                    generating={generating}
+                    totalAvailable={totalAvailable}
+                    onGenerate={handleGenerate}
+                  />
                 )}
-              </div>
-              <div className="space-y-2">
+              </TabsContent>
+
+              <TabsContent value={1} className="space-y-2">
                 {PROMOTION_TYPES.map((type) => {
                   const gen = latestGenByType.get(type)
                   if (!gen) return null
@@ -634,30 +647,18 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                     />
                   )
                 })}
-              </div>
-            </div>
-          )}
-
-          {/* Manual regenerate buttons when pipeline is done */}
-          {hasTranscript && !isRunning && (
-            <div className="border-t border-border-subtle pt-3 space-y-4">
-              <RegenerateSection
-                label="production"
-                types={PRODUCTION_TYPES}
-                hasExisting={PRODUCTION_TYPES.some(t => latestGenByType.has(t))}
-                generating={generating}
-                totalAvailable={totalAvailable}
-                onGenerate={handleGenerate}
-              />
-              <RegenerateSection
-                label="promotion"
-                types={PROMOTION_TYPES}
-                hasExisting={PROMOTION_TYPES.some(t => latestGenByType.has(t))}
-                generating={generating}
-                totalAvailable={totalAvailable}
-                onGenerate={handleGenerate}
-              />
-            </div>
+                {hasTranscript && !isRunning && (
+                  <RegenerateSection
+                    label="promotion"
+                    types={PROMOTION_TYPES}
+                    hasExisting={PROMOTION_TYPES.some(t => latestGenByType.has(t))}
+                    generating={generating}
+                    totalAvailable={totalAvailable}
+                    onGenerate={handleGenerate}
+                  />
+                )}
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       )}
@@ -960,10 +961,11 @@ function GeneratedResult({
   const canApply = type === 'show_notes' || type === 'description'
   const [applyState, setApplyState] = useState<'idle' | 'applied' | 'failed'>('idle')
   const [copied, setCopied] = useState(false)
-  const [confirmApply, setConfirmApply] = useState(false)
-  const [editing, setEditing] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [editedContent, setEditedContent] = useState(content)
   const [showHistory, setShowHistory] = useState(false)
+
+  const maxHeight = type === 'show_notes' ? 'max-h-[300px]' : 'max-h-[200px]'
 
   if (type === 'title_suggestions') {
     return (
@@ -1000,43 +1002,22 @@ function GeneratedResult({
     )
   }
 
-  const activeContent = editing ? editedContent : content
-
   return (
     <div className="rounded-md border border-border-subtle bg-surface-default p-3 space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-text-primary">{GENERATION_LABELS[type]}</span>
         <div className="flex items-center gap-2">
-          {canApply && applyState === 'idle' && !confirmApply && (
+          {canApply && applyState === 'idle' && (
             <button
-              onClick={() => setConfirmApply(true)}
+              onClick={async () => {
+                const ok = await onApply(content)
+                setApplyState(ok ? 'applied' : 'failed')
+                setTimeout(() => setApplyState('idle'), 2000)
+              }}
               className="text-xs text-accent hover:text-accent-hover transition-colors"
             >
-              Apply to Episode
+              Apply
             </button>
-          )}
-          {confirmApply && (
-            <>
-              <span className="text-xs text-text-secondary">Overwrite {type === 'show_notes' ? 'notes' : 'description'}?</span>
-              <button
-                onClick={async () => {
-                  const ok = await onApply(activeContent)
-                  setApplyState(ok ? 'applied' : 'failed')
-                  setConfirmApply(false)
-                  if (ok && editing) setEditing(false)
-                  setTimeout(() => setApplyState('idle'), 2000)
-                }}
-                className="text-xs text-accent hover:text-accent-hover transition-colors font-medium"
-              >
-                Confirm
-              </button>
-              <button
-                onClick={() => setConfirmApply(false)}
-                className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
-              >
-                Cancel
-              </button>
-            </>
           )}
           {applyState === 'applied' && (
             <span className="text-xs text-emerald-400">Applied!</span>
@@ -1045,19 +1026,16 @@ function GeneratedResult({
             <span className="text-xs text-red-400">Failed</span>
           )}
           <button
-            onClick={() => { onCopy(activeContent); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+            onClick={() => { onCopy(content); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
             className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
           >
             {copied ? 'Copied!' : 'Copy'}
           </button>
           <button
-            onClick={() => {
-              if (editing) setEditedContent(content)
-              setEditing(!editing)
-            }}
+            onClick={() => { setEditedContent(content); setEditOpen(true) }}
             className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
           >
-            {editing ? 'Cancel' : 'Edit'}
+            Edit
           </button>
           <button
             onClick={onRegenerate}
@@ -1068,23 +1046,17 @@ function GeneratedResult({
         </div>
       </div>
 
-      {editing ? (
-        <textarea
-          value={editedContent}
-          onChange={(e) => setEditedContent(e.target.value)}
-          className="w-full rounded-md border border-border-subtle bg-surface-raised px-3 py-2 text-xs text-text-primary leading-relaxed focus:border-accent focus:outline-none resize-y"
-          rows={Math.min(20, editedContent.split('\n').length + 2)}
-          style={{ minHeight: '100px' }}
-        />
-      ) : type === 'show_notes' ? (
-        <MarkdownContent content={content} />
-      ) : (
-        <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed">
-          {content}
-        </div>
-      )}
+      <div className={`${maxHeight} overflow-y-auto`}>
+        {type === 'show_notes' ? (
+          <MarkdownContent content={content} />
+        ) : (
+          <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed">
+            {content}
+          </div>
+        )}
+      </div>
 
-      <SocialMeta type={type} content={activeContent} />
+      <SocialMeta type={type} content={content} />
 
       {previousVersions && previousVersions.length > 0 && (
         <div>
@@ -1118,6 +1090,97 @@ function GeneratedResult({
           )}
         </div>
       )}
+
+      <EditContentDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        type={type}
+        content={editedContent}
+        onChange={setEditedContent}
+        canApply={canApply}
+        onApply={onApply}
+        onCopy={onCopy}
+      />
     </div>
+  )
+}
+
+function EditContentDialog({
+  open,
+  onOpenChange,
+  type,
+  content,
+  onChange,
+  canApply,
+  onApply,
+  onCopy,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  type: GenerationType
+  content: string
+  onChange: (content: string) => void
+  canApply: boolean
+  onApply: (content: string) => Promise<boolean>
+  onCopy: (content: string) => void
+}) {
+  const [applyState, setApplyState] = useState<'idle' | 'applying' | 'applied' | 'failed'>('idle')
+  const [copied, setCopied] = useState(false)
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col bg-surface-raised border-border-subtle">
+        <DialogHeader>
+          <DialogTitle className="text-sm font-semibold text-text-primary">
+            Edit {GENERATION_LABELS[type]}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 min-h-0">
+          <textarea
+            value={content}
+            onChange={(e) => onChange(e.target.value)}
+            className="w-full h-full min-h-[300px] max-h-[50vh] rounded-md border border-border-subtle bg-surface-default px-3 py-2 text-xs text-text-primary leading-relaxed focus:border-accent focus:outline-none resize-y font-mono"
+          />
+        </div>
+        <SocialMeta type={type} content={content} />
+        <DialogFooter className="bg-transparent border-t-0 flex-row justify-between sm:justify-between">
+          <button
+            onClick={() => { onCopy(content); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:border-border-hover transition-colors"
+            >
+              Cancel
+            </button>
+            {canApply && (
+              <button
+                onClick={async () => {
+                  setApplyState('applying')
+                  const ok = await onApply(content)
+                  setApplyState(ok ? 'applied' : 'failed')
+                  if (ok) {
+                    setTimeout(() => { onOpenChange(false); setApplyState('idle') }, 1000)
+                  } else {
+                    setTimeout(() => setApplyState('idle'), 2000)
+                  }
+                }}
+                disabled={applyState === 'applying'}
+                className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+              >
+                {applyState === 'applying' ? 'Applying...'
+                  : applyState === 'applied' ? 'Applied!'
+                  : applyState === 'failed' ? 'Failed'
+                  : 'Save & Apply to Episode'}
+              </button>
+            )}
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
