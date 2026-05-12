@@ -72,7 +72,7 @@ function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: 
         {episode.tags && episode.tags.length > 0 && (
           <div className="flex gap-0.5 shrink-0">
             {episode.tags.map((tag) => (
-              <span key={tag.id} className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} title={tag.name} />
+              <span key={tag.id} className="h-[7px] w-[7px] rounded-full shrink-0" style={{ backgroundColor: tag.color }} title={tag.name} />
             ))}
           </div>
         )}
@@ -86,26 +86,26 @@ function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: 
   }
 
   return (
-    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-strong group">
-      <div className="relative">
-        <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9]" />
+    <div className="rounded-[10px] border border-border-subtle bg-surface-raised transition-colors hover:border-border-strong group cursor-pointer p-[11px]">
+      <div className="relative mb-[9px]">
+        <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9] !rounded-[5px]" />
         {episode.episode_number != null && (
-          <span className="absolute top-1.5 left-2 font-mono text-[9px] text-text-secondary">
+          <span className="absolute top-1.5 left-2 font-mono text-[10px] tracking-[0.04em] text-text-secondary z-[1]">
             EP {String(episode.episode_number).padStart(3, '0')}
           </span>
         )}
       </div>
-      <div className="px-2.5 py-2">
-        <p className="text-[11.5px] font-medium text-text-primary group-hover:text-accent transition-colors leading-[1.32]">
+      <div>
+        <p className="text-[13px] font-medium text-text-primary group-hover:text-accent transition-colors leading-[1.35]">
           {episode.title}
         </p>
-        <div className="text-[10px] text-text-tertiary mt-0.5 truncate">{episode.shows?.name}</div>
-        <div className="flex items-center gap-[5px] mt-2">
+        <div className="text-[11.5px] text-text-tertiary mt-[3px] truncate">{episode.shows?.name}</div>
+        <div className="flex items-center gap-[7px] mt-[10px]">
           {episode.tags && episode.tags.length > 0 && (
             <CardTagPills tags={episode.tags} />
           )}
           {episode.scheduled_publish_date && (
-            <span className={`shrink-0 text-[9.5px] font-mono tabular-nums ml-auto ${isOverdue ? 'text-error font-medium' : 'text-text-tertiary'}`}>
+            <span className={`shrink-0 text-[11px] font-mono tabular-nums ml-auto ${isOverdue ? 'text-error font-medium' : 'text-text-tertiary'}`}>
               {formatDate(episode.scheduled_publish_date)}
             </span>
           )}
@@ -365,7 +365,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
             <div style={{ minHeight: 'calc(100vh - 200px)' }}>
               {/* Column headers row */}
               <div
-                className="grid gap-3 mb-2"
+                className="grid gap-3.5 mb-2"
                 style={{ gridTemplateColumns: `repeat(${kanbanColumns.length}, minmax(0, 1fr))` }}
               >
                 {kanbanColumns.map((col, i) => {
@@ -402,7 +402,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
             </div>
           ) : (
             <div
-              className="grid gap-3"
+              className="grid gap-3.5"
               style={{
                 gridTemplateColumns: `repeat(${kanbanColumns.length}, minmax(0, 1fr))`,
                 minHeight: 'calc(100vh - 200px)',

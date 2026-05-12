@@ -44,8 +44,8 @@ export function SortableColumn({
       )}
       <SortableContext items={collapsed ? [] : episodeIds} strategy={verticalListSortingStrategy}>
         <div
-          className={`flex-1 flex flex-col gap-2 rounded-lg p-1 transition-colors ${
-            collapsed ? 'min-h-0' : 'min-h-[100px]'
+          className={`flex-1 flex flex-col gap-[9px] rounded-lg p-1 pb-3 transition-colors ${
+            collapsed ? 'min-h-0' : 'min-h-[60px]'
           } ${
             overLimit
               ? 'bg-red-500/10 ring-1 ring-red-500/30'

@@ -32,7 +32,7 @@ export function Topbar() {
   }
 
   return (
-    <div className="hidden md:flex items-center h-12 px-6 border-b border-border-subtle bg-surface-base/80 backdrop-blur-sm sticky top-0 z-30">
+    <div className="hidden md:flex items-center gap-3 h-12 px-4 border-b border-border-subtle bg-surface-base sticky top-0 z-30">
       {/* Breadcrumbs — left */}
       <nav className="flex items-center gap-1.5 text-[13px] min-w-0">
         {crumbs.map((crumb, i) => (
@@ -53,16 +53,16 @@ export function Topbar() {
       <div className="flex-1" />
 
       {/* Right group: search, new episode, bell */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {/* Search bar */}
-        <div className="flex items-center gap-2 bg-surface-input border border-border-subtle rounded-[7px] w-[220px] px-2.5 py-1.5 text-[13px] text-text-tertiary cursor-default">
+        <div className="flex items-center gap-2 bg-surface-input border border-border-subtle hover:border-border-default rounded-[7px] w-[220px] px-[9px] py-[5px] text-[13px] text-text-tertiary cursor-text">
           <SearchIcon className="h-3.5 w-3.5 shrink-0" />
           <span>Search episodes, shows&hellip;</span>
-          <kbd className="ml-auto bg-surface-overlay border border-border-subtle rounded px-1.5 py-0.5 text-[10.5px] font-mono text-fg-faint">⌘K</kbd>
+          <kbd className="ml-auto bg-surface-overlay border border-border-subtle rounded px-[5px] py-px text-[10.5px] font-mono text-fg-faint">⌘K</kbd>
         </div>
 
         {/* New episode button */}
-        <button className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-accent text-white hover:bg-accent-hover transition-colors">
+        <button className="flex items-center gap-1 px-2 py-[3.5px] text-xs font-semibold rounded-md border border-accent bg-accent text-white hover:bg-accent-hover transition-colors">
           <PlusIcon className="h-3.5 w-3.5" />
           New episode
         </button>

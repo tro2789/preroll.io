@@ -70,7 +70,7 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
   if (!activeOrg) return null
 
   return (
-    <div ref={ref} className="relative mx-2 mt-[9px] mb-1">
+    <div ref={ref} className="relative mx-[8px] mt-[9px] mb-[4px]">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-[9px] rounded-[7px] px-[10px] py-[9px] text-left transition-colors border border-transparent hover:bg-surface-raised hover:border-border-subtle cursor-pointer"
@@ -88,7 +88,7 @@ function OrgSwitcher({ orgs, activeOrgId }: { orgs: OrgMembership[]; activeOrgId
             {PLAN_LABELS[activeOrg.planId] || activeOrg.planId} &middot; {activeOrg.role}
           </p>
         </div>
-        <ChevronsUpDownIcon className="h-4 w-4 text-fg-faint shrink-0" />
+        <ChevronsUpDownIcon className="h-3.5 w-3.5 text-fg-faint shrink-0" />
       </button>
 
       {open && (
@@ -232,7 +232,7 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts 
                       />
                       {item.label}
                       {item.external && (
-                        <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-fg-faint opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ExternalLinkIcon className="ml-auto h-3 w-3 text-fg-faint" />
                       )}
                     </Link>
                   )
