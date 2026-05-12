@@ -390,35 +390,25 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
         aria-expanded={!collapsed}
         aria-label={`AI Assistant${isRunning ? ' — processing' : ''}`}
       >
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-text-primary shrink-0">AI Assistant</h3>
-            <span aria-live="polite" aria-atomic="true">
-              {isRunning && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs whitespace-nowrap">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
-                  {pipeline?.status === 'transcribing' || isTranscribing ? 'Transcribing' : 'Generating'}
-                  {elapsedSeconds > 0 && (
-                    <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
-                  )}
-                </span>
-              )}
-              {pipeline?.status === 'completed' && (
-                <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 text-xs">Done</span>
-              )}
-              {pipeline?.status === 'partial' && (
-                <span className="rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs">Partial</span>
-              )}
-            </span>
-          </div>
-          {!addon.selfHosted && (
-            <span
-              className="text-xs text-text-secondary tabular-nums"
-              title={`${addon.addon.monthly_remaining} of ${addon.addon.monthly_allowance} monthly credits remaining${addon.addon.credits_balance > 0 ? `, plus ${addon.addon.credits_balance} purchased` : ''}`}
-            >
-              {addon.addon.monthly_remaining} monthly{addon.addon.credits_balance > 0 && <> · {addon.addon.credits_balance} purchased</>}
-            </span>
-          )}
+        <div className="flex items-center gap-2 min-w-0">
+          <h3 className="text-sm font-medium text-text-primary shrink-0">AI Assistant</h3>
+          <span aria-live="polite" aria-atomic="true">
+            {isRunning && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs whitespace-nowrap">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+                {pipeline?.status === 'transcribing' || isTranscribing ? 'Transcribing' : 'Generating'}
+                {elapsedSeconds > 0 && (
+                  <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
+                )}
+              </span>
+            )}
+            {pipeline?.status === 'completed' && (
+              <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 text-xs">Done</span>
+            )}
+            {pipeline?.status === 'partial' && (
+              <span className="rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs">Partial</span>
+            )}
+          </span>
         </div>
         <svg
           className={`h-4 w-4 shrink-0 text-text-tertiary transition-transform ${collapsed ? '' : 'rotate-180'}`}
@@ -634,6 +624,21 @@ function TranscriptSection(props: {
             className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
           >
             Copy
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              const blob = new Blob([props.fullText], { type: 'text/plain' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = 'transcript.txt'
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
+            className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+          >
+            Download
           </button>
           <svg
             className={`h-3.5 w-3.5 text-text-tertiary transition-transform ${open ? 'rotate-180' : ''}`}
@@ -938,14 +943,15 @@ function GeneratedResult({
   const [editedContent, setEditedContent] = useState(content)
   const [showHistory, setShowHistory] = useState(false)
 
-  const maxHeight = type === 'show_notes' ? 'max-h-[300px]' : 'max-h-[200px]'
+  const maxHeight = type === 'show_notes' ? 'max-h-[160px]' : 'max-h-[200px]'
 
   if (type === 'title_suggestions') {
     return (
-      <div className="rounded-md border border-border-subtle bg-surface-default p-3">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-text-primary">{GENERATION_LABELS[type]}</span>
+      <div className="rounded-md border border-border-subtle bg-surface-default">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-surface-raised/50 rounded-t-md">
+          <span className="text-xs font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
         </div>
+        <div className="p-3">
         <TitleSuggestions content={content} onRegenerate={onRegenerate} />
         {previousVersions && previousVersions.length > 0 && (
           <div className="mt-2">
@@ -971,14 +977,15 @@ function GeneratedResult({
             )}
           </div>
         )}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="rounded-md border border-border-subtle bg-surface-default p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-text-primary">{GENERATION_LABELS[type]}</span>
+    <div className="rounded-md border border-border-subtle bg-surface-default">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-surface-raised/50 rounded-t-md">
+        <span className="text-xs font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
         <div className="flex items-center gap-2">
           {canApply && applyState === 'idle' && (
             <button
@@ -1019,7 +1026,7 @@ function GeneratedResult({
         </div>
       </div>
 
-      <div className={`${maxHeight} overflow-y-auto`}>
+      <div className={`${maxHeight} overflow-y-auto p-3`}>
         {type === 'show_notes' ? (
           <MarkdownContent content={content} />
         ) : (
@@ -1029,10 +1036,14 @@ function GeneratedResult({
         )}
       </div>
 
-      <SocialMeta type={type} content={content} />
+      {type.startsWith('social_') && (
+        <div className="px-3 pb-2">
+          <SocialMeta type={type} content={content} />
+        </div>
+      )}
 
       {previousVersions && previousVersions.length > 0 && (
-        <div>
+        <div className="px-3 pb-3">
           <button
             onClick={() => setShowHistory(!showHistory)}
             className="text-xs text-text-tertiary hover:text-text-secondary transition-colors"
