@@ -91,10 +91,10 @@ export default async function EpisodeDetailPage({
 
   return (
     <div className="mx-auto max-w-6xl">
-      {/* Breadcrumb */}
+      {/* Navigation */}
       <Link
         href={`/app/shows/${showId}`}
-        className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-md border border-border-subtle bg-surface-default px-2.5 py-1.5 text-sm text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -102,17 +102,26 @@ export default async function EpisodeDetailPage({
         {showData?.name || 'Show'}
       </Link>
 
-      {/* Title row */}
-      <div className="mt-4 flex items-start justify-between gap-4">
-        <div>
+      {/* Header */}
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold text-text-primary">
           {episode.episode_number != null && (
-            <p className="text-sm font-medium text-text-secondary mb-1">
-              Episode {episode.episode_number}
-            </p>
+            <span className="text-text-secondary font-semibold">Ep. {episode.episode_number} · </span>
           )}
-          <h1 className="text-2xl font-bold text-text-primary">{episode.title}</h1>
-        </div>
-        <div className="flex shrink-0 items-center gap-2 pt-1">
+          {episode.title}
+        </h1>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="inline-flex items-center rounded-full bg-accent/15 text-accent px-2.5 py-0.5 text-xs font-medium">
+            {stage?.name || 'Not set'}
+          </span>
+          {episode.distribution_status === 'published' && (
+            <span className="inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 px-2.5 py-0.5 text-xs font-medium">
+              Published
+            </span>
+          )}
+          {client && (
+            <span className="text-sm text-text-secondary">{client.name}</span>
+          )}
           {(distributionConnections || []).map((dc: any) => (
             <PublishButton
               key={dc.id}
@@ -130,7 +139,7 @@ export default async function EpisodeDetailPage({
           ))}
           <Link
             href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
-            className="rounded-md bg-surface-overlay border border-border-default px-3 py-1.5 text-sm font-medium text-text-primary transition-colors hover:bg-surface-input"
+            className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-sm font-medium text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
           >
             Edit
           </Link>
@@ -138,60 +147,26 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
+      {/* Published links */}
+      {episode.published_at && (
+        <div className="mt-2 flex items-center gap-2 text-xs text-text-secondary">
+          <span>Published {formatDate(episode.published_at)}</span>
+          {(episode.distribution_metadata as any)?.share_url && (
+            <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
+              Transistor
+            </a>
+          )}
+          {(episode.distribution_metadata as any)?.view_url && (
+            <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
+              YouTube
+            </a>
+          )}
+        </div>
+      )}
+
       <div className="mt-5 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-6">
-        {/* Left column: metadata + files */}
-        <div className="space-y-6">
-          <div className="rounded-lg border border-border-default bg-surface-raised">
-            <div className="divide-y divide-border-subtle">
-              <PropertyRow label="Stage" value={stage?.name || 'Not set'}>
-                {episode.distribution_status === 'published' && (
-                  <span className="ml-2 inline-flex items-center rounded-full bg-emerald-500/15 text-emerald-400 px-2 py-0.5 text-xs font-medium">
-                    Published
-                  </span>
-                )}
-                {episode.distribution_status === 'scheduled' && (
-                  <span className="ml-2 inline-flex items-center rounded-full bg-amber-500/15 text-amber-400 px-2 py-0.5 text-xs font-medium">
-                    Scheduled
-                  </span>
-                )}
-              </PropertyRow>
-
-              {episode.scheduled_publish_date && (
-                <PropertyRow label="Scheduled" value={formatDate(episode.scheduled_publish_date)!} />
-              )}
-
-              {episode.published_at && (
-                <PropertyRow label="Published" value={formatDate(episode.published_at)!}>
-                  {(episode.distribution_metadata as any)?.share_url && (
-                    <a href={(episode.distribution_metadata as any).share_url} target="_blank" rel="noopener noreferrer" className="ml-2 rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
-                      Transistor
-                    </a>
-                  )}
-                  {(episode.distribution_metadata as any)?.view_url && (
-                    <a href={(episode.distribution_metadata as any).view_url} target="_blank" rel="noopener noreferrer" className="ml-2 rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
-                      YouTube
-                    </a>
-                  )}
-                </PropertyRow>
-              )}
-
-              {client && (
-                <PropertyRow label="Client" value={client.name}>
-                  <span className={`ml-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${client.onboarded_at ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400'}`}>
-                    {client.onboarded_at ? 'Active' : 'Pending'}
-                  </span>
-                  <Link
-                    href={`/portal?preview=${client.id}`}
-                    target="_blank"
-                    className="ml-2 rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
-                  >
-                    Portal
-                  </Link>
-                </PropertyRow>
-              )}
-            </div>
-          </div>
-
+        {/* Left column: files */}
+        <div>
           <EpisodeDetailContent
             episodeId={episodeId}
             showId={showId}
@@ -222,12 +197,3 @@ export default async function EpisodeDetailPage({
   )
 }
 
-function PropertyRow({ label, value, children }: { label: string; value: string; children?: React.ReactNode }) {
-  return (
-    <div className="flex items-center px-4 py-2.5">
-      <span className="w-28 shrink-0 text-sm text-text-secondary">{label}</span>
-      <span className="text-sm font-medium text-text-primary">{value}</span>
-      {children}
-    </div>
-  )
-}
