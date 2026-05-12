@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Inter, Geist } from "next/font/google";
+import { Sora, Geist } from "next/font/google";
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import "./globals.css";
 import { cn } from "@/lib/utils";

@@ -308,6 +308,27 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
     }
   }
 
+  const latestGenByType = useMemo(() => {
+    const map = new Map<string, Generation>()
+    for (const g of generations) {
+      if (!map.has(g.generation_type)) {
+        map.set(g.generation_type, g)
+      }
+    }
+    return map
+  }, [generations])
+
+  const estimatedCost = useMemo(() => enabledTypes.reduce((sum, t) => sum + CREDIT_COSTS[t], 0), [enabledTypes])
+
+  const previousByType = useMemo(() => {
+    const map = new Map<string, Generation[]>()
+    for (const type of ALL_GENERATION_TYPES) {
+      const latest = latestGenByType.get(type)
+      map.set(type, generations.filter(g => g.generation_type === type && g.id !== latest?.id).slice(0, 4))
+    }
+    return map
+  }, [generations, latestGenByType])
+
   if (loading) return null
 
   if (!addon?.addon.enabled) {
@@ -339,13 +360,6 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const hasTranscript = transcription?.status === 'completed' && transcription.full_text
   const isTranscribing = transcribing || transcription?.status === 'pending' || transcription?.status === 'processing'
 
-  const latestGenByType = new Map<string, Generation>()
-  for (const g of generations) {
-    if (!latestGenByType.has(g.generation_type)) {
-      latestGenByType.set(g.generation_type, g)
-    }
-  }
-
   let currentGenerationType: GenerationType | null = null
   if (pipeline?.status === 'generating') {
     for (const type of enabledTypes) {
@@ -359,16 +373,6 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const totalSteps = 1 + enabledTypes.length
   const completedSteps = (hasTranscript ? 1 : 0) + enabledTypes.filter(t => latestGenByType.has(t)).length
   const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
-  const estimatedCost = useMemo(() => enabledTypes.reduce((sum, t) => sum + CREDIT_COSTS[t], 0), [enabledTypes])
-
-  const previousByType = useMemo(() => {
-    const map = new Map<string, Generation[]>()
-    for (const type of ALL_GENERATION_TYPES) {
-      const latest = latestGenByType.get(type)
-      map.set(type, generations.filter(g => g.generation_type === type && g.id !== latest?.id).slice(0, 4))
-    }
-    return map
-  }, [generations, latestGenByType])
 
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-raised">
