@@ -247,7 +247,7 @@ export function FeatureBeats() {
                     <span className="w-[18px] h-[18px] rounded-full bg-surface-3 grid place-items-center text-[8.5px] font-semibold text-text-secondary">DR</span>
                     Dana Reyes is reviewing
                   </span>
-                  <span className="ml-auto text-[11px] font-semibold text-accent-fg bg-accent px-2.5 py-1 rounded-md">Approve all</span>
+                  <span className="ml-auto text-[11px] font-semibold text-white bg-accent px-2.5 py-1 rounded-md">Approve all</span>
                 </div>
               </div>
             </PanelShell>

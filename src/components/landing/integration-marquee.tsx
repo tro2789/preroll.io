@@ -1,18 +1,16 @@
 const INTEGRATIONS = [
   ['Frame.io', 'FR', 'oklch(0.78 0.13 95)'],
-  ['Descript', 'DS', 'oklch(0.72 0.15 300)'],
-  ['Riverside', 'RV', 'oklch(0.68 0.16 280)'],
-  ['Captivate', 'CP', 'oklch(0.72 0.16 30)'],
-  ['Transistor', 'TR', 'oklch(0.7 0.15 200)'],
-  ['Megaphone', 'MG', 'oklch(0.74 0.14 145)'],
-  ['Spotify', 'SP', 'oklch(0.74 0.16 150)'],
-  ['Apple Podcasts', 'AP', 'oklch(0.72 0.15 320)'],
-  ['RSS', 'RS', 'oklch(0.74 0.15 50)'],
-  ['Slack', 'SL', 'oklch(0.72 0.13 330)'],
-  ['Notion', 'NO', 'oklch(0.85 0.01 264)'],
   ['Google Drive', 'GD', 'oklch(0.74 0.14 145)'],
-  ['Zapier', 'ZP', 'oklch(0.72 0.16 35)'],
-  ['Calendar', 'CA', 'oklch(0.7 0.14 264)'],
+  ['Vimeo', 'VM', 'oklch(0.68 0.16 280)'],
+  ['Transistor.fm', 'TR', 'oklch(0.7 0.15 200)'],
+  ['Deepgram', 'DG', 'oklch(0.74 0.16 150)'],
+  ['Claude AI', 'CL', 'oklch(0.72 0.16 30)'],
+  ['Stripe', 'ST', 'oklch(0.72 0.15 320)'],
+  ['n8n', 'N8', 'oklch(0.74 0.15 50)'],
+  ['Webhooks', 'WH', 'oklch(0.72 0.13 330)'],
+  ['REST API', 'AP', 'oklch(0.7 0.14 264)'],
+  ['MCP Server', 'MC', 'oklch(0.74 0.14 145)'],
+  ['Cloudflare R2', 'R2', 'oklch(0.72 0.16 35)'],
 ] as const
 
 function Chip({ name, abbr, color }: { name: string; abbr: string; color: string }) {
@@ -29,7 +27,7 @@ function Chip({ name, abbr, color }: { name: string; abbr: string; color: string
   )
 }
 
-function MarqueeTrack({ items, reverse }: { items: typeof INTEGRATIONS[number][]; reverse?: boolean }) {
+function MarqueeTrack({ items, reverse }: { items: (readonly [string, string, string])[]; reverse?: boolean }) {
   const doubled = [...items, ...items]
   return (
     <div className="relative overflow-hidden" style={{ maskImage: 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)' }}>
@@ -45,13 +43,13 @@ function MarqueeTrack({ items, reverse }: { items: typeof INTEGRATIONS[number][]
 }
 
 export function IntegrationMarquee() {
-  const row1 = INTEGRATIONS.slice(0, 8)
-  const row2 = INTEGRATIONS.slice(6)
+  const row1 = INTEGRATIONS.slice(0, 7)
+  const row2 = INTEGRATIONS.slice(5)
 
   return (
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
-      <div className="text-center text-sm text-text-tertiary mb-9 reveal">
-        Drops into the stack you already run. <b className="text-text-secondary font-semibold">Files, recording, hosting, comms</b>, all wired in.
+      <div className="max-w-[1200px] mx-auto px-7 text-center text-sm text-text-tertiary mb-9 reveal">
+        Drops into the stack you already run. <b className="text-text-secondary font-semibold">Files, review, hosting, AI, automation</b> — all wired in.
       </div>
       <div className="space-y-3.5">
         <MarqueeTrack items={[...row1]} />

@@ -59,7 +59,7 @@ export function Topbar() {
       <div className="flex items-center gap-2">
         <Link
           href="/app/shows"
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-accent text-accent-fg hover:bg-accent-hover transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover transition-colors"
         >
           <PlusIcon className="h-3.5 w-3.5" />
           New episode
