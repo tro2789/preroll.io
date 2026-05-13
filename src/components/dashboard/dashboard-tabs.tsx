@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { KanbanBoard } from '@/components/dashboard/kanban-board'
 import { PageHeader } from '@/components/layout/page-header'
 
@@ -74,7 +75,9 @@ interface ActivityFilters {
 }
 
 export function DashboardTabs({ columns, episodes }: DashboardTabsProps) {
-  const [tab, setTab] = useState<Tab>('board')
+  const searchParams = useSearchParams()
+  const initialTab = searchParams.get('tab') === 'activity' ? 'activity' as Tab : 'board' as Tab
+  const [tab, setTab] = useState<Tab>(initialTab)
   const [activities, setActivities] = useState<Activity[]>([])
   const [activitiesLoading, setActivitiesLoading] = useState(false)
   const [activityFilters, setActivityFilters] = useState<ActivityFilters>({ showId: null, search: '' })

@@ -108,7 +108,7 @@ export function NotificationDropdown() {
             <h3 className="text-[13px] font-semibold text-text-primary">Notifications</h3>
             {activities.length > 0 && (
               <Link
-                href="/app"
+                href="/app?tab=activity"
                 onClick={() => setOpen(false)}
                 className="text-[11px] text-text-secondary hover:text-text-primary transition-colors"
               >
