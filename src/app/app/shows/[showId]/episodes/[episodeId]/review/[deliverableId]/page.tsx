@@ -147,7 +147,7 @@ export default function ProducerReviewPage() {
         </div>
       ) : media ? (
         <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
-          <div className="flex-1 lg:w-2/3 min-h-0 flex flex-col">
+          <div className="flex-[2] min-h-0 flex flex-col">
             <ReviewPlayer
               src={media.url}
               mimeType={media.mime_type}
@@ -161,7 +161,7 @@ export default function ProducerReviewPage() {
               onRefreshNeeded={fetchMedia}
             />
           </div>
-          <div className="h-[50vh] lg:h-auto lg:w-1/3 min-h-0 shrink-0 lg:shrink rounded-lg border border-border-subtle bg-surface-raised overflow-hidden">
+          <div className="h-[50vh] lg:h-auto lg:w-[340px] min-h-0 shrink-0 rounded-lg border border-border-subtle bg-surface-raised overflow-hidden">
             <CommentsSidebar
               comments={comments}
               currentTime={currentTime}
