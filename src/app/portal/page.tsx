@@ -56,7 +56,7 @@ export default async function PortalDashboard() {
       {!client.portal_welcome_dismissed_at && (
         <WelcomeCard orgDisplayName={orgDisplayName} />
       )}
-      <p className="text-lg text-text-primary">
+      <p className="text-[15px] text-text-primary">
         Welcome back, <span className="font-semibold">{client.name.split(' ')[0]}</span>
       </p>
 
@@ -67,7 +67,7 @@ export default async function PortalDashboard() {
             <Link
               key={show.id}
               href={`/portal/shows/${show.id}`}
-              className="rounded-xl bg-surface-raised border border-border-subtle overflow-hidden hover:border-border-default transition-colors group"
+              className="rounded-[10px] bg-surface-raised border border-border-subtle overflow-hidden hover:border-border-default transition-colors group"
             >
               <Thumbnail
                 id={show.id}
@@ -77,7 +77,7 @@ export default async function PortalDashboard() {
               <div className="p-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="font-medium text-text-primary group-hover:text-accent transition-colors">
+                    <h2 className="font-medium text-text-primary group-hover:text-accent transition-colors font-[family-name:var(--font-display)]">
                       {show.name}
                     </h2>
                   </div>

@@ -98,25 +98,22 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
 
   return (
     <div>
-      <div className="flex items-center gap-1 border-b border-border-subtle mb-5 overflow-x-auto">
+      <div className="flex gap-0.5 border-b border-border-subtle mb-5 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActive(tab.id)}
-            className={`relative shrink-0 px-3 py-2.5 text-sm font-medium transition-colors ${
+            className={`shrink-0 px-3 py-2.5 transition-colors -mb-px ${
               active === tab.id
-                ? 'text-text-primary'
-                : 'text-text-secondary hover:text-text-primary'
+                ? 'text-[13px] font-medium text-text-primary border-b-2 border-accent'
+                : 'text-[13px] font-[450] text-text-secondary border-b-2 border-transparent hover:text-text-primary'
             }`}
           >
             {tab.label}
             {tab.count != null && (
-              <span className={`ml-1.5 ${active === tab.id ? 'text-text-secondary' : 'text-text-tertiary'}`}>
+              <span className="font-mono text-[11px] text-fg-faint ml-1.5">
                 {tab.count}
               </span>
-            )}
-            {active === tab.id && (
-              <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-accent rounded-full" />
             )}
           </button>
         ))}

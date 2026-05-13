@@ -9,12 +9,12 @@ interface ActivityFeedProps {
   activities: ActivityEntry[]
 }
 
-const actionIcons: Record<string, string> = {
-  episode_stage_changed: '▶',
-  deliverable_submitted: '●',
-  deliverable_approved: '✓',
-  deliverable_revision_requested: '↺',
-  deliverable_resubmitted: '●',
+const dotColors: Record<string, string> = {
+  episode_stage_changed: 'bg-blue-400',
+  deliverable_submitted: 'bg-amber-400',
+  deliverable_approved: 'bg-emerald-400',
+  deliverable_revision_requested: 'bg-red-400',
+  deliverable_resubmitted: 'bg-amber-400',
 }
 
 export function ActivityFeed({ activities }: ActivityFeedProps) {
@@ -28,19 +28,12 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
 
   return (
     <div className="space-y-0">
-      {activities.map((entry, idx) => (
+      {activities.map((entry) => (
         <div key={entry.id} className="flex gap-3 py-2.5">
-          <div className="flex flex-col items-center">
-            <span className="text-xs text-text-secondary w-4 text-center">
-              {actionIcons[entry.action] || '●'}
-            </span>
-            {idx < activities.length - 1 && (
-              <div className="w-px flex-1 bg-border-subtle mt-1" />
-            )}
-          </div>
+          <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${dotColors[entry.action] || 'bg-blue-400'}`} />
           <div className="min-w-0 flex-1 pb-1">
-            <p className="text-sm text-text-primary">{entry.description}</p>
-            <p className="text-sm text-text-secondary mt-0.5">
+            <p className="text-[13px] text-text-primary">{entry.description}</p>
+            <p className="text-[11px] text-text-secondary mt-0.5">
               {new Date(entry.created_at).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',

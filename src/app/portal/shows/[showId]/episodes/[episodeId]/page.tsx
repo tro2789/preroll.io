@@ -94,7 +94,7 @@ export default async function PortalEpisodePage({
           {episode.episode_number != null && (
             <span className="text-sm font-mono text-text-secondary">#{episode.episode_number}</span>
           )}
-          <h1 className="text-lg font-semibold text-text-primary">{episode.title}</h1>
+          <h1 className="text-[20px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary">{episode.title}</h1>
         </div>
 
         <div className="flex items-center gap-3 mt-2">
@@ -113,7 +113,7 @@ export default async function PortalEpisodePage({
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-sm font-medium text-text-secondary">
+        <h2 className="text-[13px] font-semibold text-text-primary">
           Shared Files
           {deliverables && deliverables.length > 0 && (
             <span className="ml-2 text-text-secondary font-normal">({deliverables.length})</span>
@@ -135,7 +135,7 @@ export default async function PortalEpisodePage({
 
       {episode.description && (
         <section>
-          <h2 className="text-sm font-medium text-text-secondary mb-3">Notes</h2>
+          <h2 className="text-[13px] font-semibold text-text-primary mb-3">Notes</h2>
           <div className="rounded-lg bg-surface-raised border border-border-subtle p-4">
             <p className="text-sm text-text-secondary whitespace-pre-wrap">{episode.description}</p>
           </div>

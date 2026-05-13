@@ -17,7 +17,7 @@ export function WelcomeCard({ orgDisplayName }: WelcomeCardProps) {
   if (dismissed) return null
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface-raised p-5">
+    <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-text-primary">Your client portal</h2>

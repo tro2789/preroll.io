@@ -23,25 +23,25 @@ export function PortalHeader({ clientName, email, orgDisplayName, logoUrl }: Por
 
   return (
     <header className="border-b border-border-subtle bg-surface-raised/50 backdrop-blur-sm sticky top-0 z-10">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/portal" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             {logoUrl ? (
               <img src={logoUrl} alt={orgDisplayName || 'Logo'} className="h-6 w-auto" />
             ) : (
-              <span className="text-sm font-bold tracking-widest uppercase text-text-primary hover:text-accent transition-colors">
+              <span className="text-[13px] font-semibold text-text-primary hover:text-accent transition-colors">
                 {orgDisplayName || 'preroll.io'}
               </span>
             )}
           </Link>
-          <span className="text-border-default">/</span>
+          <span className="text-fg-faint">/</span>
           <span className="text-sm text-text-secondary">{clientName}</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-xs text-text-secondary hidden sm:block">{email}</span>
           <button
             onClick={handleSignOut}
-            className="text-xs text-text-secondary hover:text-text-primary transition-colors"
+            className="rounded-[7px] border border-border-subtle bg-surface-input px-2.5 py-1 text-[12px] text-text-secondary hover:text-text-primary transition-colors"
           >
             Sign out
           </button>

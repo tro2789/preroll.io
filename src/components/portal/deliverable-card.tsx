@@ -55,7 +55,7 @@ export function DeliverableCard({ deliverable, episodeContext, reviewUrl, thumbn
   const status = statusConfig[deliverable.status] || statusConfig.pending
 
   return (
-    <div className="rounded-lg bg-surface-raised border border-border-subtle overflow-hidden">
+    <div className="rounded-[10px] bg-surface-raised border border-border-subtle overflow-hidden">
       <div className="flex gap-3 p-3">
         {thumb && !thumbFailed ? (
           <a
