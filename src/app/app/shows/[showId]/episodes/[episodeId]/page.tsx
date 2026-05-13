@@ -101,11 +101,7 @@ export default async function EpisodeDetailPage({
       {/* Page header — server-rendered, non-editable parts */}
       <div>
         <div className="flex items-start gap-4">
-          <div className="flex-1">
-            <p className="text-[13.5px] text-text-secondary mt-1">
-              {showData?.name}{client?.name ? ` · with ${client.name}` : ''}
-            </p>
-          </div>
+          <div className="flex-1" />
           <div className="flex items-center gap-2 shrink-0">
             {(distributionConnections || []).map((dc: any) => (
               <PublishButton

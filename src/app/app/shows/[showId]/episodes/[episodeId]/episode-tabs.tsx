@@ -413,6 +413,9 @@ export function EpisodeTabs({
               {episode.title}
             </h1>
           )}
+          <p className="text-[13.5px] text-text-secondary mt-1">
+            {showName}{clientName ? ` · with ${clientName}` : ''}
+          </p>
         </div>
       </div>
 
