@@ -76,7 +76,6 @@ export default function FilePreviewPage() {
     setTimeout(() => setSeekToTime(null), 100)
   }, [])
 
-  const backUrl = `/app/shows/${showId}/episodes/${episodeId}`
 
   return (
     <div className="flex flex-col h-auto lg:h-[calc(100vh-6.5rem)] overflow-y-auto lg:overflow-hidden">
@@ -96,7 +95,6 @@ export default function FilePreviewPage() {
               seekToTime={seekToTime}
               fillContainer
               title={media.name}
-              backUrl={backUrl}
               onTimeUpdate={setCurrentTime}
               onRefreshNeeded={fetchMedia}
             />

@@ -134,8 +134,6 @@ export default function ProducerReviewPage() {
     setTimeout(() => setSeekToTime(null), 100)
   }, [])
 
-  const backUrl = `/app/shows/${showId}/episodes/${episodeId}`
-
   return (
     <div className="flex flex-col h-auto lg:h-[calc(100vh-6.5rem)] overflow-y-auto lg:overflow-hidden">
       {/* Error state */}
@@ -155,7 +153,6 @@ export default function ProducerReviewPage() {
               seekToTime={seekToTime}
               fillContainer
               title={deliverable?.title}
-              backUrl={backUrl}
               downloadUrl={deliverable?.file_url}
               onTimeUpdate={setCurrentTime}
               onRefreshNeeded={fetchMedia}

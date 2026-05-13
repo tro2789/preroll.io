@@ -185,18 +185,9 @@ export function ReviewPlayer({
             onDoubleClick={toggleFullscreen}
             {...mediaProps}
           />
-          {(backUrl || title) && !isFullscreen && (
+          {title && !isFullscreen && (
             <div className="absolute top-0 left-0 right-0 flex items-center gap-2 px-3 py-2 bg-gradient-to-b from-black/60 to-transparent rounded-t-lg">
-              {backUrl && (
-                <a href={backUrl} className="text-white/70 hover:text-white transition-colors shrink-0">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
-                  </svg>
-                </a>
-              )}
-              {title && (
-                <span className="text-xs text-white/80 truncate">{title}</span>
-              )}
+              <span className="text-xs text-white/80 truncate">{title}</span>
             </div>
           )}
         </div>
