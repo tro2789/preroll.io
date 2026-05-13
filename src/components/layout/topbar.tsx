@@ -50,6 +50,24 @@ export function Topbar() {
 
   return (
     <>
+      {/* Mobile top bar */}
+      <div className="flex md:hidden items-center justify-end gap-2 h-11 px-4 border-b border-border-subtle bg-surface-base sticky top-0 z-30">
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="flex items-center justify-center w-[32px] h-[32px] rounded-[7px] border border-transparent text-text-secondary hover:bg-surface-raised hover:border-border-subtle hover:text-text-primary transition-colors"
+        >
+          <SearchIcon className="h-[18px] w-[18px]" />
+        </button>
+        <button
+          onClick={() => setQuickCreateOpen(true)}
+          className="flex items-center gap-1 px-2.5 py-[5px] text-xs font-semibold rounded-md border border-accent bg-accent text-white hover:bg-accent-hover transition-colors"
+        >
+          <PlusIcon className="h-3.5 w-3.5" />
+          New
+        </button>
+      </div>
+
+      {/* Desktop top bar */}
       <div className="hidden md:flex items-center gap-3 h-12 px-4 border-b border-border-subtle bg-surface-base sticky top-0 z-30">
         {/* Breadcrumbs — left */}
         <nav className="flex items-center gap-1.5 text-[13px] min-w-0">
