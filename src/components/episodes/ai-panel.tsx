@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TranscriptViewer } from './transcript-viewer'
@@ -66,15 +66,11 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const [transcribing, setTranscribing] = useState(false)
   const [generating, setGenerating] = useState<GenerationType | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [collapsed, setCollapsed] = useState(false)
   const [startingPipeline, setStartingPipeline] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [notification, setNotification] = useState<string | null>(null)
   const [hasAudio, setHasAudio] = useState(hasAudioFiles)
-  const collapsedRef = useRef(collapsed)
   const router = useRouter()
-
-  useEffect(() => { collapsedRef.current = collapsed }, [collapsed])
 
   const fetchData = useCallback(async () => {
     try {
@@ -162,7 +158,7 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
                 : 'AI content partially generated — some types were skipped'
             )
             setTimeout(() => setNotification(null), 8000)
-            if (collapsedRef.current) setCollapsed(false)
+
           }
         }
       )
@@ -452,47 +448,33 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
   const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
 
   return (
-    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex w-full items-center justify-between px-3.5 py-[11px] gap-2"
-        style={{ background: 'linear-gradient(180deg, var(--color-accent-tint), transparent)' }}
-        aria-expanded={!collapsed}
-        aria-label={`AI Assistant${isRunning ? ' — processing' : ''}`}
-      >
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-accent" aria-hidden="true">
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" /></svg>
-          </span>
-          <h3 className="text-[13px] font-semibold text-text-primary shrink-0">AI Assistant</h3>
-          <span aria-live="polite" aria-atomic="true">
-            {isRunning && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs whitespace-nowrap">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
-                {pipeline?.status === 'transcribing' || isTranscribing ? 'Transcribing' : 'Generating'}
-                {elapsedSeconds > 0 && (
-                  <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
-                )}
-              </span>
-            )}
-            {pipeline?.status === 'completed' && (
-              <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 text-xs">Done</span>
-            )}
-            {pipeline?.status === 'partial' && (
-              <span className="rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs">Partial</span>
-            )}
-          </span>
-        </div>
-        <svg
-          className={`h-4 w-4 shrink-0 text-text-tertiary transition-transform ${collapsed ? '' : 'rotate-180'}`}
-          fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+    <div className="space-y-4">
+      {/* AI label + status */}
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[11.5px] font-semibold text-accent">
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" /></svg>
+          AI show notes
+        </span>
+        <span aria-live="polite" aria-atomic="true">
+          {isRunning && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs whitespace-nowrap">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
+              {pipeline?.status === 'transcribing' || isTranscribing ? 'Transcribing' : 'Generating'}
+              {elapsedSeconds > 0 && (
+                <span className="tabular-nums opacity-70">{formatDuration(elapsedSeconds)}</span>
+              )}
+            </span>
+          )}
+          {pipeline?.status === 'completed' && (
+            <span className="rounded-full bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 text-xs">Done</span>
+          )}
+          {pipeline?.status === 'partial' && (
+            <span className="rounded-full bg-amber-500/15 text-amber-400 px-1.5 py-0.5 text-xs">Partial</span>
+          )}
+        </span>
+      </div>
 
-      {!collapsed && (
-        <div className="border-t border-border-subtle p-4 space-y-4">
+      <div className="space-y-4">
           {error && (
             <div className="rounded-md bg-red-500/10 border border-red-500/20 p-3 text-xs text-red-400">
               {error}
@@ -651,7 +633,6 @@ export function AiPanel({ episodeId, showId, hasAudioFiles }: AiPanelProps) {
             </div>
           )}
         </div>
-      )}
     </div>
   )
 }

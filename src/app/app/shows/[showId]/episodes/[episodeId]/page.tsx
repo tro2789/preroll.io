@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
-import { EpisodeDetailContent } from './episode-detail-content'
 import { AiPanel } from '@/components/episodes/ai-panel'
 import { PeekPane } from '@/components/episodes/peek-pane'
 import type { IntegrationProvider } from '@/lib/integrations/types'
@@ -186,37 +185,20 @@ export default async function EpisodeDetailPage({
       </div>
 
       <div className="mt-[18px] grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
-        {/* Working area: AI + files */}
-        <div className="flex flex-col lg:flex-row gap-[18px] items-start min-w-0">
-          <div className="flex-[1.4] min-w-0">
-            <AiPanel
-              episodeId={episodeId}
-              showId={showId}
-              hasAudioFiles={hasAudioFiles}
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <EpisodeDetailContent
-              episodeId={episodeId}
-              showId={showId}
-              integration={integration}
-              deliverables={deliverables || []}
-              connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
-              episode={{
-                scheduled_publish_date: episode.scheduled_publish_date,
-                published_at: episode.published_at,
-                description: episode.description,
-                notes: episode.notes,
-                stage: stage ? { name: stage.name } : null,
-              }}
-              hasIntegration={!!episodeIntegration}
-            />
-          </div>
+        {/* Main content: AI panel */}
+        <div className="min-w-0">
+          <AiPanel
+            episodeId={episodeId}
+            showId={showId}
+            hasAudioFiles={hasAudioFiles}
+          />
         </div>
 
-        {/* Peek pane: sticky metadata rail */}
+        {/* Sidebar: files, metadata, deliverables */}
         <aside className="xl:sticky xl:top-[60px]">
           <PeekPane
+            episodeId={episodeId}
+            showId={showId}
             episode={{
               episode_number: episode.episode_number,
               scheduled_publish_date: episode.scheduled_publish_date,
@@ -227,8 +209,11 @@ export default async function EpisodeDetailPage({
             stage={stage ? { name: stage.name } : null}
             showName={showData?.name || 'Show'}
             clientName={client?.name || null}
-            showId={showId}
             deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, status: d.status }))}
+            integration={integration}
+            connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
+            hasIntegration={!!episodeIntegration}
+            audioFileCount={(audioFileRefs || []).length}
           />
         </aside>
       </div>
