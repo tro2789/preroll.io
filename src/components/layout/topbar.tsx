@@ -6,35 +6,26 @@ import Link from 'next/link'
 import { QuickCreate } from '@/components/dashboard/quick-create'
 import { GlobalSearch } from '@/components/search/global-search'
 
-const SEGMENT_LABELS: Record<string, string> = {
-  app: 'Home',
-  shows: 'Shows',
-  clients: 'Clients',
-  calendar: 'Calendar',
-  reports: 'Reports',
-  settings: 'Settings',
-  episodes: 'Episodes',
-  billing: 'Billing',
-  integrations: 'Integrations',
-  team: 'Team',
-  branding: 'Branding',
+interface Crumb {
+  label: string
+  href: string
 }
 
 export function Topbar() {
   const pathname = usePathname()
-  const segments = pathname.split('/').filter(Boolean)
   const [quickCreateOpen, setQuickCreateOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [crumbs, setCrumbs] = useState<Crumb[]>([])
 
-  const crumbs: { label: string; href: string }[] = []
-  let path = ''
-  for (const seg of segments) {
-    path += `/${seg}`
-    const label = SEGMENT_LABELS[seg]
-    if (label) {
-      crumbs.push({ label, href: path })
-    }
-  }
+  useEffect(() => {
+    if (!pathname.startsWith('/app')) return
+    let cancelled = false
+    fetch(`/api/v1/breadcrumbs?path=${encodeURIComponent(pathname)}`)
+      .then(r => r.json())
+      .then(json => { if (!cancelled) setCrumbs(json.data || []) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [pathname])
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -70,10 +61,10 @@ export function Topbar() {
       {/* Desktop top bar */}
       <div className="hidden md:flex items-center gap-3 h-12 px-4 border-b border-border-subtle bg-surface-base sticky top-0 z-30">
         {/* Breadcrumbs — left */}
-        <nav className="flex items-center gap-1.5 text-[13px] min-w-0">
+        <nav className="flex items-center gap-1.5 text-[13px] min-w-0 overflow-hidden">
           {crumbs.map((crumb, i) => (
-            <span key={crumb.href} className="flex items-center gap-1.5">
-              {i > 0 && <span className="text-fg-faint">/</span>}
+            <span key={crumb.href} className="flex items-center gap-1.5 min-w-0">
+              {i > 0 && <span className="text-fg-faint shrink-0">/</span>}
               {i === crumbs.length - 1 ? (
                 <span className="font-medium text-text-primary truncate">{crumb.label}</span>
               ) : (
