@@ -921,12 +921,6 @@ export function DeliveryPanel({
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-text-primary">Files</h3>
-                    {files.length > 0 && (
-                      <span className="rounded-full bg-surface-overlay px-2 py-0.5 text-xs font-medium text-text-secondary">{files.length}</span>
-                    )}
-                  </div>
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => fileInputRef.current?.click()}
