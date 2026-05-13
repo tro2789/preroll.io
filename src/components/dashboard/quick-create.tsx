@@ -19,9 +19,21 @@ type Step = 'client' | 'show' | 'episode'
 const STEPS: Step[] = ['client', 'show', 'episode']
 const SEARCH_THRESHOLD = 7
 
-export function QuickCreate() {
+interface QuickCreateProps {
+  buttonLabel?: string
+  buttonClassName?: string
+  externalOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpenChange }: QuickCreateProps = {}) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = externalOpen !== undefined ? externalOpen : internalOpen
+  const setOpen = (v: boolean) => {
+    setInternalOpen(v)
+    onOpenChange?.(v)
+  }
   const [step, setStep] = useState<Step>('client')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -252,12 +264,13 @@ export function QuickCreate() {
   }
 
   if (!open) {
+    if (externalOpen !== undefined) return null
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors"
+        className={buttonClassName || "rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors"}
       >
-        + New Project
+        {buttonLabel || '+ New Project'}
       </button>
     )
   }

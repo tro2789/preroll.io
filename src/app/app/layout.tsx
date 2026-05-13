@@ -71,7 +71,7 @@ export default async function AppLayout({
         />
         <div className="md:pl-[244px] flex flex-col min-h-screen">
           <Topbar />
-          <main className="flex-1 px-4 sm:px-7 py-0 pb-20 md:pb-16 max-w-[1640px] mx-auto w-full">
+          <main className="flex-1 px-4 sm:px-7 pt-5 pb-20 md:pb-16 max-w-[1640px] mx-auto w-full">
             {children}
           </main>
         </div>

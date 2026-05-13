@@ -2,10 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
 import { getActiveOrgId } from '@/lib/org/server'
-import { QuickCreate } from '@/components/dashboard/quick-create'
-import { KanbanBoard } from '@/components/dashboard/kanban-board'
+import { DashboardTabs } from '@/components/dashboard/dashboard-tabs'
 import { OnboardingChecklist } from '@/components/dashboard/onboarding-checklist'
-import { PageHeader } from '@/components/layout/page-header'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -85,30 +83,11 @@ export default async function DashboardPage() {
     }
   })
 
-  const hasAnyEpisodes = episodes.length > 0
-
   return (
     <div className="space-y-4">
       <OnboardingChecklist />
 
-      <PageHeader
-        title="Dashboard"
-        description="Every episode in flight across your shows, by pipeline stage. Drag a card to advance it."
-        tabs={
-          <div className="flex gap-0.5 border-b border-border-subtle">
-            <button className="px-2.5 py-2 text-[13px] font-medium text-text-primary border-b-2 border-accent -mb-px">Board</button>
-            <button className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px hover:text-text-primary">Table <span className="font-mono text-[11px] text-fg-faint ml-1.5">{episodes.length}</span></button>
-            <button className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px hover:text-text-primary">Activity</button>
-          </div>
-        }
-        actions={<QuickCreate />}
-      />
-
-      {!hasAnyEpisodes ? (
-        <p className="text-sm text-text-tertiary py-12 text-center">No episodes yet. Create a show and add your first episode to get started.</p>
-      ) : (
-        <KanbanBoard columns={columns} episodes={episodes} />
-      )}
+      <DashboardTabs columns={columns} episodes={episodes} />
     </div>
   )
 }

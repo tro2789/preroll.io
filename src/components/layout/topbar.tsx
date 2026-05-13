@@ -1,7 +1,10 @@
 'use client'
 
+import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { QuickCreate } from '@/components/dashboard/quick-create'
+import { GlobalSearch } from '@/components/search/global-search'
 
 const SEGMENT_LABELS: Record<string, string> = {
   app: 'Home',
@@ -20,6 +23,8 @@ const SEGMENT_LABELS: Record<string, string> = {
 export function Topbar() {
   const pathname = usePathname()
   const segments = pathname.split('/').filter(Boolean)
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   const crumbs: { label: string; href: string }[] = []
   let path = ''
@@ -31,51 +36,74 @@ export function Topbar() {
     }
   }
 
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault()
+      setSearchOpen(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [handleKeyDown])
+
   return (
-    <div className="hidden md:flex items-center gap-3 h-12 px-4 border-b border-border-subtle bg-surface-base sticky top-0 z-30">
-      {/* Breadcrumbs — left */}
-      <nav className="flex items-center gap-1.5 text-[13px] min-w-0">
-        {crumbs.map((crumb, i) => (
-          <span key={crumb.href} className="flex items-center gap-1.5">
-            {i > 0 && <span className="text-fg-faint">/</span>}
-            {i === crumbs.length - 1 ? (
-              <span className="font-medium text-text-primary truncate">{crumb.label}</span>
-            ) : (
-              <Link href={crumb.href} className="text-text-secondary hover:text-text-primary transition-colors truncate">
-                {crumb.label}
-              </Link>
-            )}
-          </span>
-        ))}
-      </nav>
+    <>
+      <div className="hidden md:flex items-center gap-3 h-12 px-4 border-b border-border-subtle bg-surface-base sticky top-0 z-30">
+        {/* Breadcrumbs — left */}
+        <nav className="flex items-center gap-1.5 text-[13px] min-w-0">
+          {crumbs.map((crumb, i) => (
+            <span key={crumb.href} className="flex items-center gap-1.5">
+              {i > 0 && <span className="text-fg-faint">/</span>}
+              {i === crumbs.length - 1 ? (
+                <span className="font-medium text-text-primary truncate">{crumb.label}</span>
+              ) : (
+                <Link href={crumb.href} className="text-text-secondary hover:text-text-primary transition-colors truncate">
+                  {crumb.label}
+                </Link>
+              )}
+            </span>
+          ))}
+        </nav>
 
-      {/* Spacer */}
-      <div className="flex-1" />
+        {/* Spacer */}
+        <div className="flex-1" />
 
-      {/* Right group: search, new episode, bell */}
-      <div className="flex items-center gap-3">
-        {/* Search bar */}
-        <div className="flex items-center gap-2 bg-surface-input border border-border-subtle hover:border-border-default rounded-[7px] w-[220px] px-[9px] py-[5px] text-[13px] text-text-tertiary cursor-text">
-          <SearchIcon className="h-3.5 w-3.5 shrink-0" />
-          <span>Search episodes, shows&hellip;</span>
-          <kbd className="ml-auto bg-surface-overlay border border-border-subtle rounded px-[5px] py-px text-[10.5px] font-mono text-fg-faint">⌘K</kbd>
+        {/* Right group: search, new, bell */}
+        <div className="flex items-center gap-3">
+          {/* Search bar */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="flex items-center gap-2 bg-surface-input border border-border-subtle hover:border-border-default rounded-[7px] w-[220px] px-[9px] py-[5px] text-[13px] text-text-tertiary cursor-text text-left"
+          >
+            <SearchIcon className="h-3.5 w-3.5 shrink-0" />
+            <span>Search</span>
+            <kbd className="ml-auto bg-surface-overlay border border-border-subtle rounded px-[5px] py-px text-[10.5px] font-mono text-fg-faint">⌘K</kbd>
+          </button>
+
+          {/* New button */}
+          <button
+            onClick={() => setQuickCreateOpen(true)}
+            className="flex items-center gap-1 px-2 py-[3.5px] text-xs font-semibold rounded-md border border-accent bg-accent text-white hover:bg-accent-hover transition-colors"
+          >
+            <PlusIcon className="h-3.5 w-3.5" />
+            New
+          </button>
+
+          {/* Notification bell — icon button */}
+          <button
+            className="flex items-center justify-center w-[30px] h-[30px] rounded-[7px] border border-transparent text-text-secondary hover:bg-surface-raised hover:border-border-subtle hover:text-text-primary transition-colors"
+            title="Notifications"
+          >
+            <BellIcon className="h-4 w-4" />
+          </button>
         </div>
-
-        {/* New episode button */}
-        <button className="flex items-center gap-1 px-2 py-[3.5px] text-xs font-semibold rounded-md border border-accent bg-accent text-white hover:bg-accent-hover transition-colors">
-          <PlusIcon className="h-3.5 w-3.5" />
-          New episode
-        </button>
-
-        {/* Notification bell — icon button */}
-        <button
-          className="flex items-center justify-center w-[30px] h-[30px] rounded-[7px] border border-transparent text-text-secondary hover:bg-surface-raised hover:border-border-subtle hover:text-text-primary transition-colors"
-          title="Notifications"
-        >
-          <BellIcon className="h-4 w-4" />
-        </button>
       </div>
-    </div>
+
+      <QuickCreate externalOpen={quickCreateOpen} onOpenChange={setQuickCreateOpen} />
+      <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+    </>
   )
 }
 

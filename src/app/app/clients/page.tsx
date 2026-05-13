@@ -48,14 +48,6 @@ export default async function ClientsPage() {
       <PageHeader
         title="Clients"
         description="Everyone you produce for, their portal status, and pending reviews."
-        actions={
-          <Link
-            href="/app/clients/new"
-            className="rounded-[7px] bg-accent text-white px-[11px] py-[5.5px] text-[13px] font-semibold hover:bg-accent-hover transition-colors"
-          >
-            + Add Client
-          </Link>
-        }
       />
 
       {/* Toolbar */}
