@@ -102,7 +102,7 @@ export default async function EpisodeDetailPage({
   return (
     <div className="max-w-[1640px] mx-auto">
       {/* Page header */}
-      <div className="pt-1">
+      <div className="pt-0.5">
         <Link
           href={`/app/shows/${showId}`}
           className="inline-flex items-center gap-1 text-[12.5px] text-text-secondary hover:text-text-primary transition-colors"
@@ -139,6 +139,10 @@ export default async function EpisodeDetailPage({
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
               Edit
             </Link>
+            <button className="inline-flex items-center gap-1.5 px-[11px] py-[5.5px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors">
+              Move stage
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m6 9 6 6 6-6" /></svg>
+            </button>
             {(distributionConnections || []).map((dc: any) => (
               <PublishButton
                 key={dc.id}
@@ -181,7 +185,7 @@ export default async function EpisodeDetailPage({
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
+      <div className="mt-[18px] grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
         {/* Working area: AI + files */}
         <div className="flex flex-col lg:flex-row gap-[18px] items-start min-w-0">
           <div className="flex-[1.4] min-w-0">
