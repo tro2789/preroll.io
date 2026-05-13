@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/client'
 import { DeliveryPanel } from '@/components/episodes/delivery-panel'
 import { formatDuration } from '@/lib/format'
 import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS, CREDIT_COSTS } from '@/lib/ai/constants'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { RichTextEditor } from '@/components/episodes/rich-text-editor'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 import type { Deliverable } from '@/lib/constants/deliverables'
 
@@ -611,6 +613,8 @@ function ContentBlock({ type, content, onApply, onRegenerate, generating }: {
 }) {
   const [applyState, setApplyState] = useState<'idle' | 'confirm' | 'applying' | 'applied' | 'failed'>('idle')
   const [copied, setCopied] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editedContent, setEditedContent] = useState(content)
   const isShowNotes = type === 'show_notes'
   const label = type === 'show_notes' ? 'Show Notes' : type === 'description' ? 'Description' : GENERATION_LABELS[type]
 
@@ -656,6 +660,12 @@ function ContentBlock({ type, content, onApply, onRegenerate, generating }: {
             {copied ? 'Copied!' : 'Copy'}
           </button>
           <button
+            onClick={() => { setEditedContent(content); setEditOpen(true) }}
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+          >
+            Edit
+          </button>
+          <button
             onClick={onRegenerate}
             disabled={generating}
             className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors disabled:opacity-50"
@@ -673,6 +683,15 @@ function ContentBlock({ type, content, onApply, onRegenerate, generating }: {
           </div>
         )}
       </div>
+
+      <EditContentDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        type={type}
+        content={editedContent}
+        onChange={setEditedContent}
+        onApply={onApply}
+      />
     </div>
   )
 }
@@ -714,5 +733,76 @@ function TitleSuggestionsList({ content, onApplyTitle }: {
         </div>
       ))}
     </div>
+  )
+}
+
+function EditContentDialog({ open, onOpenChange, type, content, onChange, onApply }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  type: GenerationType
+  content: string
+  onChange: (content: string) => void
+  onApply: (content: string) => Promise<boolean>
+}) {
+  const [applyState, setApplyState] = useState<'idle' | 'applying' | 'applied' | 'failed'>('idle')
+  const [copied, setCopied] = useState(false)
+  const isShowNotes = type === 'show_notes'
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col bg-surface-raised border-border-subtle">
+        <DialogHeader>
+          <DialogTitle className="text-sm font-semibold text-text-primary">
+            Edit {GENERATION_LABELS[type]}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="flex-1 min-h-0">
+          {isShowNotes ? (
+            <RichTextEditor content={content} onChange={onChange} limit={4000} />
+          ) : (
+            <textarea
+              value={content}
+              onChange={(e) => onChange(e.target.value)}
+              className="w-full h-full min-h-[300px] max-h-[50vh] rounded-md border border-border-subtle bg-surface-default px-3 py-2 text-xs text-text-primary leading-relaxed focus-visible:border-accent focus-visible:ring-2 focus-visible:ring-accent/20 focus:outline-none resize-y font-mono"
+            />
+          )}
+        </div>
+        <DialogFooter className="bg-transparent border-t-0 flex-row justify-between sm:justify-between">
+          <button
+            onClick={() => { navigator.clipboard.writeText(content.replace(/<[^>]*>/g, '')); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onOpenChange(false)}
+              className="rounded-md border border-border-subtle bg-surface-default px-3 py-1.5 text-xs font-medium text-text-secondary hover:border-border-hover transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={async () => {
+                setApplyState('applying')
+                const ok = await onApply(content)
+                setApplyState(ok ? 'applied' : 'failed')
+                if (ok) {
+                  setTimeout(() => { onOpenChange(false); setApplyState('idle') }, 1000)
+                } else {
+                  setTimeout(() => setApplyState('idle'), 2000)
+                }
+              }}
+              disabled={applyState === 'applying'}
+              className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+            >
+              {applyState === 'applying' ? 'Applying...'
+                : applyState === 'applied' ? 'Applied!'
+                : applyState === 'failed' ? 'Failed'
+                : 'Save & Apply'}
+            </button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
