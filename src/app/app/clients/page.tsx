@@ -58,16 +58,30 @@ export default async function ClientsPage() {
         }
       />
 
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 py-3.5 sticky top-12 z-10 bg-surface-base">
+        <span className="inline-flex items-center gap-1.5 px-[9px] py-1 rounded-[7px] text-[12.5px] text-text-secondary border border-border-subtle bg-surface-input hover:border-border-default hover:text-text-primary transition-colors cursor-pointer">
+          Portal status
+          <svg className="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m6 9 6 6 6-6" /></svg>
+        </span>
+        <div className="flex-1" />
+        <span className="inline-flex items-center gap-[7px] px-[9px] py-1 rounded-[7px] text-[12.5px] text-text-tertiary border border-border-subtle bg-surface-input">
+          <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+          Search clients…
+        </span>
+      </div>
+
       {clients && clients.length > 0 ? (
-        <table className="w-full mt-5">
+        <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+        <table className="w-full">
           <thead>
             <tr className="border-b border-border-subtle text-left">
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary">Name</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary hidden sm:table-cell">Company</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary hidden md:table-cell">Email</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary text-center w-16">Shows</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary text-center w-20 hidden sm:table-cell">Review</th>
-              <th className="pb-2 text-[11px] font-medium uppercase tracking-wider text-text-secondary text-center w-20">Portal</th>
+              <th className="px-3.5 py-[9px] text-[11px] font-semibold uppercase tracking-[0.04em] text-fg-faint">Name</th>
+              <th className="px-3.5 py-[9px] text-[11px] font-semibold uppercase tracking-[0.04em] text-fg-faint hidden sm:table-cell">Company</th>
+              <th className="px-3.5 py-[9px] text-[11px] font-semibold uppercase tracking-[0.04em] text-fg-faint hidden md:table-cell">Email</th>
+              <th className="px-3.5 py-[9px] text-[11px] font-semibold uppercase tracking-[0.04em] text-fg-faint text-right w-16">Shows</th>
+              <th className="px-3.5 py-[9px] text-[11px] font-semibold uppercase tracking-[0.04em] text-fg-faint text-right w-20 hidden sm:table-cell">Pending review</th>
+              <th className="px-3.5 py-[9px] text-[11px] font-semibold uppercase tracking-[0.04em] text-fg-faint">Portal</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle">
@@ -77,42 +91,42 @@ export default async function ClientsPage() {
               const portal = portalStatus(client)
 
               return (
-                <tr key={client.id} className="group">
-                  <td className="py-2.5 pr-4">
+                <tr key={client.id} className="group border-b border-border-subtle last:border-b-0 hover:bg-[oklch(0.21_0.006_264_/_0.4)]">
+                  <td className="px-3.5 py-2.5">
                     <Link
                       href={`/app/clients/${client.id}`}
-                      className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors"
+                      className="text-[13px] font-medium text-text-primary group-hover:text-accent transition-colors"
                     >
                       {client.name}
                     </Link>
                   </td>
-                  <td className="py-2.5 pr-4 hidden sm:table-cell">
-                    <span className="text-sm text-text-secondary">{client.company || '—'}</span>
+                  <td className="px-3.5 py-2.5 hidden sm:table-cell">
+                    <span className="text-[13px] text-text-secondary">{client.company || '—'}</span>
                   </td>
-                  <td className="py-2.5 pr-4 hidden md:table-cell">
+                  <td className="px-3.5 py-2.5 hidden md:table-cell">
                     {client.email ? (
-                      <span className="text-sm text-text-secondary">{client.email}</span>
+                      <span className="text-[13px] text-text-secondary font-mono">{client.email}</span>
                     ) : (
-                      <span className="text-sm text-text-tertiary">{'—'}</span>
+                      <span className="text-[13px] text-text-tertiary">{'—'}</span>
                     )}
                   </td>
-                  <td className="py-2.5 text-center">
-                    <span className="text-sm text-text-secondary tabular-nums">{shows}</span>
+                  <td className="px-3.5 py-2.5 text-right">
+                    <span className="text-[13px] text-text-primary font-mono tabular-nums">{shows}</span>
                   </td>
-                  <td className="py-2.5 text-center hidden sm:table-cell">
+                  <td className="px-3.5 py-2.5 text-right hidden sm:table-cell">
                     {pending > 0 ? (
-                      <span className="text-xs text-amber-400 tabular-nums">{pending}</span>
+                      <span className="text-[13px] text-warning font-mono tabular-nums">{pending}</span>
                     ) : (
-                      <span className="text-sm text-text-tertiary">{'—'}</span>
+                      <span className="text-[13px] text-fg-faint">{'—'}</span>
                     )}
                   </td>
-                  <td className="py-2.5 text-center">
+                  <td className="px-3.5 py-2.5">
                     {portal ? (
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${portal.cls}`}>
+                      <span className={`inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-0.5 rounded-full border border-border-subtle bg-surface-input ${portal.cls}`}>
                         {portal.label}
                       </span>
                     ) : (
-                      <span className="text-sm text-text-tertiary">{'—'}</span>
+                      <span className="text-[13px] text-fg-faint">{'—'}</span>
                     )}
                   </td>
                 </tr>
@@ -120,6 +134,7 @@ export default async function ClientsPage() {
             })}
           </tbody>
         </table>
+        </div>
       ) : (
         <div className="mt-12 rounded-lg border border-border-subtle border-dashed py-12 text-center">
           <p className="text-sm text-text-tertiary">No clients yet</p>

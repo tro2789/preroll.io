@@ -32,8 +32,22 @@ export default async function ShowsPage() {
         }
       />
 
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-2 py-3.5 sticky top-12 z-10 bg-surface-base">
+        <span className="inline-flex items-center gap-1.5 px-[9px] py-1 rounded-[7px] text-[12.5px] text-text-secondary border border-border-subtle bg-surface-input hover:border-border-default hover:text-text-primary transition-colors cursor-pointer">
+          <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
+          Client
+          <svg className="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m6 9 6 6 6-6" /></svg>
+        </span>
+        <div className="flex-1" />
+        <span className="inline-flex items-center gap-[7px] px-[9px] py-1 rounded-[7px] text-[12.5px] text-text-tertiary border border-border-subtle bg-surface-input">
+          <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+          Search shows…
+        </span>
+      </div>
+
       {shows && shows.length > 0 ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-[14px] sm:grid-cols-2 lg:grid-cols-3">
           {shows.map((show) => {
             const clients = show.clients as unknown as { id: string; name: string } | { id: string; name: string }[] | null
             const client = Array.isArray(clients) ? clients[0] : clients
@@ -42,12 +56,12 @@ export default async function ShowsPage() {
               <Link
                 key={show.id}
                 href={`/app/shows/${show.id}`}
-                className="block rounded-lg border border-border-subtle bg-surface-raised overflow-hidden transition-colors hover:border-border-hover"
+                className="block rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden transition-all hover:border-border-strong cursor-pointer"
               >
-                <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/9]" />
-                <div className="p-3">
-                  <h3 className="text-sm font-semibold text-text-primary">{show.name}</h3>
-                  <p className="mt-0.5 text-xs text-text-tertiary">
+                <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="aspect-[16/8]" />
+                <div className="px-3.5 py-[13px]">
+                  <h3 className="text-[14px] font-semibold text-text-primary">{show.name}</h3>
+                  <p className="mt-[3px] text-xs text-text-tertiary">
                     {client && <>{client.name} &middot; </>}{episodeCount} {episodeCount === 1 ? 'episode' : 'episodes'}
                   </p>
                 </div>
