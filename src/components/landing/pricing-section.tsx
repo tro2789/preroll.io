@@ -67,14 +67,9 @@ export default function PricingSection() {
   const [annual, setAnnual] = useState(false)
 
   return (
-    <section id="pricing" className="px-6 py-24 scroll-mt-20">
-      <div className="mx-auto max-w-5xl">
-        <h2 className="text-center font-[family-name:var(--font-display)] text-3xl sm:text-4xl font-bold text-text-primary">
-          Simple, honest pricing.
-        </h2>
-
+    <div className="mx-auto max-w-5xl">
         {/* Segmented toggle */}
-        <div className="mt-6 flex items-center justify-center gap-3">
+        <div className="flex items-center justify-center gap-3">
           <div className="inline-flex items-center rounded-[9px] border border-border-subtle bg-surface-input p-[3px]">
             <button
               onClick={() => setAnnual(false)}
@@ -207,7 +202,6 @@ export default function PricingSection() {
             preroll.io is open source and self-hostable.
           </Link>
         </p>
-      </div>
-    </section>
+    </div>
   )
 }
