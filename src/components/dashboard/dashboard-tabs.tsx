@@ -76,8 +76,12 @@ interface ActivityFilters {
 
 export function DashboardTabs({ columns, episodes }: DashboardTabsProps) {
   const searchParams = useSearchParams()
-  const initialTab = searchParams.get('tab') === 'activity' ? 'activity' as Tab : 'board' as Tab
-  const [tab, setTab] = useState<Tab>(initialTab)
+  const paramTab = searchParams.get('tab') === 'activity' ? 'activity' as Tab : 'board' as Tab
+  const [tab, setTab] = useState<Tab>(paramTab)
+
+  useEffect(() => {
+    setTab(paramTab)
+  }, [paramTab])
   const [activities, setActivities] = useState<Activity[]>([])
   const [activitiesLoading, setActivitiesLoading] = useState(false)
   const [activityFilters, setActivityFilters] = useState<ActivityFilters>({ showId: null, search: '' })
