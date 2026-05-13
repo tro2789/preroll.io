@@ -419,17 +419,19 @@ export function EpisodeTabs({
                   {/* Right: title suggestions */}
                   {titleSuggestions && (
                     <div className="w-full lg:w-[340px] shrink-0">
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-[13px] font-semibold text-text-primary">Title Suggestions</h3>
-                        <button
-                          onClick={() => handleGenerate('title_suggestions')}
-                          disabled={generating !== null}
-                          className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors disabled:opacity-50"
-                        >
-                          {generating === 'title_suggestions' ? 'Generating...' : 'Regenerate'}
-                        </button>
+                      <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+                        <div className="flex items-center justify-between px-4 py-[11px] border-b border-border-subtle">
+                          <h3 className="text-[13px] font-semibold text-text-primary">Title Suggestions</h3>
+                          <button
+                            onClick={() => handleGenerate('title_suggestions')}
+                            disabled={generating !== null}
+                            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors disabled:opacity-50"
+                          >
+                            {generating === 'title_suggestions' ? 'Generating...' : 'Regenerate'}
+                          </button>
+                        </div>
+                        <TitleSuggestionsList content={titleSuggestions.result} onApplyTitle={handleApplyTitle} />
                       </div>
-                      <TitleSuggestionsList content={titleSuggestions.result} onApplyTitle={handleApplyTitle} />
                     </div>
                   )}
                 </div>
@@ -613,8 +615,8 @@ function ContentBlock({ type, content, onApply, onRegenerate, generating }: {
   const label = type === 'show_notes' ? 'Show Notes' : type === 'description' ? 'Description' : GENERATION_LABELS[type]
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
+    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-[11px] border-b border-border-subtle">
         <h3 className="text-[13px] font-semibold text-text-primary">{label}</h3>
         <div className="flex items-center gap-1.5">
           {applyState === 'idle' && (
@@ -662,7 +664,7 @@ function ContentBlock({ type, content, onApply, onRegenerate, generating }: {
           </button>
         </div>
       </div>
-      <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-4">
+      <div className="p-4">
         {isShowNotes ? (
           <ShowNotesContent html={content} />
         ) : (
@@ -687,7 +689,7 @@ function TitleSuggestionsList({ content, onApplyTitle }: {
   const [appliedIdx, setAppliedIdx] = useState<number | null>(null)
 
   return (
-    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+    <div>
       {titles.map((title, i) => (
         <div key={i} className="flex items-start gap-2.5 px-3.5 py-[11px] border-b border-border-subtle last:border-b-0 hover:bg-[oklch(0.21_0.006_264_/_0.4)] transition-colors">
           <span className="font-mono text-[11px] text-text-tertiary pt-0.5 shrink-0">{i + 1}.</span>
