@@ -2,8 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
-import { AiPanel } from '@/components/episodes/ai-panel'
-import { PeekPane } from '@/components/episodes/peek-pane'
+import { EpisodeTabs } from './episode-tabs'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -131,17 +130,6 @@ export default async function EpisodeDetailPage({
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
-              className="inline-flex items-center gap-1.5 px-[11px] py-[5.5px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-              Edit
-            </Link>
-            <button className="inline-flex items-center gap-1.5 px-[11px] py-[5.5px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors">
-              Move stage
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m6 9 6 6 6-6" /></svg>
-            </button>
             {(distributionConnections || []).map((dc: any) => (
               <PublishButton
                 key={dc.id}
@@ -174,50 +162,29 @@ export default async function EpisodeDetailPage({
             )}
           </div>
         )}
-
-        <div className="flex gap-0.5 border-b border-border-subtle mt-5">
-          <span className="px-2.5 py-2 text-[13px] font-medium text-text-primary border-b-2 border-accent -mb-px">Overview</span>
-          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Files <span className="font-mono text-[11px] text-fg-faint ml-1.5">{(audioFileRefs || []).length}</span></span>
-          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Deliverables <span className="font-mono text-[11px] text-fg-faint ml-1.5">{(deliverables || []).length}</span></span>
-          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Distribution</span>
-          <span className="px-2.5 py-2 text-[13px] font-[450] text-text-secondary border-b-2 border-transparent -mb-px">Activity</span>
-        </div>
       </div>
 
-      <div className="mt-[18px] grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
-        {/* Main content: AI panel */}
-        <div className="min-w-0">
-          <AiPanel
-            episodeId={episodeId}
-            showId={showId}
-            hasAudioFiles={hasAudioFiles}
-          />
-        </div>
-
-        {/* Sidebar: files, metadata, deliverables */}
-        <aside className="xl:sticky xl:top-[60px]">
-          <PeekPane
-            episodeId={episodeId}
-            showId={showId}
-            episode={{
-              episode_number: episode.episode_number,
-              scheduled_publish_date: episode.scheduled_publish_date,
-              published_at: episode.published_at,
-              description: episode.description,
-              notes: episode.notes,
-            }}
-            stage={stage ? { name: stage.name } : null}
-            showName={showData?.name || 'Show'}
-            clientName={client?.name || null}
-            deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, status: d.status }))}
-            integration={integration}
-            connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
-            hasIntegration={!!episodeIntegration}
-            audioFileCount={(audioFileRefs || []).length}
-          />
-        </aside>
-      </div>
+      <EpisodeTabs
+        episodeId={episodeId}
+        showId={showId}
+        showName={showData?.name || 'Show'}
+        clientName={client?.name || null}
+        stage={stage ? { id: stage.id, name: stage.name } : null}
+        episode={{
+          episode_number: episode.episode_number,
+          scheduled_publish_date: episode.scheduled_publish_date,
+          published_at: episode.published_at,
+          description: episode.description,
+          notes: episode.notes,
+        }}
+        integration={integration}
+        deliverables={deliverables || []}
+        connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
+        hasIntegration={!!episodeIntegration}
+        hasAudioFiles={hasAudioFiles}
+        fileCount={(audioFileRefs || []).length}
+        distributionConnections={(distributionConnections || []).map((dc: any) => ({ id: dc.id, provider: dc.provider }))}
+      />
     </div>
   )
 }
-
