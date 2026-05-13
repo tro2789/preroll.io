@@ -19,7 +19,7 @@ export default function BrandingPage() {
   const [entitled, setEntitled] = useState(true)
 
   const [displayName, setDisplayName] = useState('')
-  const [accentColor, setAccentColor] = useState('#7c5cbf')
+  const [accentColor, setAccentColor] = useState('#e86a47')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function BrandingPage() {
         }
         setBranding(data as Branding)
         setDisplayName(data.display_name || '')
-        setAccentColor(data.accent_color || '#7c5cbf')
+        setAccentColor(data.accent_color || '#e86a47')
       })
       .catch(() => setError('Failed to load branding'))
       .finally(() => setLoading(false))
@@ -217,7 +217,7 @@ export default function BrandingPage() {
               type="text"
               value={accentColor}
               onChange={(e) => setAccentColor(e.target.value)}
-              placeholder="#7c5cbf"
+              placeholder="#e86a47"
               className="w-32 rounded-lg border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary font-mono placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
             />
             <div
@@ -270,7 +270,7 @@ export default function BrandingPage() {
           <button
             onClick={() => {
               setDisplayName('')
-              setAccentColor('#7c5cbf')
+              setAccentColor('#e86a47')
             }}
             className="rounded-lg border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"
           >
