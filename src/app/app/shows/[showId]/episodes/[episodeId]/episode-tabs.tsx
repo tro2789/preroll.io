@@ -8,6 +8,7 @@ import { DeliveryPanel } from '@/components/episodes/delivery-panel'
 import { formatDuration } from '@/lib/format'
 import { type GenerationType, ALL_GENERATION_TYPES, GENERATION_LABELS, CREDIT_COSTS } from '@/lib/ai/constants'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 import { RichTextEditor } from '@/components/episodes/rich-text-editor'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 import type { Deliverable } from '@/lib/constants/deliverables'
@@ -49,18 +50,27 @@ interface Activity {
   created_at: string
 }
 
+interface PipelineStage {
+  id: string
+  name: string
+  position: number
+}
+
 interface EpisodeTabsProps {
   episodeId: string
   showId: string
   showName: string
   clientName: string | null
   stage: { id: string; name: string } | null
+  stages: PipelineStage[]
   episode: {
+    title: string
     episode_number: number | null
     scheduled_publish_date: string | null
     published_at: string | null
     description: string | null
     notes: string | null
+    image_url: string | null
   }
   integration: {
     provider: IntegrationProvider
@@ -144,12 +154,47 @@ function ShowNotesContent({ html }: { html: string }) {
 }
 
 export function EpisodeTabs({
-  episodeId, showId, showName, clientName, stage, episode,
+  episodeId, showId, showName, clientName, stage, stages, episode,
   integration, deliverables, connectedProviders, hasIntegration,
   hasAudioFiles, fileCount, distributionConnections,
 }: EpisodeTabsProps) {
   const [tab, setTab] = useState<Tab>('files')
   const router = useRouter()
+
+  // Inline-editable fields
+  const [editTitle, setEditTitle] = useState<string | null>(null)
+  const [editEpNum, setEditEpNum] = useState<string | null>(null)
+  const [editDate, setEditDate] = useState<string | null>(null)
+  const [editStage, setEditStage] = useState(false)
+  const [imageUrl, setImageUrl] = useState(episode.image_url)
+  const [saving, setSaving] = useState(false)
+
+  const patchEpisode = async (fields: Record<string, unknown>) => {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(fields),
+      })
+      if (res.ok) { router.refresh(); return true }
+      return false
+    } catch { return false }
+    finally { setSaving(false) }
+  }
+
+  const handleImageUploaded = async (fileKey: string) => {
+    const filename = fileKey.split('/').pop() || 'thumbnail'
+    const res = await fetch(`/api/v1/episodes/${episodeId}/assets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: filename, file_key: fileKey, asset_type: 'thumbnail' }),
+    })
+    if (res.ok) {
+      const { data } = await res.json()
+      setImageUrl(data.url ?? fileKey)
+    }
+  }
 
   // AI state
   const [generations, setGenerations] = useState<Generation[]>([])
@@ -319,8 +364,59 @@ export function EpisodeTabs({
   const titleSuggestions = latestGenByType.get('title_suggestions')
   const hasContent = showNotes || description || titleSuggestions
 
+  const sortedStages = [...stages].sort((a, b) => a.position - b.position)
+
   return (
-    <div className="mt-[18px] grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
+    <div className="mt-4">
+      {/* Inline-editable title + thumbnail */}
+      <div className="flex gap-4 items-start mb-5">
+        <ThumbnailUpload
+          id={episodeId}
+          imageUrl={imageUrl}
+          showId={showId}
+          episodeId={episodeId}
+          onUploaded={handleImageUploaded}
+          className="w-[120px] shrink-0"
+        />
+        <div className="flex-1 min-w-0 pt-1">
+          {editTitle !== null ? (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                if (editTitle.trim()) {
+                  await patchEpisode({ title: editTitle.trim() })
+                }
+                setEditTitle(null)
+              }}
+              className="flex items-center gap-2"
+            >
+              <input
+                autoFocus
+                value={editTitle}
+                onChange={e => setEditTitle(e.target.value)}
+                onBlur={async () => {
+                  if (editTitle.trim() && editTitle.trim() !== episode.title) {
+                    await patchEpisode({ title: editTitle.trim() })
+                  }
+                  setEditTitle(null)
+                }}
+                onKeyDown={e => { if (e.key === 'Escape') setEditTitle(null) }}
+                className="w-full text-[22px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary bg-transparent border-b-2 border-accent focus:outline-none"
+              />
+            </form>
+          ) : (
+            <h1
+              onClick={() => setEditTitle(episode.title)}
+              className="text-[22px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary cursor-text hover:text-accent transition-colors"
+              title="Click to edit title"
+            >
+              {episode.title}
+            </h1>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_312px] gap-6 items-start">
       {/* Main content */}
       <div className="min-w-0">
         {/* Tabs */}
@@ -521,43 +617,104 @@ export function EpisodeTabs({
 
       {/* Sidebar */}
       <aside className="xl:sticky xl:top-[60px] flex flex-col gap-3.5">
-        {/* Actions: Edit + Move stage */}
-        <div className="flex flex-col gap-2">
-          <Link
-            href={`/app/shows/${showId}/episodes/${episodeId}/edit`}
-            className="inline-flex items-center justify-center gap-1.5 px-[11px] py-[7px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-            Edit
-          </Link>
-          <button className="inline-flex items-center justify-center gap-1.5 px-[11px] py-[7px] rounded-[7px] text-[13px] font-medium bg-surface-raised border border-border-default text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors">
-            Move stage
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m6 9 6 6 6-6" /></svg>
-          </button>
-        </div>
-
-        {/* Metadata */}
+        {/* Metadata — inline editable */}
         <div className="bg-surface-raised border border-border-subtle rounded-[10px] p-4">
-          {stage && (
-            <MetaRow label="Stage" value={
-              <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-0.5 rounded-full border border-border-subtle bg-surface-input text-text-secondary">
-                <span className="w-[7px] h-[7px] rounded-full" style={{ background: stageColor }} />
-                {stage.name}
-              </span>
-            } />
-          )}
+          {/* Stage — click to open dropdown */}
+          <div className="flex justify-between gap-3 py-[9px] border-b border-border-subtle text-[13px]">
+            <span className="text-text-secondary">Stage</span>
+            {editStage ? (
+              <select
+                autoFocus
+                value={stage?.id || ''}
+                onChange={async (e) => {
+                  await patchEpisode({ stage_id: e.target.value || null })
+                  setEditStage(false)
+                }}
+                onBlur={() => setEditStage(false)}
+                className="text-[13px] text-text-primary bg-surface-input border border-border-default rounded-md px-2 py-0.5 focus:border-accent focus:outline-none"
+              >
+                <option value="">None</option>
+                {sortedStages.map(s => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            ) : (
+              <button onClick={() => setEditStage(true)} className="text-right cursor-pointer hover:text-accent transition-colors">
+                {stage ? (
+                  <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-0.5 rounded-full border border-border-subtle bg-surface-input text-text-secondary">
+                    <span className="w-[7px] h-[7px] rounded-full" style={{ background: stageColor }} />
+                    {stage.name}
+                  </span>
+                ) : <span className="text-text-tertiary">—</span>}
+              </button>
+            )}
+          </div>
+
           <MetaRow label="Show" value={
             <Link href={`/app/shows/${showId}`} className="text-text-primary hover:text-accent transition-colors">{showName}</Link>
           } />
           {clientName && <MetaRow label="Client" value={clientName} />}
-          {episode.episode_number != null && (
-            <MetaRow label="Episode" value={<span className="font-mono">{String(episode.episode_number).padStart(3, '0')}</span>} />
-          )}
-          <MetaRow label="Schedule" value={
-            <span className="font-mono">{episode.scheduled_publish_date
-              ? new Date(episode.scheduled_publish_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-              : '—'}</span>
-          } />
+
+          {/* Episode # — click to edit */}
+          <div className="flex justify-between gap-3 py-[9px] border-b border-border-subtle text-[13px]">
+            <span className="text-text-secondary">Episode</span>
+            {editEpNum !== null ? (
+              <input
+                autoFocus
+                type="number"
+                value={editEpNum}
+                onChange={e => setEditEpNum(e.target.value)}
+                onBlur={async () => {
+                  const num = editEpNum ? Number(editEpNum) : null
+                  if (num !== episode.episode_number) {
+                    await patchEpisode({ episode_number: num })
+                  }
+                  setEditEpNum(null)
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                  if (e.key === 'Escape') setEditEpNum(null)
+                }}
+                className="w-16 text-right font-mono text-[13px] text-text-primary bg-surface-input border border-border-default rounded-md px-2 py-0.5 focus:border-accent focus:outline-none"
+              />
+            ) : (
+              <button
+                onClick={() => setEditEpNum(episode.episode_number?.toString() ?? '')}
+                className="font-mono text-text-primary cursor-text hover:text-accent transition-colors text-right"
+              >
+                {episode.episode_number != null ? String(episode.episode_number).padStart(3, '0') : '—'}
+              </button>
+            )}
+          </div>
+
+          {/* Scheduled date — click to edit */}
+          <div className="flex justify-between gap-3 py-[9px] border-b border-border-subtle last:border-b-0 text-[13px]">
+            <span className="text-text-secondary">Schedule</span>
+            {editDate !== null ? (
+              <input
+                autoFocus
+                type="date"
+                value={editDate}
+                onChange={async (e) => {
+                  const val = e.target.value || null
+                  await patchEpisode({ scheduled_publish_date: val })
+                  setEditDate(null)
+                }}
+                onBlur={() => setEditDate(null)}
+                onKeyDown={e => { if (e.key === 'Escape') setEditDate(null) }}
+                className="text-[13px] font-mono text-text-primary bg-surface-input border border-border-default rounded-md px-2 py-0.5 focus:border-accent focus:outline-none"
+              />
+            ) : (
+              <button
+                onClick={() => setEditDate(episode.scheduled_publish_date || '')}
+                className="font-mono text-text-primary cursor-text hover:text-accent transition-colors text-right"
+              >
+                {episode.scheduled_publish_date
+                  ? new Date(episode.scheduled_publish_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                  : '—'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Ask the producer */}
@@ -591,6 +748,7 @@ export function EpisodeTabs({
           </div>
         </div>
       </aside>
+      </div>
     </div>
   )
 }

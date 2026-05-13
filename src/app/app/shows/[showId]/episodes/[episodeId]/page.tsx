@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { resolveImageUrl } from '@/lib/r2/client'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { EpisodeTabs } from './episode-tabs'
@@ -15,7 +16,7 @@ export default async function EpisodeDetailPage({
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnections }, { data: audioFileRefs }] = await Promise.all([
+  const [{ data: episode, error }, { data: deliverables }, { data: episodeIntegration }, { data: connectedProviders }, { data: distributionConnections }, { data: audioFileRefs }, { data: stagesData }] = await Promise.all([
     supabase
       .from('episodes')
       .select('*, pipeline_stages(id, name, position), shows(name, clients(id, name, email, invite_code, client_user_id, onboarded_at))')
@@ -45,6 +46,11 @@ export default async function EpisodeDetailPage({
       .select('id, mime_type')
       .eq('episode_id', episodeId)
       .limit(10),
+    supabase
+      .from('pipeline_stages')
+      .select('id, name, position')
+      .eq('show_id', showId)
+      .order('position', { ascending: true }),
   ])
 
   if (error || !episode) {
@@ -88,18 +94,16 @@ export default async function EpisodeDetailPage({
     return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
+  const stages = (stagesData || []).map((s: any) => ({ id: s.id, name: s.name, position: s.position }))
+
   return (
     <div className="max-w-[1640px] mx-auto">
-      {/* Page header */}
+      {/* Page header — server-rendered, non-editable parts */}
       <div>
         <div className="flex items-start gap-4">
           <div className="flex-1">
-            <h1 className="text-[22px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary">
-              {episode.title}
-            </h1>
             <p className="text-[13.5px] text-text-secondary mt-1">
               {showData?.name}{client?.name ? ` · with ${client.name}` : ''}
-              {episode.scheduled_publish_date && <> — scheduled to publish <span className="font-mono">{formatDate(episode.scheduled_publish_date)}</span></>}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -143,12 +147,15 @@ export default async function EpisodeDetailPage({
         showName={showData?.name || 'Show'}
         clientName={client?.name || null}
         stage={stage ? { id: stage.id, name: stage.name } : null}
+        stages={stages}
         episode={{
+          title: episode.title,
           episode_number: episode.episode_number,
           scheduled_publish_date: episode.scheduled_publish_date,
           published_at: episode.published_at,
           description: episode.description,
           notes: episode.notes,
+          image_url: resolveImageUrl(episode.image_url),
         }}
         integration={integration}
         deliverables={deliverables || []}
