@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { QuickCreate } from '@/components/dashboard/quick-create'
 import { GlobalSearch } from '@/components/search/global-search'
+import { NotificationDropdown } from '@/components/layout/notification-dropdown'
 
 interface Crumb {
   label: string
@@ -99,13 +100,7 @@ export function Topbar() {
             New
           </button>
 
-          {/* Notification bell — icon button */}
-          <button
-            className="flex items-center justify-center w-[30px] h-[30px] rounded-[7px] border border-transparent text-text-secondary hover:bg-surface-raised hover:border-border-subtle hover:text-text-primary transition-colors"
-            title="Notifications"
-          >
-            <BellIcon className="h-4 w-4" />
-          </button>
+          <NotificationDropdown />
         </div>
       </div>
 
@@ -131,10 +126,3 @@ function PlusIcon({ className }: { className?: string }) {
   )
 }
 
-function BellIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
-    </svg>
-  )
-}
