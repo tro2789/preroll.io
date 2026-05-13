@@ -88,32 +88,32 @@ export default function ReportsPage() {
 
         {!gated && (
           <div className="flex flex-wrap items-center gap-3">
-            <select
-              value={showId}
-              onChange={(e) => setShowId(e.target.value)}
-              className="rounded-lg border border-border-default bg-surface-overlay px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-            >
-              <option value="">All shows</option>
-              {shows.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-
-            <div className="flex rounded-lg border border-border-default bg-surface-overlay p-0.5">
+            <div className="inline-flex items-center rounded-[7px] border border-border-subtle bg-surface-input p-[2px]">
               {PERIODS.map((p) => (
                 <button
                   key={p.value}
                   onClick={() => setPeriod(p.value)}
-                  className={`rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+                  className={`rounded-[4px] px-[9px] py-[3.5px] text-[12.5px] transition-colors ${
                     period === p.value
-                      ? 'bg-accent text-white'
-                      : 'text-text-secondary hover:text-text-primary'
+                      ? 'bg-surface-overlay text-text-primary font-[500]'
+                      : 'text-text-secondary font-[450] hover:text-text-primary'
                   }`}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
+
+            <select
+              value={showId}
+              onChange={(e) => setShowId(e.target.value)}
+              className="inline-flex items-center gap-1.5 rounded-[7px] border border-border-subtle bg-surface-input px-[9px] py-[4px] text-[12.5px] font-[450] text-text-secondary focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              <option value="">All shows</option>
+              {shows.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
           </div>
         )}
       </div>
@@ -162,24 +162,24 @@ export default function ReportsPage() {
           </div>
 
           {data.episodes.total === 0 ? (
-            <div className="rounded-xl border border-border-default bg-surface-raised p-8 text-center text-sm text-text-tertiary">
+            <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-8 text-center text-sm text-text-tertiary">
               No episode data for this period.
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-border-default bg-surface-raised overflow-hidden">
+              <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
                 <div className="px-5 py-4 border-b border-border-subtle">
                   <h2 className="text-sm font-semibold text-text-primary">Episodes by Show</h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border-subtle text-left text-text-secondary">
-                        <th className="px-5 py-3 font-medium">Show</th>
-                        <th className="px-5 py-3 font-medium">Client</th>
-                        <th className="px-5 py-3 font-medium text-right">Total</th>
-                        <th className="px-5 py-3 font-medium text-right">Published</th>
-                        <th className="px-5 py-3 font-medium text-right">In Progress</th>
+                      <tr className="border-b border-border-subtle text-left text-fg-faint">
+                        <th className="px-5 py-3 text-[11px] font-semibold tracking-[0.04em] uppercase">Show</th>
+                        <th className="px-5 py-3 text-[11px] font-semibold tracking-[0.04em] uppercase">Client</th>
+                        <th className="px-5 py-3 text-[11px] font-semibold tracking-[0.04em] uppercase text-right">Total</th>
+                        <th className="px-5 py-3 text-[11px] font-semibold tracking-[0.04em] uppercase text-right">Published</th>
+                        <th className="px-5 py-3 text-[11px] font-semibold tracking-[0.04em] uppercase text-right">In Progress</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -198,7 +198,7 @@ export default function ReportsPage() {
               </div>
 
               {data.episodes_by_month.length > 0 && (
-                <div className="rounded-xl border border-border-default bg-surface-raised overflow-hidden">
+                <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
                   <div className="px-5 py-4 border-b border-border-subtle">
                     <h2 className="text-sm font-semibold text-text-primary">Episodes by Month</h2>
                   </div>
@@ -209,7 +209,7 @@ export default function ReportsPage() {
               )}
 
               {data.deliverables.total > 0 && (
-                <div className="rounded-xl border border-border-default bg-surface-raised overflow-hidden">
+                <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
                   <div className="px-5 py-4 border-b border-border-subtle">
                     <h2 className="text-sm font-semibold text-text-primary">Deliverable Breakdown</h2>
                   </div>
@@ -247,10 +247,10 @@ function StatCard({
   sub: string
 }) {
   return (
-    <div className="rounded-xl border border-border-default bg-surface-raised p-5">
-      <div className="text-xs font-medium text-text-secondary uppercase tracking-wider">{label}</div>
-      <div className="mt-2 text-2xl font-bold text-text-primary">{value}</div>
-      <div className="mt-1 text-xs text-text-secondary">{sub}</div>
+    <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-5">
+      <div className="text-[12px] font-[450] text-text-secondary">{label}</div>
+      <div className="mt-2 font-[family-name:var(--font-display)] text-[30px] font-semibold tracking-[-0.02em] tabular-nums text-text-primary">{value}</div>
+      <div className="mt-1 text-[11.5px] text-text-tertiary">{sub}</div>
     </div>
   )
 }

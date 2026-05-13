@@ -872,10 +872,11 @@ function TitleSuggestions({ content, onRegenerate, onApplyTitle }: {
   const [appliedIdx, setAppliedIdx] = useState<number | null>(null)
 
   return (
-    <div className="space-y-1.5">
+    <div>
       {titles.map((title, i) => (
-        <div key={i} className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-surface-raised px-3 py-2">
-          <span className="text-xs text-text-primary">{title}</span>
+        <div key={i} className="flex items-start gap-2.5 px-3.5 py-[11px] border-b border-border-subtle last:border-b-0 hover:bg-[oklch(0.21_0.006_264_/_0.4)] transition-colors">
+          <span className="font-mono text-[11px] text-text-tertiary pt-0.5 shrink-0">{i + 1}.</span>
+          <span className="flex-1 text-[13.5px] text-text-primary leading-[1.4]">{title}</span>
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={async () => {
@@ -952,7 +953,7 @@ function GeneratedResult({
     return (
       <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
         <div className="flex items-center justify-between px-3.5 py-[11px] border-b border-border-subtle" style={{ background: 'linear-gradient(180deg, var(--color-accent-tint), transparent)' }}>
-          <span className="text-xs font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
+          <span className="text-[13px] font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
           <button
             onClick={onRegenerate}
             className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
@@ -960,18 +961,16 @@ function GeneratedResult({
             Regenerate
           </button>
         </div>
-        <div className="p-3">
-          <TitleSuggestions content={content} onRegenerate={onRegenerate} onApplyTitle={onApplyTitle} />
-        </div>
+        <TitleSuggestions content={content} onRegenerate={onRegenerate} onApplyTitle={onApplyTitle} />
       </div>
     )
   }
 
   return (
-    <div className="rounded-md border border-border-subtle bg-surface-default">
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-surface-raised/50 rounded-t-md">
+    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+      <div className="flex items-center justify-between px-3.5 py-[11px] border-b border-border-subtle" style={{ background: 'linear-gradient(180deg, var(--color-accent-tint), transparent)' }}>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
+          <span className="text-[13px] font-semibold text-text-primary">{GENERATION_LABELS[type]}</span>
           {isShowNotes && (
             <span className={`text-xs tabular-nums ${charCount > 4000 ? 'text-red-400' : 'text-text-secondary'}`}>
               {charCount.toLocaleString()} / 4,000
@@ -1039,21 +1038,21 @@ function GeneratedResult({
         </div>
       </div>
 
-      <div className="max-h-[200px] overflow-y-auto p-3">
+      <div className="max-h-[200px] overflow-y-auto p-4">
         {isShowNotes ? (
           <div
-            className="prose-sm text-xs text-text-secondary leading-relaxed [&_strong]:text-text-primary [&_strong]:font-medium [&_a]:text-accent [&_a]:underline [&_ul]:space-y-0.5 [&_li]:leading-relaxed"
+            className="prose-sm text-[13.5px] text-text-secondary leading-[1.65] [&_strong]:text-text-primary [&_strong]:font-semibold [&_h4]:text-[13.5px] [&_h4]:font-semibold [&_h4]:text-text-primary [&_h4]:mt-3.5 [&_h4]:mb-1 [&_h4:first-child]:mt-0 [&_a]:text-accent [&_a]:underline [&_ul]:space-y-0.5 [&_ul]:my-1.5 [&_ul]:pl-[18px] [&_li]:leading-[1.65] [&_li]:my-0.5 [&_p]:max-w-[68ch] [&_ul]:max-w-[68ch]"
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
           />
         ) : (
-          <div className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed">
+          <div className="text-[13.5px] text-text-secondary whitespace-pre-wrap leading-[1.65]">
             {content}
           </div>
         )}
       </div>
 
       {previousVersions && previousVersions.length > 0 && (
-        <div className="px-3 pb-3">
+        <div className="px-4 pb-4">
           <button
             onClick={() => setShowHistory(!showHistory)}
             className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
