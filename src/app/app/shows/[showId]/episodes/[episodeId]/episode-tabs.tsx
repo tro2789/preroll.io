@@ -311,7 +311,7 @@ export function EpisodeTabs({
 
         {/* Content tab — clean AI content */}
         {tab === 'content' && (
-          <div className="space-y-6">
+          <div>
             {aiLoading ? (
               <div className="py-12 text-center text-sm text-text-secondary">Loading...</div>
             ) : !hasContent && !isRunning ? (
@@ -335,51 +335,61 @@ export function EpisodeTabs({
             ) : (
               <>
                 {isRunning && (
-                  <div className="flex items-center gap-2 text-sm text-text-secondary">
+                  <div className="flex items-center gap-2 text-sm text-text-secondary mb-4">
                     <div className="h-4 w-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
                     AI pipeline running...
                   </div>
                 )}
 
-                {showNotes && (
-                  <div>
-                    <h3 className="text-[13px] font-semibold text-text-primary mb-3">Show Notes</h3>
-                    <ShowNotesContent html={showNotes.result} />
-                  </div>
-                )}
+                <div className="flex flex-col lg:flex-row gap-6 items-start">
+                  {/* Left: show notes + description */}
+                  <div className="flex-1 min-w-0 space-y-6">
+                    {showNotes && (
+                      <div>
+                        <h3 className="text-[13px] font-semibold text-text-primary mb-3">Show Notes</h3>
+                        <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-4">
+                          <ShowNotesContent html={showNotes.result} />
+                        </div>
+                      </div>
+                    )}
 
-                {titleSuggestions && (
-                  <div>
-                    <h3 className="text-[13px] font-semibold text-text-primary mb-3">Title Suggestions</h3>
-                    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
-                      {titleSuggestions.result
-                        .split('\n')
-                        .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
-                        .filter(Boolean)
-                        .map((title, i) => (
-                          <div key={i} className="flex items-start gap-2.5 px-3.5 py-[11px] border-b border-border-subtle last:border-b-0 hover:bg-[oklch(0.21_0.006_264_/_0.4)] transition-colors">
-                            <span className="font-mono text-[11px] text-text-tertiary pt-0.5 shrink-0">{i + 1}.</span>
-                            <span className="flex-1 text-[13.5px] text-text-primary leading-[1.4]">{title}</span>
-                            <button
-                              onClick={() => navigator.clipboard.writeText(title)}
-                              className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors shrink-0"
-                            >
-                              Copy
-                            </button>
+                    {description && (
+                      <div>
+                        <h3 className="text-[13px] font-semibold text-text-primary mb-3">Description</h3>
+                        <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-4">
+                          <div className="text-[13.5px] text-text-secondary whitespace-pre-wrap leading-[1.65] max-w-[68ch]">
+                            {description.result}
                           </div>
-                        ))}
-                    </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
 
-                {description && (
-                  <div>
-                    <h3 className="text-[13px] font-semibold text-text-primary mb-3">Description</h3>
-                    <div className="text-[13.5px] text-text-secondary whitespace-pre-wrap leading-[1.65] max-w-[68ch]">
-                      {description.result}
+                  {/* Right: title suggestions */}
+                  {titleSuggestions && (
+                    <div className="w-full lg:w-[340px] shrink-0">
+                      <h3 className="text-[13px] font-semibold text-text-primary mb-3">Title Suggestions</h3>
+                      <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+                        {titleSuggestions.result
+                          .split('\n')
+                          .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
+                          .filter(Boolean)
+                          .map((title, i) => (
+                            <div key={i} className="flex items-start gap-2.5 px-3.5 py-[11px] border-b border-border-subtle last:border-b-0 hover:bg-[oklch(0.21_0.006_264_/_0.4)] transition-colors">
+                              <span className="font-mono text-[11px] text-text-tertiary pt-0.5 shrink-0">{i + 1}.</span>
+                              <span className="flex-1 text-[13px] text-text-primary leading-[1.4]">{title}</span>
+                              <button
+                                onClick={() => navigator.clipboard.writeText(title)}
+                                className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors shrink-0"
+                              >
+                                Copy
+                              </button>
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </div>
