@@ -259,6 +259,57 @@ export function EpisodeTabs({
     finally { setStartingPipeline(false) }
   }
 
+  const [generating, setGenerating] = useState<GenerationType | null>(null)
+
+  const handleApply = async (type: GenerationType, content: string): Promise<boolean> => {
+    const field = type === 'show_notes' ? 'notes' : type === 'description' ? 'description' : null
+    if (!field) return false
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: content }),
+      })
+      if (!res.ok) return false
+      router.refresh()
+      return true
+    } catch { return false }
+  }
+
+  const handleApplyTitle = async (title: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/episodes/${episodeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      })
+      if (!res.ok) return false
+      router.refresh()
+      return true
+    } catch { return false }
+  }
+
+  const handleGenerate = async (type: GenerationType) => {
+    setGenerating(type)
+    try {
+      const res = await fetch(`/api/v1/episodes/${episodeId}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setGenerations(prev => [{
+          id: data.data.generation.id,
+          generation_type: type,
+          result: data.data.generation.result,
+          credits_consumed: data.data.generation.credits_consumed,
+          created_at: new Date().toISOString(),
+        }, ...prev])
+      }
+    } finally { setGenerating(null) }
+  }
+
   const stageColor = stage ? STAGE_COLORS[stage.name.toLowerCase()] || undefined : undefined
 
   const showNotes = latestGenByType.get('show_notes')
@@ -345,48 +396,40 @@ export function EpisodeTabs({
                   {/* Left: show notes + description */}
                   <div className="flex-1 min-w-0 space-y-6">
                     {showNotes && (
-                      <div>
-                        <h3 className="text-[13px] font-semibold text-text-primary mb-3">Show Notes</h3>
-                        <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-4">
-                          <ShowNotesContent html={showNotes.result} />
-                        </div>
-                      </div>
+                      <ContentBlock
+                        type="show_notes"
+                        content={showNotes.result}
+                        onApply={(c) => handleApply('show_notes', c)}
+                        onRegenerate={() => handleGenerate('show_notes')}
+                        generating={generating === 'show_notes'}
+                      />
                     )}
 
                     {description && (
-                      <div>
-                        <h3 className="text-[13px] font-semibold text-text-primary mb-3">Description</h3>
-                        <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-4">
-                          <div className="text-[13.5px] text-text-secondary whitespace-pre-wrap leading-[1.65] max-w-[68ch]">
-                            {description.result}
-                          </div>
-                        </div>
-                      </div>
+                      <ContentBlock
+                        type="description"
+                        content={description.result}
+                        onApply={(c) => handleApply('description', c)}
+                        onRegenerate={() => handleGenerate('description')}
+                        generating={generating === 'description'}
+                      />
                     )}
                   </div>
 
                   {/* Right: title suggestions */}
                   {titleSuggestions && (
                     <div className="w-full lg:w-[340px] shrink-0">
-                      <h3 className="text-[13px] font-semibold text-text-primary mb-3">Title Suggestions</h3>
-                      <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
-                        {titleSuggestions.result
-                          .split('\n')
-                          .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
-                          .filter(Boolean)
-                          .map((title, i) => (
-                            <div key={i} className="flex items-start gap-2.5 px-3.5 py-[11px] border-b border-border-subtle last:border-b-0 hover:bg-[oklch(0.21_0.006_264_/_0.4)] transition-colors">
-                              <span className="font-mono text-[11px] text-text-tertiary pt-0.5 shrink-0">{i + 1}.</span>
-                              <span className="flex-1 text-[13px] text-text-primary leading-[1.4]">{title}</span>
-                              <button
-                                onClick={() => navigator.clipboard.writeText(title)}
-                                className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors shrink-0"
-                              >
-                                Copy
-                              </button>
-                            </div>
-                          ))}
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-[13px] font-semibold text-text-primary">Title Suggestions</h3>
+                        <button
+                          onClick={() => handleGenerate('title_suggestions')}
+                          disabled={generating !== null}
+                          className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors disabled:opacity-50"
+                        >
+                          {generating === 'title_suggestions' ? 'Generating...' : 'Regenerate'}
+                        </button>
                       </div>
+                      <TitleSuggestionsList content={titleSuggestions.result} onApplyTitle={handleApplyTitle} />
                     </div>
                   )}
                 </div>
@@ -553,6 +596,121 @@ function MetaRow({ label, value }: { label: string; value: React.ReactNode }) {
     <div className="flex justify-between gap-3 py-[9px] border-b border-border-subtle last:border-b-0 text-[13px]">
       <span className="text-text-secondary">{label}</span>
       <span className="text-text-primary text-right">{value}</span>
+    </div>
+  )
+}
+
+function ContentBlock({ type, content, onApply, onRegenerate, generating }: {
+  type: GenerationType
+  content: string
+  onApply: (content: string) => Promise<boolean>
+  onRegenerate: () => void
+  generating: boolean
+}) {
+  const [applyState, setApplyState] = useState<'idle' | 'confirm' | 'applying' | 'applied' | 'failed'>('idle')
+  const [copied, setCopied] = useState(false)
+  const isShowNotes = type === 'show_notes'
+  const label = type === 'show_notes' ? 'Show Notes' : type === 'description' ? 'Description' : GENERATION_LABELS[type]
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-[13px] font-semibold text-text-primary">{label}</h3>
+        <div className="flex items-center gap-1.5">
+          {applyState === 'idle' && (
+            <button
+              onClick={() => setApplyState('confirm')}
+              className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
+            >
+              Apply
+            </button>
+          )}
+          {applyState === 'confirm' && (
+            <>
+              <span className="text-xs text-text-secondary">Overwrite?</span>
+              <button
+                onClick={async () => {
+                  setApplyState('applying')
+                  const ok = await onApply(content)
+                  setApplyState(ok ? 'applied' : 'failed')
+                  setTimeout(() => setApplyState('idle'), 2000)
+                }}
+                className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
+              >
+                Confirm
+              </button>
+              <button onClick={() => setApplyState('idle')} className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors">
+                Cancel
+              </button>
+            </>
+          )}
+          {applyState === 'applying' && <span className="text-xs text-text-secondary">Applying...</span>}
+          {applyState === 'applied' && <span className="text-xs text-emerald-400">Applied!</span>}
+          {applyState === 'failed' && <span className="text-xs text-red-400">Failed</span>}
+          <button
+            onClick={() => { navigator.clipboard.writeText(content.replace(/<[^>]*>/g, '')); setCopied(true); setTimeout(() => setCopied(false), 2000) }}
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <button
+            onClick={onRegenerate}
+            disabled={generating}
+            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors disabled:opacity-50"
+          >
+            {generating ? 'Generating...' : 'Regenerate'}
+          </button>
+        </div>
+      </div>
+      <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-4">
+        {isShowNotes ? (
+          <ShowNotesContent html={content} />
+        ) : (
+          <div className="text-[13.5px] text-text-secondary whitespace-pre-wrap leading-[1.65] max-w-[68ch]">
+            {content}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function TitleSuggestionsList({ content, onApplyTitle }: {
+  content: string
+  onApplyTitle: (title: string) => Promise<boolean>
+}) {
+  const titles = content
+    .split('\n')
+    .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
+    .filter(Boolean)
+
+  const [appliedIdx, setAppliedIdx] = useState<number | null>(null)
+
+  return (
+    <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+      {titles.map((title, i) => (
+        <div key={i} className="flex items-start gap-2.5 px-3.5 py-[11px] border-b border-border-subtle last:border-b-0 hover:bg-[oklch(0.21_0.006_264_/_0.4)] transition-colors">
+          <span className="font-mono text-[11px] text-text-tertiary pt-0.5 shrink-0">{i + 1}.</span>
+          <span className="flex-1 text-[13px] text-text-primary leading-[1.4]">{title}</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={async () => {
+                const ok = await onApplyTitle(title)
+                if (ok) { setAppliedIdx(i); setTimeout(() => setAppliedIdx(null), 2000) }
+              }}
+              className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
+            >
+              {appliedIdx === i ? 'Applied!' : 'Use'}
+            </button>
+            <button
+              onClick={() => navigator.clipboard.writeText(title)}
+              className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
