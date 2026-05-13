@@ -88,40 +88,13 @@ export default async function EpisodeDetailPage({
     return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
-  const stageColor = stage ? {
-    planning: 'var(--color-status-planning)',
-    recording: 'var(--color-status-recording)',
-    editing: 'var(--color-status-editing)',
-    review: 'var(--color-status-review)',
-    approved: 'var(--color-status-approved)',
-    published: 'var(--color-status-published)',
-  }[stage.name.toLowerCase()] || undefined : undefined
-
   return (
     <div className="max-w-[1640px] mx-auto">
       {/* Page header */}
-      <div className="pt-0.5">
-        <Link
-          href={`/app/shows/${showId}`}
-          className="inline-flex items-center gap-1 text-[12.5px] text-text-secondary hover:text-text-primary transition-colors"
-        >
-          <svg className="w-[13px] h-[13px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="m15 18-6-6 6-6" /></svg>
-          {showData?.name || 'Show'}
-        </Link>
-        <div className="flex items-start gap-4 mt-2">
+      <div>
+        <div className="flex items-start gap-4">
           <div className="flex-1">
-            <div className="flex items-center gap-2.5">
-              {episode.episode_number != null && (
-                <span className="font-mono text-xs text-text-tertiary">EP {String(episode.episode_number).padStart(3, '0')}</span>
-              )}
-              {stage && (
-                <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium px-2 py-0.5 rounded-full border border-border-subtle bg-surface-input text-text-secondary">
-                  <span className="w-[7px] h-[7px] rounded-full" style={{ background: stageColor }} />
-                  {stage.name}
-                </span>
-              )}
-            </div>
-            <h1 className="text-[22px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary mt-1.5">
+            <h1 className="text-[22px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary">
               {episode.title}
             </h1>
             <p className="text-[13.5px] text-text-secondary mt-1">
