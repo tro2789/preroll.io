@@ -77,8 +77,7 @@ function Nav() {
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 const STAGES = [
-  { id: 'planning', name: 'Planning', color: 'var(--color-status-planning)' },
-  { id: 'recording', name: 'Recording', color: 'var(--color-status-recording)' },
+  { id: 'submitted', name: 'Submitted', color: 'var(--color-status-submitted)' },
   { id: 'editing', name: 'Editing', color: 'var(--color-status-editing)' },
   { id: 'review', name: 'Review', color: 'var(--color-status-review)' },
   { id: 'approved', name: 'Approved', color: 'var(--color-status-approved)' },

@@ -32,6 +32,7 @@ const STATUS_LABELS: Record<string, string> = {
   editing: 'Editing',
   recording: 'Recording',
   planning: 'Planning',
+  submitted: 'Submitted',
 }
 
 type ViewMode = 'month' | 'week'

@@ -116,7 +116,7 @@ export function FeatureBeats() {
             title="One board for everything in flight"
             lead="Every episode, every show, every client, on a single kanban organized by production stage. WIP limits flag bottlenecks before they turn into missed dates. Drag a card to advance it; filter to one client and the noise disappears."
             items={[
-              { bold: 'Stages you define.', rest: 'Planning → Recording → Editing → Review → Approved, or whatever your shop actually runs.' },
+              { bold: 'Stages you define.', rest: 'Submitted → Editing → Review → Approved → Published, or whatever your shop actually runs.' },
               { bold: 'WIP limits and overdue flags', rest: 'so a stalled episode surfaces itself instead of hiding.' },
               { bold: 'Scope to a client or show', rest: 'in one click. Same board, less to scan.' },
             ]}

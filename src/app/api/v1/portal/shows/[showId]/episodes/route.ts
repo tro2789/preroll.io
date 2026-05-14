@@ -83,7 +83,7 @@ export async function POST(
 
   const { data: members } = await serviceClient
     .from('memberships')
-    .select('users(email)')
+    .select('user_id, user_profiles(email)')
     .eq('org_id', client.org_id)
 
   if (members && members.length > 0) {
@@ -103,7 +103,7 @@ export async function POST(
     `
 
     for (const m of members) {
-      const email = (m.users as unknown as { email: string } | null)?.email
+      const email = (m.user_profiles as unknown as { email: string } | null)?.email
       if (email) sendEmail(email, subject, html).catch(() => {})
     }
   }

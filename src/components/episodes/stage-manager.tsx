@@ -23,6 +23,7 @@ import { CSS } from '@dnd-kit/utilities'
 
 const STATUS_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'None' },
+  { value: 'submitted', label: 'Submitted' },
   { value: 'planning', label: 'Planning' },
   { value: 'recording', label: 'Recording' },
   { value: 'editing', label: 'Editing' },

@@ -35,6 +35,7 @@
   --color-accent-fg: oklch(0.16 0.02 40);
 
   /* Semantic status */
+  --color-status-submitted: oklch(0.72 0.16 40);
   --color-status-planning: oklch(0.7 0.14 264);
   --color-status-recording: oklch(0.74 0.155 30);
   --color-status-editing: oklch(0.78 0.13 95);

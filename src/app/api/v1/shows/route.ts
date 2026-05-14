@@ -62,12 +62,11 @@ export async function POST(request: Request) {
   if (showError) return errorResponse(showError.message, 500)
 
   const defaultStages = [
-    { show_id: show.id, name: 'Planning', position: 1, status_override: 'planning' },
-    { show_id: show.id, name: 'Recording', position: 2, status_override: 'recording' },
-    { show_id: show.id, name: 'Editing', position: 3, status_override: 'editing' },
-    { show_id: show.id, name: 'Review', position: 4, status_override: 'review' },
-    { show_id: show.id, name: 'Approved', position: 5, status_override: 'approved' },
-    { show_id: show.id, name: 'Published', position: 6, status_override: 'published' },
+    { show_id: show.id, name: 'Submitted', position: 1, status_override: 'submitted' },
+    { show_id: show.id, name: 'Editing', position: 2, status_override: 'editing' },
+    { show_id: show.id, name: 'Review', position: 3, status_override: 'review' },
+    { show_id: show.id, name: 'Approved', position: 4, status_override: 'approved' },
+    { show_id: show.id, name: 'Published', position: 5, status_override: 'published' },
   ]
 
   const { data: stages, error: stagesError } = await supabase!

@@ -69,6 +69,7 @@ export async function PATCH(
       }
 
       updateData['stage_entered_at'] = new Date().toISOString()
+      updateData['client_submitted'] = false
 
       if (!('archived_at' in body)) {
         updateData['archived_at'] = null
