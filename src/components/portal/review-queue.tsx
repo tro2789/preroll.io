@@ -156,10 +156,10 @@ export function ReviewQueue({ deliverables, allowDownload }: ReviewQueueProps) {
           </table>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {deliverables.map((d) => {
             const episodeContext = d.episode_number
-              ? `Episode ${d.episode_number} — ${d.episode_title}`
+              ? `Ep ${d.episode_number} — ${d.episode_title}`
               : d.episode_title || undefined
 
             return (

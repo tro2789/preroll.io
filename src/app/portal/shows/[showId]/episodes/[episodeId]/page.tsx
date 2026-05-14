@@ -123,29 +123,33 @@ export default async function PortalEpisodePage({
         ) : (
           <>
             {deliverables.filter((d) => d.status === 'pending').length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-[13px] font-semibold text-text-primary">
+              <div>
+                <h2 className="text-[13px] font-semibold text-text-primary mb-3">
                   Needs Review
                   <span className="ml-2 text-text-secondary font-normal">
                     ({deliverables.filter((d) => d.status === 'pending').length})
                   </span>
                 </h2>
-                {deliverables.filter((d) => d.status === 'pending').map((d) => (
-                  <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} allowDownload={allowDownloads} versionCount={versionCountForDeliverable.get(d.id)} />
-                ))}
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {deliverables.filter((d) => d.status === 'pending').map((d) => (
+                    <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} allowDownload={allowDownloads} versionCount={versionCountForDeliverable.get(d.id)} />
+                  ))}
+                </div>
               </div>
             )}
             {deliverables.filter((d) => d.status !== 'pending').length > 0 && (
-              <div className="space-y-3">
-                <h2 className="text-[13px] font-semibold text-text-primary">
+              <div>
+                <h2 className="text-[13px] font-semibold text-text-primary mb-3">
                   Completed
                   <span className="ml-2 text-text-secondary font-normal">
                     ({deliverables.filter((d) => d.status !== 'pending').length})
                   </span>
                 </h2>
-                {deliverables.filter((d) => d.status !== 'pending').map((d) => (
-                  <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} allowDownload={allowDownloads} versionCount={versionCountForDeliverable.get(d.id)} />
-                ))}
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {deliverables.filter((d) => d.status !== 'pending').map((d) => (
+                    <DeliverableCard key={d.id} deliverable={d} reviewUrl={reviewUrlMap.get(d.id)} thumbnailUrl={thumbnailMap.get(d.id)} allowDownload={allowDownloads} versionCount={versionCountForDeliverable.get(d.id)} />
+                  ))}
+                </div>
               </div>
             )}
           </>
