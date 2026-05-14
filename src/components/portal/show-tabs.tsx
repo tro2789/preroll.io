@@ -87,7 +87,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
 
   return (
     <div>
-      <div className="flex gap-0.5 border-b border-border-subtle mb-5 overflow-x-auto">
+      <div className="flex gap-0.5 border-b border-border-subtle mb-5 overflow-x-auto overflow-y-hidden">
         {tabs.map((tab) => (
           <button
             key={tab.id}
