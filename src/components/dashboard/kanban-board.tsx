@@ -21,11 +21,11 @@ interface DashboardColumn {
   wipLimit: number | null
 }
 
-interface Episode extends KanbanEpisode {
-  updated_at: string
-  image_url: string | null
-  shows: { id: string; name: string } | null
-  client: { id: string; name: string } | null
+export interface Episode extends KanbanEpisode {
+  updated_at?: string
+  image_url?: string | null
+  shows?: { id: string; name: string } | null
+  client?: { id: string; name: string } | null
 }
 
 interface KanbanBoardProps {
@@ -33,7 +33,7 @@ interface KanbanBoardProps {
   episodes: Episode[]
 }
 
-const columnColors = [
+export const columnColors = [
   { header: 'text-sky-400', dot: 'bg-sky-400', tab: 'border-sky-400 text-sky-400' },
   { header: 'text-violet-400', dot: 'bg-violet-400', tab: 'border-violet-400 text-violet-400' },
   { header: 'text-amber-400', dot: 'bg-amber-400', tab: 'border-amber-400 text-amber-400' },
@@ -44,11 +44,11 @@ const columnColors = [
   { header: 'text-fuchsia-400', dot: 'bg-fuchsia-400', tab: 'border-fuchsia-400 text-fuchsia-400' },
 ]
 
-function getColumnColor(index: number) {
+export function getColumnColor(index: number) {
   return columnColors[index % columnColors.length]
 }
 
-function formatDate(dateStr: string): string {
+export function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00')
   const now = new Date()
   const todayStr = now.toISOString().split('T')[0]
@@ -59,7 +59,7 @@ function formatDate(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: boolean }) {
+export function EpisodeCardContent({ episode, compact }: { episode: Episode; compact?: boolean }) {
   const isOverdue = episode.scheduled_publish_date && episode.scheduled_publish_date < new Date().toISOString().split('T')[0]
 
   if (compact) {

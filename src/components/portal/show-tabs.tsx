@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { ReviewQueue } from './review-queue'
 import { ActivityFeed } from './activity-feed'
+import { PortalKanban } from './portal-kanban'
 
 interface ReviewDeliverable {
   id: string
@@ -78,17 +78,6 @@ const assetTypeLabels: Record<string, string> = {
 export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages, activities, assets }: ShowTabsProps) {
   const [active, setActive] = useState<Tab>(reviewItems.length > 0 ? 'review' : 'episodes')
 
-  const sortedStages = [...stages].sort((a, b) => a.position - b.position)
-  const episodesByStage = new Map<string, Episode[]>()
-  for (const ep of episodes) {
-    if (ep.stage_id) {
-      const list = episodesByStage.get(ep.stage_id) || []
-      list.push(ep)
-      episodesByStage.set(ep.stage_id, list)
-    }
-  }
-  const activeStages = sortedStages.filter((s) => (episodesByStage.get(s.id) || []).length > 0)
-
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: 'review', label: 'Needs Review', count: reviewItems.length || undefined },
     { id: 'episodes', label: 'Episodes', count: episodes.length || undefined },
@@ -124,53 +113,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
       )}
 
       {active === 'episodes' && (
-        <div>
-          {episodes.length === 0 ? (
-            <div className="rounded-lg border border-border-subtle bg-surface-raised/50 px-4 py-10 text-center">
-              <p className="text-sm text-text-secondary">No episodes yet.</p>
-            </div>
-          ) : (
-            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(activeStages.length, 4)}, minmax(0, 1fr))` }}>
-              {activeStages.map((stage) => {
-                const stageEps = episodesByStage.get(stage.id) || []
-                return (
-                  <div key={stage.id} className="min-w-0">
-                    <div className="flex items-center justify-between mb-2.5 px-1">
-                      <h3 className="text-sm font-semibold text-text-primary">{stage.name}</h3>
-                      <span className="text-sm text-text-secondary">{stageEps.length}</span>
-                    </div>
-                    <div className="space-y-2">
-                      {stageEps.map((ep) => (
-                          <Link
-                            key={ep.id}
-                            href={`/portal/shows/${showId}/episodes/${ep.id}`}
-                            className="block rounded-lg border border-border-subtle bg-surface-raised p-3 hover:border-border-default transition-colors"
-                          >
-                            <p className="text-sm font-medium text-text-primary leading-snug line-clamp-1">
-                              {ep.title}
-                            </p>
-                            <div className="mt-1 flex items-center gap-2 text-sm text-text-secondary">
-                              {ep.episode_number != null && (
-                                <span className="font-mono">#{ep.episode_number}</span>
-                              )}
-                              {ep.scheduled_publish_date && (
-                                <span>{new Date(ep.scheduled_publish_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                              )}
-                            </div>
-                            {ep.pendingCount > 0 && (
-                              <span className="mt-1.5 inline-block text-sm font-medium text-accent">
-                                {ep.pendingCount} to review
-                              </span>
-                            )}
-                          </Link>
-                        ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        <PortalKanban showId={showId} episodes={episodes} stages={stages} />
       )}
 
       {active === 'assets' && (
