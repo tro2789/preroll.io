@@ -91,12 +91,13 @@ export function ClientForm({ defaultValues, onSubmit, submitLabel }: ClientFormP
 
       <div>
         <label htmlFor="email" className={labelClass}>
-          Email
+          Email <span className="text-red-400">*</span>
         </label>
         <input
           id="email"
           name="email"
           type="email"
+          required
           value={formData.email}
           onChange={handleChange}
           className={inputClass}

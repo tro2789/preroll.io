@@ -35,6 +35,7 @@ export async function POST(request: Request) {
 
   const body = await request.json()
   if (!body.name) return errorResponse('name is required')
+  if (!body.email) return errorResponse('email is required')
 
   const { data, error: dbError } = await supabase!
     .from('clients')
