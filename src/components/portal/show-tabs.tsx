@@ -91,25 +91,36 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
 
   return (
     <div>
-      <div className="flex gap-0.5 border-b border-border-subtle mb-5 overflow-x-auto overflow-y-hidden">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActive(tab.id)}
-            className={`shrink-0 px-3 py-2.5 transition-colors -mb-px ${
-              active === tab.id
-                ? 'text-[13px] font-medium text-text-primary border-b-2 border-accent'
-                : 'text-[13px] font-[450] text-text-secondary border-b-2 border-transparent hover:text-text-primary'
-            }`}
-          >
-            {tab.label}
-            {tab.count != null && (
-              <span className="font-mono text-[11px] text-fg-faint ml-1.5">
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="flex items-center border-b border-border-subtle mb-5">
+        <div className="flex gap-0.5 overflow-x-auto overflow-y-hidden flex-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActive(tab.id)}
+              className={`shrink-0 px-3 py-2.5 transition-colors -mb-px ${
+                active === tab.id
+                  ? 'text-[13px] font-medium text-text-primary border-b-2 border-accent'
+                  : 'text-[13px] font-[450] text-text-secondary border-b-2 border-transparent hover:text-text-primary'
+              }`}
+            >
+              {tab.label}
+              {tab.count != null && (
+                <span className="font-mono text-[11px] text-fg-faint ml-1.5">
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowSubmitForm(true)}
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors ml-3 mb-1"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+            <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+          </svg>
+          Submit Episode
+        </button>
       </div>
 
       {active === 'review' && (
@@ -117,31 +128,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
       )}
 
       {active === 'episodes' && (
-        <div className="space-y-4">
-          {showSubmitForm ? (
-            <EpisodeSubmitForm
-              showId={showId}
-              onSuccess={() => {
-                setShowSubmitForm(false)
-                router.refresh()
-              }}
-              onCancel={() => setShowSubmitForm(false)}
-            />
-          ) : (
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowSubmitForm(true)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-                  <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-                </svg>
-                Submit Episode
-              </button>
-            </div>
-          )}
-          <PortalKanban showId={showId} episodes={episodes} stages={stages} />
-        </div>
+        <PortalKanban showId={showId} episodes={episodes} stages={stages} />
       )}
 
       {active === 'assets' && (
@@ -173,6 +160,21 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
       {active === 'activity' && (
         <div className="rounded-lg bg-surface-raised border border-border-subtle p-4">
           <ActivityFeed activities={activities} />
+        </div>
+      )}
+
+      {showSubmitForm && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg">
+            <EpisodeSubmitForm
+              showId={showId}
+              onSuccess={() => {
+                setShowSubmitForm(false)
+                router.refresh()
+              }}
+              onCancel={() => setShowSubmitForm(false)}
+            />
+          </div>
         </div>
       )}
     </div>
