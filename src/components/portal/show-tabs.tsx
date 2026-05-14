@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ReviewQueue } from './review-queue'
 import { ActivityFeed } from './activity-feed'
 import { PortalKanban } from './portal-kanban'
+import { EpisodeSubmitForm } from './episode-submit-form'
 
 interface ReviewDeliverable {
   id: string
@@ -77,6 +79,8 @@ const assetTypeLabels: Record<string, string> = {
 
 export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages, activities, assets }: ShowTabsProps) {
   const [active, setActive] = useState<Tab>(reviewItems.length > 0 ? 'review' : 'episodes')
+  const [showSubmitForm, setShowSubmitForm] = useState(false)
+  const router = useRouter()
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: 'review', label: 'Needs Review', count: reviewItems.length || undefined },
@@ -113,7 +117,31 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
       )}
 
       {active === 'episodes' && (
-        <PortalKanban showId={showId} episodes={episodes} stages={stages} />
+        <div className="space-y-4">
+          {showSubmitForm ? (
+            <EpisodeSubmitForm
+              showId={showId}
+              onSuccess={() => {
+                setShowSubmitForm(false)
+                router.refresh()
+              }}
+              onCancel={() => setShowSubmitForm(false)}
+            />
+          ) : (
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowSubmitForm(true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
+                  <path d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+                </svg>
+                Submit Episode
+              </button>
+            </div>
+          )}
+          <PortalKanban showId={showId} episodes={episodes} stages={stages} />
+        </div>
       )}
 
       {active === 'assets' && (
