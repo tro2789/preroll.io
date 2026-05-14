@@ -53,9 +53,10 @@ export default async function PortalShowPage({
       .order('episode_number', { ascending: true, nullsFirst: false }),
     supabase
       .from('deliverables')
-      .select('id, type, title, description, producer_notes, file_url, status, reviewer_notes, reviewed_at, created_at, episode_id, episodes(title, episode_number)')
+      .select('id, type, title, description, producer_notes, file_url, status, reviewer_notes, reviewed_at, created_at, episode_id, episodes!inner(title, episode_number, archived_at)')
       .eq('show_id', showId)
       .eq('status', 'pending')
+      .is('episodes.archived_at', null)
       .order('created_at', { ascending: false }),
     supabase
       .from('activity_log')

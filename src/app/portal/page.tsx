@@ -35,9 +35,10 @@ export default async function PortalDashboard() {
   const showIds = shows.map((s) => s.id)
   const { data: pendingRows } = await supabase
     .from('deliverables')
-    .select('show_id')
+    .select('show_id, episodes!inner(archived_at)')
     .in('show_id', showIds)
     .eq('status', 'pending')
+    .is('episodes.archived_at', null)
 
   const pendingByShow = new Map<string, number>()
   for (const row of pendingRows ?? []) {
