@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
 import { cookies } from 'next/headers'
+import { sendEmail, getSiteUrl } from '@/lib/email/send'
 
 export async function POST(
   request: NextRequest,
@@ -66,6 +67,7 @@ export async function POST(
       stage_id: stageId,
       status,
       position,
+      client_submitted: true,
     })
     .select()
     .single()
@@ -73,12 +75,38 @@ export async function POST(
   if (episodeError) return errorResponse(episodeError.message, 500)
 
   await serviceClient.from('activity_log').insert({
-    org_id: client.org_id,
     show_id: showId,
     episode_id: episode.id,
     action: 'episode_submitted',
     description: `${client.name} submitted a new episode request: ${episode.title}`,
   })
+
+  const { data: members } = await serviceClient
+    .from('memberships')
+    .select('users(email)')
+    .eq('org_id', client.org_id)
+
+  if (members && members.length > 0) {
+    const siteUrl = await getSiteUrl()
+    const episodeUrl = `${siteUrl}/app/shows/${showId}/episodes/${episode.id}`
+    const subject = `New episode request: ${episode.title}`
+    const html = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px;">
+        <p><strong>${client.name}</strong> submitted a new episode request for <strong>${show.name}</strong>.</p>
+        <div style="background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 16px 0;">
+          <p style="margin: 0 0 8px; font-weight: 600;">${episode.title}</p>
+          ${notes ? `<p style="margin: 0 0 8px; color: #666;">${notes}</p>` : ''}
+          ${links.length > 0 ? `<p style="margin: 0; color: #666;">Content links:<br/>${links.map((l: string) => `<a href="${l.trim()}">${l.trim()}</a>`).join('<br/>')}</p>` : ''}
+        </div>
+        <a href="${episodeUrl}" style="display: inline-block; background: #e86a47; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">View Episode</a>
+      </div>
+    `
+
+    for (const m of members) {
+      const email = (m.users as unknown as { email: string } | null)?.email
+      if (email) sendEmail(email, subject, html).catch(() => {})
+    }
+  }
 
   return jsonResponse(episode, 201)
 }

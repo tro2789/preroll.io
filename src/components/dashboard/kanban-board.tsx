@@ -26,6 +26,7 @@ export interface Episode extends KanbanEpisode {
   image_url?: string | null
   shows?: { id: string; name: string } | null
   client?: { id: string; name: string } | null
+  client_submitted?: boolean
 }
 
 interface KanbanBoardProps {
@@ -64,7 +65,10 @@ export function EpisodeCardContent({ episode, compact }: { episode: Episode; com
 
   if (compact) {
     return (
-      <div className="rounded-md border border-border-subtle bg-surface-raised px-2.5 py-1.5 transition-colors hover:border-border-default group flex items-center gap-2 min-w-0">
+      <div className={`rounded-md border bg-surface-raised px-2.5 py-1.5 transition-colors hover:border-border-default group flex items-center gap-2 min-w-0 ${episode.client_submitted ? 'border-accent/40' : 'border-border-subtle'}`}>
+        {episode.client_submitted && (
+          <span className="shrink-0 rounded-full bg-accent/15 text-accent text-[9px] font-semibold px-1.5 py-0.5">NEW</span>
+        )}
         <p className="text-xs font-medium text-text-primary group-hover:text-accent transition-colors truncate min-w-0">
           {episode.title}
         </p>
@@ -86,12 +90,17 @@ export function EpisodeCardContent({ episode, compact }: { episode: Episode; com
   }
 
   return (
-    <div className="rounded-[10px] border border-border-subtle bg-surface-raised transition-colors hover:border-border-strong group cursor-pointer p-[11px]">
+    <div className={`rounded-[10px] border bg-surface-raised transition-colors hover:border-border-strong group cursor-pointer p-[11px] ${episode.client_submitted ? 'border-accent/40' : 'border-border-subtle'}`}>
       <div className="relative mb-[9px]">
         <Thumbnail id={episode.id} imageUrl={episode.image_url} className="aspect-[16/9] !rounded-[5px]" />
         {episode.episode_number != null && (
           <span className="absolute top-1.5 left-2 font-mono text-[10px] tracking-[0.04em] text-text-secondary z-[1]">
             EP {String(episode.episode_number).padStart(3, '0')}
+          </span>
+        )}
+        {episode.client_submitted && (
+          <span className="absolute top-1.5 right-1.5 rounded-full bg-accent/90 text-white text-[9px] font-semibold px-2 py-0.5 z-[1]">
+            Client submitted
           </span>
         )}
       </div>

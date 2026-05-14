@@ -25,7 +25,7 @@ export default async function DashboardPage() {
       .order('position', { ascending: true }),
     supabase
       .from('episodes')
-      .select('id, title, episode_number, status, stage_id, position, scheduled_publish_date, updated_at, image_url, show_id, shows!inner(id, name, clients!inner(id, name, company, org_id)), episode_tags(tag_id, tags(id, name, color))')
+      .select('id, title, episode_number, status, stage_id, position, scheduled_publish_date, updated_at, image_url, show_id, client_submitted, shows!inner(id, name, clients!inner(id, name, company, org_id)), episode_tags(tag_id, tags(id, name, color))')
       .eq('shows.clients.org_id', orgId!)
       .not('status', 'eq', 'published')
       .is('archived_at', null)
@@ -80,6 +80,7 @@ export default async function DashboardPage() {
       shows: show ? { id: show.id, name: show.name } : null,
       client: show?.clients ? { id: show.clients.id, name: show.clients.company || show.clients.name } : null,
       tags: episodeTags.map((et) => et.tags).filter(Boolean) as { id: string; name: string; color: string }[],
+      client_submitted: ep.client_submitted ?? false,
     }
   })
 

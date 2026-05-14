@@ -12,6 +12,7 @@ interface DashboardActivityFeedProps {
 
 const actionDots: Record<string, string> = {
   episode_stage_changed: 'bg-blue-400',
+  episode_submitted: 'bg-accent',
   deliverable_submitted: 'bg-amber-400',
   deliverable_approved: 'bg-emerald-400',
   deliverable_revision_requested: 'bg-red-400',
