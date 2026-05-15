@@ -249,9 +249,14 @@ export function ChatPanel() {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
+        <div className="flex items-center justify-between px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] border-b border-border-subtle">
           <div className="flex items-center gap-2">
-            <svg className="size-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+            <button onClick={close} className="md:hidden flex items-center justify-center size-8 -ml-1 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors" aria-label="Close chat">
+              <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <svg className="size-4 text-accent hidden md:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
               <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z" />
             </svg>
@@ -263,7 +268,7 @@ export function ChatPanel() {
                 <path d="M12 5v14M5 12h14" />
               </svg>
             </Button>
-            <Button size="icon-sm" variant="ghost" onClick={close} aria-label="Close chat">
+            <Button size="icon-sm" variant="ghost" onClick={close} className="hidden md:flex" aria-label="Close chat">
               <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
                 <path d="M18 6L6 18M6 6l12 12" />
               </svg>
