@@ -1,7 +1,6 @@
 import { getAuthenticatedClient, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAiAddonStatus, totalAvailableCredits, consumeCredits, getAnthropicApiKey } from '@/lib/ai/entitlements'
-import { getOrgEntitlements } from '@/lib/entitlements'
 import { streamChat, buildSystemPrompt } from '@/lib/ai/chat-stream'
 import { executeAction, WRITE_TOOL_NAMES } from '@/lib/ai/chat-tools'
 import { AI_CHAT_CREDIT_COST, AI_CHAT_CONTEXT_WINDOW } from '@/lib/ai/constants'
@@ -11,14 +10,9 @@ export async function POST(request: Request) {
   const { user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
-  const entitlements = await getOrgEntitlements(org!.id, org!.planId, org!.trialEndsAt)
-  if (!entitlements.can('ai')) {
-    return errorResponse('AI features require a Pro or Studio plan', 403)
-  }
-
   const addon = await getAiAddonStatus(org!.id)
   if (!addon.enabled) {
-    return errorResponse('AI add-on is not enabled', 403)
+    return errorResponse('AI features require a Pro or Studio plan', 403)
   }
 
   const available = totalAvailableCredits(addon)
