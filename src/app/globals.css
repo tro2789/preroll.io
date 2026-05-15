@@ -571,6 +571,15 @@ body {
   100% { opacity: 1;  transform: scale(1.075) translateY(-1.6%); }
 }
 
+/* Landing page anchor offset for fixed nav */
+[id="features"],
+[id="developers"],
+[id="integrations"],
+[id="pricing"],
+[id="faq"] {
+  scroll-margin-top: 72px;
+}
+
 /* Chat markdown */
 .prose-chat p { margin: 0; }
 .prose-chat p + p { margin-top: 0.5em; }

@@ -139,11 +139,12 @@ export default function AppearancePage() {
   function applyTheme(themeId: string) {
     setActiveTheme(themeId)
 
-    const html = document.documentElement
-    THEMES.forEach((t) => html.classList.remove(`theme-${t.id}`))
-
-    if (themeId !== DEFAULT_THEME) {
-      html.classList.add(`theme-${themeId}`)
+    const root = document.getElementById('app-theme-root')
+    if (root) {
+      THEMES.forEach((t) => root.classList.remove(`theme-${t.id}`))
+      if (themeId !== DEFAULT_THEME) {
+        root.classList.add(`theme-${themeId}`)
+      }
     }
 
     localStorage.setItem(THEME_STORAGE_KEY, themeId)

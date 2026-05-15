@@ -8,6 +8,7 @@ import { NoOrgsPrompt } from '@/components/layout/no-orgs-prompt'
 import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ChatShell } from '@/components/chat/chat-shell'
+import { ThemeProvider } from '@/components/layout/theme-provider'
 import type { OrgMembership } from '@/components/layout/sidebar'
 
 export default async function AppLayout({
@@ -66,10 +67,11 @@ export default async function AppLayout({
   }
 
   return (
-    <TooltipProvider>
-      <ChatShell>
-        <div className="min-h-screen bg-surface-base overflow-x-hidden">
-          <Sidebar
+    <ThemeProvider>
+      <TooltipProvider>
+        <ChatShell>
+          <div className="min-h-screen bg-surface-base overflow-x-hidden">
+            <Sidebar
             orgs={orgs}
             activeOrgId={activeOrg?.id}
             userEmail={user.email ?? ''}
@@ -83,7 +85,8 @@ export default async function AppLayout({
             </main>
           </div>
         </div>
-      </ChatShell>
-    </TooltipProvider>
+        </ChatShell>
+      </TooltipProvider>
+    </ThemeProvider>
   )
 }
