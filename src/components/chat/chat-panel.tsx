@@ -169,10 +169,10 @@ function SessionPicker() {
           <path d="M12 5v14M5 12h14" />
         </svg>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="bottom" align="end" className="w-72">
+      <DropdownMenuContent side="bottom" align="end" className="w-72 p-1.5">
         <DropdownMenuItem
           onClick={() => newConversation()}
-          className="gap-2"
+          className="gap-2 py-2 px-2.5 focus:bg-surface-overlay focus:text-text-primary"
         >
           <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
             <path d="M12 5v14M5 12h14" />
@@ -187,9 +187,9 @@ function SessionPicker() {
         {isLoadingSessions && visibleSessions.length === 0 && (
           <>
             {[1, 2, 3].map((i) => (
-              <div key={i} className="px-1.5 py-1.5">
+              <div key={i} className="px-2.5 py-2">
                 <div className="h-3.5 w-3/4 rounded bg-surface-overlay animate-pulse" />
-                <div className="h-2.5 w-1/3 rounded bg-surface-overlay animate-pulse mt-1" />
+                <div className="h-2.5 w-1/3 rounded bg-surface-overlay animate-pulse mt-1.5" />
               </div>
             ))}
           </>
@@ -199,17 +199,17 @@ function SessionPicker() {
           <DropdownMenuItem
             key={session.id}
             className={cn(
-              'group/session flex items-center justify-between gap-2 pr-1',
-              session.id === sessionId && 'bg-accent/10'
+              'group/session flex items-center justify-between gap-2 py-2 px-2.5 pr-1.5 focus:bg-surface-overlay focus:text-text-primary',
+              session.id === sessionId && 'bg-surface-overlay'
             )}
             onClick={() => loadSession(session.id)}
           >
             <div className="flex-1 min-w-0">
-              <p className="text-sm truncate">{session.title || 'Untitled conversation'}</p>
-              <p className="text-xs text-text-tertiary">{timeAgo(session.updatedAt)}</p>
+              <p className="text-sm text-text-primary truncate">{session.title || 'Untitled conversation'}</p>
+              <p className="text-xs text-text-tertiary mt-0.5">{timeAgo(session.updatedAt)}</p>
             </div>
             <button
-              className="shrink-0 size-6 flex items-center justify-center rounded text-text-tertiary opacity-0 group-hover/session:opacity-100 hover:text-error hover:bg-error/10 transition-all"
+              className="shrink-0 size-7 flex items-center justify-center rounded text-text-tertiary opacity-0 group-hover/session:opacity-100 hover:text-error hover:bg-error/10 transition-all"
               onClick={(e) => {
                 e.stopPropagation()
                 deleteSession(session.id)
