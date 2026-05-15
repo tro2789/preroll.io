@@ -33,6 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn(sora.variable, inter.variable, "font-sans")} suppressHydrationWarning>
       <body className="antialiased">
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('preroll-theme');if(t&&t!=='midnight')document.documentElement.classList.add('theme-'+t)}catch(e){}})()`,
+          }}
+        />
         <RootProvider
           theme={{
             defaultTheme: 'dark',
