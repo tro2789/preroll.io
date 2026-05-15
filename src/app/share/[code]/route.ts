@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getSiteUrl, generateMagicLinkUrl, sendEmail } from '@/lib/email/send'
 
 export async function GET(
@@ -20,6 +20,16 @@ export async function GET(
     errorUrl.pathname = '/share/not-found'
     errorUrl.search = ''
     return NextResponse.redirect(errorUrl)
+  }
+
+  // If the visitor already has a valid session for this client's email, skip straight to portal
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user && user.email === client.email) {
+    const portalUrl = request.nextUrl.clone()
+    portalUrl.pathname = '/portal'
+    portalUrl.search = ''
+    return NextResponse.redirect(portalUrl)
   }
 
   if (!client.client_user_id) {
