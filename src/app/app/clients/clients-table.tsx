@@ -133,7 +133,7 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
               </td>
               <td className="px-3.5 py-2.5 hidden md:table-cell">
                 {client.email ? (
-                  <span className="text-[13px] text-text-secondary">{client.email}</span>
+                  <a href={`mailto:${client.email}`} className="text-[13px] text-text-secondary hover:text-accent transition-colors">{client.email}</a>
                 ) : (
                   <span className="text-[13px] text-text-tertiary">—</span>
                 )}
