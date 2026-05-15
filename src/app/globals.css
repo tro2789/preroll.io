@@ -571,6 +571,13 @@ body {
   100% { opacity: 1;  transform: scale(1.075) translateY(-1.6%); }
 }
 
+/* Chat markdown */
+.prose-chat p { margin: 0; }
+.prose-chat p + p { margin-top: 0.5em; }
+.prose-chat strong { font-weight: 600; }
+.prose-chat ul { margin: 0.25em 0; }
+.prose-chat li { margin: 0; }
+
 /* Blip pulse for live indicator */
 @keyframes blip {
   0%   { box-shadow: 0 0 0 0 oklch(0.74 0.14 165 / 0.55); }
