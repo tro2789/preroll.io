@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { getGradient } from '@/lib/ui/gradient'
 
 interface ThumbnailProps {
@@ -9,13 +10,13 @@ interface ThumbnailProps {
 export function Thumbnail({ id, imageUrl, className = '' }: ThumbnailProps) {
   if (imageUrl) {
     return (
-      <div className={`overflow-hidden rounded-md ${className}`}>
-        <img
+      <div className={`relative overflow-hidden rounded-md ${className}`}>
+        <Image
           src={imageUrl}
           alt=""
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+          className="object-cover"
         />
       </div>
     )

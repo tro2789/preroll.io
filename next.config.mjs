@@ -10,6 +10,14 @@ const nextConfig = {
     root: __dirname,
   },
   allowedDevOrigins: ['192.168.0.83'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'assets.preroll.io',
+      },
+    ],
+  },
 };
 
 const withMDX = createMDX();
