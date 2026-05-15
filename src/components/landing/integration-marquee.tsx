@@ -28,13 +28,13 @@ function Chip({ name, abbr, color }: { name: string; abbr: string; color: string
 }
 
 function MarqueeTrack({ items, reverse }: { items: (readonly [string, string, string])[]; reverse?: boolean }) {
-  const repeated = [...items, ...items, ...items]
+  const doubled = [...items, ...items]
   return (
-    <div className="relative overflow-hidden flex justify-center" style={{ maskImage: 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)' }}>
+    <div className="relative overflow-hidden" style={{ maskImage: 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)' }}>
       <div
-        className={`flex gap-3.5 w-max hover:[animation-play-state:paused] ${reverse ? 'animate-[scrollx_46s_linear_infinite_reverse]' : 'animate-[scrollx_38s_linear_infinite]'}`}
+        className={`flex gap-3.5 w-max hover:[animation-play-state:paused] ${reverse ? 'animate-[scrollx_50s_linear_infinite_reverse]' : 'animate-[scrollx_50s_linear_infinite]'}`}
       >
-        {repeated.map(([name, abbr, color], i) => (
+        {doubled.map(([name, abbr, color], i) => (
           <Chip key={`${name}-${i}`} name={name} abbr={abbr} color={color} />
         ))}
       </div>
@@ -43,8 +43,8 @@ function MarqueeTrack({ items, reverse }: { items: (readonly [string, string, st
 }
 
 export function IntegrationMarquee() {
-  const row1 = INTEGRATIONS.slice(0, 7)
-  const row2 = INTEGRATIONS.slice(5)
+  const row1 = [...INTEGRATIONS]
+  const row2 = [...INTEGRATIONS].reverse()
 
   return (
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
