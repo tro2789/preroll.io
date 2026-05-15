@@ -13,6 +13,7 @@ import { useCompactView } from '@/lib/kanban/use-compact-view'
 import { Swimlane } from '@/components/kanban/swimlane'
 import { Thumbnail } from '@/components/ui/thumbnail'
 import { CardTagPills } from '@/components/kanban/card-tag-pills'
+import { DragCoachmark } from '@/components/dashboard/drag-coachmark'
 
 interface DashboardColumn {
   position: number
@@ -356,6 +357,11 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
           onFilterChange={setFilters}
           compact={compact}
           onCompactChange={toggleCompact}
+        />
+
+        <DragCoachmark
+          visible={showDragCoachmark}
+          onDismiss={() => setShowDragCoachmark(false)}
         />
 
         <DndContext

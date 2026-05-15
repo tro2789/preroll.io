@@ -37,7 +37,7 @@ export async function GET() {
     links: {
       create_client: '/app/clients',
       add_show: firstClientRes.data ? `/app/clients/${firstClientRes.data.id}` : '/app/clients',
-      create_episode: firstShowRes.data ? `/app/shows/${firstShowRes.data.id}` : '/app/shows',
+      create_episode: firstShowRes.data ? `/app/shows/${firstShowRes.data.id}/episodes/new` : '/app/shows',
       move_episode: '/app',
     },
   })

@@ -34,6 +34,7 @@ export default function NewShowPage({
     if (!res.ok) {
       throw new Error(result.error || 'Failed to create show')
     }
+    window.dispatchEvent(new Event('preroll:show-created'))
     router.push(`/app/shows/${result.data.id}`)
   }
 

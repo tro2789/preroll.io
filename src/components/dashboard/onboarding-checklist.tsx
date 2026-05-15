@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { OnboardingSkeleton } from '@/components/onboarding/onboarding-skeleton'
 
 interface OnboardingData {
   dismissed: boolean
@@ -60,8 +61,14 @@ export function OnboardingChecklist() {
         })
         .catch(() => {})
     }
-    window.addEventListener('preroll:episode-moved', refetch)
-    return () => window.removeEventListener('preroll:episode-moved', refetch)
+    const events = [
+      'preroll:episode-moved',
+      'preroll:client-created',
+      'preroll:show-created',
+      'preroll:episode-created',
+    ]
+    events.forEach((e) => window.addEventListener(e, refetch))
+    return () => events.forEach((e) => window.removeEventListener(e, refetch))
   }, [])
 
   useEffect(() => {
@@ -75,7 +82,8 @@ export function OnboardingChecklist() {
     }
   }, [data, dismissed, router])
 
-  if (loading || dismissed || !data) return null
+  if (loading) return <OnboardingSkeleton />
+  if (dismissed || !data) return null
 
   const completedCount = STEPS.filter((s) => data.steps[s.key]).length
   const progressPct = (completedCount / STEPS.length) * 100

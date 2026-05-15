@@ -76,6 +76,7 @@ export default function NewEpisodePage({
     if (!res.ok) {
       throw new Error(result.error || 'Failed to create episode')
     }
+    window.dispatchEvent(new Event('preroll:episode-created'))
     router.push(`/app/shows/${showId}`)
   }
 

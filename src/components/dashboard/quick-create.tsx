@@ -7,6 +7,7 @@ interface Client {
   id: string
   name: string
   company: string | null
+  is_sample?: boolean
 }
 
 interface Show {
@@ -187,6 +188,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
         setNewClientName('')
         setNewClientEmail('')
         setNewClientCompany('')
+        window.dispatchEvent(new Event('preroll:client-created'))
         await fetchShows(data.id)
         setStep('show')
       } catch (err) {
@@ -226,6 +228,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
         setSelectedShowId(data.id)
         setCreatingShow(false)
         setNewShowName('')
+        window.dispatchEvent(new Event('preroll:show-created'))
         setStep('episode')
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -258,6 +261,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
         throw new Error(json.error || 'Failed to create episode')
       }
       const { data } = await res.json()
+      window.dispatchEvent(new Event('preroll:episode-created'))
       reset()
       router.push(`/app/shows/${selectedShowId}/episodes/${data.id}`)
     } catch (err) {
@@ -360,6 +364,9 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
                               }`}
                             >
                               <span className="font-medium">{c.name}</span>
+                              {c.is_sample && (
+                                <span className="text-text-tertiary ml-1.5 text-xs">(sample)</span>
+                              )}
                               {c.company && (
                                 <span className="text-text-secondary ml-1.5 text-xs">— {c.company}</span>
                               )}
