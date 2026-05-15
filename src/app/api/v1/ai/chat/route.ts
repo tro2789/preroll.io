@@ -179,7 +179,9 @@ export async function POST(request: Request) {
 
         if (!session_id) {
           const title = message.length > 60 ? message.slice(0, 57) + '...' : message
-          await supabase.from('ai_chat_sessions').update({ title }).eq('id', sessionId)
+          await supabase.from('ai_chat_sessions').update({ title, updated_at: new Date().toISOString() }).eq('id', sessionId)
+        } else {
+          await supabase.from('ai_chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', sessionId)
         }
 
         send('done', { tokens_used: totalTokens })

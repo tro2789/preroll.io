@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useCallback, useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useCallback, useRef, useState, useEffect, type ReactNode } from 'react'
 
 export interface ChatMessage {
   id: string
@@ -25,12 +25,31 @@ export interface ChatContext {
   label?: string
 }
 
+export interface ChatSession {
+  id: string
+  title: string | null
+  contextType: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Credits {
+  monthly: number
+  monthlyAllowance: number
+  purchased: number
+  selfHosted: boolean
+}
+
 interface ChatState {
   isOpen: boolean
   sessionId: string | null
   messages: ChatMessage[]
   isStreaming: boolean
   context: ChatContext
+  sessions: ChatSession[]
+  isLoadingSessions: boolean
+  isLoadingHistory: boolean
+  credits: Credits | null
 }
 
 interface ChatActions {
@@ -41,6 +60,9 @@ interface ChatActions {
   confirmAction: (messageId: string, confirmed: boolean) => Promise<void>
   setContext: (ctx: ChatContext) => void
   newConversation: () => void
+  loadSessions: () => Promise<void>
+  loadSession: (id: string) => Promise<void>
+  deleteSession: (id: string) => Promise<void>
 }
 
 const ChatStateContext = createContext<ChatState>({
@@ -49,6 +71,10 @@ const ChatStateContext = createContext<ChatState>({
   messages: [],
   isStreaming: false,
   context: {},
+  sessions: [],
+  isLoadingSessions: false,
+  isLoadingHistory: false,
+  credits: null,
 })
 
 const ChatActionsContext = createContext<ChatActions>({
@@ -59,6 +85,9 @@ const ChatActionsContext = createContext<ChatActions>({
   confirmAction: async () => {},
   setContext: () => {},
   newConversation: () => {},
+  loadSessions: async () => {},
+  loadSession: async () => {},
+  deleteSession: async () => {},
 })
 
 export function useChatState() {
@@ -80,7 +109,114 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [context, setContext] = useState<ChatContext>({})
+  const [sessions, setSessions] = useState<ChatSession[]>([])
+  const [isLoadingSessions, setIsLoadingSessions] = useState(false)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [credits, setCredits] = useState<Credits | null>(null)
   const abortRef = useRef<AbortController | null>(null)
+  const sessionIdRef = useRef<string | null>(null)
+
+  // Keep ref in sync for use in callbacks that capture stale closures
+  useEffect(() => {
+    sessionIdRef.current = sessionId
+  }, [sessionId])
+
+  const loadSessions = useCallback(async () => {
+    setIsLoadingSessions(true)
+    try {
+      const res = await fetch('/api/v1/ai/sessions')
+      if (res.ok) {
+        const json = await res.json()
+        const rows = json.data?.sessions || []
+        setSessions(
+          rows.map((r: { id: string; title: string | null; context_type: string | null; created_at: string; updated_at: string }) => ({
+            id: r.id,
+            title: r.title,
+            contextType: r.context_type,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at,
+          }))
+        )
+      }
+    } catch {
+      // silently fail — sessions are non-critical
+    } finally {
+      setIsLoadingSessions(false)
+    }
+  }, [])
+
+  const loadCredits = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/ai/addon')
+      if (res.ok) {
+        const json = await res.json()
+        const addon = json.data?.addon
+        const selfHosted = json.data?.selfHosted ?? false
+        if (addon) {
+          setCredits({
+            monthly: addon.monthly_remaining ?? 0,
+            monthlyAllowance: addon.monthly_allowance ?? 0,
+            purchased: addon.credits_balance ?? 0,
+            selfHosted,
+          })
+        }
+      }
+    } catch {
+      // silently fail
+    }
+  }, [])
+
+  // Load sessions + credits on mount
+  useEffect(() => {
+    loadSessions()
+    loadCredits()
+  }, [loadSessions, loadCredits])
+
+  const loadSession = useCallback(async (id: string) => {
+    setIsLoadingHistory(true)
+    try {
+      const res = await fetch(`/api/v1/ai/sessions/${id}`)
+      if (!res.ok) {
+        setIsLoadingHistory(false)
+        return
+      }
+      const json = await res.json()
+      const rows = json.data?.messages || []
+      const loaded: ChatMessage[] = rows.map(
+        (r: { id: string; role: string; content: string; tool_calls: unknown; tool_results: unknown; created_at: string }) => ({
+          id: r.id,
+          role: r.role as 'user' | 'assistant',
+          content: r.content || '',
+          toolCalls: undefined, // historical tool calls are not re-rendered as spinners
+          createdAt: new Date(r.created_at),
+        })
+      )
+      setSessionId(id)
+      setMessages(loaded)
+    } catch {
+      // silently fail
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }, [])
+
+  const deleteSession = useCallback(async (id: string) => {
+    // Optimistic remove
+    setSessions((prev) => prev.filter((s) => s.id !== id))
+
+    // If deleting the active session, reset to new conversation
+    if (sessionIdRef.current === id) {
+      setSessionId(null)
+      setMessages([])
+    }
+
+    try {
+      await fetch(`/api/v1/ai/sessions/${id}`, { method: 'DELETE' })
+    } catch {
+      // If delete fails, reload sessions to restore truth
+      loadSessions()
+    }
+  }, [loadSessions])
 
   const toggle = useCallback(() => setIsOpen((v) => !v), [])
   const open = useCallback(() => setIsOpen(true), [])
@@ -93,6 +229,18 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const sendMessage = useCallback(async (message: string) => {
     if (isStreaming) return
+
+    // Optimistic credit decrement
+    setCredits((prev) => {
+      if (!prev || prev.selfHosted) return prev
+      if (prev.monthly > 0) {
+        return { ...prev, monthly: prev.monthly - 1 }
+      }
+      if (prev.purchased > 0) {
+        return { ...prev, purchased: prev.purchased - 1 }
+      }
+      return prev
+    })
 
     const userMsg: ChatMessage = {
       id: tempId(),
@@ -114,12 +262,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     const controller = new AbortController()
     abortRef.current = controller
 
+    const wasNewSession = !sessionIdRef.current
+
     try {
       const res = await fetch('/api/v1/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: sessionIdRef.current,
           message,
           context,
         }),
@@ -219,6 +369,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           }
         }
       }
+
+      // After stream completes, refresh sessions if this was a new session (to get the title)
+      if (wasNewSession) {
+        loadSessions()
+      }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
         setMessages((prev) =>
@@ -233,11 +388,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setIsStreaming(false)
       abortRef.current = null
     }
-  }, [isStreaming, sessionId, context])
+  }, [isStreaming, context, loadSessions])
 
   const confirmAction = useCallback(async (messageId: string, confirmed: boolean) => {
     const msg = messages.find((m) => m.id === messageId)
-    if (!msg?.actionRequest || !sessionId) return
+    if (!msg?.actionRequest || !sessionIdRef.current) return
 
     setMessages((prev) =>
       prev.map((m) =>
@@ -252,7 +407,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
+          session_id: sessionIdRef.current,
           action_type: msg.actionRequest.actionType,
           action_data: msg.actionRequest.actionData,
           tool_use_id: msg.actionRequest.toolUseId,
@@ -288,10 +443,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         )
       )
     }
-  }, [messages, sessionId])
+  }, [messages])
 
-  const state: ChatState = { isOpen, sessionId, messages, isStreaming, context }
-  const actions: ChatActions = { toggle, open, close, sendMessage, confirmAction, setContext, newConversation }
+  const state: ChatState = {
+    isOpen, sessionId, messages, isStreaming, context,
+    sessions, isLoadingSessions, isLoadingHistory, credits,
+  }
+  const actions: ChatActions = {
+    toggle, open, close, sendMessage, confirmAction, setContext,
+    newConversation, loadSessions, loadSession, deleteSession,
+  }
 
   return (
     <ChatStateContext.Provider value={state}>

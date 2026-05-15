@@ -3,9 +3,28 @@
 import { useRef, useEffect, useState, useCallback, type KeyboardEvent } from 'react'
 import { useChatState, useChatActions, type ChatMessage } from './chat-context'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
+
 function renderMarkdown(text: string): string {
+  // Escape HTML entities first to prevent XSS, then apply markdown formatting
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -126,6 +145,7 @@ function MessageBubble({ message, isStreaming }: { message: ChatMessage; isStrea
           ) : (
             <div
               className="text-sm leading-relaxed break-words prose-chat"
+              // Content is sanitized by renderMarkdown which escapes all HTML entities before formatting
               dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
             />
           )
@@ -141,6 +161,169 @@ function MessageBubble({ message, isStreaming }: { message: ChatMessage; isStrea
 
         <ActionCard message={message} />
       </div>
+    </div>
+  )
+}
+
+function SessionPicker() {
+  const { sessions, isLoadingSessions, sessionId } = useChatState()
+  const { newConversation, loadSession, deleteSession } = useChatActions()
+
+  const visibleSessions = sessions.slice(0, 10)
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className="inline-flex items-center justify-center size-7 rounded-md text-text-secondary hover:text-text-primary hover:bg-surface-raised transition-colors"
+        aria-label="Session menu"
+      >
+        <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="bottom" align="end" className="w-72">
+        <DropdownMenuItem
+          onClick={() => newConversation()}
+          className="gap-2"
+        >
+          <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          <span className="text-sm">New conversation</span>
+        </DropdownMenuItem>
+
+        {(isLoadingSessions || visibleSessions.length > 0) && (
+          <DropdownMenuSeparator />
+        )}
+
+        {isLoadingSessions && visibleSessions.length === 0 && (
+          <>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="px-1.5 py-1.5">
+                <div className="h-3.5 w-3/4 rounded bg-surface-overlay animate-pulse" />
+                <div className="h-2.5 w-1/3 rounded bg-surface-overlay animate-pulse mt-1" />
+              </div>
+            ))}
+          </>
+        )}
+
+        {visibleSessions.map((session) => (
+          <DropdownMenuItem
+            key={session.id}
+            className={cn(
+              'group/session flex items-center justify-between gap-2 pr-1',
+              session.id === sessionId && 'bg-accent/10'
+            )}
+            onClick={() => loadSession(session.id)}
+          >
+            <div className="flex-1 min-w-0">
+              <p className="text-sm truncate">{session.title || 'Untitled conversation'}</p>
+              <p className="text-xs text-text-tertiary">{relativeTime(session.updatedAt)}</p>
+            </div>
+            <button
+              className="shrink-0 size-6 flex items-center justify-center rounded text-text-tertiary opacity-0 group-hover/session:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all"
+              onClick={(e) => {
+                e.stopPropagation()
+                deleteSession(session.id)
+              }}
+              aria-label="Delete session"
+            >
+              <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+              </svg>
+            </button>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+function CreditBar() {
+  const { credits } = useChatState()
+
+  // Hidden when selfHosted or credits not loaded
+  if (!credits || credits.selfHosted) return null
+
+  const total = credits.monthly + credits.purchased
+  const isLow = total < 5
+
+  return (
+    <div className="border-t border-border-subtle px-4 py-2 flex items-center justify-between">
+      <div className="flex items-center gap-1.5 text-xs">
+        <svg
+          className={cn('size-3', isLow ? 'text-red-400' : 'text-accent')}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+        </svg>
+        <span className={cn(isLow ? 'text-red-400' : 'text-text-secondary')}>
+          {credits.monthly} monthly
+          {' · '}
+          {credits.purchased} purchased
+        </span>
+      </div>
+      <div className="text-xs text-text-tertiary">
+        {isLow ? (
+          <a href="/app/settings/ai" className="text-red-400 hover:underline">
+            Low — buy credits
+          </a>
+        ) : (
+          '1 credit/turn'
+        )}
+      </div>
+    </div>
+  )
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <div className="size-6 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
+    </div>
+  )
+}
+
+function EmptyState() {
+  const { sessions } = useChatState()
+  const { loadSession } = useChatActions()
+  const recentSessions = sessions.slice(0, 3)
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+      <div className="size-10 rounded-full bg-accent/10 flex items-center justify-center mb-3">
+        <svg className="size-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+          <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z" />
+        </svg>
+      </div>
+      <h3 className="text-sm font-semibold text-text-primary mb-1">PreRoll AI</h3>
+      <p className="text-xs text-text-secondary leading-relaxed">
+        Ask about your episodes, shows, or clients. I can look things up, move episodes, generate content, and more.
+      </p>
+
+      {recentSessions.length > 0 && (
+        <div className="mt-4 w-full max-w-xs space-y-1">
+          <p className="text-xs text-text-tertiary mb-1.5">Recent conversations</p>
+          {recentSessions.map((session) => (
+            <button
+              key={session.id}
+              onClick={() => loadSession(session.id)}
+              className="w-full text-left px-3 py-2 rounded-lg bg-surface-raised hover:bg-surface-overlay transition-colors"
+            >
+              <p className="text-sm text-text-primary truncate">
+                {session.title || 'Untitled conversation'}
+              </p>
+              <p className="text-xs text-text-tertiary">{relativeTime(session.updatedAt)}</p>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -209,8 +392,8 @@ function ChatInput() {
 }
 
 export function ChatPanel() {
-  const { isOpen, messages, isStreaming, context } = useChatState()
-  const { close, newConversation } = useChatActions()
+  const { isOpen, messages, isStreaming, context, isLoadingHistory } = useChatState()
+  const { close } = useChatActions()
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -262,11 +445,7 @@ export function ChatPanel() {
             <h2 className="text-sm font-semibold text-text-primary">AI Assistant</h2>
           </div>
           <div className="flex items-center gap-1">
-            <Button size="icon-sm" variant="ghost" onClick={newConversation} aria-label="New conversation">
-              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </Button>
+            <SessionPicker />
             <Button size="icon-sm" variant="ghost" onClick={close} className="hidden md:flex" aria-label="Close chat">
               <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
                 <path d="M18 6L6 18M6 6l12 12" />
@@ -286,29 +465,23 @@ export function ChatPanel() {
 
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center px-6">
-              <div className="size-10 rounded-full bg-accent/10 flex items-center justify-center mb-3">
-                <svg className="size-5 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
-                  <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z" />
-                </svg>
-              </div>
-              <h3 className="text-sm font-semibold text-text-primary mb-1">PreRoll AI</h3>
-              <p className="text-xs text-text-secondary leading-relaxed">
-                Ask about your episodes, shows, or clients. I can look things up, move episodes, generate content, and more.
-              </p>
-            </div>
+          {isLoadingHistory ? (
+            <LoadingSpinner />
+          ) : messages.length === 0 ? (
+            <EmptyState />
+          ) : (
+            messages.map((msg, i) => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isStreaming={isStreaming && i === messages.length - 1 && msg.role === 'assistant'}
+              />
+            ))
           )}
-
-          {messages.map((msg, i) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isStreaming={isStreaming && i === messages.length - 1 && msg.role === 'assistant'}
-            />
-          ))}
         </div>
+
+        {/* Credit bar */}
+        <CreditBar />
 
         {/* Input */}
         <ChatInput />
