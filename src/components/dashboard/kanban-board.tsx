@@ -371,7 +371,7 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
           accessibility={{ announcements }}
         >
           {swimlaneGroups ? (
-            <div style={{ minHeight: 'calc(100vh - 200px)' }}>
+            <div>
               {/* Column headers row */}
               <div
                 className="grid gap-3.5 mb-2"
@@ -414,7 +414,6 @@ export function KanbanBoard({ columns: dashboardColumns, episodes: initialEpisod
               className="grid gap-3.5"
               style={{
                 gridTemplateColumns: `repeat(${kanbanColumns.length}, minmax(0, 1fr))`,
-                minHeight: 'calc(100vh - 200px)',
               }}
             >
               {kanbanColumns.map((col, i) => renderColumn(col, i))}
