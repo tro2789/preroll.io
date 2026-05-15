@@ -135,9 +135,6 @@ export default function EditEpisodePage({
         &larr; Back to Episode
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-text-primary">Edit Episode</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        Update &ldquo;{episode.title}&rdquo;.
-      </p>
       <div className="mt-6 max-w-lg">
         <ThumbnailUpload
           id={episodeId}

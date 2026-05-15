@@ -18,7 +18,6 @@ export default async function ClientsPage() {
     <div>
       <PageHeader
         title="Clients"
-        description="Everyone you produce for."
       />
 
       <ClientsTable clients={clients ?? []} />

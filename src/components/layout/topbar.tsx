@@ -85,10 +85,12 @@ export function Topbar() {
           {/* Search */}
           <button
             onClick={() => setSearchOpen(true)}
-            className="flex items-center justify-center w-[30px] h-[30px] rounded-[7px] border border-transparent text-text-secondary hover:bg-surface-raised hover:border-border-subtle hover:text-text-primary transition-colors"
-            title="Search (⌘K)"
+            className="flex items-center gap-1.5 h-[30px] px-2 rounded-[7px] border border-border-subtle text-text-secondary hover:bg-surface-raised hover:text-text-primary transition-colors"
+            aria-label="Search (⌘K)"
           >
-            <SearchIcon className="h-4 w-4" />
+            <SearchIcon className="h-3.5 w-3.5" />
+            <span className="text-xs text-text-tertiary">Search</span>
+            <kbd className="ml-0.5 bg-surface-overlay border border-border-subtle rounded px-1 py-px text-[10px] font-mono text-text-tertiary">⌘K</kbd>
           </button>
 
           {/* New button */}

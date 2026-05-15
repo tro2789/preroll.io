@@ -20,7 +20,6 @@ export default async function ShowsPage() {
     <div>
       <PageHeader
         title="Shows"
-        description="Every show you produce, grouped by client."
       />
 
       {shows && shows.length > 0 ? (

@@ -720,36 +720,6 @@ export function EpisodeTabs({
           </div>
         </div>
 
-        {/* Ask the producer */}
-        <div className="bg-surface-raised border border-border-subtle rounded-[10px] overflow-hidden">
-          <div className="px-4 py-3 border-b border-border-subtle" style={{ background: 'linear-gradient(135deg, oklch(0.35 0.05 280), oklch(0.30 0.04 250))' }}>
-            <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
-                <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z" />
-                <path d="M18 15l.5 1.5L20 17l-1.5.5L18 19l-.5-1.5L16 17l1.5-.5L18 15z" />
-              </svg>
-              <h3 className="text-[13.5px] font-semibold text-white">Ask the producer</h3>
-            </div>
-          </div>
-          <div className="px-4 pt-3 pb-3.5">
-            <p className="text-[12px] text-text-secondary leading-[1.5] mb-3">
-              Generate clips, draft a publish post, summarize feedback, or rework the title for SEO.
-            </p>
-            <div className="relative">
-              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-              <input
-                type="text"
-                placeholder="Draft a LinkedIn post for this episode…"
-                disabled
-                className="w-full pl-8 pr-3 py-[7px] text-[12.5px] rounded-[7px] border border-border-subtle bg-surface-input text-text-tertiary placeholder:text-text-tertiary cursor-not-allowed"
-              />
-            </div>
-          </div>
-        </div>
       </aside>
       </div>
     </div>

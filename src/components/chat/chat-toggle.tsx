@@ -10,7 +10,7 @@ export function ChatToggle() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'j') {
         e.preventDefault()
         toggle()
       }
@@ -22,10 +22,10 @@ export function ChatToggle() {
   return (
     <button
       onClick={toggle}
-      aria-label="Toggle AI assistant"
+      aria-label="Toggle AI assistant (⌘J)"
       aria-expanded={isOpen}
       className={cn(
-        'fixed bottom-5 right-5 z-40',
+        'group fixed bottom-5 right-5 z-40',
         'size-12 rounded-full',
         'bg-accent text-white shadow-lg',
         'flex items-center justify-center',
@@ -39,6 +39,15 @@ export function ChatToggle() {
         <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z" />
         <path d="M18 15l.5 1.5L20 17l-1.5.5L18 19l-.5-1.5L16 17l1.5-.5L18 15z" />
       </svg>
+      {/* Shortcut hint — desktop only, visible on hover */}
+      <kbd className={cn(
+        'hidden md:block absolute -top-8 left-1/2 -translate-x-1/2',
+        'bg-surface-raised border border-border-subtle rounded px-1.5 py-0.5',
+        'text-[10px] font-mono text-text-secondary shadow-sm',
+        'opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none'
+      )}>
+        ⌘J
+      </kbd>
     </button>
   )
 }

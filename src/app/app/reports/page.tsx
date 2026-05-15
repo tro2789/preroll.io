@@ -83,7 +83,6 @@ export default function ReportsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-[22px] font-semibold tracking-[-0.02em] font-[family-name:var(--font-display)] text-text-primary">Reports</h1>
-          <p className="text-[13.5px] text-text-secondary mt-1.5 max-w-[62ch]">Publishing throughput, reliability, and turnaround across the org.</p>
         </div>
 
         {!gated && (

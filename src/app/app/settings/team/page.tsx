@@ -147,9 +147,6 @@ export default function TeamPage() {
         <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
           Team Members
         </h2>
-        <p className="mt-1 text-xs text-text-secondary">
-          Manage who has access to your organization.
-        </p>
 
         {members.length === 0 ? (
           <div className="mt-4 rounded-lg border border-border-subtle bg-surface-raised p-8 text-center">
@@ -245,9 +242,6 @@ export default function TeamPage() {
           <h2 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
             Invite Team Member
           </h2>
-          <p className="mt-1 text-xs text-text-secondary">
-            Send an email invitation to add someone to your organization.
-          </p>
 
           {inviteSuccess && (
             <div className="mt-4 rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">

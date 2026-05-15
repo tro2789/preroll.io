@@ -46,9 +46,6 @@ export default function NewShowPage({
         &larr; Back to Client
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-text-primary">Add Show</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        Create a new show for this client.
-      </p>
       <div className="mt-6">
         <ShowForm
           clientId={clientId}

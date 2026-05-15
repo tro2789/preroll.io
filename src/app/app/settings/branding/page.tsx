@@ -167,9 +167,6 @@ export default function BrandingPage() {
       {org && (
         <section>
           <h2 className="text-lg font-semibold text-text-primary">Workspace</h2>
-          <p className="mt-1 text-sm text-text-secondary">
-            Your workspace identity across PreRoll.
-          </p>
 
           <div className="mt-6">
             <ImageUploadField
@@ -229,9 +226,6 @@ export default function BrandingPage() {
       {org && (
         <section>
           <h2 className="text-lg font-semibold text-text-primary">Client Portal</h2>
-          <p className="mt-1 text-sm text-text-secondary">
-            Control what clients can do in their portal.
-          </p>
 
           <div className="mt-5 flex items-center justify-between">
             <div>

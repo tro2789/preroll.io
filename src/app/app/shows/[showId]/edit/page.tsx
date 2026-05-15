@@ -113,9 +113,6 @@ export default function EditShowPage({
         &larr; Back to Show
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-text-primary">Edit Show</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        Update {String(show.name)}&apos;s details.
-      </p>
 
       <nav className="mt-6 flex gap-1 border-b border-border-default">
         {TABS.map((tab) => (

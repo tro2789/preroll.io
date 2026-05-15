@@ -10,7 +10,7 @@ export default async function CalendarPage() {
 
   return (
     <div>
-      <PageHeader title="Calendar" description="Upcoming episodes across every show, by scheduled publish date." />
+      <PageHeader title="Calendar" />
       <CalendarView />
     </div>
   )

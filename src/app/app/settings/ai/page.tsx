@@ -108,9 +108,6 @@ export default function AiSettingsPage() {
     <div className="max-w-2xl space-y-8">
       <div>
         <h2 className="text-lg font-semibold text-text-primary">AI Usage</h2>
-        <p className="mt-1 text-sm text-text-secondary">
-          Auto-transcription and content generation for your episodes.
-        </p>
       </div>
 
       {purchaseStatus === 'success' && (

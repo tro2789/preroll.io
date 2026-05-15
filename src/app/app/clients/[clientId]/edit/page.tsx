@@ -79,9 +79,6 @@ export default function EditClientPage({
         &larr; Back to Client
       </Link>
       <h1 className="mt-2 text-2xl font-bold text-text-primary">Edit Client</h1>
-      <p className="mt-1 text-sm text-text-secondary">
-        Update {client.name}&apos;s profile.
-      </p>
       <div className="mt-6">
         <ClientForm
           defaultValues={{

@@ -122,7 +122,6 @@ export function DashboardTabs({ columns, episodes }: DashboardTabsProps) {
     <>
       <PageHeader
         title="Dashboard"
-        description="Every episode in flight across your shows, by pipeline stage. Drag a card to advance it."
         tabs={
           <div className="flex gap-0.5 border-b border-border-subtle">
             <button
