@@ -87,9 +87,9 @@ function ActionCard({ message }: { message: ChatMessage }) {
 
   const statusStyles = {
     confirmed: 'text-accent',
-    executed: 'text-green-400',
+    executed: 'text-success',
     cancelled: 'text-text-tertiary',
-    failed: 'text-red-400',
+    failed: 'text-error',
   }
 
   const statusLabels = {
@@ -209,7 +209,7 @@ function SessionPicker() {
               <p className="text-xs text-text-tertiary">{timeAgo(session.updatedAt)}</p>
             </div>
             <button
-              className="shrink-0 size-6 flex items-center justify-center rounded text-text-tertiary opacity-0 group-hover/session:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all"
+              className="shrink-0 size-6 flex items-center justify-center rounded text-text-tertiary opacity-0 group-hover/session:opacity-100 hover:text-error hover:bg-error/10 transition-all"
               onClick={(e) => {
                 e.stopPropagation()
                 deleteSession(session.id)
@@ -240,7 +240,7 @@ function CreditBar() {
     <div className="border-t border-border-subtle px-4 py-2 flex items-center justify-between">
       <div className="flex items-center gap-1.5 text-xs">
         <svg
-          className={cn('size-3', isLow ? 'text-red-400' : 'text-accent')}
+          className={cn('size-3', isLow ? 'text-error' : 'text-accent')}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -250,7 +250,7 @@ function CreditBar() {
         >
           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
         </svg>
-        <span className={cn(isLow ? 'text-red-400' : 'text-text-secondary')}>
+        <span className={cn(isLow ? 'text-error' : 'text-text-secondary')}>
           {credits.monthly} monthly
           {' · '}
           {credits.purchased} purchased
@@ -258,7 +258,7 @@ function CreditBar() {
       </div>
       <div className="text-xs text-text-tertiary">
         {isLow ? (
-          <a href="/app/settings/ai" className="text-red-400 hover:underline">
+          <a href="/app/settings/ai" className="text-error hover:underline">
             Low — buy credits
           </a>
         ) : (
