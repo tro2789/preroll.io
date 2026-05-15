@@ -84,6 +84,7 @@ export function DashboardTabs({ columns, episodes }: DashboardTabsProps) {
   }, [paramTab])
   const [activities, setActivities] = useState<Activity[]>([])
   const [activitiesLoading, setActivitiesLoading] = useState(false)
+  const [activitiesFetched, setActivitiesFetched] = useState(false)
   const [activityFilters, setActivityFilters] = useState<ActivityFilters>({ showId: null, search: '' })
 
   const shows = Array.from(
@@ -91,7 +92,7 @@ export function DashboardTabs({ columns, episodes }: DashboardTabsProps) {
   )
 
   useEffect(() => {
-    if (tab !== 'activity') return
+    if (tab !== 'activity' || activitiesFetched) return
     setActivitiesLoading(true)
     fetch('/api/v1/dashboard')
       .then(r => r.json())
@@ -102,10 +103,11 @@ export function DashboardTabs({ columns, episodes }: DashboardTabsProps) {
           const show = (Array.isArray(showRaw) ? showRaw[0] : showRaw) as { name: string } | null
           return { ...a, shows: show }
         }))
+        setActivitiesFetched(true)
       })
       .catch(() => {})
       .finally(() => setActivitiesLoading(false))
-  }, [tab])
+  }, [tab, activitiesFetched])
 
   const filteredActivities = activities.filter(a => {
     if (activityFilters.showId && a.show_id !== activityFilters.showId) return false
@@ -147,80 +149,78 @@ export function DashboardTabs({ columns, episodes }: DashboardTabsProps) {
         }
       />
 
-      {tab === 'board' && (
-        episodes.length === 0 ? (
+      <div className={tab !== 'board' ? 'hidden' : undefined}>
+        {episodes.length === 0 ? (
           <p className="text-sm text-text-tertiary py-12 text-center">No episodes yet. Create a show and add your first episode to get started.</p>
         ) : (
           <KanbanBoard columns={columns} episodes={episodes} />
-        )
-      )}
+        )}
+      </div>
 
-      {tab === 'activity' && (
-        <div>
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <div className="relative flex-1 min-w-[180px] max-w-xs">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-tertiary pointer-events-none">
-                <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
-              </svg>
-              <input
-                type="text"
-                value={activityFilters.search}
-                onChange={e => setActivityFilters(f => ({ ...f, search: e.target.value }))}
-                placeholder="Search activity..."
-                className="w-full rounded-md border border-border-subtle bg-surface-input pl-8 pr-3 py-1.5 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
-              />
-            </div>
-
-            {shows.length > 1 && (
-              <select
-                value={activityFilters.showId || ''}
-                onChange={e => setActivityFilters(f => ({ ...f, showId: e.target.value || null }))}
-                className="shrink-0 rounded-md border border-border-subtle bg-surface-input px-2.5 py-1.5 text-xs text-text-secondary focus:border-accent focus:outline-none"
-              >
-                <option value="">All Shows</option>
-                {shows.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
-            )}
-
-            {(activityFilters.search || activityFilters.showId) && (
-              <button
-                onClick={() => setActivityFilters({ showId: null, search: '' })}
-                className="shrink-0 text-xs text-text-tertiary hover:text-text-primary transition-colors"
-              >
-                Clear
-              </button>
-            )}
+      <div className={tab !== 'activity' ? 'hidden' : undefined}>
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="relative flex-1 min-w-[180px] max-w-xs">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-tertiary pointer-events-none">
+              <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
+            </svg>
+            <input
+              type="text"
+              value={activityFilters.search}
+              onChange={e => setActivityFilters(f => ({ ...f, search: e.target.value }))}
+              placeholder="Search activity..."
+              className="w-full rounded-md border border-border-subtle bg-surface-input pl-8 pr-3 py-1.5 text-xs text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+            />
           </div>
 
-          {activitiesLoading ? (
-            <div className="py-12 text-center text-sm text-text-secondary">Loading activity...</div>
-          ) : filteredActivities.length === 0 ? (
-            <div className="rounded-lg border border-border-subtle bg-surface-raised px-4 py-8 text-center">
-              <p className="text-sm text-text-secondary">No recent activity{activityFilters.search || activityFilters.showId ? ' matching filters' : ''}.</p>
-            </div>
-          ) : (
-            <div className="rounded-lg border border-border-subtle bg-surface-raised divide-y divide-border-subtle">
-              {filteredActivities.map(a => {
-                const dotColor = actionDots[a.action] || 'bg-text-tertiary'
-                return (
-                  <div key={a.id} className="flex items-start gap-3 px-4 py-3">
-                    <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${dotColor}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-text-primary">{a.description}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {a.shows?.name && <span className="text-xs text-text-secondary">{a.shows.name}</span>}
-                        <span className="text-xs text-text-secondary">{timeAgo(a.created_at)}</span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+          {shows.length > 1 && (
+            <select
+              value={activityFilters.showId || ''}
+              onChange={e => setActivityFilters(f => ({ ...f, showId: e.target.value || null }))}
+              className="shrink-0 rounded-md border border-border-subtle bg-surface-input px-2.5 py-1.5 text-xs text-text-secondary focus:border-accent focus:outline-none"
+            >
+              <option value="">All Shows</option>
+              {shows.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          )}
+
+          {(activityFilters.search || activityFilters.showId) && (
+            <button
+              onClick={() => setActivityFilters({ showId: null, search: '' })}
+              className="shrink-0 text-xs text-text-tertiary hover:text-text-primary transition-colors"
+            >
+              Clear
+            </button>
           )}
         </div>
-      )}
+
+        {activitiesLoading ? (
+          <div className="py-12 text-center text-sm text-text-secondary">Loading activity...</div>
+        ) : filteredActivities.length === 0 ? (
+          <div className="rounded-lg border border-border-subtle bg-surface-raised px-4 py-8 text-center">
+            <p className="text-sm text-text-secondary">No recent activity{activityFilters.search || activityFilters.showId ? ' matching filters' : ''}.</p>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-border-subtle bg-surface-raised divide-y divide-border-subtle">
+            {filteredActivities.map(a => {
+              const dotColor = actionDots[a.action] || 'bg-text-tertiary'
+              return (
+                <div key={a.id} className="flex items-start gap-3 px-4 py-3">
+                  <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${dotColor}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-text-primary">{a.description}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {a.shows?.name && <span className="text-xs text-text-secondary">{a.shows.name}</span>}
+                      <span className="text-xs text-text-secondary">{timeAgo(a.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
     </>
   )
 }
