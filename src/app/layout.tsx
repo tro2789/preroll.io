@@ -43,6 +43,7 @@ export default function RootLayout({
             defaultTheme: 'dark',
             forcedTheme: 'dark',
           }}
+          search={{ enabled: false }}
         >
           {children}
         </RootProvider>
