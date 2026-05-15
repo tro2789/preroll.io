@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getSiteUrl, generateMagicLinkUrl, sendEmail } from '@/lib/email/send'
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +11,7 @@ export async function GET(
 
   const { data: client } = await service
     .from('clients')
-    .select('id, name, email, client_user_id, onboarded_at, portal_auth_token')
+    .select('id, name, email, client_user_id, onboarded_at')
     .eq('invite_code', code)
     .single()
 
@@ -22,31 +22,17 @@ export async function GET(
     return NextResponse.redirect(errorUrl)
   }
 
-  let authToken = client.portal_auth_token
-  let userId = client.client_user_id
-
-  if (!authToken) {
-    authToken = crypto.randomUUID()
-    await service
-      .from('clients')
-      .update({ portal_auth_token: authToken })
-      .eq('id', client.id)
-  }
-
-  if (!userId) {
+  if (!client.client_user_id) {
     const { data: created, error: createErr } = await service.auth.admin.createUser({
       email: client.email,
-      password: authToken,
       email_confirm: true,
     })
 
+    let userId: string | null = null
     if (createErr) {
       const { data: { users } } = await service.auth.admin.listUsers()
       const existing = users?.find((u) => u.email === client.email)
-      if (existing) {
-        userId = existing.id
-        await service.auth.admin.updateUserById(userId, { password: authToken })
-      }
+      if (existing) userId = existing.id
     } else {
       userId = created.user.id
     }
@@ -60,43 +46,40 @@ export async function GET(
         })
         .eq('id', client.id)
     }
-  } else {
-    await service.auth.admin.updateUserById(userId, { password: authToken })
   }
 
-  const redirectUrl = request.nextUrl.clone()
-  redirectUrl.pathname = '/portal'
-  redirectUrl.search = ''
-  const response = NextResponse.redirect(redirectUrl)
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
+  const siteUrl = await getSiteUrl()
+  const magicLinkUrl = await generateMagicLinkUrl(
+    client.email,
+    siteUrl,
+    '/portal',
+    `${siteUrl}/share/not-found`,
   )
 
-  const { error: signInError } = await supabase.auth.signInWithPassword({
-    email: client.email,
-    password: authToken,
-  })
+  await sendEmail(
+    client.email,
+    'Sign in to your portal',
+    `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL.IO</h1>
+        <p style="font-size: 15px; color: #333; line-height: 1.6;">
+          Hi ${client.name?.split(' ')[0] || 'there'},
+        </p>
+        <p style="font-size: 15px; color: #333; line-height: 1.6;">
+          Click the button below to sign in to your client portal.
+        </p>
+        <a href="${magicLinkUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #e86a47; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
+          Sign In
+        </a>
+        <p style="font-size: 13px; color: #888; line-height: 1.5; margin-top: 24px;">
+          This link expires in 1 hour. If you didn't request this, you can ignore this email.
+        </p>
+      </div>
+    `,
+  )
 
-  if (signInError) {
-    const errorUrl = request.nextUrl.clone()
-    errorUrl.pathname = '/share/not-found'
-    errorUrl.search = ''
-    return NextResponse.redirect(errorUrl)
-  }
-
-  return response
+  const sentUrl = request.nextUrl.clone()
+  sentUrl.pathname = '/share/check-email'
+  sentUrl.search = `?email=${encodeURIComponent(client.email)}`
+  return NextResponse.redirect(sentUrl)
 }
