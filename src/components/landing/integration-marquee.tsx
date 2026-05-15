@@ -43,8 +43,8 @@ function MarqueeTrack({ items, reverse }: { items: (readonly [string, string, st
 }
 
 export function IntegrationMarquee() {
-  const row1 = [...INTEGRATIONS]
-  const row2 = [...INTEGRATIONS].reverse()
+  const row1 = [...INTEGRATIONS, ...INTEGRATIONS]
+  const row2 = [...INTEGRATIONS, ...INTEGRATIONS].reverse()
 
   return (
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
