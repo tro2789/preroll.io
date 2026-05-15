@@ -364,6 +364,92 @@ body {
   --color-accent-fg: oklch(0.16 0.02 345);
 }
 
+/* ── Light themes ────────────────────────────────────────────────── */
+
+.theme-daylight {
+  --color-surface-base: oklch(0.965 0.003 264);
+  --color-surface-raised: oklch(0.993 0.001 264);
+  --color-surface-overlay: oklch(0.985 0.002 264);
+  --color-surface-input: oklch(0.975 0.003 264);
+  --color-surface-3: oklch(0.955 0.004 264);
+  --color-bg-deeper: oklch(0.94 0.005 264);
+
+  --color-border-default: oklch(0.87 0.006 264);
+  --color-border-subtle: oklch(0.91 0.004 264);
+  --color-border-hover: oklch(0.80 0.008 264);
+  --color-border-strong: oklch(0.78 0.008 264);
+
+  --color-text-primary: oklch(0.18 0.008 264);
+  --color-text-secondary: oklch(0.42 0.012 264);
+  --color-text-tertiary: oklch(0.52 0.01 264);
+  --color-fg-faint: oklch(0.72 0.008 264);
+
+  --color-accent: oklch(0.52 0.20 250);
+  --color-accent-hover: oklch(0.47 0.22 248);
+  --color-accent-muted: oklch(0.92 0.03 250);
+  --color-accent-quiet: oklch(0.88 0.04 250);
+  --color-accent-tint: oklch(0.52 0.20 250 / 10%);
+  --color-accent-fg: oklch(0.97 0.005 250);
+
+  --color-success: oklch(0.52 0.14 155);
+  --color-warning: oklch(0.58 0.14 70);
+  --color-error: oklch(0.52 0.20 25);
+
+  --color-status-submitted: oklch(0.55 0.15 40);
+  --color-status-planning: oklch(0.52 0.14 264);
+  --color-status-recording: oklch(0.55 0.15 30);
+  --color-status-editing: oklch(0.58 0.13 90);
+  --color-status-review: oklch(0.52 0.15 320);
+  --color-status-approved: oklch(0.52 0.14 155);
+  --color-status-published: oklch(0.48 0.06 264);
+
+  --chart-3: oklch(0.52 0.14 264);
+  --chart-4: oklch(0.55 0.15 30);
+  --chart-5: oklch(0.58 0.13 95);
+}
+
+.theme-sand {
+  --color-surface-base: oklch(0.955 0.01 70);
+  --color-surface-raised: oklch(0.985 0.005 70);
+  --color-surface-overlay: oklch(0.975 0.006 70);
+  --color-surface-input: oklch(0.965 0.008 70);
+  --color-surface-3: oklch(0.945 0.012 70);
+  --color-bg-deeper: oklch(0.93 0.014 70);
+
+  --color-border-default: oklch(0.86 0.012 70);
+  --color-border-subtle: oklch(0.90 0.008 70);
+  --color-border-hover: oklch(0.78 0.014 70);
+  --color-border-strong: oklch(0.76 0.014 70);
+
+  --color-text-primary: oklch(0.20 0.014 45);
+  --color-text-secondary: oklch(0.44 0.016 50);
+  --color-text-tertiary: oklch(0.54 0.013 55);
+  --color-fg-faint: oklch(0.72 0.01 60);
+
+  --color-accent: oklch(0.52 0.15 35);
+  --color-accent-hover: oklch(0.47 0.17 33);
+  --color-accent-muted: oklch(0.92 0.03 35);
+  --color-accent-quiet: oklch(0.88 0.04 35);
+  --color-accent-tint: oklch(0.52 0.15 35 / 10%);
+  --color-accent-fg: oklch(0.97 0.005 35);
+
+  --color-success: oklch(0.52 0.14 155);
+  --color-warning: oklch(0.58 0.14 70);
+  --color-error: oklch(0.52 0.20 25);
+
+  --color-status-submitted: oklch(0.55 0.15 40);
+  --color-status-planning: oklch(0.52 0.12 264);
+  --color-status-recording: oklch(0.55 0.15 30);
+  --color-status-editing: oklch(0.58 0.13 90);
+  --color-status-review: oklch(0.52 0.14 320);
+  --color-status-approved: oklch(0.52 0.14 155);
+  --color-status-published: oklch(0.48 0.05 264);
+
+  --chart-3: oklch(0.52 0.12 264);
+  --chart-4: oklch(0.55 0.15 30);
+  --chart-5: oklch(0.58 0.13 95);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
