@@ -147,9 +147,15 @@ function MessageBubble({ message, isStreaming }: { message: ChatMessage; isStrea
 
 function ChatInput() {
   const [value, setValue] = useState('')
-  const { isStreaming } = useChatState()
+  const { isOpen, isStreaming } = useChatState()
   const { sendMessage } = useChatActions()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => textareaRef.current?.focus(), 100)
+    }
+  }, [isOpen])
 
   const handleSubmit = useCallback(() => {
     const trimmed = value.trim()

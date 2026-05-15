@@ -47,7 +47,9 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 
   useEffect(() => {
     if (open) {
-      setTimeout(() => inputRef.current?.focus(), 50)
+      requestAnimationFrame(() => {
+        inputRef.current?.focus()
+      })
     } else {
       setQuery('')
       setEpisodes([])
