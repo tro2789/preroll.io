@@ -194,16 +194,15 @@ function ChatInput() {
           className="flex-1 resize-none bg-surface-input border border-border-subtle rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent/50 transition-colors"
           disabled={isStreaming}
         />
-        <Button
-          size="icon"
+        <button
           onClick={handleSubmit}
           disabled={!value.trim() || isStreaming}
-          className="shrink-0"
+          className="shrink-0 size-8 rounded-lg bg-accent text-white flex items-center justify-center hover:bg-accent-hover disabled:opacity-40 transition-colors"
         >
           <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
-        </Button>
+        </button>
       </div>
     </div>
   )
