@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { cn } from '@/lib/utils'
+import { useState, useEffect, useCallback } from 'react'
 
 const DISMISS_KEY = 'preroll:drag-coachmark-dismissed'
 
@@ -14,35 +13,26 @@ export function DragCoachmark({ visible, onDismiss }: DragCoachmarkProps) {
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem(DISMISS_KEY) === 'true') {
+    if (localStorage.getItem(DISMISS_KEY) === 'true') {
       setDismissed(true)
     }
   }, [])
 
-  useEffect(() => {
-    const handler = () => {
-      setDismissed(true)
-      localStorage.setItem(DISMISS_KEY, 'true')
-      onDismiss()
-    }
-    window.addEventListener('preroll:episode-moved', handler)
-    return () => window.removeEventListener('preroll:episode-moved', handler)
-  }, [onDismiss])
-
-  if (!visible || dismissed) return null
-
-  function handleClose() {
+  const dismiss = useCallback(() => {
     setDismissed(true)
     localStorage.setItem(DISMISS_KEY, 'true')
     onDismiss()
-  }
+  }, [onDismiss])
+
+  useEffect(() => {
+    window.addEventListener('preroll:episode-moved', dismiss)
+    return () => window.removeEventListener('preroll:episode-moved', dismiss)
+  }, [dismiss])
+
+  if (!visible || dismissed) return null
 
   return (
-    <div
-      className={cn(
-        'mb-3 flex items-center gap-2.5 rounded-lg border border-accent/20 bg-accent/5 px-4 py-2.5',
-      )}
-    >
+    <div className="mb-3 flex items-center gap-2.5 rounded-lg border border-accent/20 bg-accent/5 px-4 py-2.5">
       <svg
         width="16"
         height="16"
@@ -62,7 +52,7 @@ export function DragCoachmark({ visible, onDismiss }: DragCoachmarkProps) {
         Drag an episode card to a new column to advance it through the pipeline
       </span>
       <button
-        onClick={handleClose}
+        onClick={dismiss}
         className="ml-auto shrink-0 text-text-tertiary hover:text-text-secondary transition-colors"
         aria-label="Dismiss drag hint"
       >

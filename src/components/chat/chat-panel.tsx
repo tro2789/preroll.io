@@ -11,20 +11,9 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-
-function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  const days = Math.floor(hrs / 24)
-  return `${days}d ago`
-}
+import { timeAgo } from '@/lib/format'
 
 function renderMarkdown(text: string): string {
-  // Escape HTML entities first to prevent XSS, then apply markdown formatting
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -145,7 +134,6 @@ function MessageBubble({ message, isStreaming }: { message: ChatMessage; isStrea
           ) : (
             <div
               className="text-sm leading-relaxed break-words prose-chat"
-              // Content is sanitized by renderMarkdown which escapes all HTML entities before formatting
               dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
             />
           )
@@ -218,7 +206,7 @@ function SessionPicker() {
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm truncate">{session.title || 'Untitled conversation'}</p>
-              <p className="text-xs text-text-tertiary">{relativeTime(session.updatedAt)}</p>
+              <p className="text-xs text-text-tertiary">{timeAgo(session.updatedAt)}</p>
             </div>
             <button
               className="shrink-0 size-6 flex items-center justify-center rounded text-text-tertiary opacity-0 group-hover/session:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all"
@@ -319,7 +307,7 @@ function EmptyState() {
               <p className="text-sm text-text-primary truncate">
                 {session.title || 'Untitled conversation'}
               </p>
-              <p className="text-xs text-text-tertiary">{relativeTime(session.updatedAt)}</p>
+              <p className="text-xs text-text-tertiary">{timeAgo(session.updatedAt)}</p>
             </button>
           ))}
         </div>

@@ -11,24 +11,25 @@ export async function GET(
   const { sessionId } = await params
   const supabase = createServiceClient()
 
-  const { data: session } = await supabase
-    .from('ai_chat_sessions')
-    .select('id')
-    .eq('id', sessionId)
-    .eq('org_id', org!.id)
-    .eq('user_id', user!.id)
-    .single()
+  const [{ data: session }, { data: messages }] = await Promise.all([
+    supabase
+      .from('ai_chat_sessions')
+      .select('id')
+      .eq('id', sessionId)
+      .eq('org_id', org!.id)
+      .eq('user_id', user!.id)
+      .single(),
+    supabase
+      .from('ai_chat_messages')
+      .select('id, role, content, tool_calls, tool_results, tokens_used, created_at')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true })
+      .limit(50),
+  ])
 
   if (!session) {
     return errorResponse('Session not found', 404)
   }
-
-  const { data: messages } = await supabase
-    .from('ai_chat_messages')
-    .select('id, role, content, tool_calls, tool_results, tokens_used, created_at')
-    .eq('session_id', sessionId)
-    .order('created_at', { ascending: true })
-    .limit(50)
 
   return jsonResponse({ messages: messages || [] })
 }

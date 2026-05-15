@@ -177,12 +177,11 @@ export async function POST(request: Request) {
 
         await consumeCredits(org!.id, AI_CHAT_CREDIT_COST, 'ai_chat', sessionId!)
 
+        const sessionUpdate: Record<string, string> = {}
         if (!session_id) {
-          const title = message.length > 60 ? message.slice(0, 57) + '...' : message
-          await supabase.from('ai_chat_sessions').update({ title, updated_at: new Date().toISOString() }).eq('id', sessionId)
-        } else {
-          await supabase.from('ai_chat_sessions').update({ updated_at: new Date().toISOString() }).eq('id', sessionId)
+          sessionUpdate.title = message.length > 60 ? message.slice(0, 57) + '...' : message
         }
+        await supabase.from('ai_chat_sessions').update({ ...sessionUpdate, updated_at: new Date().toISOString() }).eq('id', sessionId)
 
         send('done', { tokens_used: totalTokens })
       } catch (err) {

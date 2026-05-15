@@ -166,11 +166,14 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Load sessions + credits on mount
+  const hasLoadedRef = useRef(false)
   useEffect(() => {
-    loadSessions()
-    loadCredits()
-  }, [loadSessions, loadCredits])
+    if (isOpen && !hasLoadedRef.current) {
+      hasLoadedRef.current = true
+      loadSessions()
+      loadCredits()
+    }
+  }, [isOpen, loadSessions, loadCredits])
 
   const loadSession = useCallback(async (id: string) => {
     setIsLoadingHistory(true)
@@ -390,8 +393,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [isStreaming, context, loadSessions])
 
+  const messagesRef = useRef<ChatMessage[]>([])
+  useEffect(() => { messagesRef.current = messages }, [messages])
+
   const confirmAction = useCallback(async (messageId: string, confirmed: boolean) => {
-    const msg = messages.find((m) => m.id === messageId)
+    const msg = messagesRef.current.find((m) => m.id === messageId)
     if (!msg?.actionRequest || !sessionIdRef.current) return
 
     setMessages((prev) =>
@@ -443,7 +449,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         )
       )
     }
-  }, [messages])
+  }, [])
 
   const state: ChatState = {
     isOpen, sessionId, messages, isStreaming, context,
