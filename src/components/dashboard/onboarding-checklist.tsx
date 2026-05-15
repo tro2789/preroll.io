@@ -82,8 +82,7 @@ export function OnboardingChecklist() {
     }
   }, [data, dismissed, router])
 
-  if (loading) return <OnboardingSkeleton />
-  if (dismissed || !data) return null
+  if (loading || dismissed || !data) return null
 
   const completedCount = STEPS.filter((s) => data.steps[s.key]).length
   const progressPct = (completedCount / STEPS.length) * 100
