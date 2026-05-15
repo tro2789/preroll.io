@@ -51,6 +51,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
   // Inline creation
   const [creatingClient, setCreatingClient] = useState(false)
   const [newClientName, setNewClientName] = useState('')
+  const [newClientEmail, setNewClientEmail] = useState('')
   const [newClientCompany, setNewClientCompany] = useState('')
 
   const [creatingShow, setCreatingShow] = useState(false)
@@ -137,6 +138,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
     setSelectedShowId(null)
     setCreatingClient(false)
     setNewClientName('')
+    setNewClientEmail('')
     setNewClientCompany('')
     setCreatingShow(false)
     setNewShowName('')
@@ -161,7 +163,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
     setError(null)
 
     if (creatingClient) {
-      if (!newClientName.trim()) return
+      if (!newClientName.trim() || !newClientEmail.trim()) return
       setLoading(true)
       try {
         const res = await fetch('/api/v1/clients', {
@@ -169,6 +171,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: newClientName.trim(),
+            email: newClientEmail.trim(),
             company: newClientCompany.trim() || null,
           }),
         })
@@ -182,6 +185,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
         setSelectedClientId(data.id)
         setCreatingClient(false)
         setNewClientName('')
+        setNewClientEmail('')
         setNewClientCompany('')
         await fetchShows(data.id)
         setStep('show')
@@ -381,7 +385,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
                         <span className="text-xs font-medium text-text-secondary">New Client</span>
                         {clients.length > 0 && (
                           <button
-                            onClick={() => { setCreatingClient(false); setNewClientName(''); setNewClientCompany('') }}
+                            onClick={() => { setCreatingClient(false); setNewClientName(''); setNewClientEmail(''); setNewClientCompany('') }}
                             className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
                           >
                             Cancel
@@ -389,13 +393,23 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
                         )}
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-text-secondary mb-1">Name</label>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Name <span className="text-red-400">*</span></label>
                         <input
                           type="text"
                           value={newClientName}
                           onChange={e => setNewClientName(e.target.value)}
-                          placeholder="e.g. Acme Corp"
+                          placeholder="e.g. John Smith"
                           autoFocus
+                          className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Email <span className="text-red-400">*</span></label>
+                        <input
+                          type="email"
+                          value={newClientEmail}
+                          onChange={e => setNewClientEmail(e.target.value)}
+                          placeholder="client@example.com"
                           className="block w-full rounded-md border border-border-default bg-surface-input px-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none"
                         />
                       </div>
@@ -422,7 +436,7 @@ export function QuickCreate({ buttonLabel, buttonClassName, externalOpen, onOpen
                 </button>
                 <button
                   onClick={handleAdvanceFromClient}
-                  disabled={loading || (!selectedClientId && !(creatingClient && newClientName.trim()))}
+                  disabled={loading || (!selectedClientId && !(creatingClient && newClientName.trim() && newClientEmail.trim()))}
                   className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Creating...' : creatingClient ? 'Create & Continue' : 'Next'}
