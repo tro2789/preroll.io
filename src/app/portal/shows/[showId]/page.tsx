@@ -60,7 +60,7 @@ export default async function PortalShowPage({
       .order('created_at', { ascending: false }),
     supabase
       .from('activity_log')
-      .select('*')
+      .select('id, action, description, entity_type, entity_id, metadata, created_at')
       .eq('show_id', showId)
       .order('created_at', { ascending: false })
       .limit(20),

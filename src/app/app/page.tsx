@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   const orgId = await getActiveOrgId(user.id)
 
-  await autoArchiveApprovedEpisodes(supabase)
+  autoArchiveApprovedEpisodes(supabase)
 
   const [{ data: stagesData }, { data: episodesData }] = await Promise.all([
     supabase

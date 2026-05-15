@@ -49,12 +49,17 @@ export default async function AppLayout({
   const orgId = activeOrg?.id
   let navCounts: { shows?: number; clients?: number; inFlight?: number } = {}
   if (orgId) {
+    const { data: orgShows } = await service.from('shows').select('id').eq('org_id', orgId)
+    const showIds = orgShows?.map(s => s.id) || []
+
     const [{ count: showCount }, { count: clientCount }, { count: inFlightCount }] = await Promise.all([
-      service.from('shows').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
+      Promise.resolve({ count: showIds.length }),
       service.from('clients').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
-      service.from('episodes').select('id', { count: 'exact', head: true })
-        .in('show_id', (await service.from('shows').select('id').eq('org_id', orgId)).data?.map(s => s.id) || [])
-        .not('status', 'eq', 'published'),
+      showIds.length > 0
+        ? service.from('episodes').select('id', { count: 'exact', head: true })
+            .in('show_id', showIds)
+            .not('status', 'eq', 'published')
+        : Promise.resolve({ count: 0 }),
     ])
     navCounts = { shows: showCount ?? 0, clients: clientCount ?? 0, inFlight: inFlightCount ?? 0 }
   }

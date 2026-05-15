@@ -25,12 +25,12 @@ export default async function EpisodeDetailPage({
       .single(),
     supabase
       .from('deliverables')
-      .select('*')
+      .select('id, type, title, description, producer_notes, file_url, file_key, status, reviewer_notes, reviewed_at, created_at, updated_at, episode_id, show_id')
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false }),
     supabase
       .from('episode_integrations')
-      .select('*')
+      .select('provider, external_project_id, external_folder_id, external_view_url')
       .eq('episode_id', episodeId)
       .maybeSingle(),
     supabase

@@ -17,12 +17,12 @@ export default async function ShowDetailPage({
   const { showId } = await params
   const supabase = await createClient()
 
-  await autoArchiveApprovedEpisodes(supabase)
+  autoArchiveApprovedEpisodes(supabase)
 
   const [{ data: show, error }, { data: episodes }] = await Promise.all([
     supabase
       .from('shows')
-      .select('*, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(*)')
+      .select('id, name, description, cover_art_url, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(id, name, position, wip_limit, status_override)')
       .eq('id', showId)
       .order('position', { referencedTable: 'pipeline_stages' })
       .single(),
@@ -50,7 +50,8 @@ export default async function ShowDetailPage({
   }
 
   const totalEpisodes = episodes?.length ?? 0
-  const client = show.clients as PortalClient | null
+  const clientsRaw = show.clients as unknown
+  const client = (Array.isArray(clientsRaw) ? clientsRaw[0] : clientsRaw) as PortalClient | null
   const stages = (show.pipeline_stages ?? []) as { id: string; name: string; position: number; wip_limit: number | null; status_override: string | null }[]
 
   return (

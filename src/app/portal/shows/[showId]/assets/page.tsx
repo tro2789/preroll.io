@@ -21,19 +21,20 @@ export default async function PortalAssetsPage({
 
   if (!show) redirect('/portal')
 
-  const { data: assets } = await supabase
-    .from('assets')
-    .select('*')
-    .eq('show_id', showId)
-    .is('episode_id', null)
-    .order('created_at', { ascending: false })
-
-  const { data: deliverables } = await supabase
-    .from('deliverables')
-    .select('*')
-    .eq('show_id', showId)
-    .is('episode_id', null)
-    .order('created_at', { ascending: false })
+  const [{ data: assets }, { data: deliverables }] = await Promise.all([
+    supabase
+      .from('assets')
+      .select('id, name, asset_type, mime_type, file_key')
+      .eq('show_id', showId)
+      .is('episode_id', null)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('deliverables')
+      .select('id, type, title, description, file_url, status, producer_notes, reviewer_notes, reviewed_at, created_at')
+      .eq('show_id', showId)
+      .is('episode_id', null)
+      .order('created_at', { ascending: false }),
+  ])
 
   const assetTypeLabels: Record<string, string> = {
     cover_art: 'Cover Art',
