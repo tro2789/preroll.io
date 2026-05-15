@@ -119,7 +119,7 @@ export function ClientsTable({ clients }: { clients: Client[] }) {
         </thead>
         <tbody className="divide-y divide-border-subtle">
           {sorted.map(client => (
-            <tr key={client.id} className="group hover:bg-[oklch(0.21_0.006_264_/_0.4)]">
+            <tr key={client.id} className="group hover:bg-surface-overlay">
               <td className="px-3.5 py-2.5">
                 <Link
                   href={`/app/clients/${client.id}`}
