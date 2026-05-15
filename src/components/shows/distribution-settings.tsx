@@ -263,7 +263,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
               </button>
             ) : (
               <a
-                href="/app/settings/developer?connect=youtube"
+                href="/app/settings/integrations?connect=youtube"
                 className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5"
               >
                 <span className="font-medium text-text-primary">YouTube</span>

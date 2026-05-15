@@ -1,28 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { ConnectButton } from '@/components/integrations/connect-button'
-import { ConnectedAccountCard } from '@/components/integrations/connected-account-card'
 import { WebhookEndpointList } from '@/components/webhooks/endpoint-list'
 import { ApiKeyList } from '@/components/api-keys/api-key-list'
 import { UpgradeGate } from '@/components/ui/upgrade-gate'
-
-interface Provider {
-  name: string
-  displayName: string
-  comingSoon: boolean
-  note?: string
-}
-
-interface Integration {
-  id: string
-  provider: string
-  account_name: string | null
-  account_email: string | null
-  account_avatar_url: string | null
-  created_at: string
-}
 
 interface Endpoint {
   id: string
@@ -42,7 +24,6 @@ interface ApiKey {
 }
 
 const TABS = [
-  { key: 'integrations', label: 'Integrations' },
   { key: 'webhooks', label: 'Webhooks' },
   { key: 'api-keys', label: 'API Keys' },
 ] as const
@@ -50,66 +31,37 @@ const TABS = [
 type Tab = (typeof TABS)[number]['key']
 
 interface DeveloperTabsProps {
-  providers: Provider[]
-  integrations: Integration[]
   endpoints: Endpoint[]
   apiKeys: ApiKey[]
-  canIntegrations: boolean
   canWebhooks: boolean
   canApiKeys: boolean
-  autoConnectProvider?: string
-  returnTo?: string
-  connectedProvider?: string
-  oauthError?: string
   initialTab?: string
 }
 
 export function DeveloperTabs({
-  providers,
-  integrations,
   endpoints,
   apiKeys,
-  canIntegrations,
   canWebhooks,
   canApiKeys,
-  autoConnectProvider,
-  returnTo,
-  connectedProvider,
-  oauthError,
   initialTab,
 }: DeveloperTabsProps) {
   const searchParams = useSearchParams()
 
   function resolveInitialTab(): Tab {
-    if (autoConnectProvider || connectedProvider || oauthError) return 'integrations'
     const fromParam = initialTab || searchParams.get('tab')
     const match = TABS.find((t) => t.key === fromParam)
-    return match?.key || 'integrations'
+    return match?.key || 'webhooks'
   }
 
   const [activeTab, setActiveTab] = useState<Tab>(resolveInitialTab)
 
-  useEffect(() => {
-    if (connectedProvider || oauthError) {
-      const url = new URL(window.location.href)
-      url.searchParams.delete('connected')
-      url.searchParams.delete('error')
-      url.searchParams.delete('detail')
-      window.history.replaceState(null, '', url.toString())
-    }
-  }, [connectedProvider, oauthError])
-
   function switchTab(tab: Tab) {
     setActiveTab(tab)
     const url = new URL(window.location.href)
-    if (tab === 'integrations') url.searchParams.delete('tab')
+    if (tab === 'webhooks') url.searchParams.delete('tab')
     else url.searchParams.set('tab', tab)
     window.history.replaceState(null, '', url.toString())
   }
-
-  const connectedMap = new Map(
-    integrations.map((i) => [i.provider, i])
-  )
 
   return (
     <div>
@@ -130,68 +82,6 @@ export function DeveloperTabs({
       </div>
 
       <div className="mt-6">
-        {activeTab === 'integrations' && (
-          canIntegrations ? (
-            <div className="max-w-xl">
-              {connectedProvider && (
-                <div className="mb-4 rounded-lg bg-success/8 px-4 py-2.5 text-sm text-success">
-                  {connectedProvider.replace(/_/g, ' ')} connected successfully.
-                </div>
-              )}
-
-              {oauthError && (
-                <div className="mb-4 rounded-lg bg-error/8 px-4 py-2.5 text-sm text-error">
-                  Connection failed: {oauthError.replace(/_/g, ' ')}
-                </div>
-              )}
-
-              <div className="rounded-lg border border-border-subtle bg-surface-raised">
-                <div className="divide-y divide-border-subtle px-4">
-                  {providers.map((provider) => {
-                    const connected = connectedMap.get(provider.name)
-                    if (connected) {
-                      return (
-                        <ConnectedAccountCard
-                          key={provider.name}
-                          provider={provider.name}
-                          displayName={provider.displayName}
-                          accountName={connected.account_name}
-                          accountEmail={connected.account_email}
-                          accountAvatarUrl={connected.account_avatar_url}
-                          connectedAt={connected.created_at}
-                          note={provider.note}
-                        />
-                      )
-                    }
-                    return (
-                      <ConnectButton
-                        key={provider.name}
-                        provider={provider.name}
-                        displayName={provider.displayName}
-                        comingSoon={provider.comingSoon}
-                        note={provider.note}
-                        autoConnect={autoConnectProvider === provider.name}
-                        returnTo={autoConnectProvider === provider.name ? returnTo : undefined}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <UpgradeGate
-              feature="Integrations"
-              description="Connect Frame.io, Google Drive, Vimeo, and more to streamline your delivery workflow. Available on the Pro plan."
-              tier="Pro"
-              icon={
-                <svg className="h-6 w-6 text-accent" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m9.86-2.07a4.5 4.5 0 0 0-1.242-7.244l4.5-4.5a4.5 4.5 0 1 1 6.364 6.364l-1.757 1.757" />
-                </svg>
-              }
-            />
-          )
-        )}
-
         {activeTab === 'webhooks' && (
           canWebhooks ? (
             <WebhookEndpointList endpoints={endpoints} />

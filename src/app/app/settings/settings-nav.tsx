@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation'
 
 const tabs = [
   { label: 'Account', href: '/app/settings/account' },
+  { label: 'Branding', href: '/app/settings/branding' },
   { label: 'Billing', href: '/app/settings/billing' },
   { label: 'AI', href: '/app/settings/ai' },
+  { label: 'Integrations', href: '/app/settings/integrations' },
   { label: 'Developer', href: '/app/settings/developer' },
   { label: 'Team', href: '/app/settings/team' },
-  { label: 'Branding', href: '/app/settings/branding' },
 ]
 
 export function SettingsNav() {

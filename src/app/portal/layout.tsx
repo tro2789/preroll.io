@@ -31,6 +31,7 @@ export default async function PortalLayout({
   let orgDisplayName: string | undefined
   let logoUrl: string | undefined
   let accentColor: string | undefined
+  let portalCustomCss: string | undefined
 
   if (org) {
     const hasWhiteLabel = isSelfHosted() || (await getOrgEntitlements(client.org_id)).can('white_label')
@@ -38,6 +39,7 @@ export default async function PortalLayout({
       orgDisplayName = org.display_name || undefined
       logoUrl = resolveImageUrl(org.logo_url) || undefined
       accentColor = org.accent_color || undefined
+      portalCustomCss = org.portal_custom_css || undefined
     }
   }
 
@@ -45,6 +47,9 @@ export default async function PortalLayout({
     <div className="min-h-screen bg-surface-base overflow-x-hidden">
       {accentColor && (
         <style>{`:root { --color-accent: ${accentColor}; }`}</style>
+      )}
+      {portalCustomCss && (
+        <style>{portalCustomCss}</style>
       )}
       {isPreview && <PortalPreviewBanner clientName={client.name} />}
       <PortalHeader

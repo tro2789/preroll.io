@@ -13,14 +13,7 @@ function DeveloperIcon() {
   )
 }
 
-const PROVIDERS = [
-  { name: 'frame_io', displayName: 'Frame.io', comingSoon: false },
-  { name: 'google_drive', displayName: 'Google Drive', comingSoon: false },
-  { name: 'vimeo', displayName: 'Vimeo', comingSoon: false, note: 'In-app video playback requires a Vimeo Pro, Business, or Premium plan.' },
-  { name: 'youtube', displayName: 'YouTube', comingSoon: false },
-]
-
-export default async function DeveloperPage({ searchParams }: { searchParams: Promise<{ tab?: string; connect?: string; returnTo?: string; connected?: string; error?: string }> }) {
+export default async function DeveloperPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -31,28 +24,21 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
 
   const entitlements = await getOrgEntitlements(org.id, org.planId, org.trialEndsAt)
 
-  const canIntegrations = entitlements.can('integrations')
   const canWebhooks = entitlements.can('webhooks')
   const canApiKeys = entitlements.can('api_keys')
 
-  if (!canIntegrations && !canWebhooks && !canApiKeys) {
+  if (!canWebhooks && !canApiKeys) {
     return (
       <UpgradeGate
         feature="Developer Tools"
-        description="Connect integrations, configure webhooks, and generate API keys to automate your workflow. Available on the Pro plan."
+        description="Configure webhooks and generate API keys to automate your workflow. Available on the Pro plan."
         tier="Pro"
         icon={<DeveloperIcon />}
       />
     )
   }
 
-  const [integrationsResult, endpointsResult, keysResult] = await Promise.all([
-    canIntegrations
-      ? supabase
-          .from('user_integrations')
-          .select('id, provider, account_name, account_email, account_avatar_url, created_at')
-          .eq('user_id', user.id)
-      : Promise.resolve({ data: null }),
+  const [endpointsResult, keysResult] = await Promise.all([
     canWebhooks
       ? supabase
           .from('webhook_endpoints')
@@ -69,17 +55,10 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
 
   return (
     <DeveloperTabs
-      providers={PROVIDERS}
-      integrations={integrationsResult.data || []}
       endpoints={endpointsResult.data || []}
       apiKeys={keysResult.data || []}
-      canIntegrations={canIntegrations}
       canWebhooks={canWebhooks}
       canApiKeys={canApiKeys}
-      autoConnectProvider={params.connect}
-      returnTo={params.returnTo}
-      connectedProvider={params.connected}
-      oauthError={params.error}
       initialTab={params.tab}
     />
   )

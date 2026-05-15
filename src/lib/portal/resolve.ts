@@ -1,7 +1,7 @@
 import { headers, cookies } from 'next/headers'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-const CLIENT_SELECT = 'id, name, org_id, portal_welcome_dismissed_at, organizations(display_name, logo_url, accent_color, plan_id, allow_client_downloads)' as const
+const CLIENT_SELECT = 'id, name, org_id, portal_welcome_dismissed_at, organizations(display_name, logo_url, accent_color, portal_custom_css, plan_id, allow_client_downloads)' as const
 
 export interface PortalClient {
   id: string
@@ -12,6 +12,7 @@ export interface PortalClient {
     display_name: string | null
     logo_url: string | null
     accent_color: string | null
+    portal_custom_css: string | null
     plan_id: string
     allow_client_downloads: boolean
   } | null
