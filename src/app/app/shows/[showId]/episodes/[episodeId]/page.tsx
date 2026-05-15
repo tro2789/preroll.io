@@ -4,6 +4,7 @@ import { resolveImageUrl } from '@/lib/r2/client'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { EpisodeTabs } from './episode-tabs'
+import { ChatContextSync } from '@/components/chat/chat-context-sync'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 
 export default async function EpisodeDetailPage({
@@ -96,8 +97,11 @@ export default async function EpisodeDetailPage({
 
   const stages = (stagesData || []).map((s: any) => ({ id: s.id, name: s.name, position: s.position }))
 
+  const chatLabel = `${showData?.name || 'Show'} — ${episode.title}${episode.episode_number ? ` (#${episode.episode_number})` : ''}`
+
   return (
     <div className="max-w-[1640px] mx-auto">
+      <ChatContextSync contextLabel={chatLabel} />
       {/* Page header — server-rendered, non-editable parts */}
       <div>
         <div className="flex items-start gap-4">

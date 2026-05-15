@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { ClientDetailActions } from './client-detail-actions'
 import { ClientPortalSection } from '@/components/client-portal-section'
+import { ChatContextSync } from '@/components/chat/chat-context-sync'
 import { Thumbnail } from '@/components/ui/thumbnail'
 
 export default async function ClientDetailPage({
@@ -74,6 +75,7 @@ export default async function ClientDetailPage({
 
   return (
     <div>
+      <ChatContextSync contextLabel={`${client.name}${client.company ? ` (${client.company})` : ''}`} />
       <Link
         href="/app/clients"
         className="text-xs text-text-secondary hover:text-text-primary transition-colors"

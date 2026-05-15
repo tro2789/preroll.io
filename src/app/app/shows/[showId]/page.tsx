@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
 import { PipelineBoard } from '@/components/episodes/pipeline-board'
+import { ChatContextSync } from '@/components/chat/chat-context-sync'
 import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
 import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
 import { BatchAiButton } from '@/components/shows/batch-ai-button'
@@ -56,6 +57,7 @@ export default async function ShowDetailPage({
 
   return (
     <div>
+      <ChatContextSync contextLabel={`${show.name}${client ? ` (${client.name})` : ''}`} />
       <div>
         {client && (
           <Link

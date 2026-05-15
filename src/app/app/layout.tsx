@@ -7,6 +7,7 @@ import { Topbar } from '@/components/layout/topbar'
 import { NoOrgsPrompt } from '@/components/layout/no-orgs-prompt'
 import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { ChatShell } from '@/components/chat/chat-shell'
 import type { OrgMembership } from '@/components/layout/sidebar'
 
 export default async function AppLayout({
@@ -66,21 +67,23 @@ export default async function AppLayout({
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-surface-base overflow-x-hidden">
-        <Sidebar
-          orgs={orgs}
-          activeOrgId={activeOrg?.id}
-          userEmail={user.email ?? ''}
-          userDisplayName={profile?.display_name || null}
-          counts={navCounts}
-        />
-        <div className="md:pl-[244px] flex flex-col min-h-screen">
-          <Topbar />
-          <main className="flex-1 px-4 sm:px-7 pt-5 pb-20 md:pb-16 max-w-[1640px] mx-auto w-full">
-            {children}
-          </main>
+      <ChatShell>
+        <div className="min-h-screen bg-surface-base overflow-x-hidden">
+          <Sidebar
+            orgs={orgs}
+            activeOrgId={activeOrg?.id}
+            userEmail={user.email ?? ''}
+            userDisplayName={profile?.display_name || null}
+            counts={navCounts}
+          />
+          <div className="md:pl-[244px] flex flex-col min-h-screen">
+            <Topbar />
+            <main className="flex-1 px-4 sm:px-7 pt-5 pb-20 md:pb-16 max-w-[1640px] mx-auto w-full">
+              {children}
+            </main>
+          </div>
         </div>
-      </div>
+      </ChatShell>
     </TooltipProvider>
   )
 }

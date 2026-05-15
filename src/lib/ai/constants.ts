@@ -45,3 +45,8 @@ export const AI_LENGTHS = ['brief', 'standard', 'detailed'] as const
 export type AiLength = (typeof AI_LENGTHS)[number]
 
 export const MAX_CONCURRENT_TRANSCRIPTIONS = 3
+
+export const AI_CHAT_MODEL = process.env.AI_CHAT_MODEL || 'claude-haiku-4-5'
+export const AI_CHAT_MAX_TOKENS = 2048
+export const AI_CHAT_CONTEXT_WINDOW = 20
+export const AI_CHAT_CREDIT_COST = 1
