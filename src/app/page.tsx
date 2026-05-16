@@ -4,7 +4,6 @@ import { redirect } from 'next/navigation'
 import PricingSection from '@/components/landing/pricing-section'
 import { FeatureBeats } from '@/components/landing/feature-beats'
 import { IntegrationMarquee } from '@/components/landing/integration-marquee'
-import { FaqSection } from '@/components/landing/faq-section'
 import { AuroraBackground, CursorGlow, ScrollRevealInit, NavScrollEffect } from '@/components/landing/hero-effects'
 
 export default async function LandingPage() {
@@ -23,7 +22,6 @@ export default async function LandingPage() {
       <IntegrationMarquee />
       <PricingBlock />
       <div className="max-w-[1200px] mx-auto px-7"><div className="h-px bg-gradient-to-r from-transparent via-border-default to-transparent" /></div>
-      <FaqSection />
       <FinalCta />
       <Footer />
     </div>
@@ -52,7 +50,6 @@ function Nav() {
             ['API & MCP', '#developers'],
             ['Integrations', '#integrations'],
             ['Pricing', '#pricing'],
-            ['FAQ', '#faq'],
             ['Docs', '/docs'],
           ].map(([label, href]) => (
             <a key={label} href={href} className="px-[11px] py-[7px] rounded-[6px] text-sm text-text-secondary font-[450] hover:text-text-primary hover:bg-surface-raised transition-colors">
@@ -77,26 +74,28 @@ function Nav() {
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
 const STAGES = [
-  { id: 'submitted', name: 'Submitted', color: 'var(--color-status-submitted)' },
-  { id: 'editing', name: 'Editing', color: 'var(--color-status-editing)' },
-  { id: 'review', name: 'Review', color: 'var(--color-status-review)' },
-  { id: 'approved', name: 'Approved', color: 'var(--color-status-approved)' },
+  { id: 'submitted', name: 'Submitted', color: 'oklch(0.746 0.16 231)' },
+  { id: 'editing', name: 'Editing', color: 'oklch(0.702 0.183 294)' },
+  { id: 'review', name: 'Review', color: 'oklch(0.828 0.17 84)' },
+  { id: 'approved', name: 'Approved', color: 'oklch(0.788 0.184 70)' },
 ]
 
-const TAG_COLORS = ['oklch(0.7 0.16 28)', 'oklch(0.7 0.15 200)', 'oklch(0.74 0.14 145)', 'oklch(0.72 0.14 300)']
+const TAGS = [
+  { name: 'Strategy', color: 'oklch(0.7 0.16 28)' },
+  { name: 'Culture', color: 'oklch(0.7 0.15 200)' },
+  { name: 'Technical', color: 'oklch(0.74 0.14 145)' },
+  { name: 'Growth', color: 'oklch(0.72 0.14 300)' },
+]
 
 const EPISODES = [
-  { st: 'planning', no: 51, t: 'The cold open is a contract', sh: 'The Long Game', dt: 'Jun 02', tg: 0 },
-  { st: 'planning', no: 24, t: "Sponsorship reads that don't tank retention", sh: 'Frequency', dt: 'Jun 09', tg: 1 },
-  { st: 'recording', no: 50, t: 'What a 4-host roundtable costs you', sh: 'The Long Game', dt: 'May 26', tg: 0, dur: '52:40' },
-  { st: 'recording', no: 23, t: 'Field recording without the wind problem', sh: 'Frequency', dt: 'May 22', tg: 1, dur: '38:11' },
-  { st: 'recording', no: 12, t: 'Migrating a back-catalog without breaking feeds', sh: 'Build Log', dt: 'May 24', tg: 3, dur: '41:55' },
-  { st: 'editing', no: 47, t: 'Why your retention curve lies to you', sh: 'The Long Game', dt: 'May 19', tg: 0, dur: '44:18' },
-  { st: 'editing', no: 39, t: 'On-mic apologies & other trust mechanics', sh: 'Off the Record', dt: 'May 20', tg: 2, dur: '33:02' },
-  { st: 'review', no: 46, t: 'The chart that fooled everyone', sh: 'The Long Game', dt: 'May 16', tg: 0, dur: '47:09' },
-  { st: 'review', no: 38, t: "A producer's field guide to feedback", sh: 'Off the Record', dt: 'May 15', tg: 2, dur: '40:30' },
-  { st: 'approved', no: 45, t: 'Reading a cliff vs. a slope', sh: 'The Long Game', dt: 'May 12', tg: 0, dur: '45:55' },
-  { st: 'approved', no: 21, t: 'Cold opens, A/B tested', sh: 'Frequency', dt: 'May 12', tg: 1, dur: '31:20' },
+  { st: 'submitted', no: 52, t: 'The cold open is a contract', sh: 'The Long Game', dt: 'Jun 02', tags: [0] },
+  { st: 'submitted', no: 13, t: 'Migrating a back-catalog without breaking feeds', sh: 'Build Log', dt: 'Jun 09', tags: [2] },
+  { st: 'editing', no: 47, t: 'Why your retention curve lies to you', sh: 'The Long Game', dt: 'May 19', tags: [0] },
+  { st: 'editing', no: 39, t: 'On-mic apologies & other trust mechanics', sh: 'Off the Record', dt: 'May 20', tags: [1] },
+  { st: 'review', no: 46, t: 'The chart that fooled everyone', sh: 'The Long Game', dt: 'May 16', tags: [0] },
+  { st: 'review', no: 38, t: "A producer's field guide to feedback", sh: 'Off the Record', dt: 'May 15', tags: [1] },
+  { st: 'approved', no: 45, t: 'Reading a cliff vs. a slope', sh: 'The Long Game', dt: 'May 12', tags: [0] },
+  { st: 'approved', no: 21, t: 'Cold opens, A/B tested', sh: 'Frequency', dt: 'May 12', tags: [3] },
 ]
 
 function Hero() {
@@ -141,6 +140,7 @@ function Hero() {
         <div className="relative z-[2]">
           <div className="shot-aura" aria-hidden="true" />
           <div className="relative border border-border-default rounded-[20px] bg-bg-deeper overflow-hidden shadow-[0_1px_0_oklch(1_0_0/0.04)_inset,0_40px_120px_-40px_oklch(0.05_0_0/0.8),0_0_0_1px_oklch(0_0_0/0.3)] reveal" data-d="3">
+            {/* Chrome bar */}
             <div className="flex items-center gap-2.5 px-4 py-[11px] border-b border-border-subtle bg-[oklch(0.155_0.006_264)]">
               <span className="flex gap-1.5">
                 <i className="block w-2.5 h-2.5 rounded-full bg-surface-3" />
@@ -150,34 +150,55 @@ function Hero() {
               <span className="text-[12.5px] text-text-tertiary flex items-center gap-1.5 ml-1.5">
                 Atlas Audio Co. <span className="text-fg-faint">/</span> <b className="text-text-secondary font-medium">Dashboard</b>
               </span>
-              <span className="ml-auto flex items-center gap-1.5 text-[11.5px] text-text-tertiary font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_0_0_oklch(0.74_0.14_165/0.6)] animate-[blip_2.4s_ease-out_infinite]" />
-                live pipeline
+            </div>
+
+            {/* Toolbar */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle">
+              <div className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-md border border-border-subtle bg-surface-input text-text-tertiary text-[11px]">
+                <svg className="w-3 h-3 text-fg-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
+                <span>Search episodes...</span>
+              </div>
+              {TAGS.map((tag) => (
+                <span key={tag.name} className="hidden sm:inline-flex items-center rounded-full border border-transparent px-2 py-[3px] text-[10px] font-medium opacity-60" style={{ background: `${tag.color}15`, color: tag.color }}>
+                  {tag.name}
+                </span>
+              ))}
+              <span className="ml-auto flex items-center gap-1.5 text-fg-faint">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
               </span>
             </div>
-            <div className="p-4 grid grid-cols-5 gap-3 min-h-[332px] max-[920px]:grid-cols-3 max-[560px]:grid-cols-2">
+
+            {/* Columns */}
+            <div className="p-4 grid grid-cols-4 gap-3.5 min-h-[332px] max-[920px]:grid-cols-3 max-[560px]:grid-cols-2">
               {STAGES.map((stage) => {
                 const cards = EPISODES.filter(ep => ep.st === stage.id)
                 return (
                   <div key={stage.id} className="min-w-0 max-[920px]:[&:nth-child(n+4)]:hidden max-[560px]:[&:nth-child(n+3)]:hidden">
-                    <div className="flex items-center gap-1.5 px-1 pb-2.5 text-[11.5px]">
+                    <div className="flex items-center gap-1.5 px-1 pb-2.5 text-[12.5px]">
                       <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: stage.color }} />
-                      <span className="font-semibold text-text-primary">{stage.name}</span>
-                      <span className="font-mono text-[10.5px] text-fg-faint ml-auto">{cards.length}</span>
+                      <span className="font-semibold text-text-primary tracking-[0.01em]">{stage.name}</span>
+                      <span className="font-mono text-[11px] text-fg-faint ml-auto">{cards.length}</span>
                     </div>
                     <div className="flex flex-col gap-2.5">
                       {cards.map(ep => (
-                        <div key={ep.no} className="bg-surface-raised border border-border-subtle rounded-[9px] p-2.5 hover:border-border-strong transition-colors">
-                          <div className="aspect-video rounded bg-gradient-to-br from-surface-overlay to-surface-3 relative overflow-hidden mb-2">
-                            <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_80%_0%,oklch(0.5_0.06_264/0.45),transparent)]" />
-                            <span className="absolute top-[5px] left-[7px] font-mono text-[9px] text-text-secondary">EP {String(ep.no).padStart(3, '0')}</span>
-                            {ep.dur && <span className="absolute bottom-1 right-[5px] font-mono text-[8.5px] bg-[oklch(0.1_0_0/0.7)] px-1 py-0.5 rounded-[3px] text-text-primary">{ep.dur}</span>}
+                        <div key={ep.no} className="rounded-[10px] border border-border-subtle bg-surface-raised p-[11px] hover:border-border-strong transition-colors">
+                          <div className="relative mb-[9px]">
+                            <div className="aspect-[16/9] rounded-[5px] bg-gradient-to-br from-surface-overlay to-surface-3 relative overflow-hidden">
+                              <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_80%_0%,oklch(0.5_0.06_264/0.45),transparent)]" />
+                            </div>
+                            <span className="absolute top-1.5 left-2 font-mono text-[10px] tracking-[0.04em] text-text-secondary z-[1]">EP {String(ep.no).padStart(3, '0')}</span>
                           </div>
-                          <div className="text-[11.5px] font-medium text-text-primary leading-[1.32]">{ep.t}</div>
-                          <div className="text-[10px] text-text-tertiary mt-0.5">{ep.sh}</div>
-                          <div className="flex items-center gap-[5px] mt-2">
-                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: TAG_COLORS[ep.tg] }} />
-                            <span className="ml-auto font-mono text-[9.5px] text-text-tertiary">{ep.dt}</span>
+                          <p className="text-[13px] font-medium text-text-primary leading-[1.35]">{ep.t}</p>
+                          <div className="text-[11.5px] text-text-tertiary mt-[3px] truncate">{ep.sh}</div>
+                          <div className="flex items-center gap-[7px] mt-[10px]">
+                            <div className="flex flex-wrap gap-1">
+                              {ep.tags.map(ti => (
+                                <span key={ti} className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none" style={{ background: `${TAGS[ti].color}20`, color: TAGS[ti].color }}>
+                                  {TAGS[ti].name}
+                                </span>
+                              ))}
+                            </div>
+                            <span className="ml-auto font-mono text-[11px] tabular-nums text-text-tertiary shrink-0">{ep.dt}</span>
                           </div>
                         </div>
                       ))}
@@ -266,7 +287,7 @@ function Footer() {
           </div>
 
           {[
-            { title: 'Product', links: [['Pipeline', '#features'], ['AI assist', '#features'], ['Client portal', '#features'], ['Integrations', '#integrations'], ['Pricing', '#pricing']] },
+            { title: 'Product', links: [['API & MCP', '#developers'], ['AI assistant', '#features'], ['Integrations', '#integrations'], ['Pricing', '#pricing']] },
             { title: 'Company', links: [['About', '#'], ['Blog', '#'], ['Contact', '#']] },
             { title: 'Resources', links: [['Docs', '/docs'], ['Changelog', '#'], ['Privacy', '#'], ['Terms', '#']] },
           ].map(col => (

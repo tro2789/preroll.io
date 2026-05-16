@@ -72,7 +72,7 @@ export function FeatureBeats() {
       <div className="text-center max-w-[64ch] mx-auto reveal">
         <span className="font-mono text-xs tracking-[0.12em] uppercase text-accent">What it does</span>
         <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5">An AI-native tool, end to end</h2>
-        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">The API and the MCP server are in the box on day one. So is everything they plug into: a shared production pipeline, AI-drafted titles and show notes, and a clean client portal that needs no logins.</p>
+        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">The API and the MCP server are in the box on day one. So is an AI assistant that reads your pipeline and writes what you&apos;d normally type at 11pm.</p>
       </div>
 
       <div className="mt-[72px] space-y-28">
@@ -109,145 +109,95 @@ export function FeatureBeats() {
           </Beat>
         </div>
 
-        {/* Beat 1 — Pipeline */}
+        {/* Beat 1 — AI Chat */}
         <div className="reveal">
           <Beat
-            kicker="The pipeline"
-            title="One board for everything in flight"
-            lead="Every episode, every show, every client, on a single kanban organized by production stage. WIP limits flag bottlenecks before they turn into missed dates. Drag a card to advance it; filter to one client and the noise disappears."
+            kicker="The AI assistant"
+            title="Talk to your pipeline"
+            lead="PreRoll AI lives in a sliding panel, reachable from any page with one keystroke. Ask it to look up episodes, check what&apos;s overdue, draft show notes from a transcript, or advance an episode. It confirms before making changes."
             items={[
-              { bold: 'Stages you define.', rest: 'Submitted → Editing → Review → Approved → Published, or whatever your shop actually runs.' },
-              { bold: 'WIP limits and overdue flags', rest: 'so a stalled episode surfaces itself instead of hiding.' },
-              { bold: 'Scope to a client or show', rest: 'in one click. Same board, less to scan.' },
+              { bold: 'Context-aware.', rest: 'It knows which episode, show, or client you’re viewing and scopes answers automatically.' },
+              { bold: '22 tools, read and write.', rest: 'Look things up, create episodes, generate content, move stages — all with confirmation before executing.' },
+              { bold: 'Transcribe and draft.', rest: 'Upload audio and it auto-transcribes, then generates show notes, titles, and social posts.' },
             ]}
-            linkText="See the dashboard"
+            linkText="Try the AI assistant"
             linkHref="/signup"
             flipped
           >
-            <PanelShell label="dashboard · board view">
-              <div className="grid grid-cols-3 gap-2.5">
-                {[
-                  { name: 'Recording', color: 'var(--color-status-recording)', wip: '3/3', cards: [
-                    { t: 'What a 4-host roundtable costs you', s: 'The Long Game · EP 50', p: 30 },
-                    { t: 'Field recording without the wind problem', s: 'Frequency · EP 23', p: 25 },
-                  ]},
-                  { name: 'Editing', color: 'var(--color-status-editing)', cards: [
-                    { t: 'Why your retention curve lies to you', s: 'The Long Game · EP 47', p: 62 },
-                    { t: 'On-mic apologies and trust mechanics', s: 'Off the Record · EP 39', p: 48 },
-                  ]},
-                  { name: 'Review', color: 'var(--color-status-review)', cards: [
-                    { t: 'The chart that fooled everyone', s: 'The Long Game · EP 46', p: 88 },
-                    { t: "A producer's field guide to feedback", s: 'Off the Record · EP 38', p: 80 },
-                  ]},
-                ].map(col => (
-                  <div key={col.name}>
-                    <div className="flex items-center gap-1.5 pb-2 px-0.5 text-[10.5px]">
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: col.color }} />
-                      <span className="font-semibold text-text-secondary">{col.name}</span>
-                      {col.wip && <span className="ml-auto font-mono text-[9px] text-warning">{col.wip}</span>}
-                    </div>
-                    {col.cards.map(card => (
-                      <div key={card.t} className="bg-surface-raised border border-border-subtle rounded-[7px] p-2 px-2.5 mb-2">
-                        <div className="text-[11px] font-medium text-text-primary leading-[1.3]">{card.t}</div>
-                        <div className="text-[9.5px] text-text-tertiary mt-1">{card.s}</div>
-                        <div className="h-[3px] rounded-full bg-surface-3 mt-1.5 overflow-hidden">
-                          <div className="h-full bg-accent rounded-full" style={{ width: `${card.p}%` }} />
-                        </div>
+            <PanelShell label="AI Assistant">
+              {/* Header */}
+              <div className="flex items-center gap-2 pb-2.5 border-b border-border-subtle mb-3">
+                <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+                  <path d="M5 19l1 3 1-3 3-1-3-1-1-3-1 3-3 1 3 1z" />
+                </svg>
+                <span className="text-[12.5px] font-semibold text-text-primary">AI Assistant</span>
+                <span className="ml-auto text-[10px] text-fg-faint font-mono">{'⌘'}J</span>
+              </div>
+
+              {/* Context bar */}
+              <div className="px-2.5 py-1.5 mb-3 rounded-md bg-surface-raised/50">
+                <span className="text-[10.5px] text-text-secondary">Viewing: The Long Game &middot; EP 047</span>
+              </div>
+
+              {/* Messages */}
+              <div className="space-y-2.5">
+                {/* User message */}
+                <div className="flex justify-end">
+                  <div className="max-w-[85%] rounded-xl px-3 py-2 bg-[oklch(0.715_0.155_40/0.15)] text-[12px] text-text-primary leading-relaxed">
+                    What&apos;s overdue this week? And move EP 047 to Review.
+                  </div>
+                </div>
+
+                {/* Tool indicator */}
+                <div className="flex items-center gap-2 text-[11px] text-text-secondary py-0.5">
+                  <div className="w-3 h-3 border-2 border-accent/50 border-t-accent rounded-full animate-spin" />
+                  <span>Checking episodes...</span>
+                </div>
+
+                {/* Assistant response */}
+                <div className="flex justify-start">
+                  <div className="max-w-[85%] rounded-xl px-3 py-2 bg-surface-raised text-[12px] text-text-primary leading-relaxed">
+                    <b className="font-semibold">2 episodes overdue:</b><br />
+                    &bull; EP 046 &ldquo;The chart that fooled everyone&rdquo; &mdash; Review, due May 16<br />
+                    &bull; EP 038 &ldquo;A producer&apos;s field guide&rdquo; &mdash; Review, due May 15
+                  </div>
+                </div>
+
+                {/* Action card */}
+                <div className="flex justify-start">
+                  <div className="max-w-[85%]">
+                    <div className="rounded-lg border border-border-subtle bg-surface-raised p-2.5">
+                      <p className="text-[11.5px] text-text-primary font-medium mb-2">Move EP 047 &rarr; Review</p>
+                      <div className="flex gap-1.5">
+                        <span className="px-2.5 py-1 rounded-md bg-accent text-white text-[10.5px] font-medium">Confirm</span>
+                        <span className="px-2.5 py-1 rounded-md border border-border-default bg-surface-overlay text-text-secondary text-[10.5px] font-medium">Cancel</span>
                       </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </PanelShell>
-          </Beat>
-        </div>
-
-        {/* Beat 2 — AI */}
-        <div className="reveal">
-          <Beat
-            kicker="The AI"
-            title="The busywork, drafted before you ask"
-            lead="The moment a cut lands, PreRoll.io reads the audio and drafts what you'd otherwise write at 11pm: a ranked set of titles, full show notes, timestamped chapters, and a clean transcript. You edit, pick, and publish."
-            items={[
-              { bold: 'Ranked title options.', rest: 'Pick one, tweak it, or regenerate from a different angle.' },
-              { bold: 'Show notes and chapters', rest: 'in your house style, ready to paste into your host.' },
-              { bold: 'You stay in control.', rest: "Nothing publishes itself; every draft is yours to approve." },
-            ]}
-            linkText="Inside an episode"
-            linkHref="/signup"
-          >
-            <PanelShell label="EP 047 · AI assist">
-              <div className="flex items-center gap-2.5 pb-3 border-b border-border-subtle mb-3">
-                <span className="w-7 h-7 rounded-[7px] grid place-items-center bg-accent-tint text-accent">
-                  <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
-                    <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" />
-                  </svg>
-                </span>
-                <div>
-                  <div className="text-[12.5px] font-semibold text-text-primary">Generated titles</div>
-                  <div className="text-[10px] text-fg-faint font-mono">claude · just now</div>
-                </div>
-              </div>
-              {[
-                { rank: '01', title: 'Why your retention curve lies to you', chosen: true },
-                { rank: '02', title: "The retention metric that's quietly killing your show" },
-                { rank: '03', title: 'What average listen-through hides from you' },
-              ].map(opt => (
-                <div key={opt.rank} className="flex items-center gap-2.5 px-2.5 py-2 rounded-[7px] hover:bg-surface-raised transition-colors">
-                  <span className="font-mono text-[10px] text-fg-faint w-4">{opt.rank}</span>
-                  <span className="flex-1 text-[12.5px] text-text-primary leading-[1.35]">{opt.title}</span>
-                  {opt.chosen && (
-                    <span className="text-[10px] font-semibold text-accent border border-accent-quiet bg-accent-tint px-1.5 py-0.5 rounded-full">Chosen</span>
-                  )}
-                </div>
-              ))}
-              <div className="mt-3.5 pt-3 border-t border-border-subtle text-[11.5px] text-text-tertiary leading-relaxed">
-                <div className="text-[11px] font-semibold text-text-secondary mb-1">Show notes · 1,180 words · 5 chapters</div>
-                <span className="font-mono text-fg-faint">00:00</span> Cold open: the chart that lies &middot; <span className="font-mono text-fg-faint">04:12</span> Why average listen-through is wrong &middot; <span className="font-mono text-fg-faint">17:38</span> Reading a cliff vs. a slope ...
-              </div>
-            </PanelShell>
-          </Beat>
-        </div>
-
-        {/* Beat 3 — Client Portal */}
-        <div className="reveal">
-          <Beat
-            kicker="The client side"
-            title="Clients see exactly what they need, and nothing else"
-            lead="Share a review link, not a folder. Clients open a clean page with the cut, the show notes, and the cover art. They leave feedback, approve, and they're done."
-            items={[
-              { bold: 'Free client portal.', rest: 'No seat required, no login maze, just the link.' },
-              { bold: 'Per-deliverable status.', rest: 'Approved, Pending, or Revision requested, visible to everyone.' },
-              { bold: 'Frame.io-connected,', rest: 'so the file you review is the file of record.' },
-            ]}
-            linkText="See the review flow"
-            linkHref="/signup"
-            flipped
-          >
-            <PanelShell label="reyesmedia.preroll.io · EP 047 review">
-              <div className="-m-4">
-                {[
-                  { name: 'long-game-047_final-v3.mp4', meta: '1.4 GB · 44:18 · updated 2h ago', status: 'Approved', statusClass: 'text-success bg-[oklch(0.74_0.14_165/0.14)]' },
-                  { name: 'EP047_show-notes.md', meta: '6 KB · drafted by AI · edited', status: 'Pending', statusClass: 'text-warning bg-[oklch(0.78_0.13_75/0.14)]' },
-                  { name: 'EP047_cover-art.png', meta: '2.1 MB · 3000×3000', status: 'Revision', statusClass: 'text-error bg-[oklch(0.66_0.18_22/0.14)]' },
-                ].map(item => (
-                  <div key={item.name} className="flex items-center gap-3 px-3 py-2.5 border-b border-border-subtle">
-                    <div className="w-[46px] h-[30px] rounded-[5px] bg-gradient-to-br from-surface-overlay to-surface-3 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium text-text-primary truncate">{item.name}</div>
-                      <div className="text-[10px] text-text-tertiary mt-0.5 font-mono">{item.meta}</div>
                     </div>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1 ${item.statusClass}`}>
-                      {item.status}
-                    </span>
                   </div>
-                ))}
-                <div className="flex items-center gap-2.5 px-3 py-2.5 text-[11px] text-text-tertiary">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-[18px] h-[18px] rounded-full bg-surface-3 grid place-items-center text-[8.5px] font-semibold text-text-secondary">DR</span>
-                    Dana Reyes is reviewing
-                  </span>
-                  <span className="ml-auto text-[11px] font-semibold text-white bg-accent px-2.5 py-1 rounded-md">Approve all</span>
+                </div>
+              </div>
+
+              {/* Credit bar */}
+              <div className="mt-3.5 pt-2.5 border-t border-border-subtle flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[10.5px]">
+                  <svg className="w-3 h-3 text-accent" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                  <span className="text-text-secondary">24 monthly &middot; 100 purchased</span>
+                </div>
+                <span className="text-[10.5px] text-text-tertiary">1 credit/turn</span>
+              </div>
+
+              {/* Input */}
+              <div className="mt-2.5 flex items-center gap-2">
+                <div className="flex-1 px-2.5 py-1.5 rounded-lg border border-border-subtle bg-surface-input text-[11px] text-text-tertiary">
+                  Ask anything about your shows...
+                </div>
+                <div className="w-7 h-7 rounded-lg bg-accent/40 flex items-center justify-center shrink-0">
+                  <svg className="w-3.5 h-3.5 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
                 </div>
               </div>
             </PanelShell>
