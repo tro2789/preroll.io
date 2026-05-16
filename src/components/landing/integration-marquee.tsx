@@ -114,9 +114,9 @@ function MarqueeTrack({ items }: { items: Integration[] }) {
 export function IntegrationMarquee() {
   return (
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
-      <div className="max-w-[1200px] mx-auto px-7 text-center text-sm text-text-tertiary mb-9 reveal">
+      <h2 className="max-w-[1200px] mx-auto px-7 text-center text-2xl font-bold text-text-primary mb-10 reveal">
         Connects to the tools you already use.
-      </div>
+      </h2>
       <MarqueeTrack items={INTEGRATIONS} />
     </section>
   )
