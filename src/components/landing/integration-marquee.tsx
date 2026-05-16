@@ -7,9 +7,23 @@ const INTEGRATIONS = [
   ['Claude AI', 'CL', 'oklch(0.72 0.16 30)'],
   ['Stripe', 'ST', 'oklch(0.72 0.15 320)'],
   ['n8n', 'N8', 'oklch(0.74 0.15 50)'],
+  ['Slack', 'SL', 'oklch(0.72 0.14 310)'],
+  ['Discord', 'DC', 'oklch(0.68 0.16 290)'],
+  ['Notion', 'NT', 'oklch(0.72 0.12 250)'],
+  ['Airtable', 'AT', 'oklch(0.7 0.15 180)'],
+  ['Google Sheets', 'GS', 'oklch(0.76 0.15 155)'],
+  ['YouTube', 'YT', 'oklch(0.7 0.18 25)'],
+  ['Dropbox', 'DB', 'oklch(0.68 0.15 240)'],
+  ['Calendly', 'CY', 'oklch(0.7 0.16 265)'],
+  ['Mailchimp', 'MC', 'oklch(0.74 0.14 80)'],
+  ['Trello', 'TL', 'oklch(0.7 0.14 230)'],
+  ['HubSpot', 'HS', 'oklch(0.72 0.16 40)'],
+  ['WordPress', 'WP', 'oklch(0.68 0.14 250)'],
+  ['X / Twitter', 'TW', 'oklch(0.72 0.1 250)'],
+  ['LinkedIn', 'LI', 'oklch(0.68 0.15 245)'],
   ['Webhooks', 'WH', 'oklch(0.72 0.13 330)'],
   ['REST API', 'AP', 'oklch(0.7 0.14 264)'],
-  ['MCP Server', 'MC', 'oklch(0.74 0.14 145)'],
+  ['MCP Server', 'MP', 'oklch(0.74 0.14 145)'],
   ['Cloudflare R2', 'R2', 'oklch(0.72 0.16 35)'],
 ] as const
 
@@ -43,8 +57,9 @@ function MarqueeTrack({ items, reverse }: { items: (readonly [string, string, st
 }
 
 export function IntegrationMarquee() {
-  const row1 = [...INTEGRATIONS, ...INTEGRATIONS]
-  const row2 = [...INTEGRATIONS, ...INTEGRATIONS].reverse()
+  const mid = Math.ceil(INTEGRATIONS.length / 2)
+  const row1 = INTEGRATIONS.slice(0, mid)
+  const row2 = INTEGRATIONS.slice(mid)
 
   return (
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
