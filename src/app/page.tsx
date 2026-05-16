@@ -111,7 +111,7 @@ function Hero() {
       </div>
 
       {/* Product screenshot */}
-      <div className="max-w-[1080px] mx-auto px-7 mt-14">
+      <div className="max-w-[1400px] mx-auto px-7 mt-14">
         <div className="relative z-[2]">
           <div className="shot-aura" aria-hidden="true" />
           <div className="relative rounded-[20px] overflow-hidden shadow-[0_1px_0_oklch(1_0_0/0.04)_inset,0_40px_120px_-40px_oklch(0.05_0_0/0.8),0_0_0_1px_oklch(0_0_0/0.3)] reveal" data-d="3">
