@@ -195,8 +195,8 @@ function Footer() {
 
           {[
             { title: 'Product', links: [['API & MCP', '#developers'], ['AI assistant', '#features'], ['Integrations', '#integrations'], ['Pricing', '#pricing']] },
-            { title: 'Company', links: [['About', '#'], ['Blog', '#'], ['Contact', '#']] },
-            { title: 'Resources', links: [['Docs', '/docs'], ['Changelog', '#'], ['Privacy', '#'], ['Terms', '#']] },
+            { title: 'Company', links: [['Blog', '/blog'], ['Contact', 'mailto:trevor@trevorohare.com']] },
+            { title: 'Resources', links: [['Docs', '/docs'], ['Privacy', '/privacy'], ['Terms', '/terms']] },
           ].map(col => (
             <div key={col.title}>
               <h4 className="text-xs font-semibold tracking-[0.06em] uppercase text-fg-faint mb-3.5">{col.title}</h4>
@@ -207,9 +207,8 @@ function Footer() {
           ))}
         </div>
 
-        <div className="mt-11 pt-5 border-t border-border-subtle flex items-center gap-4 text-[12.5px] text-fg-faint">
+        <div className="mt-11 pt-5 border-t border-border-subtle text-[12.5px] text-fg-faint">
           <span>&copy; {new Date().getFullYear()} PreRoll.io. All rights reserved.</span>
-          <span className="font-mono text-text-tertiary">made for podcast people</span>
         </div>
       </div>
     </footer>
