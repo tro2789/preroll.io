@@ -1,0 +1,270 @@
+---
+title: "AI Assistant"
+description: "Transcribe episodes, generate show notes and social posts, and chat with an AI that understands your production data."
+---
+
+
+preroll.io includes a built-in AI assistant that handles the repetitive content work of podcast production — transcription, show notes, episode descriptions, social posts, and title suggestions. It also provides a conversational chat interface where you can ask questions about your data or take actions hands-free.
+
+The AI features are available as a metered add-on, separate from your plan tier. Credits are shared across all AI operations.
+
+---
+
+## AI Chat
+
+The AI chat is a conversational assistant that understands your preroll.io data. Open it from any page in the app to ask questions, look things up, or perform actions without navigating away from what you're doing.
+
+### Opening the Chat
+
+- Click the **sparkle icon** in the bottom-right corner of any page
+- Press **Cmd+K** (Mac) or **Ctrl+K** (Windows/Linux)
+- Press **Escape** to close
+
+The chat panel slides in from the right side and persists across page navigation — you can keep a conversation going while moving between episodes, shows, and clients.
+
+### Context Awareness
+
+The assistant automatically knows where you are in the app:
+
+- **On an episode page** — "Generate show notes for this episode" works without specifying which episode
+- **On a show page** — "What episodes are due this week?" scopes to that show
+- **On a client page** — "Add a meeting note" knows which client you mean
+- **On the dashboard** — General questions about your workspace
+
+### What It Can Do
+
+**Look things up (instant):**
+
+- List episodes by status, deadline, or show
+- Check pipeline progress across shows
+- View upcoming deadlines
+- Check AI credit balance and usage
+- Summarize recent activity
+- Search across clients, shows, and episodes
+
+**Take actions (with confirmation):**
+
+- Create clients, shows, and episodes
+- Move episodes between pipeline stages
+- Update episode details (title, description, notes, deadline)
+- Share files with clients
+- Add meeting notes
+- Trigger transcription or content generation
+- Create and manage tags
+
+Write operations always show a **Confirm / Cancel** card before executing — the assistant will never modify your data without your explicit approval.
+
+**Not available via chat:**
+
+- Deleting anything (too destructive)
+- Billing and subscription changes
+- Org settings or team management
+- OAuth integration setup
+- Transistor publishing (use the dedicated publish UI)
+
+### Session Management
+
+Conversations are saved automatically. You can:
+
+- Start a new conversation with the **+** button
+- Switch between recent sessions from the dropdown in the chat header
+- Sessions are auto-titled based on your first message
+
+### Credits
+
+Each chat message costs **1 AI credit**. If the assistant triggers transcription or content generation on your behalf, those operations consume additional credits at their normal rates.
+
+---
+
+## Transcription
+
+preroll.io transcribes episode audio using Deepgram Nova-2, producing speaker-diarized transcripts that serve as the foundation for all AI content generation.
+
+### How to Transcribe
+
+1. Link an audio or video file to your episode (via upload, Frame.io, Google Drive, or Vimeo)
+2. Open the episode detail page
+3. Click **Transcribe** in the AI section (or ask the chat assistant)
+4. Transcription runs in the background — the page updates automatically when complete
+
+Transcription typically takes 30-60 seconds for a 1-hour episode.
+
+### Auto-Transcription
+
+You can configure shows to automatically transcribe new audio:
+
+1. Go to **Show Settings → AI**
+2. Enable **Auto-transcribe**
+
+When enabled, transcription starts automatically whenever:
+- A file is uploaded or linked to an episode
+- A Frame.io, Google Drive, or Vimeo webhook reports a file is ready
+
+### Transcript Features
+
+- **Speaker diarization** — Identifies distinct speakers
+- **Word-level timestamps** — Segments are timecoded for reference
+- **Searchable** — Full-text search within the transcript
+- **Copyable** — One-click copy of the full transcript text
+
+### Credit Cost
+
+Transcription costs **1 credit per minute** of audio (rounded up).
+
+---
+
+## Content Generation
+
+Once an episode has a transcript, you can generate production and promotion content from it.
+
+### Content Types
+
+| Type | Description | Credits |
+|------|-------------|---------|
+| **Show Notes** | Structured notes with headings, bullet points, and key topics | 3 |
+| **Description** | Episode description suitable for podcast directories | 2 |
+| **Title Suggestions** | 5 alternative title ideas based on content | 1 |
+| **Twitter/X Post** | 280-character post with key takeaway | 1 |
+| **LinkedIn Post** | Professional multi-paragraph post | 1 |
+| **Instagram Caption** | Casual caption with hashtags | 1 |
+
+### Generating Content
+
+From the episode detail page:
+
+1. Scroll to the **AI** section
+2. Click **Run AI Pipeline** to generate all enabled types, or click individual type buttons to generate one at a time
+3. Generated content appears inline with options to **Copy**, **Edit**, **Apply to Episode**, or **Regenerate**
+
+From the chat assistant:
+
+> "Generate show notes for this episode"
+
+### Per-Show Configuration
+
+Each show can have its own AI settings (**Show Settings → AI**):
+
+| Setting | Options | Default |
+|---------|---------|---------|
+| Auto-generate types | Show notes, description, titles, social posts | Show notes only |
+| Tone | Professional, Casual, Energetic | Professional |
+| Length | Brief, Standard, Detailed | Standard |
+
+These settings apply to both manual and automatic generation.
+
+### Applying Generated Content
+
+For show notes and descriptions, you can **Apply to Episode** to write the generated text directly into the episode's fields. A confirmation dialog prevents accidental overwrites.
+
+For social posts, use the **Copy** button on individual posts or **Copy All** to bundle all promotion content.
+
+Title suggestions are presented as individual selectable options — click **Copy** on whichever title you prefer.
+
+### Editing Before Applying
+
+Click **Edit** on any generated content to modify it inline. After editing, you can **Save & Apply** to write your modified version to the episode, or **Copy edited** to grab it for use elsewhere.
+
+### Generation History
+
+Previous versions of generated content are preserved. Click **"N previous"** below any generation to expand the history, compare versions, and copy older outputs.
+
+### Batch Processing
+
+From a show page, click **Run AI** to batch-process up to 5 episodes that have audio but no transcript. This queues transcription and auto-generation for each eligible episode.
+
+---
+
+## AI Pipeline
+
+The AI pipeline is the automated flow from audio file to finished content:
+
+```
+Audio file linked → Transcribe → Generate enabled content types
+```
+
+### Automatic Triggers
+
+The pipeline runs automatically when:
+
+1. **File upload** — An audio/video file is linked to an episode via `file_references`
+2. **Integration webhook** — Frame.io, Google Drive, or Vimeo reports a file is ready
+3. **Manual trigger** — You click "Run AI Pipeline" or ask the chat assistant
+
+### Pipeline Progress
+
+The AI section shows a step-by-step progress indicator:
+
+- **Transcription** — In progress / Complete
+- **Show Notes** — Generating / Complete
+- **Description** — Generating / Complete
+- *...additional enabled types*
+
+A notification banner appears when the pipeline completes, and the panel auto-expands if it was collapsed.
+
+---
+
+## Credits and Billing
+
+AI features use a shared credit pool, separate from your plan subscription.
+
+### How Credits Work
+
+- **Monthly allowance** — Pro plans include 200 credits/month, Studio includes 500
+- **Purchased credits** — Buy additional credit packs that never expire
+- Credits are consumed in order: monthly first, then purchased
+- Unused monthly credits do not roll over
+
+### Credit Packs
+
+| Pack | Credits | Price |
+|------|---------|-------|
+| Starter | 100 | $9 |
+| Growth | 500 | $39 |
+| Scale | 1,000 | $69 |
+
+Purchase from **Settings → AI**.
+
+### Cost Reference
+
+| Operation | Credits |
+|-----------|---------|
+| Chat message | 1 |
+| Transcription | 1 per minute of audio |
+| Show Notes | 3 |
+| Description | 2 |
+| Title Suggestions | 1 |
+| Twitter/X Post | 1 |
+| LinkedIn Post | 1 |
+| Instagram Caption | 1 |
+
+### Monitoring Usage
+
+- The AI section on episode pages shows your current balance
+- **Settings → AI** shows full usage history
+- The chat assistant can tell you your balance: "How many credits do I have left?"
+- Low-credit warnings appear when your balance is running low
+
+---
+
+## Plan Requirements
+
+| Plan | AI Access |
+|------|-----------|
+| Free | No |
+| Pro | Full AI features (200 monthly credits) |
+| Studio | Full AI features (500 monthly credits) |
+| Trial | Full AI features (50 trial credits) |
+
+Free-plan users see the AI chat button but receive an upgrade prompt when attempting to use it.
+
+---
+
+## Self-Hosted Mode
+
+Self-hosted deployments can use their own API keys instead of credits:
+
+1. Set `PREROLL_SELF_HOSTED=true` in your environment
+2. Go to **Settings → AI**
+3. Enter your own Deepgram API key (for transcription) and Anthropic API key (for generation and chat)
+
+With BYOK (Bring Your Own Key), no credits are consumed — usage is billed directly by the respective providers.
