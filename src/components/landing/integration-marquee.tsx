@@ -89,22 +89,20 @@ const INTEGRATIONS: Integration[] = [
 
 function Chip({ name, icon: Icon, color }: Integration) {
   return (
-    <div className="flex items-center gap-2.5 px-4 py-2.5 border border-border-subtle bg-surface-raised rounded-[7px] text-sm font-medium text-text-secondary whitespace-nowrap hover:border-border-strong hover:text-text-primary hover:bg-surface-overlay transition-colors">
-      <span className="w-[18px] h-[18px] shrink-0 grid place-items-center">
-        <Icon width={16} height={16} color={color} />
+    <div className="flex items-center gap-3 px-5 py-3 border border-border-subtle bg-surface-raised rounded-lg text-base font-medium text-text-secondary whitespace-nowrap hover:border-border-strong hover:text-text-primary hover:bg-surface-overlay transition-colors">
+      <span className="w-[22px] h-[22px] shrink-0 grid place-items-center">
+        <Icon width={20} height={20} color={color} />
       </span>
       {name}
     </div>
   )
 }
 
-function MarqueeTrack({ items, reverse }: { items: Integration[]; reverse?: boolean }) {
+function MarqueeTrack({ items }: { items: Integration[] }) {
   const doubled = [...items, ...items]
   return (
     <div className="relative overflow-hidden" style={{ maskImage: 'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)' }}>
-      <div
-        className={`flex gap-3.5 w-max hover:[animation-play-state:paused] ${reverse ? 'animate-[scrollx_50s_linear_infinite_reverse]' : 'animate-[scrollx_50s_linear_infinite]'}`}
-      >
+      <div className="flex gap-4 w-max hover:[animation-play-state:paused] animate-[scrollx_60s_linear_infinite]">
         {doubled.map((integration, i) => (
           <Chip key={`${integration.name}-${i}`} {...integration} />
         ))}
@@ -114,19 +112,12 @@ function MarqueeTrack({ items, reverse }: { items: Integration[]; reverse?: bool
 }
 
 export function IntegrationMarquee() {
-  const mid = Math.ceil(INTEGRATIONS.length / 2)
-  const row1 = INTEGRATIONS.slice(0, mid)
-  const row2 = INTEGRATIONS.slice(mid)
-
   return (
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
       <div className="max-w-[1200px] mx-auto px-7 text-center text-sm text-text-tertiary mb-9 reveal">
         Connects to the tools you already use.
       </div>
-      <div className="space-y-3.5">
-        <MarqueeTrack items={row1} />
-        <MarqueeTrack items={row2} reverse />
-      </div>
+      <MarqueeTrack items={INTEGRATIONS} />
     </section>
   )
 }
