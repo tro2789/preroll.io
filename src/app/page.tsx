@@ -90,23 +90,21 @@ function Hero() {
             color: 'transparent',
           }}
         >
-          Production management your AI can actually run.
+          Podcast production, orchestrated.
         </h1>
-        <p className="reveal in text-[clamp(16px,1.5vw,19px)] text-text-secondary max-w-[60ch] mx-auto mt-5 leading-relaxed" data-d="2">
-          PreRoll.io is the AI-native production tool for podcast agencies. It ships with a full REST API and a built-in MCP server, so Claude, your own agents, or a five-line script can read the pipeline, move episodes, pull transcripts, and publish.
+        <p className="reveal in text-[clamp(16px,1.5vw,19px)] text-text-secondary max-w-[48ch] mx-auto mt-5 leading-relaxed" data-d="2">
+          The production tool for podcast agencies. Manage clients, shows, and episodes in one pipeline — or hand it to your AI.
         </p>
         <div className="reveal in flex gap-3 justify-center mt-7 flex-wrap" data-d="3">
           <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-[13px] rounded-[9px] text-[15.5px] font-semibold bg-accent text-white hover:bg-accent-hover transition-colors shadow-[0_0_0_0_var(--color-accent-tint),0_8px_24px_-8px_oklch(0.715_0.155_40/0.55)] hover:shadow-[0_0_0_4px_var(--color-accent-tint),0_12px_32px_-8px_oklch(0.715_0.155_40/0.65)]">
-            Start free trial
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            Get started free
           </Link>
           <a href="#developers" className="inline-flex items-center gap-2 px-6 py-[13px] rounded-[9px] text-[15.5px] font-medium border border-border-default bg-surface-raised text-text-primary hover:bg-surface-overlay hover:border-border-strong transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><path d="M8 5v14l11-7z" /></svg>
-            See the API & MCP server
+            See the API
           </a>
         </div>
         <p className="reveal in mt-4 text-[13px] text-fg-faint" data-d="4">
-          Free 7-day trial · no card required · <span className="font-mono text-text-tertiary">REST API · built-in MCP server · Frame.io & host integrations</span>
+          Free for 7 days · No card required
         </p>
       </div>
 
@@ -136,8 +134,8 @@ function PricingBlock() {
     <section id="pricing" className="py-24 px-7 max-w-[1200px] mx-auto">
       <div className="text-center max-w-[64ch] mx-auto reveal">
         <span className="font-mono text-xs tracking-[0.12em] uppercase text-accent">Pricing</span>
-        <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5">Priced per studio, not per headache</h2>
-        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">Start free for 7 days. No card required. Cancel anytime.</p>
+        <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5">Simple pricing.</h2>
+        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">Free for 7 days. No card required.</p>
       </div>
       <div className="mt-12">
         <PricingSection />
@@ -158,21 +156,20 @@ function FinalCta() {
       <div className="max-w-[1200px] mx-auto px-7">
         <div className="reveal relative z-[2] max-w-[760px] mx-auto p-14 sm:px-10 border border-border-default rounded-[20px] bg-[oklch(0.155_0.006_264/0.7)] backdrop-blur-lg shadow-[0_40px_120px_-40px_oklch(0.05_0_0/0.8)] text-center">
           <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.8vw,42px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em]">
-            Stop running production from a spreadsheet
+            Ship episodes, not spreadsheets.
           </h2>
           <p className="text-text-secondary mt-4 text-[17px]">
-            Bring every show, every client, and every deliverable into one pipeline, and let the writing draft itself. Free for 7 days.
+            One pipeline for every show, every client, every deliverable.
           </p>
           <div className="flex gap-3 justify-center mt-7 flex-wrap">
             <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-[9px] text-[15.5px] font-semibold bg-accent text-white hover:bg-accent-hover transition-colors shadow-[0_0_0_0_var(--color-accent-tint),0_8px_24px_-8px_oklch(0.715_0.155_40/0.55)]">
-              Start free trial
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+              Get started free
             </Link>
             <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-[9px] text-[15.5px] font-medium border border-border-default bg-surface-raised text-text-primary hover:bg-surface-overlay transition-colors">
-              Book a walkthrough
+              Book a demo
             </Link>
           </div>
-          <p className="mt-3.5 text-[13px] text-fg-faint">No card required · cancel anytime · <span className="font-mono text-text-tertiary">setup in an afternoon</span></p>
+          <p className="mt-3.5 text-[13px] text-fg-faint">Free for 7 days · No card required</p>
         </div>
       </div>
     </section>
@@ -197,7 +194,7 @@ function Footer() {
               <span className="text-text-primary">PreRoll<span className="text-accent">.io</span></span>
             </Link>
             <p className="text-[13.5px] text-text-tertiary max-w-[36ch] leading-relaxed">
-              AI-native production management for podcast agencies. Built by people who&apos;ve missed too many publish dates.
+              Production management for podcast teams.
             </p>
           </div>
 

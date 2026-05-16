@@ -49,7 +49,7 @@ export function IntegrationMarquee() {
   return (
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
       <div className="max-w-[1200px] mx-auto px-7 text-center text-sm text-text-tertiary mb-9 reveal">
-        Drops into the stack you already run. <b className="text-text-secondary font-semibold">Files, review, hosting, AI, automation</b> — all wired in.
+        Connects to the tools you already use.
       </div>
       <div className="space-y-3.5">
         <MarqueeTrack items={[...row1]} />

@@ -70,24 +70,24 @@ export function FeatureBeats() {
   return (
     <section id="features" className="py-24 px-7 max-w-[1200px] mx-auto">
       <div className="text-center max-w-[64ch] mx-auto reveal">
-        <span className="font-mono text-xs tracking-[0.12em] uppercase text-accent">What it does</span>
-        <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5">An AI-native tool, end to end</h2>
-        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">The API and the MCP server are in the box on day one. So is an AI assistant that reads your pipeline and writes what you&apos;d normally type at 11pm.</p>
+        <span className="font-mono text-xs tracking-[0.12em] uppercase text-accent">Features</span>
+        <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5">Built for agents, not just humans</h2>
+        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">API and MCP server included. AI assistant built in.</p>
       </div>
 
       <div className="mt-[72px] space-y-28">
         {/* Beat 0 — API & MCP */}
         <div className="reveal" id="developers">
           <Beat
-            kicker="The API & MCP server"
-            title="An API and an MCP server, in the box"
-            lead="PreRoll.io exposes everything the app does through a REST API, and ships a built-in MCP server so any MCP client uses it as tools. Point Claude at your workspace and it can list shows, advance an episode, fetch a transcript, draft notes, or publish."
+            kicker="For developers"
+            title="API-first. MCP included."
+            lead="Everything in the UI has an API endpoint. The built-in MCP server turns your pipeline into tools any AI agent can call."
             items={[
-              { bold: 'Built-in MCP server.', rest: 'Nothing to host. Connect Claude or any agent and the pipeline shows up as callable tools.' },
-              { bold: 'Full REST API.', rest: 'Everything in the UI has an endpoint, plus webhooks for every stage change, episode update, and approval.' },
-              { bold: 'Scoped access and an audit log.', rest: 'An agent only ever sees the shows and actions you grant it, and every call is on the record.' },
+              { bold: 'MCP server.', rest: 'Connect Claude Desktop and your pipeline shows up as callable tools. Nothing to deploy.' },
+              { bold: 'Full REST API.', rest: 'Every resource, every action. Webhooks on stage changes and approvals.' },
+              { bold: 'Scoped and logged.', rest: 'Agents only see the shows you grant. Every call is on the record.' },
             ]}
-            linkText="Read the API docs"
+            linkText="API docs"
             linkHref="/docs/developer/api-reference"
           >
             <PanelShell label="claude · preroll mcp">
@@ -112,15 +112,15 @@ export function FeatureBeats() {
         {/* Beat 1 — AI Chat */}
         <div className="reveal">
           <Beat
-            kicker="The AI assistant"
-            title="Talk to your pipeline"
-            lead="PreRoll AI lives in a sliding panel, reachable from any page with one keystroke. Ask it to look up episodes, check what&apos;s overdue, draft show notes from a transcript, or advance an episode. It confirms before making changes."
+            kicker="AI assistant"
+            title="Talk to your pipeline."
+            lead="Ask what&apos;s overdue, draft show notes from a transcript, or advance an episode. Confirms before writing."
             items={[
-              { bold: 'Context-aware.', rest: 'It knows which episode, show, or client you’re viewing and scopes answers automatically.' },
-              { bold: '22 tools, read and write.', rest: 'Look things up, create episodes, generate content, move stages — all with confirmation before executing.' },
-              { bold: 'Transcribe and draft.', rest: 'Upload audio and it auto-transcribes, then generates show notes, titles, and social posts.' },
+              { bold: 'Context-aware.', rest: 'Knows which episode, show, or client you\'re viewing.' },
+              { bold: '22 tools.', rest: 'Read data, create episodes, generate content, move stages.' },
+              { bold: 'Transcribe and draft.', rest: 'Upload audio. Get a transcript, show notes, titles, and social posts.' },
             ]}
-            linkText="Try the AI assistant"
+            linkText="Try it free"
             linkHref="/signup"
             flipped
           >
