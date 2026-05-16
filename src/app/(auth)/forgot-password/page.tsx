@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { LogoIcon } from '@/components/ui/logo'
 import { createClient } from '@/lib/supabase/client'
 
 export default function ForgotPasswordPage() {
@@ -35,10 +36,7 @@ export default function ForgotPasswordPage() {
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center flex flex-col items-center gap-3">
           <span className="w-10 h-10 rounded-[9px] grid place-items-center shadow-[0_4px_14px_-4px_oklch(0.715_0.155_40/0.6)]" style={{ background: 'linear-gradient(150deg, var(--color-accent), oklch(0.62 0.16 18))', color: 'white' }}>
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
-              <path d="M5 4v16M12 4v16M19 4v16" />
-              <circle cx="12" cy="9" r="2.4" fill="currentColor" stroke="none" />
-            </svg>
+            <LogoIcon className="w-5 h-5" />
           </span>
           <h1 className="text-xl font-bold text-text-primary font-[family-name:var(--font-display)] tracking-[-0.02em]">
             PreRoll<span className="text-accent">.io</span>

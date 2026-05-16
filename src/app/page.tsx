@@ -5,6 +5,7 @@ import PricingSection from '@/components/landing/pricing-section'
 import { FeatureBeats } from '@/components/landing/feature-beats'
 import { IntegrationMarquee } from '@/components/landing/integration-marquee'
 import { AuroraBackground, CursorGlow, ScrollRevealInit, NavScrollEffect } from '@/components/landing/hero-effects'
+import { LogoIcon } from '@/components/ui/logo'
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -36,10 +37,7 @@ function Nav() {
       <div className="flex items-center gap-7 h-[60px] max-w-[1200px] mx-auto px-7">
         <Link href="/" className="flex items-center gap-2.5 font-[family-name:var(--font-display)] font-bold text-[16.5px] tracking-[-0.02em]">
           <span className="w-[26px] h-[26px] rounded-[7px] grid place-items-center text-sm font-bold shadow-[0_4px_14px_-4px_oklch(0.715_0.155_40/0.6)]" style={{ background: 'linear-gradient(150deg, var(--color-accent), oklch(0.62 0.16 18))', color: 'white' }}>
-            <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
-              <path d="M5 4v16M12 4v16M19 4v16" />
-              <circle cx="12" cy="9" r="2.4" fill="currentColor" stroke="none" />
-            </svg>
+            <LogoIcon className="w-[15px] h-[15px]" />
           </span>
           <span className="text-text-primary">PreRoll<span className="text-accent">.io</span></span>
         </Link>
@@ -186,10 +184,7 @@ function Footer() {
           <div className="max-[760px]:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 font-[family-name:var(--font-display)] font-bold text-[16.5px] tracking-[-0.02em] mb-3.5">
               <span className="w-[26px] h-[26px] rounded-[7px] grid place-items-center text-sm font-bold shadow-[0_4px_14px_-4px_oklch(0.715_0.155_40/0.6)]" style={{ background: 'linear-gradient(150deg, var(--color-accent), oklch(0.62 0.16 18))', color: 'white' }}>
-                <svg className="w-[15px] h-[15px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round">
-                  <path d="M5 4v16M12 4v16M19 4v16" />
-                  <circle cx="12" cy="9" r="2.4" fill="currentColor" stroke="none" />
-                </svg>
+                <LogoIcon className="w-[15px] h-[15px]" />
               </span>
               <span className="text-text-primary">PreRoll<span className="text-accent">.io</span></span>
             </Link>
