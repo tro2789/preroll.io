@@ -73,24 +73,6 @@ function Nav() {
 
 // ─── Hero ───────────────────────────────────────────────────────────────────
 
-const STAGES = [
-  { id: 'submitted', name: 'Submitted', color: 'oklch(0.746 0.16 231)' },
-  { id: 'editing', name: 'Editing', color: 'oklch(0.702 0.183 294)' },
-  { id: 'review', name: 'Review', color: 'oklch(0.828 0.17 84)' },
-  { id: 'approved', name: 'Approved', color: 'oklch(0.788 0.184 70)' },
-]
-
-const EPISODES = [
-  { st: 'submitted', no: 52, t: 'The cold open is a contract', sh: 'The Long Game', dt: 'Jun 02', img: '/images/landing/man-wooden-desk.jpg' },
-  { st: 'submitted', no: 13, t: 'Migrating a back-catalog without breaking feeds', sh: 'Build Log', dt: 'Jun 09', img: '/images/landing/creators-laptop-mics.jpg' },
-  { st: 'editing', no: 47, t: 'Why your retention curve lies to you', sh: 'The Long Game', dt: 'May 19', img: '/images/landing/two-presenters-laptop.jpg' },
-  { st: 'editing', no: 39, t: 'On-mic apologies & other trust mechanics', sh: 'Off the Record', dt: 'May 20', img: '/images/landing/host-interview.jpg' },
-  { st: 'review', no: 46, t: 'The chart that fooled everyone', sh: 'The Long Game', dt: 'May 16', img: '/images/landing/man-home-studio.jpg' },
-  { st: 'review', no: 38, t: "A producer's field guide to feedback", sh: 'Off the Record', dt: 'May 15', img: '/images/landing/podcast-woman-studio.jpg' },
-  { st: 'approved', no: 45, t: 'Reading a cliff vs. a slope', sh: 'The Long Game', dt: 'May 12', img: '/images/landing/two-creators-studio.jpg' },
-  { st: 'approved', no: 21, t: 'Cold opens, A/B tested', sh: 'Frequency', dt: 'May 12', img: '/images/landing/creators-laptop-mics.jpg' },
-]
-
 function Hero() {
   return (
     <header className="relative pt-[132px] pb-[70px] overflow-hidden">
@@ -128,64 +110,18 @@ function Hero() {
         </p>
       </div>
 
-      {/* Kanban product shot */}
+      {/* Product screenshot */}
       <div className="max-w-[1080px] mx-auto px-7 mt-14">
         <div className="relative z-[2]">
           <div className="shot-aura" aria-hidden="true" />
-          <div className="relative border border-border-default rounded-[20px] bg-bg-deeper overflow-hidden shadow-[0_1px_0_oklch(1_0_0/0.04)_inset,0_40px_120px_-40px_oklch(0.05_0_0/0.8),0_0_0_1px_oklch(0_0_0/0.3)] reveal" data-d="3">
-            {/* Chrome bar */}
-            <div className="flex items-center gap-2.5 px-4 py-[11px] border-b border-border-subtle bg-[oklch(0.155_0.006_264)]">
-              <span className="flex gap-1.5">
-                <i className="block w-2.5 h-2.5 rounded-full bg-surface-3" />
-                <i className="block w-2.5 h-2.5 rounded-full bg-surface-3" />
-                <i className="block w-2.5 h-2.5 rounded-full bg-surface-3" />
-              </span>
-              <span className="text-[12.5px] text-text-tertiary flex items-center gap-1.5 ml-1.5">
-                Atlas Audio Co. <span className="text-fg-faint">/</span> <b className="text-text-secondary font-medium">Dashboard</b>
-              </span>
-            </div>
-
-            {/* Toolbar */}
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-border-subtle">
-              <div className="flex items-center gap-1.5 px-2.5 py-[5px] rounded-md border border-border-subtle bg-surface-input text-text-tertiary text-[11px]">
-                <svg className="w-3 h-3 text-fg-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
-                <span>Search episodes...</span>
-              </div>
-              <span className="ml-auto flex items-center gap-1.5 text-fg-faint">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
-              </span>
-            </div>
-
-            {/* Columns */}
-            <div className="p-4 grid grid-cols-4 gap-3.5 min-h-[332px] max-[920px]:grid-cols-3 max-[560px]:grid-cols-2">
-              {STAGES.map((stage) => {
-                const cards = EPISODES.filter(ep => ep.st === stage.id)
-                return (
-                  <div key={stage.id} className="min-w-0 max-[920px]:[&:nth-child(n+4)]:hidden max-[560px]:[&:nth-child(n+3)]:hidden">
-                    <div className="flex items-center gap-1.5 px-1 pb-2.5 text-[12.5px]">
-                      <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: stage.color }} />
-                      <span className="font-semibold text-text-primary tracking-[0.01em]">{stage.name}</span>
-                      <span className="font-mono text-[11px] text-fg-faint ml-auto">{cards.length}</span>
-                    </div>
-                    <div className="flex flex-col gap-2.5">
-                      {cards.map(ep => (
-                        <div key={ep.no} className="rounded-[10px] border border-border-subtle bg-surface-raised p-[11px] hover:border-border-strong transition-colors">
-                          <div className="relative mb-[9px]">
-                            <img src={ep.img} alt="" className="aspect-[16/9] w-full rounded-[5px] object-cover bg-surface-3" loading="lazy" />
-                            <span className="absolute top-1.5 left-2 font-mono text-[10px] tracking-[0.04em] text-white/80 z-[1] drop-shadow-[0_1px_2px_oklch(0_0_0/0.6)]">EP {String(ep.no).padStart(3, '0')}</span>
-                          </div>
-                          <p className="text-[13px] font-medium text-text-primary leading-[1.35]">{ep.t}</p>
-                          <div className="text-[11.5px] text-text-tertiary mt-[3px] truncate">{ep.sh}</div>
-                          <div className="flex items-center mt-[10px]">
-                            <span className="ml-auto font-mono text-[11px] tabular-nums text-text-tertiary">{ep.dt}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+          <div className="relative rounded-[20px] overflow-hidden shadow-[0_1px_0_oklch(1_0_0/0.04)_inset,0_40px_120px_-40px_oklch(0.05_0_0/0.8),0_0_0_1px_oklch(0_0_0/0.3)] reveal" data-d="3">
+            <img
+              src="/images/landing/hero-screenshot.jpg"
+              alt="PreRoll.io dashboard showing a kanban board with podcast episodes organized by production stage"
+              className="w-full h-auto"
+              width={2880}
+              height={1800}
+            />
           </div>
         </div>
       </div>
