@@ -1,4 +1,4 @@
-const DEFAULT_BASE = 'https://api.preroll.io'
+const DEFAULT_BASE = 'https://preroll.io'
 
 export class PreRollClient {
   private baseUrl: string

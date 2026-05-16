@@ -1,0 +1,94 @@
+---
+title: n8n Community Node
+description: Automate podcast production workflows with the preroll.io community node for n8n.
+---
+
+## Overview
+
+The `n8n-nodes-preroll` community node lets you interact with preroll.io directly from n8n workflows. Use it to automate episode creation, monitor pipeline progress, trigger actions when deliverables are approved, and more.
+
+The package includes two nodes:
+
+- **PreRoll.io** — perform actions (create episodes, update clients, run AI pipelines, etc.)
+- **PreRoll.io Trigger** — start workflows when events occur (episode published, deliverable approved, etc.)
+
+## Installation
+
+In your n8n instance, go to **Settings → Community Nodes** and install:
+
+```
+n8n-nodes-preroll
+```
+
+Or install via CLI:
+
+```bash
+cd ~/.n8n
+npm install n8n-nodes-preroll
+```
+
+Restart n8n after installation.
+
+## Credential Setup
+
+1. In preroll.io, go to **Settings → Developer → API Keys** and create a new key
+2. In n8n, go to **Credentials → Add Credential → PreRoll.io API**
+3. Paste your API key (starts with `pr_`)
+4. The Base URL defaults to `https://preroll.io` — change this only for self-hosted instances
+
+## PreRoll.io Node
+
+The main node supports the following resources and operations:
+
+| Resource | Operations |
+|----------|-----------|
+| Client | Get, Get Many, Create, Update |
+| Show | Get, Get Many, Create, Update |
+| Episode | Get, Get Many, Create, Update |
+| Deliverable | Get Many, Create, Update |
+| Pipeline Stage | Get Many (per show) |
+| Tag | Get Many, Create |
+| Meeting Note | Get Many, Create |
+| Activity | Get Many |
+| AI | Get Credits, Transcribe Episode, Generate Content, Run Pipeline |
+| Dashboard | Get Overview |
+
+## PreRoll.io Trigger Node
+
+The trigger node registers a webhook with preroll.io and starts your workflow when selected events occur:
+
+| Event | Fires when |
+|-------|-----------|
+| `episode.status_changed` | Episode status changes (draft, in_progress, published) |
+| `episode.stage_changed` | Episode moves to a different pipeline stage |
+| `episode.published` | Episode published to distribution |
+| `episode.scheduled` | Episode scheduled for future publication |
+| `deliverable.submitted` | Deliverable submitted for client review |
+| `deliverable.approved` | Client approves a deliverable |
+| `deliverable.revision_requested` | Client requests revisions |
+| `deliverable.resubmitted` | Revised deliverable resubmitted |
+
+The trigger automatically registers and deregisters its webhook endpoint when you activate or deactivate the workflow. Webhook payloads are signed with HMAC-SHA256 and verified automatically by the node.
+
+## Example Workflows
+
+### Notify Slack when an episode is approved
+
+1. **PreRoll.io Trigger** → events: `deliverable.approved`
+2. **Slack** → send message to `#production` with episode title and client name
+
+### Auto-transcribe new episodes
+
+1. **PreRoll.io Trigger** → events: `episode.stage_changed`
+2. **IF** → stage equals "Editing"
+3. **PreRoll.io** → AI: Transcribe Episode
+
+### Weekly production report
+
+1. **Schedule Trigger** → every Monday at 9 AM
+2. **PreRoll.io** → Dashboard: Get Overview
+3. **Email** → send summary to team
+
+## Self-Hosted Instances
+
+If you're running a self-hosted preroll.io instance, update the **Base URL** in your credential to point to your instance (e.g., `https://preroll.yourdomain.com`). The node appends `/api/v1/...` to whatever base URL you provide.

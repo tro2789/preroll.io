@@ -89,7 +89,7 @@ Configure in your MCP client:
       "args": ["./mcp/dist/index.js"],
       "env": {
         "PREROLL_API_KEY": "pr_...",
-        "PREROLL_BASE_URL": "https://api.preroll.io"
+        "PREROLL_BASE_URL": "https://preroll.io"
       }
     }
   }

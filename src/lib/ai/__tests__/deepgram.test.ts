@@ -4,10 +4,10 @@ import { parseDeepgramResponse, buildCallbackUrl } from '../deepgram'
 describe('buildCallbackUrl', () => {
   it('uses NEXT_PUBLIC_SITE_URL when set', () => {
     const original = process.env.NEXT_PUBLIC_SITE_URL
-    process.env.NEXT_PUBLIC_SITE_URL = 'https://api.preroll.io'
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://preroll.io'
     try {
       const url = buildCallbackUrl('txn-123')
-      expect(url).toBe('https://api.preroll.io/api/v1/webhooks/deepgram?id=txn-123')
+      expect(url).toBe('https://preroll.io/api/v1/webhooks/deepgram?id=txn-123')
     } finally {
       process.env.NEXT_PUBLIC_SITE_URL = original
     }

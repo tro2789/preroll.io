@@ -1,4 +1,4 @@
 {
   "title": "Developer",
-  "pages": ["api-reference", "webhooks", "mcp-server", "integrations", "self-hosting"]
+  "pages": ["api-reference", "webhooks", "mcp-server", "n8n-node", "integrations", "self-hosting"]
 }
