@@ -80,22 +80,15 @@ const STAGES = [
   { id: 'approved', name: 'Approved', color: 'oklch(0.788 0.184 70)' },
 ]
 
-const TAGS = [
-  { name: 'Strategy', color: 'oklch(0.7 0.16 28)' },
-  { name: 'Culture', color: 'oklch(0.7 0.15 200)' },
-  { name: 'Technical', color: 'oklch(0.74 0.14 145)' },
-  { name: 'Growth', color: 'oklch(0.72 0.14 300)' },
-]
-
 const EPISODES = [
-  { st: 'submitted', no: 52, t: 'The cold open is a contract', sh: 'The Long Game', dt: 'Jun 02', tags: [0] },
-  { st: 'submitted', no: 13, t: 'Migrating a back-catalog without breaking feeds', sh: 'Build Log', dt: 'Jun 09', tags: [2] },
-  { st: 'editing', no: 47, t: 'Why your retention curve lies to you', sh: 'The Long Game', dt: 'May 19', tags: [0] },
-  { st: 'editing', no: 39, t: 'On-mic apologies & other trust mechanics', sh: 'Off the Record', dt: 'May 20', tags: [1] },
-  { st: 'review', no: 46, t: 'The chart that fooled everyone', sh: 'The Long Game', dt: 'May 16', tags: [0] },
-  { st: 'review', no: 38, t: "A producer's field guide to feedback", sh: 'Off the Record', dt: 'May 15', tags: [1] },
-  { st: 'approved', no: 45, t: 'Reading a cliff vs. a slope', sh: 'The Long Game', dt: 'May 12', tags: [0] },
-  { st: 'approved', no: 21, t: 'Cold opens, A/B tested', sh: 'Frequency', dt: 'May 12', tags: [3] },
+  { st: 'submitted', no: 52, t: 'The cold open is a contract', sh: 'The Long Game', dt: 'Jun 02', img: '/images/landing/man-wooden-desk.jpg' },
+  { st: 'submitted', no: 13, t: 'Migrating a back-catalog without breaking feeds', sh: 'Build Log', dt: 'Jun 09', img: '/images/landing/creators-laptop-mics.jpg' },
+  { st: 'editing', no: 47, t: 'Why your retention curve lies to you', sh: 'The Long Game', dt: 'May 19', img: '/images/landing/two-presenters-laptop.jpg' },
+  { st: 'editing', no: 39, t: 'On-mic apologies & other trust mechanics', sh: 'Off the Record', dt: 'May 20', img: '/images/landing/host-interview.jpg' },
+  { st: 'review', no: 46, t: 'The chart that fooled everyone', sh: 'The Long Game', dt: 'May 16', img: '/images/landing/man-home-studio.jpg' },
+  { st: 'review', no: 38, t: "A producer's field guide to feedback", sh: 'Off the Record', dt: 'May 15', img: '/images/landing/podcast-woman-studio.jpg' },
+  { st: 'approved', no: 45, t: 'Reading a cliff vs. a slope', sh: 'The Long Game', dt: 'May 12', img: '/images/landing/two-creators-studio.jpg' },
+  { st: 'approved', no: 21, t: 'Cold opens, A/B tested', sh: 'Frequency', dt: 'May 12', img: '/images/landing/creators-laptop-mics.jpg' },
 ]
 
 function Hero() {
@@ -158,11 +151,6 @@ function Hero() {
                 <svg className="w-3 h-3 text-fg-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
                 <span>Search episodes...</span>
               </div>
-              {TAGS.map((tag) => (
-                <span key={tag.name} className="hidden sm:inline-flex items-center rounded-full border border-transparent px-2 py-[3px] text-[10px] font-medium opacity-60" style={{ background: `${tag.color}15`, color: tag.color }}>
-                  {tag.name}
-                </span>
-              ))}
               <span className="ml-auto flex items-center gap-1.5 text-fg-faint">
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
               </span>
@@ -183,22 +171,13 @@ function Hero() {
                       {cards.map(ep => (
                         <div key={ep.no} className="rounded-[10px] border border-border-subtle bg-surface-raised p-[11px] hover:border-border-strong transition-colors">
                           <div className="relative mb-[9px]">
-                            <div className="aspect-[16/9] rounded-[5px] bg-gradient-to-br from-surface-overlay to-surface-3 relative overflow-hidden">
-                              <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_80%_0%,oklch(0.5_0.06_264/0.45),transparent)]" />
-                            </div>
-                            <span className="absolute top-1.5 left-2 font-mono text-[10px] tracking-[0.04em] text-text-secondary z-[1]">EP {String(ep.no).padStart(3, '0')}</span>
+                            <img src={ep.img} alt="" className="aspect-[16/9] w-full rounded-[5px] object-cover bg-surface-3" loading="lazy" />
+                            <span className="absolute top-1.5 left-2 font-mono text-[10px] tracking-[0.04em] text-white/80 z-[1] drop-shadow-[0_1px_2px_oklch(0_0_0/0.6)]">EP {String(ep.no).padStart(3, '0')}</span>
                           </div>
                           <p className="text-[13px] font-medium text-text-primary leading-[1.35]">{ep.t}</p>
                           <div className="text-[11.5px] text-text-tertiary mt-[3px] truncate">{ep.sh}</div>
-                          <div className="flex items-center gap-[7px] mt-[10px]">
-                            <div className="flex flex-wrap gap-1">
-                              {ep.tags.map(ti => (
-                                <span key={ti} className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none" style={{ background: `${TAGS[ti].color}20`, color: TAGS[ti].color }}>
-                                  {TAGS[ti].name}
-                                </span>
-                              ))}
-                            </div>
-                            <span className="ml-auto font-mono text-[11px] tabular-nums text-text-tertiary shrink-0">{ep.dt}</span>
+                          <div className="flex items-center mt-[10px]">
+                            <span className="ml-auto font-mono text-[11px] tabular-nums text-text-tertiary">{ep.dt}</span>
                           </div>
                         </div>
                       ))}
