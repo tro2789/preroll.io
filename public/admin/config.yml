@@ -1,0 +1,37 @@
+backend:
+  name: gitea
+  repo: tro2789/preroll.io
+  branch: main
+  app_id: REPLACE_WITH_OAUTH_APP_ID
+  api_root: https://gitea.tohareprod.com/api/v1
+  base_url: https://gitea.tohareprod.com
+  auth_endpoint: login/oauth/authorize
+
+media_folder: public/images/blog
+public_folder: /images/blog
+
+collections:
+  - name: blog
+    label: Blog Posts
+    label_singular: Blog Post
+    folder: src/content/blog
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    fields:
+      - { label: Title, name: title, widget: string }
+      - {
+          label: Date,
+          name: date,
+          widget: datetime,
+          date_format: "YYYY-MM-DD",
+          time_format: false,
+          format: "YYYY-MM-DD",
+          picker_utc: true,
+        }
+      - { label: Excerpt, name: excerpt, widget: text }
+      - { label: Tags, name: tags, widget: list }
+      - { label: Author, name: author, widget: string, default: "PreRoll" }
+      - { label: Featured image, name: image, widget: image, required: false }
+      - { label: Body, name: body, widget: markdown }
