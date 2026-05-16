@@ -16,6 +16,14 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'assets.preroll.io',
       },
+      {
+        protocol: 'https',
+        hostname: 'dev.preroll.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'preroll.io',
+      },
     ],
   },
 };
