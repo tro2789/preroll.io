@@ -40,13 +40,14 @@ export async function GET(
 
     return jsonResponse({
       items: (r2Files || []).map((f) => ({
-        id: f.external_id,
+        id: f.id,
         name: f.name,
         type: 'file' as const,
         mimeType: f.mime_type,
         fileSize: f.file_size,
         durationSeconds: f.duration_seconds,
         createdAt: f.created_at,
+        provider: 'r2',
       })),
       breadcrumb: [],
       pagination: { hasMore: false },

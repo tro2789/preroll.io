@@ -25,12 +25,22 @@ export async function DELETE(
   const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
   if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
-  const { data: fileRef } = await supabase!
+  let { data: fileRef } = await supabase!
     .from('file_references')
     .select('id, name, provider, external_id, file_size')
     .eq('external_id', fileId)
     .eq('episode_id', episodeId)
     .maybeSingle()
+
+  if (!fileRef) {
+    const { data: byId } = await supabase!
+      .from('file_references')
+      .select('id, name, provider, external_id, file_size')
+      .eq('id', fileId)
+      .eq('episode_id', episodeId)
+      .maybeSingle()
+    fileRef = byId
+  }
 
   if (fileRef?.provider === 'r2') {
     try {

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
+import { getDownloadUrl } from '@/lib/r2/client'
 
 export async function GET(
   _request: NextRequest,
@@ -22,16 +23,38 @@ export async function GET(
   const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
   if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
-  const { data: fileRef } = await supabase!
+  let { data: fileRef } = await supabase!
     .from('file_references')
     .select('id, external_id, mime_type, duration_seconds, provider, name')
     .eq('external_id', fileId)
     .eq('episode_id', episodeId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
+
+  if (!fileRef) {
+    const { data: byId } = await supabase!
+      .from('file_references')
+      .select('id, external_id, mime_type, duration_seconds, provider, name')
+      .eq('id', fileId)
+      .eq('episode_id', episodeId)
+      .single()
+    fileRef = byId
+  }
 
   if (!fileRef) return errorResponse('File not found', 404)
+
+  if (fileRef.provider === 'r2') {
+    const url = await getDownloadUrl(fileRef.external_id)
+    return jsonResponse({
+      url,
+      mime_type: fileRef.mime_type,
+      duration_seconds: fileRef.duration_seconds,
+      status: 'ready',
+      name: fileRef.name,
+      file_reference_id: fileRef.id,
+    })
+  }
 
   ensureProvidersRegistered()
 

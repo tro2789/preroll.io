@@ -27,6 +27,7 @@ interface BrowseItem {
   durationSeconds?: number
   createdAt?: string
   metadata?: Record<string, unknown>
+  provider?: string
   version_number?: number
   version_count?: number
   version_group_id?: string
@@ -345,7 +346,7 @@ export function DeliveryPanel({
           title: file.name, file_url: file.viewUrl || null,
           mime_type: file.mimeType || null,
           external_file_id: file.id,
-          provider: integration?.provider,
+          provider: file.provider || integration?.provider,
         }),
       })
       if (!res.ok) {
