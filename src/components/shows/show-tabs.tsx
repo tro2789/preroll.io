@@ -123,7 +123,7 @@ export function ShowTabs({ show, client, stages, episodes, resolvedCoverArtUrl }
         </div>
       </div>
 
-      <nav className="mt-6 flex gap-1 border-b border-border-default overflow-x-auto">
+      <nav className="mt-6 flex gap-1 border-b border-border-default overflow-x-auto overflow-y-hidden">
         {TABS.filter((tab) => tab.key !== 'share' || client).map((tab) => (
           <button
             key={tab.key}
