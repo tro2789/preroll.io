@@ -8,7 +8,7 @@ import type { KanbanColumn, KanbanEpisode } from '@/lib/kanban/types'
 import { SortableColumn, CollapseToggle, ColumnCount } from '@/components/kanban/sortable-column'
 import { SortableCard, DragOverlayCard } from '@/components/kanban/sortable-card'
 import { BoardToolbar, applyFilters, type BoardFilters } from '@/components/kanban/board-toolbar'
-import { BulkActionBar } from '@/components/kanban/bulk-action-bar'
+import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
 import { useCollapsedColumns } from '@/lib/kanban/use-collapsed-columns'
 import { useCompactView } from '@/lib/kanban/use-compact-view'
 import { EpisodeCard } from './episode-card'
@@ -17,7 +17,8 @@ interface Stage {
   id: string
   name: string
   position: number
-  wip_limit?: number | null
+  wip_limit: number | null
+  status_override: string | null
 }
 
 interface Episode extends KanbanEpisode {
@@ -54,8 +55,6 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
   const [filters, setFilters] = useState<BoardFilters>({ search: '', overdueOnly: false, showId: null, tagIds: [] })
   const { isCollapsed, toggle, expand } = useCollapsedColumns(`pipeline-${showId}`)
   const { compact, toggle: toggleCompact } = useCompactView()
-  const [selectMode, setSelectMode] = useState(false)
-  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   const columns: KanbanColumn[] = sortedStages.map((stage) => ({
     id: stage.id,
@@ -88,15 +87,6 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
 
   const activeTab = sortedStages[0]?.id || ''
 
-  function toggleSelect(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
   const lastColumnId = sortedStages.length > 0 ? sortedStages[sortedStages.length - 1].id : null
 
   async function handleArchive(episodeId: string) {
@@ -106,20 +96,6 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
       body: JSON.stringify({ archived_at: new Date().toISOString() }),
     })
     if (res.ok) router.refresh()
-  }
-
-  async function handleBulkMove(stageId: string) {
-    const ids = [...selected]
-    const res = await fetch(`/api/v1/shows/${showId}/episodes/bulk-move`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ episodeIds: ids, stageId }),
-    })
-    if (res.ok) {
-      setSelected(new Set())
-      setSelectMode(false)
-      router.refresh()
-    }
   }
 
   return (
@@ -134,21 +110,9 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
       />
 
       <div className="hidden md:block">
-        <div className="flex items-start gap-2">
-          <div className="flex-1">
-            <BoardToolbar onFilterChange={setFilters} compact={compact} onCompactChange={toggleCompact} />
-          </div>
-          <button
-            onClick={() => { setSelectMode(!selectMode); setSelected(new Set()) }}
-            className={`shrink-0 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors ${
-              selectMode
-                ? 'border-accent/40 bg-accent/10 text-accent'
-                : 'border-border-subtle bg-surface-overlay text-text-tertiary hover:text-text-secondary hover:border-border-default'
-            }`}
-          >
-            {selectMode ? 'Cancel Select' : 'Select'}
-          </button>
-        </div>
+        <BoardToolbar onFilterChange={setFilters} compact={compact} onCompactChange={toggleCompact}>
+          <StageManagerTrigger showId={showId} stages={stages} />
+        </BoardToolbar>
 
         <DndContext
           sensors={sensors}
@@ -196,8 +160,6 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
                       key={episode.id}
                       id={episode.id}
                       label={episode.title}
-                      selected={selectMode ? selected.has(episode.id) : undefined}
-                      onToggleSelect={selectMode ? toggleSelect : undefined}
                     >
                       <EpisodeCard
                         episode={episode}
@@ -221,14 +183,6 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
           </DragOverlay>
         </DndContext>
 
-        {selectMode && (
-          <BulkActionBar
-            selectedCount={selected.size}
-            stages={sortedStages}
-            onBulkMove={handleBulkMove}
-            onClearSelection={() => { setSelected(new Set()); setSelectMode(false) }}
-          />
-        )}
       </div>
     </>
   )

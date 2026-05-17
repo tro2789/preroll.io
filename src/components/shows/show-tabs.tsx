@@ -3,9 +3,6 @@
 import { useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PipelineBoard } from '@/components/episodes/pipeline-board'
-import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
-import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
-import { BatchAiButton } from '@/components/shows/batch-ai-button'
 import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 import { ShowDetailsTab } from '@/components/shows/show-details-tab'
 import { ShowAssetsTab } from '@/components/shows/show-assets-tab'
@@ -150,11 +147,6 @@ export function ShowTabs({ show, client, stages, episodes, resolvedCoverArtUrl }
                 Episodes
                 <span className="ml-2 text-sm font-normal">({totalEpisodes})</span>
               </h2>
-              <div className="flex items-center gap-2">
-                <BatchAiButton showId={show.id} />
-                <StageManagerTrigger showId={show.id} stages={stages} />
-                <QuickCreateEpisode showId={show.id} />
-              </div>
             </div>
 
             {totalEpisodes === 0 ? (
