@@ -426,7 +426,7 @@ export function EpisodeTabs({
         <div className="flex gap-0.5 border-b border-border-subtle mb-[18px]">
           {([
             { id: 'files' as Tab, label: 'Files', count: fileCount },
-            { id: 'content' as Tab, label: 'Content' },
+            { id: 'content' as Tab, label: 'Metadata' },
             { id: 'deliverables' as Tab, label: 'Shares', count: deliverables.length },
             { id: 'distribution' as Tab, label: 'Distribution' },
             { id: 'activity' as Tab, label: 'Activity' },
