@@ -29,8 +29,7 @@ export default function StorageSettingsPage() {
   if (loading) {
     return (
       <div className="max-w-4xl">
-        <h1 className="text-2xl font-bold text-text-primary mb-1">Storage</h1>
-        <p className="text-sm text-text-secondary mb-8">Manage your built-in file storage.</p>
+        <h1 className="text-2xl font-bold text-text-primary mb-8">Storage</h1>
         <div className="animate-pulse h-32 bg-surface-raised rounded-lg" />
       </div>
     )
@@ -53,10 +52,7 @@ export default function StorageSettingsPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-text-primary mb-1">Storage</h1>
-      <p className="text-sm text-text-secondary mb-8">
-        Built-in file storage for your episodes and deliverables. Files are stored securely on Cloudflare&apos;s global network.
-      </p>
+      <h1 className="text-2xl font-bold text-text-primary mb-8">Storage</h1>
 
       <div className="border border-border-subtle rounded-lg p-6 bg-surface-raised mb-6">
         <div className="flex items-baseline justify-between mb-3">

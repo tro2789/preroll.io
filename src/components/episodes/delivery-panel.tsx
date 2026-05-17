@@ -119,11 +119,12 @@ export function DeliveryPanel({
   const hasProject = !!integration?.externalProjectId
   const hasProvider = connectedProviders.length > 0
   const providerConnected = !!integration && connectedProviders.includes(integration.provider)
-  const isLive = hasProject && providerConnected
+  const isExternalLive = hasProject && providerConnected
+  const isLive = isExternalLive || (!hasProject && !integration)
   const providerDisplayName = integration?.displayName || 'Provider'
 
   const fetchFiles = useCallback(async () => {
-    if (!isLive || projectMissing) return
+    if (!isLive || (isExternalLive && projectMissing)) return
     setFilesLoading(true)
     setFilesError(null)
     try {
@@ -884,9 +885,9 @@ export function DeliveryPanel({
         {/* Main: files */}
         <div className="min-w-0 space-y-4">
           {/* Header bar */}
-          {hasProvider && (
+          {(hasProvider || isLive) && (
             <div className="flex flex-wrap items-center justify-between gap-2">
-              {!hasProject ? (
+              {hasProvider && !hasProject ? (
                 <div className="rounded-xl border border-border-subtle bg-surface-raised p-5">
                   <div className="flex items-center gap-3">
                     <ProviderLogo provider={connectedProviders[0]} className="w-8 h-8" />
@@ -1030,7 +1031,7 @@ export function DeliveryPanel({
             </div>
           )}
 
-          {/* Empty state — project linked and provider connected */}
+          {/* Empty state */}
           {isLive && !projectMissing && !filesLoading && files.length === 0 && !filesError && (
             <div className="py-12 text-center">
               <p className="text-sm text-text-primary">No files yet.</p>
@@ -1043,56 +1044,6 @@ export function DeliveryPanel({
             <div className="py-12 text-center">
               <p className="text-sm text-text-primary">This episode has a {providerDisplayName} project linked, but {providerDisplayName} is disconnected.</p>
               <p className="mt-1 text-xs text-text-secondary">Reconnect in Settings to view files and upload.</p>
-            </div>
-          )}
-
-          {/* No provider connected at all */}
-          {!hasProvider && !hasProject && (
-            <div className="relative overflow-hidden rounded-xl border border-border-subtle bg-surface-raised p-6">
-              <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-accent/8 blur-2xl" />
-              <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-accent/8 blur-xl" />
-              <div className="relative">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">&#x1F680;</span>
-                  <h3 className="text-base font-semibold text-text-primary">
-                    Connect a delivery provider
-                  </h3>
-                </div>
-                <p className="mt-2 text-sm text-text-secondary leading-relaxed">
-                  Upload files, manage reviews, and deliver to clients — all from this page.
-                  Pick a provider to get started.
-                </p>
-                <div className="mt-5 grid grid-cols-3 gap-3">
-                  {([
-                    { provider: 'frame_io' as IntegrationProvider, name: 'Frame.io', desc: 'Video review & approval' },
-                    { provider: 'google_drive' as IntegrationProvider, name: 'Google Drive', desc: 'File storage & sharing' },
-                    { provider: 'vimeo' as IntegrationProvider, name: 'Vimeo', desc: 'Video hosting & delivery' },
-                    { provider: 'youtube' as IntegrationProvider, name: 'YouTube', desc: 'Video hosting & publishing' },
-                  ]).map((p) => (
-                    <Link
-                      key={p.provider}
-                      href={`/app/settings/integrations?connect=${p.provider}&returnTo=/app/shows/${showId}/episodes/${episodeId}`}
-                      className="group flex flex-col items-center gap-2.5 rounded-lg border border-border-default bg-surface-base p-4 text-center transition-all hover:border-accent hover:bg-accent/5 hover:shadow-sm"
-                    >
-                      <ProviderLogo provider={p.provider} className="w-10 h-10" />
-                      <div>
-                        <p className="text-sm font-medium text-text-primary group-hover:text-accent transition-colors">
-                          {p.name}
-                        </p>
-                        <p className="mt-0.5 text-xs text-text-secondary">{p.desc}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                {!showManualForm && (
-                  <button
-                    onClick={() => setShowManualForm(true)}
-                    className="mt-4 text-xs text-text-secondary hover:text-text-primary transition-colors"
-                  >
-                    or share files manually
-                  </button>
-                )}
-              </div>
             </div>
           )}
         </div>
