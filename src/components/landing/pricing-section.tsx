@@ -11,6 +11,7 @@ const TIERS = [
     description: 'Try it out with one client.',
     features: [
       '1 client, 1 show',
+      '10 GB storage',
       'Episode pipeline with drag-and-drop',
       'Client portal with magic-link auth',
       'Calendar view',
@@ -26,6 +27,7 @@ const TIERS = [
     description: 'For producers managing multiple shows.',
     features: [
       'Unlimited clients and shows',
+      '500 GB storage',
       'All integrations (Frame.io, Transistor, Drive, Vimeo)',
       'Webhook egress and API keys',
       'MCP server access',
@@ -43,6 +45,7 @@ const TIERS = [
     description: 'For teams and agencies.',
     features: [
       'Everything in Pro',
+      '2 TB storage',
       'Multi-user access with roles',
       'White-label client portal',
       'Reporting and analytics',

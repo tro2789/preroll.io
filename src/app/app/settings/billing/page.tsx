@@ -41,6 +41,7 @@ const UPGRADE_TIERS = [
     annual: 289,
     features: [
       'Unlimited clients and shows',
+      '500 GB storage',
       'All integrations (Frame.io, Transistor, Drive, Vimeo)',
       'Webhook egress and API keys',
       'MCP server access',
@@ -56,6 +57,7 @@ const UPGRADE_TIERS = [
     annual: 789,
     features: [
       'Everything in Pro',
+      '2 TB storage',
       'Multi-user access with roles',
       'White-label client portal',
       'Reporting and analytics',
@@ -277,7 +279,7 @@ export default function BillingPage() {
                   )}
                   {!isPaid && (
                     <p className="mt-0.5 text-sm text-text-secondary">
-                      1 client, 1 show — upgrade below to unlock more.
+                      1 client, 1 show, 10 GB storage — upgrade below to unlock more.
                     </p>
                   )}
                 </div>
