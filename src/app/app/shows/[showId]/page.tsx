@@ -81,15 +81,6 @@ export default async function ShowDetailPage({
   return (
     <div>
       <ChatContextSync contextLabel={`${show.name}${client ? ` (${client.name})` : ''}`} />
-      {client && (
-        <Link
-          href={`/app/clients/${client.id}`}
-          className="text-sm text-text-secondary hover:text-text-primary transition-colors"
-        >
-          &larr; {client.name}
-        </Link>
-      )}
-
       <ShowTabs
         show={showData}
         client={client}
