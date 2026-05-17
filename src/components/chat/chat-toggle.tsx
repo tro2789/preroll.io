@@ -25,7 +25,7 @@ export function ChatToggle() {
       aria-label="Toggle AI assistant (⌘J)"
       aria-expanded={isOpen}
       className={cn(
-        'group fixed bottom-5 right-5 z-40',
+        'group fixed bottom-[72px] right-5 z-30 md:bottom-5',
         'size-12 rounded-full',
         'bg-accent text-white shadow-lg',
         'flex items-center justify-center',
