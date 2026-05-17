@@ -4,6 +4,7 @@ import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { getUploadUrl, createMultipartUpload, shouldUseMultipart } from '@/lib/r2/client'
 import { checkQuota, incrementUsage } from '@/lib/storage/usage'
+import { formatFileSize } from '@/lib/format'
 
 export async function POST(
   request: Request,
@@ -52,7 +53,7 @@ async function uploadToR2(
   const { allowed, usage } = await checkQuota(orgId, body.file_size)
   if (!allowed) {
     return errorResponse(
-      `Storage quota exceeded. Used ${formatBytes(usage.usedBytes)} of ${formatBytes(usage.limitBytes!)}. Upgrade your plan for more storage.`,
+      `Storage quota exceeded. Used ${formatFileSize(usage.usedBytes)} of ${formatFileSize(usage.limitBytes!)}. Upgrade your plan for more storage.`,
       402
     )
   }
@@ -145,8 +146,3 @@ async function uploadToExternalProvider(
   }
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`
-  if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
-  return `${(bytes / 1024).toFixed(0)} KB`
-}

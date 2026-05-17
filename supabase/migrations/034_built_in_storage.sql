@@ -28,6 +28,13 @@ ON CONFLICT (plan_id, feature) DO UPDATE
       limit_value = EXCLUDED.limit_value;
 
 -- ============================================================
+-- 2b. Index for R2 storage queries by org
+-- ============================================================
+
+CREATE INDEX IF NOT EXISTS idx_file_references_org_r2
+  ON file_references(org_id) WHERE provider = 'r2';
+
+-- ============================================================
 -- 3. Atomic storage increment/decrement RPCs
 -- ============================================================
 

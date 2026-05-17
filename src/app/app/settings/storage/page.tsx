@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatFileSize } from '@/lib/format'
 
 interface StorageData {
   usedBytes: number
@@ -8,13 +9,6 @@ interface StorageData {
   usedPercent: number
   remaining: number | null
   breakdown: { show: string; bytes: number }[]
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes >= 1024 ** 4) return `${(bytes / 1024 ** 4).toFixed(2)} TB`
-  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`
-  if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
-  return `${(bytes / 1024).toFixed(0)} KB`
 }
 
 export default function StorageSettingsPage() {
@@ -47,8 +41,8 @@ export default function StorageSettingsPage() {
     )
   }
 
-  const usedLabel = formatBytes(data.usedBytes)
-  const limitLabel = data.limitBytes ? formatBytes(data.limitBytes) : 'Unlimited'
+  const usedLabel = formatFileSize(data.usedBytes)
+  const limitLabel = data.limitBytes ? formatFileSize(data.limitBytes) : 'Unlimited'
   const percent = Math.min(data.usedPercent, 100)
   const isNearLimit = percent >= 80
   const isOverLimit = percent >= 95
@@ -79,7 +73,7 @@ export default function StorageSettingsPage() {
 
         {data.remaining !== null && (
           <p className="text-xs text-text-tertiary mt-2">
-            {formatBytes(data.remaining)} remaining
+            {formatFileSize(data.remaining)} remaining
           </p>
         )}
       </div>
@@ -104,7 +98,7 @@ export default function StorageSettingsPage() {
             {data.breakdown.map((item) => (
               <div key={item.show} className="flex items-center justify-between px-5 py-3">
                 <span className="text-sm text-text-primary">{item.show}</span>
-                <span className="text-sm text-text-secondary">{formatBytes(item.bytes)}</span>
+                <span className="text-sm text-text-secondary">{formatFileSize(item.bytes)}</span>
               </div>
             ))}
           </div>

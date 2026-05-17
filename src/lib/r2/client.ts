@@ -58,19 +58,21 @@ export async function createMultipartUpload(key: string, contentType: string, fi
   if (!UploadId) throw new Error('Failed to initiate multipart upload')
 
   const partCount = Math.ceil(fileSize / PART_SIZE)
-  const parts: MultipartUpload['parts'] = []
 
-  for (let i = 1; i <= partCount; i++) {
-    const partSize = i === partCount ? fileSize - (i - 1) * PART_SIZE : PART_SIZE
-    const command = new UploadPartCommand({
-      Bucket: bucket(),
-      Key: key,
-      UploadId,
-      PartNumber: i,
+  const parts = await Promise.all(
+    Array.from({ length: partCount }, (_, idx) => {
+      const i = idx + 1
+      const partSize = i === partCount ? fileSize - (i - 1) * PART_SIZE : PART_SIZE
+      const command = new UploadPartCommand({
+        Bucket: bucket(),
+        Key: key,
+        UploadId,
+        PartNumber: i,
+      })
+      return getSignedUrl(r2, command, { expiresIn: 7200 })
+        .then(url => ({ partNumber: i, url, size: partSize }))
     })
-    const url = await getSignedUrl(r2, command, { expiresIn: 7200 })
-    parts.push({ partNumber: i, url, size: partSize })
-  }
+  )
 
   return { uploadId: UploadId, key, parts }
 }

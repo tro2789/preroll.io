@@ -40,19 +40,17 @@ export async function DELETE(
       return errorResponse(message, 500)
     }
 
-    await supabase!.from('file_references').delete().eq('id', fileRef.id)
-
-    if (fileRef.file_size) {
-      await decrementUsage(org!.id, fileRef.file_size)
-    }
-
-    await supabase!.from('activity_log').insert({
-      show_id: episode.show_id,
-      episode_id: episodeId,
-      action: 'file_deleted',
-      description: `File deleted: ${fileRef.name}`,
-      metadata: { provider: 'r2', external_id: fileId },
-    })
+    await Promise.all([
+      supabase!.from('file_references').delete().eq('id', fileRef.id),
+      fileRef.file_size ? decrementUsage(org!.id, fileRef.file_size) : null,
+      supabase!.from('activity_log').insert({
+        show_id: episode.show_id,
+        episode_id: episodeId,
+        action: 'file_deleted',
+        description: `File deleted: ${fileRef.name}`,
+        metadata: { provider: 'r2', external_id: fileId },
+      }),
+    ])
 
     return new Response(null, { status: 204 })
   }

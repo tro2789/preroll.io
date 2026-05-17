@@ -1,4 +1,5 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { createServiceClient } from '@/lib/supabase/server'
 import { completeMultipartUpload } from '@/lib/r2/client'
 
 export async function POST(request: Request) {
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data: fileRef } = await (await import('@/lib/supabase/server')).createServiceClient()
+  const { data: fileRef } = await createServiceClient()
     .from('file_references')
     .select('org_id')
     .eq('external_id', key)
