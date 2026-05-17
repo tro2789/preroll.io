@@ -42,7 +42,7 @@ export default function RootLayout({
           search={{ enabled: false }}
         >
           {children}
-          <Toaster position="bottom-right" />
+          <Toaster position="top-center" />
         </RootProvider>
       </body>
     </html>
