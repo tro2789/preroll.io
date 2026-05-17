@@ -8,6 +8,7 @@ const tabs = [
   { label: 'Appearance', href: '/app/settings/appearance' },
   { label: 'Branding', href: '/app/settings/branding' },
   { label: 'Billing', href: '/app/settings/billing' },
+  { label: 'Storage', href: '/app/settings/storage' },
   { label: 'AI', href: '/app/settings/ai' },
   { label: 'Integrations', href: '/app/settings/integrations' },
   { label: 'Developer', href: '/app/settings/developer' },

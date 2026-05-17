@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
+import { getDownloadUrl } from '@/lib/r2/client'
 
 export async function GET(
   request: NextRequest,
@@ -75,6 +76,9 @@ export async function GET(
 
   ensureProvidersRegistered()
 
+  if (fileRef.provider === 'r2') {
+    return resolveR2(fileRef)
+  }
   if (fileRef.provider === 'frame_io') {
     return resolveFrameIo(producerOrgId, fileRef)
   }
@@ -94,6 +98,17 @@ interface FileRef {
   mime_type: string | null
   duration_seconds: number | null
   provider: string
+}
+
+async function resolveR2(fileRef: FileRef) {
+  const url = await getDownloadUrl(fileRef.external_id)
+  return jsonResponse({
+    url,
+    mime_type: fileRef.mime_type,
+    duration_seconds: fileRef.duration_seconds,
+    status: 'ready',
+    file_reference_id: fileRef.id,
+  })
 }
 
 async function resolveFrameIo(producerOrgId: string, fileRef: FileRef) {

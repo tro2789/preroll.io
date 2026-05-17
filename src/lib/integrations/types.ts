@@ -1,4 +1,4 @@
-export type IntegrationProvider = 'frame_io' | 'google_drive' | 'vimeo' | 'dropbox' | 'youtube'
+export type IntegrationProvider = 'frame_io' | 'google_drive' | 'vimeo' | 'dropbox' | 'youtube' | 'r2'
 
 export type DistributionProvider = 'transistor' | 'youtube'
 

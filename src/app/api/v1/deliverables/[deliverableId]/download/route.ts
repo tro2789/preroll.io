@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedClient, errorResponse } from '@/lib/api/helpers'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
+import { getDownloadUrl } from '@/lib/r2/client'
 
 export async function GET(
   _request: NextRequest,
@@ -36,6 +37,11 @@ export async function GET(
       return NextResponse.redirect(deliverable.file_url)
     }
     return errorResponse('No file available', 404)
+  }
+
+  if (fileRef.provider === 'r2') {
+    const url = await getDownloadUrl(fileRef.external_id)
+    return NextResponse.redirect(url)
   }
 
   ensureProvidersRegistered()

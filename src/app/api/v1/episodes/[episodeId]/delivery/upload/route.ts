@@ -2,6 +2,8 @@ import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/h
 import { getProvider } from '@/lib/integrations/registry'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
+import { getUploadUrl, createMultipartUpload, shouldUseMultipart } from '@/lib/r2/client'
+import { checkQuota, incrementUsage } from '@/lib/storage/usage'
 
 export async function POST(
   request: Request,
@@ -17,13 +19,13 @@ export async function POST(
 
   const { data: episode, error: dbError } = await supabase!
     .from('episodes')
-    .select('id, shows(id, client_id, clients(org_id))')
+    .select('id, show_id, shows(id, client_id, clients(org_id))')
     .eq('id', episodeId)
     .single()
 
   if (dbError || !episode) return errorResponse('Episode not found', 404)
 
-  const show = episode.shows as unknown as { clients: { org_id: string } | null } | null
+  const show = episode.shows as unknown as { id: string; clients: { org_id: string } | null } | null
   if (!show?.clients || show.clients.org_id !== org!.id) return errorResponse('Forbidden', 403)
 
   const { data: integration } = await supabase!
@@ -32,16 +34,83 @@ export async function POST(
     .eq('episode_id', episodeId)
     .maybeSingle()
 
-  if (!integration || !integration.external_folder_id) {
-    return errorResponse('This episode has no delivery provider with a linked folder', 400)
+  if (integration?.external_folder_id) {
+    return uploadToExternalProvider(supabase!, user!.id, org!.id, episodeId, integration, body)
   }
 
+  return uploadToR2(supabase!, user!.id, org!.id, episodeId, show.id, body)
+}
+
+async function uploadToR2(
+  supabase: NonNullable<Awaited<ReturnType<typeof getAuthenticatedClient>>['supabase']>,
+  userId: string,
+  orgId: string,
+  episodeId: string,
+  showId: string,
+  body: { name: string; file_size: number; mime_type?: string }
+) {
+  const { allowed, usage } = await checkQuota(orgId, body.file_size)
+  if (!allowed) {
+    return errorResponse(
+      `Storage quota exceeded. Used ${formatBytes(usage.usedBytes)} of ${formatBytes(usage.limitBytes!)}. Upgrade your plan for more storage.`,
+      402
+    )
+  }
+
+  const uuid = crypto.randomUUID()
+  const key = `delivery/${showId}/${episodeId}/${uuid}-${body.name}`
+  const contentType = body.mime_type || 'application/octet-stream'
+
+  let uploadResponse: Record<string, unknown>
+
+  if (shouldUseMultipart(body.file_size)) {
+    const multipart = await createMultipartUpload(key, contentType, body.file_size)
+    uploadResponse = {
+      fileId: key,
+      uploadId: multipart.uploadId,
+      parts: multipart.parts,
+      uploadProtocol: 'presigned-chunks',
+    }
+  } else {
+    const uploadUrl = await getUploadUrl(key, contentType)
+    uploadResponse = {
+      fileId: key,
+      uploadUrls: [{ url: uploadUrl, size: body.file_size }],
+      uploadProtocol: 'presigned-chunks',
+    }
+  }
+
+  await supabase.from('file_references').insert({
+    user_id: userId,
+    org_id: orgId,
+    provider: 'r2',
+    external_id: key,
+    name: body.name,
+    file_size: body.file_size,
+    mime_type: body.mime_type || null,
+    episode_id: episodeId,
+  })
+
+  await incrementUsage(orgId, body.file_size)
+
+  return jsonResponse(uploadResponse, 201)
+}
+
+async function uploadToExternalProvider(
+  supabase: NonNullable<Awaited<ReturnType<typeof getAuthenticatedClient>>['supabase']>,
+  userId: string,
+  orgId: string,
+  episodeId: string,
+  integration: { provider: string; external_folder_id: string },
+  body: { name: string; file_size: number; mime_type?: string }
+) {
   ensureProvidersRegistered()
 
   try {
-    const token = await getValidToken(org!.id, integration.provider)
-    const accountId = await getIntegrationAccountId(org!.id, integration.provider)
-    const provider = getProvider(integration.provider)
+    const providerName = integration.provider as Parameters<typeof getProvider>[0]
+    const token = await getValidToken(orgId, providerName)
+    const accountId = await getIntegrationAccountId(orgId, providerName)
+    const provider = getProvider(providerName)
 
     if (!provider.createFileUpload) {
       return errorResponse(`${provider.displayName} does not support file uploads`, 400)
@@ -51,9 +120,9 @@ export async function POST(
       token, accountId, integration.external_folder_id, body.name, body.file_size
     )
 
-    await supabase!.from('file_references').insert({
-      user_id: user!.id,
-      org_id: org!.id,
+    await supabase.from('file_references').insert({
+      user_id: userId,
+      org_id: orgId,
       provider: integration.provider,
       external_id: result.fileId,
       name: body.name,
@@ -74,4 +143,10 @@ export async function POST(
     const isNotFound = message.includes('404') || message.includes('not found') || message.includes('trashed')
     return errorResponse(message, isNotFound ? 410 : 500)
   }
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`
+  if (bytes >= 1024 ** 2) return `${(bytes / 1024 ** 2).toFixed(1)} MB`
+  return `${(bytes / 1024).toFixed(0)} KB`
 }

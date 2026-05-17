@@ -30,7 +30,27 @@ export async function GET(
     .maybeSingle()
 
   if (!integration || !integration.external_folder_id) {
-    return errorResponse('This episode has no delivery provider with a linked folder', 400)
+    // No external integration — list R2 files from file_references
+    const { data: r2Files } = await supabase!
+      .from('file_references')
+      .select('id, external_id, name, mime_type, file_size, duration_seconds, created_at')
+      .eq('episode_id', episodeId)
+      .eq('provider', 'r2')
+      .order('created_at', { ascending: false })
+
+    return jsonResponse({
+      items: (r2Files || []).map((f) => ({
+        id: f.external_id,
+        name: f.name,
+        type: 'file' as const,
+        mimeType: f.mime_type,
+        fileSize: f.file_size,
+        durationSeconds: f.duration_seconds,
+        createdAt: f.created_at,
+      })),
+      breadcrumb: [],
+      pagination: { hasMore: false },
+    })
   }
 
   ensureProvidersRegistered()
