@@ -54,7 +54,9 @@ export function showNotesPrompt(ctx: GenerationContext): { system: string; user:
 Output clean HTML using only these tags: <p>, <strong>, <em>, <a href="...">, <ul>, <ol>, <li>.
 Do NOT use headings (<h1>-<h6>) — most podcast platforms strip them. Use <strong> within a <p> for section labels instead.
 
-Include:
+If a show notes template is provided, follow its structure and section order exactly. Fill in each section from the transcript content. Only add sections not in the template if they contain critical information (e.g. guest names, key resources).
+
+If no template is provided, include:
 - A brief summary (2-3 sentences)
 - Key topics discussed with timestamps (MM:SS format)
 - Notable quotes (if any)

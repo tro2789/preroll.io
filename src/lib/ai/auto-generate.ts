@@ -42,7 +42,7 @@ export async function runAutoGeneration(params: {
 
   const show = episodeRow.shows as unknown as {
     id: string; name: string; description: string; format: string; ai_auto_generate: string[] | null;
-    ai_tone: string | null; ai_length: string | null; episode_template: string | null
+    ai_tone: string | null; ai_length: string | null; episode_template: { notes?: string; description?: string } | null
   }
 
   const enabledTypes = (show.ai_auto_generate?.length ? show.ai_auto_generate : ALL_GENERATION_TYPES)
@@ -82,7 +82,7 @@ export async function runAutoGeneration(params: {
     format: show.format || undefined,
     existingNotes: episodeRow.notes || undefined,
     previousTitles: recentEpisodes?.map(e => e.title) || [],
-    showNotesTemplate: show.episode_template || undefined,
+    showNotesTemplate: show.episode_template?.notes || undefined,
     tone: (show.ai_tone as GenerationContext['tone']) || undefined,
     length: (show.ai_length as GenerationContext['length']) || undefined,
   }

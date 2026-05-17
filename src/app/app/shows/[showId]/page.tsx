@@ -2,13 +2,10 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
-import { PipelineBoard } from '@/components/episodes/pipeline-board'
 import { ChatContextSync } from '@/components/chat/chat-context-sync'
-import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
-import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
-import { BatchAiButton } from '@/components/shows/batch-ai-button'
 import { Thumbnail } from '@/components/ui/thumbnail'
-import { ClientPortalSection, type PortalClient } from '@/components/client-portal-section'
+import { ShowTabs } from '@/components/shows/show-tabs'
+import type { PortalClient } from '@/components/client-portal-section'
 
 export default async function ShowDetailPage({
   params,
@@ -23,7 +20,7 @@ export default async function ShowDetailPage({
   const [{ data: show, error }, { data: episodes }] = await Promise.all([
     supabase
       .from('shows')
-      .select('id, name, description, cover_art_url, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(id, name, position, wip_limit, status_override)')
+      .select('id, name, description, cover_art_url, format, schedule, allow_client_downloads, client_id, ai_auto_transcribe, ai_auto_generate, ai_tone, ai_length, episode_template, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(id, name, position, wip_limit, status_override)')
       .eq('id', showId)
       .order('position', { referencedTable: 'pipeline_stages' })
       .single(),
@@ -50,10 +47,35 @@ export default async function ShowDetailPage({
     )
   }
 
-  const totalEpisodes = episodes?.length ?? 0
   const clientsRaw = show.clients as unknown
   const client = (Array.isArray(clientsRaw) ? clientsRaw[0] : clientsRaw) as PortalClient | null
   const stages = (show.pipeline_stages ?? []) as { id: string; name: string; position: number; wip_limit: number | null; status_override: string | null }[]
+
+  const showData = {
+    id: show.id,
+    name: show.name as string,
+    description: show.description as string | null,
+    cover_art_url: show.cover_art_url as string | null,
+    format: show.format as string | null,
+    schedule: show.schedule as string | null,
+    allow_client_downloads: show.allow_client_downloads as boolean | null,
+    ai_auto_transcribe: (show.ai_auto_transcribe as boolean) ?? true,
+    ai_auto_generate: show.ai_auto_generate as string[] | null,
+    ai_tone: show.ai_tone as string | null,
+    ai_length: show.ai_length as string | null,
+    episode_template: show.episode_template as { description?: string; notes?: string } | null,
+    client_id: show.client_id as string | null,
+  }
+
+  const mappedEpisodes = (episodes ?? []).map((ep) => {
+    const episodeTags = (ep.episode_tags as unknown as { tags: { id: string; name: string; color: string } | null }[] | null) ?? []
+    return {
+      ...ep,
+      frame_io_url: ep.frame_io_url ?? null,
+      image_url: resolveImageUrl(ep.image_url),
+      tags: episodeTags.map((et) => et.tags).filter(Boolean) as { id: string; name: string; color: string }[],
+    }
+  })
 
   return (
     <div>
@@ -75,82 +97,15 @@ export default async function ShowDetailPage({
               <p className="mt-1 text-sm text-text-secondary leading-relaxed line-clamp-2">{show.description}</p>
             )}
           </div>
-          <div className="hidden sm:flex items-center gap-2 shrink-0">
-            <Link
-              href={`/app/shows/${showId}/assets`}
-              className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
-            >
-              Assets
-            </Link>
-            <Link
-              href={`/app/shows/${showId}/edit`}
-              className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
-            >
-              Edit
-            </Link>
-          </div>
-        </div>
-        <div className="mt-3 flex sm:hidden items-center gap-2">
-          <Link
-            href={`/app/shows/${showId}/assets`}
-            className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
-          >
-            Assets
-          </Link>
-          <Link
-            href={`/app/shows/${showId}/edit`}
-            className="rounded-md bg-surface-overlay border border-border-subtle px-3 py-1.5 text-xs font-medium text-text-primary transition-colors hover:border-border-hover"
-          >
-            Edit
-          </Link>
         </div>
       </div>
 
-      {client && (
-        <div className="mt-6 max-w-sm">
-          <ClientPortalSection
-            clientId={client.id}
-            clientName={client.name}
-            clientEmail={client.email}
-            inviteCode={client.invite_code}
-            onboardedAt={client.onboarded_at}
-          />
-        </div>
-      )}
-
-      <section className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium uppercase tracking-wider text-text-secondary">
-            Episodes
-            <span className="ml-2 text-sm font-normal">({totalEpisodes})</span>
-          </h2>
-          <div className="flex items-center gap-2">
-            <BatchAiButton showId={showId} />
-            <StageManagerTrigger showId={showId} stages={stages} />
-            <QuickCreateEpisode showId={showId} />
-          </div>
-        </div>
-
-        {totalEpisodes === 0 ? (
-          <p className="text-sm text-text-tertiary">
-            No episodes yet. Create one to get started.
-          </p>
-        ) : (
-          <PipelineBoard
-            showId={showId}
-            stages={stages}
-            episodes={(episodes ?? []).map((ep) => {
-              const episodeTags = (ep.episode_tags as unknown as { tags: { id: string; name: string; color: string } | null }[] | null) ?? []
-              return {
-                ...ep,
-                frame_io_url: ep.frame_io_url ?? null,
-                image_url: resolveImageUrl(ep.image_url),
-                tags: episodeTags.map((et) => et.tags).filter(Boolean) as { id: string; name: string; color: string }[],
-              }
-            })}
-          />
-        )}
-      </section>
+      <ShowTabs
+        show={showData}
+        client={client}
+        stages={stages}
+        episodes={mappedEpisodes}
+      />
     </div>
   )
 }
