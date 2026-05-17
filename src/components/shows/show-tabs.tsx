@@ -142,13 +142,6 @@ export function ShowTabs({ show, client, stages, episodes, resolvedCoverArtUrl }
       <div className="mt-6">
         {activeTab === 'episodes' && (
           <section>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-medium uppercase tracking-wider text-text-secondary">
-                Episodes
-                <span className="ml-2 text-sm font-normal">({totalEpisodes})</span>
-              </h2>
-            </div>
-
             {totalEpisodes === 0 ? (
               <p className="text-sm text-text-tertiary">
                 No episodes yet. Create one to get started.
