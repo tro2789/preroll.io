@@ -1,0 +1,104 @@
+---
+title: "Storage"
+description: "Built-in file storage for episode video, audio, and production files. No external accounts required."
+---
+
+preroll.io includes built-in file storage powered by Cloudflare R2. Every account gets storage that works immediately — no external integrations or configuration needed. Upload video, audio, and production files directly to episodes and manage them from one place.
+
+## How It Works
+
+When you upload a file to an episode, it goes directly to preroll.io's built-in storage by default. Files are stored on Cloudflare's global network with zero egress fees, meaning downloads are fast regardless of where your team or clients are located.
+
+If you connect an external provider like Frame.io, Google Drive, or Vimeo, you can optionally set it as your default delivery provider in **Settings > Integrations**. Individual episodes can also be linked to specific providers.
+
+**Upload priority:**
+1. Episode-level integration (if linked)
+2. Organization default provider (if set)
+3. Built-in R2 storage (always available)
+
+## Storage Limits
+
+| Plan | Included Storage |
+|------|-----------------|
+| Free | 10 GB |
+| Pro | 500 GB |
+| Studio | 2 TB |
+
+Storage is designed for video-first workflows. A single 4K episode might be 20-80 GB (ProRes) or 5-15 GB (H.264/HEVC). Plan limits are sized accordingly.
+
+## Uploading Files
+
+### From the Episode Page
+
+1. Navigate to any episode
+2. Click the **Upload** button or drag files anywhere on the page
+3. Files upload directly to storage via your browser
+
+Large files (over 100 MB) are automatically split into chunks for reliable uploads. Upload progress is shown as a toast notification at the top of the screen.
+
+### Supported Formats
+
+Any file type can be uploaded. Video and audio files get special treatment:
+
+- **Video files** — A thumbnail is automatically extracted from the video after upload
+- **Audio files** — Can trigger the AI transcription pipeline if configured
+
+## Video Thumbnails
+
+When you upload a video file, preroll.io automatically extracts a frame from approximately 2 seconds into the video and saves it as a thumbnail. This thumbnail appears in the file grid instead of a generic placeholder.
+
+## Managing Storage
+
+### Settings > Storage
+
+The storage settings page shows:
+
+- **Usage bar** — How much of your plan's storage is used
+- **File table** — Every file stored with name, show, episode, size, and upload date
+- **Sorting** — Sort by name, size, or date
+- **Filtering** — Filter by show to find specific files
+- **Deletion** — Delete individual files to free up space
+
+### Deleting Files
+
+To free up storage:
+
+1. Go to **Settings > Storage**
+2. Find the file you want to remove
+3. Click the delete icon (trash) on the row
+4. Confirm deletion
+
+Deleted files are permanently removed and cannot be recovered. The storage quota updates immediately.
+
+### From the Episode Page
+
+Files can also be deleted directly from the episode's file list using the delete button on each file card.
+
+## Default Delivery Provider
+
+If you connect Frame.io, Google Drive, or Vimeo in **Settings > Integrations**, a "Default delivery provider" option appears. This controls where new uploads go by default:
+
+- **PreRoll Storage (built-in)** — Files stay on preroll.io's infrastructure
+- **Frame.io** — Files upload to your Frame.io account (requires connected integration)
+- **Google Drive** — Files upload to your Google Drive
+- **Vimeo** — Files upload to your Vimeo account
+
+You can override the default on a per-episode basis by linking a specific provider to that episode.
+
+## External Provider Comparison
+
+| Feature | Built-in Storage | Frame.io | Google Drive | Vimeo |
+|---------|-----------------|----------|--------------|-------|
+| Setup required | None | OAuth connect | OAuth connect | OAuth connect |
+| Upload speed | Fast (1-2 Gbps) | Very fast (multi-connection) | Standard | Standard (tus) |
+| Video review | In-app player | Native Frame.io | In-app player | Native Vimeo |
+| Timecoded comments | Via deliverables | Native + synced | Via deliverables | Via deliverables |
+| Cost | Included in plan | Separate Frame.io subscription | Free (with Google account) | Separate Vimeo subscription |
+
+## Technical Details
+
+- Files are stored on Cloudflare R2 (S3-compatible, zero egress fees)
+- Uploads use presigned URLs — your browser uploads directly to R2 without going through the application server
+- Files over 100 MB use multipart uploads (64 MB chunks) for reliability
+- Signed download URLs expire after 1 hour and are regenerated on each request
+- Storage usage is tracked atomically per organization
