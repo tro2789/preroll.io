@@ -6,6 +6,7 @@ import { PipelineBoard } from '@/components/episodes/pipeline-board'
 import { StageManagerTrigger } from '@/components/episodes/stage-manager-trigger'
 import { QuickCreateEpisode } from '@/components/episodes/quick-create-episode'
 import { BatchAiButton } from '@/components/shows/batch-ai-button'
+import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 import { ShowDetailsTab } from '@/components/shows/show-details-tab'
 import { ShowAssetsTab } from '@/components/shows/show-assets-tab'
 import { ShowTemplatesTab } from '@/components/shows/show-templates-tab'
@@ -80,9 +81,10 @@ interface ShowTabsProps {
   client: ClientData | null
   stages: Stage[]
   episodes: Episode[]
+  resolvedCoverArtUrl: string | null
 }
 
-export function ShowTabs({ show, client, stages, episodes }: ShowTabsProps) {
+export function ShowTabs({ show, client, stages, episodes, resolvedCoverArtUrl }: ShowTabsProps) {
   const searchParams = useSearchParams()
   const initialTab = TABS.find((t) => t.key === searchParams.get('tab'))?.key || 'episodes'
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
@@ -97,8 +99,33 @@ export function ShowTabs({ show, client, stages, episodes }: ShowTabsProps) {
 
   const totalEpisodes = episodes.length
 
+  async function handleCoverArtUploaded(fileKey: string) {
+    await fetch(`/api/v1/shows/${show.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cover_art_url: fileKey }),
+    })
+  }
+
   return (
     <>
+      <div className="mt-2 flex items-start gap-4">
+        <ThumbnailUpload
+          id={show.id}
+          imageUrl={resolvedCoverArtUrl}
+          showId={show.id}
+          onUploaded={handleCoverArtUploaded}
+          aspect="square"
+          className="w-20 h-20 sm:w-14 sm:h-14 shrink-0"
+        />
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-bold text-text-primary leading-tight">{show.name}</h1>
+          {show.description && (
+            <p className="mt-1 text-sm text-text-secondary leading-relaxed line-clamp-2">{show.description}</p>
+          )}
+        </div>
+      </div>
+
       <nav className="mt-6 flex gap-1 border-b border-border-default overflow-x-auto">
         {TABS.filter((tab) => tab.key !== 'share' || client).map((tab) => (
           <button

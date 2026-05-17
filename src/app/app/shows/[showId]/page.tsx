@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { autoArchiveApprovedEpisodes } from '@/lib/episodes/auto-archive'
 import { ChatContextSync } from '@/components/chat/chat-context-sync'
-import { Thumbnail } from '@/components/ui/thumbnail'
 import { ShowTabs } from '@/components/shows/show-tabs'
 import type { PortalClient } from '@/components/client-portal-section'
 
@@ -77,34 +76,26 @@ export default async function ShowDetailPage({
     }
   })
 
+  const resolvedCoverArtUrl = resolveImageUrl(show.cover_art_url)
+
   return (
     <div>
       <ChatContextSync contextLabel={`${show.name}${client ? ` (${client.name})` : ''}`} />
-      <div>
-        {client && (
-          <Link
-            href={`/app/clients/${client.id}`}
-            className="text-sm text-text-secondary hover:text-text-primary transition-colors"
-          >
-            &larr; {client.name}
-          </Link>
-        )}
-        <div className="mt-2 flex items-start gap-4">
-          <Thumbnail id={show.id} imageUrl={resolveImageUrl(show.cover_art_url)} className="w-20 h-20 sm:w-14 sm:h-14 shrink-0 rounded-lg" />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold text-text-primary leading-tight">{show.name}</h1>
-            {show.description && (
-              <p className="mt-1 text-sm text-text-secondary leading-relaxed line-clamp-2">{show.description}</p>
-            )}
-          </div>
-        </div>
-      </div>
+      {client && (
+        <Link
+          href={`/app/clients/${client.id}`}
+          className="text-sm text-text-secondary hover:text-text-primary transition-colors"
+        >
+          &larr; {client.name}
+        </Link>
+      )}
 
       <ShowTabs
         show={showData}
         client={client}
         stages={stages}
         episodes={mappedEpisodes}
+        resolvedCoverArtUrl={resolvedCoverArtUrl}
       />
     </div>
   )
