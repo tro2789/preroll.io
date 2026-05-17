@@ -14,20 +14,15 @@ interface StorageData {
 export default function StorageSettingsPage() {
   const [data, setData] = useState<StorageData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [apiError, setApiError] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/v1/storage')
       .then(async (res) => {
+        if (!res.ok) return null
         const body = await res.json()
-        if (!res.ok) {
-          setApiError(`${res.status}: ${JSON.stringify(body)}`)
-          return null
-        }
-        return body
+        return body.data ?? body
       })
       .then(setData)
-      .catch((err) => setApiError(err.message))
       .finally(() => setLoading(false))
   }, [])
 
@@ -46,7 +41,6 @@ export default function StorageSettingsPage() {
       <div className="max-w-4xl">
         <h1 className="text-2xl font-bold text-text-primary mb-1">Storage</h1>
         <p className="text-sm text-text-secondary">Failed to load storage data.</p>
-        {apiError && <pre className="mt-4 text-xs text-red-400 bg-surface-raised p-3 rounded overflow-auto">{apiError}</pre>}
       </div>
     )
   }
