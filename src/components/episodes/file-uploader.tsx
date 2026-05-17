@@ -116,7 +116,6 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
       const putRes = await fetch(urlInfo.url, {
         method: 'PUT',
         headers: {
-          'x-amz-acl': 'private',
           'Content-Type': file.type || 'application/octet-stream',
         },
         body: chunk,
