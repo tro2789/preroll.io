@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { ConnectButton } from '@/components/integrations/connect-button'
 import { ConnectedAccountCard } from '@/components/integrations/connected-account-card'
 
@@ -38,6 +39,12 @@ export function IntegrationsList({
   oauthError,
 }: IntegrationsListProps) {
   useEffect(() => {
+    if (connectedProvider) {
+      toast.success(`${connectedProvider.replace(/_/g, ' ')} connected successfully.`)
+    }
+    if (oauthError) {
+      toast.error(`Connection failed: ${oauthError.replace(/_/g, ' ')}`)
+    }
     if (connectedProvider || oauthError) {
       const url = new URL(window.location.href)
       url.searchParams.delete('connected')
@@ -79,17 +86,6 @@ export function IntegrationsList({
 
   return (
     <div className="max-w-xl">
-      {connectedProvider && (
-        <div className="mb-4 rounded-lg bg-success/8 px-4 py-2.5 text-sm text-success">
-          {connectedProvider.replace(/_/g, ' ')} connected successfully.
-        </div>
-      )}
-
-      {oauthError && (
-        <div className="mb-4 rounded-lg bg-error/8 px-4 py-2.5 text-sm text-error">
-          Connection failed: {oauthError.replace(/_/g, ' ')}
-        </div>
-      )}
 
       <div className="rounded-lg border border-border-subtle bg-surface-raised">
         <div className="divide-y divide-border-subtle px-4">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { formatFileSize } from '@/lib/format'
+import { toast } from 'sonner'
 
 interface UploadingFile {
   name: string
@@ -298,7 +298,34 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
     e.target.value = ''
   }
 
-  const hasActiveUploads = uploads.some((u) => u.status === 'uploading')
+  const toastIdsRef = useRef<Map<string, string | number>>(new Map())
+
+  useEffect(() => {
+    for (const u of uploads) {
+      const existing = toastIdsRef.current.get(u.name)
+      const pct = u.totalBytes > 0 ? Math.round((u.uploadedBytes / u.totalBytes) * 100) : 0
+
+      if (u.status === 'done') {
+        if (existing) {
+          toast.success(`${u.name} uploaded`, { id: existing })
+          toastIdsRef.current.delete(u.name)
+        }
+      } else if (u.status === 'error') {
+        if (existing) {
+          toast.error(`${u.name} failed to upload`, { id: existing })
+          toastIdsRef.current.delete(u.name)
+        }
+      } else {
+        const msg = `Uploading ${u.name} — ${pct}%`
+        if (existing) {
+          toast.loading(msg, { id: existing })
+        } else {
+          const id = toast.loading(msg)
+          toastIdsRef.current.set(u.name, id)
+        }
+      }
+    }
+  }, [uploads])
 
   return (
     <>
@@ -327,53 +354,6 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         onChange={handleFileInput}
         className="hidden"
       />
-
-      {uploads.length > 0 && (
-        <div className="fixed bottom-4 right-4 z-40 w-72 rounded-lg border border-border-subtle bg-surface-raised shadow-lg overflow-hidden">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle">
-            <span className="text-xs font-medium text-text-primary">
-              {hasActiveUploads ? 'Uploading...' : 'Uploads'}
-            </span>
-            {!hasActiveUploads && (
-              <button
-                onClick={() => setUploads([])}
-                className="text-xs text-text-tertiary hover:text-text-primary transition-colors"
-              >
-                Dismiss
-              </button>
-            )}
-          </div>
-          <div className="max-h-48 overflow-y-auto">
-            {uploads.map((u) => {
-              const pct = u.totalBytes > 0 ? Math.round((u.uploadedBytes / u.totalBytes) * 100) : 0
-              return (
-                <div key={u.name} className="px-3 py-2 space-y-1 border-b border-border-subtle last:border-0">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <span className="truncate text-text-primary">{u.name}</span>
-                    <span className="shrink-0">
-                      {u.status === 'done' ? (
-                        <span className="text-emerald-400">Done</span>
-                      ) : u.status === 'error' ? (
-                        <span className="text-red-400">Failed</span>
-                      ) : (
-                        <span className="text-text-secondary tabular-nums">{pct}%</span>
-                      )}
-                    </span>
-                  </div>
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-surface-overlay">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        u.status === 'error' ? 'bg-red-500' : u.status === 'done' ? 'bg-emerald-500' : 'bg-accent'
-                      }`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </>
   )
 }

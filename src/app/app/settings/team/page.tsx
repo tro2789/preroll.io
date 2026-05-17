@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
 import { UpgradeGate } from '@/components/ui/upgrade-gate'
 
@@ -39,7 +40,6 @@ export default function TeamPage() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState('member')
   const [inviting, setInviting] = useState(false)
-  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
 
   const [canInvite, setCanInvite] = useState(false)
@@ -92,7 +92,6 @@ export default function TeamPage() {
     if (!inviteEmail.trim()) return
     setInviting(true)
     setInviteError(null)
-    setInviteSuccess(null)
     try {
       const res = await fetch('/api/v1/team/invite', {
         method: 'POST',
@@ -103,7 +102,7 @@ export default function TeamPage() {
         const json = await res.json()
         throw new Error(json.error || 'Failed to send invite')
       }
-      setInviteSuccess(`Invite sent to ${inviteEmail.trim()}`)
+      toast.success(`Invite sent to ${inviteEmail.trim()}`)
       setInviteEmail('')
       setInviteRole('member')
       await refreshTeam()
@@ -243,11 +242,6 @@ export default function TeamPage() {
             Invite Team Member
           </h2>
 
-          {inviteSuccess && (
-            <div className="mt-4 rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
-              {inviteSuccess}
-            </div>
-          )}
 
           {inviteError && (
             <div className="mt-4 rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">

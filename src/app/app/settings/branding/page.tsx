@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { toast } from 'sonner'
 import { resolveAssetUrl } from '@/lib/r2/resolve'
 import { ImageUploadField } from '@/components/settings/image-upload-field'
 import { UpgradeGate } from '@/components/ui/upgrade-gate'
@@ -39,7 +40,6 @@ export default function BrandingPage() {
   const [accentColor, setAccentColor] = useState('#e86a47')
   const [customCss, setCustomCss] = useState('')
   const [savingBranding, setSavingBranding] = useState(false)
-  const [brandingSaved, setBrandingSaved] = useState(false)
   const [brandingError, setBrandingError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -128,7 +128,6 @@ export default function BrandingPage() {
 
   async function handleBrandingSave() {
     setSavingBranding(true)
-    setBrandingSaved(false)
     setBrandingError(null)
     try {
       const res = await fetch('/api/v1/org/branding', {
@@ -146,8 +145,7 @@ export default function BrandingPage() {
       }
       const json = await res.json()
       setBranding((prev) => (prev ? { ...prev, ...json.data } : prev))
-      setBrandingSaved(true)
-      setTimeout(() => setBrandingSaved(false), 3000)
+      toast.success('Branding saved successfully.')
     } catch (err) {
       setBrandingError(err instanceof Error ? err.message : 'Failed to save branding')
     } finally {
@@ -286,12 +284,6 @@ export default function BrandingPage() {
           {brandingError && (
             <div className="rounded-lg border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
               {brandingError}
-            </div>
-          )}
-
-          {brandingSaved && (
-            <div className="rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
-              Branding saved successfully.
             </div>
           )}
 

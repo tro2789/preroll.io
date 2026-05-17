@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface AddonData {
   addon: {
@@ -40,6 +41,15 @@ export default function AiSettingsPage() {
   const [savingKeys, setSavingKeys] = useState(false)
 
   const purchaseStatus = searchParams.get('purchase')
+
+  useEffect(() => {
+    if (purchaseStatus === 'success') {
+      toast.success('Credits added successfully!')
+      const url = new URL(window.location.href)
+      url.searchParams.delete('purchase')
+      window.history.replaceState(null, '', url.toString())
+    }
+  }, [purchaseStatus])
 
   useEffect(() => {
     async function load() {
@@ -110,11 +120,6 @@ export default function AiSettingsPage() {
         <h2 className="text-lg font-semibold text-text-primary">AI Usage</h2>
       </div>
 
-      {purchaseStatus === 'success' && (
-        <div className="rounded-md bg-emerald-500/10 border border-emerald-500/20 p-3 text-sm text-emerald-400">
-          Credits added successfully!
-        </div>
-      )}
 
       {!a?.enabled && (
         <div className="rounded-lg border border-border-subtle bg-surface-raised p-5">

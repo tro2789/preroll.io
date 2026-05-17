@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, Inter } from "next/font/google";
 import { RootProvider } from 'fumadocs-ui/provider/next';
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
           search={{ enabled: false }}
         >
           {children}
+          <Toaster position="bottom-right" />
         </RootProvider>
       </body>
     </html>

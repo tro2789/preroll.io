@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { DeliverableList } from '@/components/deliverables/deliverable-list'
 import { FileUploader } from './file-uploader'
 import { EpisodeAssets } from './episode-assets'
@@ -86,7 +87,6 @@ export function DeliveryPanel({
   const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [versioningFileId, setVersioningFileId] = useState<string | null>(null)
 
-  const [autoReshareToast, setAutoReshareToast] = useState<string | null>(null)
   const [versionHistoryFileId, setVersionHistoryFileId] = useState<string | null>(null)
   const [versionHistoryFetchUrl, setVersionHistoryFetchUrl] = useState<string | null>(null)
   const [unstacking, setUnstacking] = useState(false)
@@ -486,8 +486,7 @@ export function DeliveryPanel({
         const json = await res.json()
         const reshared = json.data?.auto_reshared || []
         if (reshared.length > 0) {
-          setAutoReshareToast(`v${json.data.version_number} of ${target.name} was automatically shared with the client`)
-          setTimeout(() => setAutoReshareToast(null), 5000)
+          toast.success(`v${json.data.version_number} of ${target.name} was automatically shared with the client`)
         }
         fetchFiles()
       }
@@ -1184,24 +1183,6 @@ export function DeliveryPanel({
           <EpisodeAssets episodeId={episodeId} />
         </aside>}
       </div>
-      {/* Auto-reshare toast */}
-      {autoReshareToast && (
-        <div className="fixed bottom-4 right-4 z-50 max-w-sm animate-in slide-in-from-bottom-2 fade-in duration-200">
-          <div className="rounded-lg border border-border-subtle bg-surface-raised px-4 py-3 shadow-lg">
-            <div className="flex items-start gap-3">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-accent">
-                <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clipRule="evenodd" />
-              </svg>
-              <p className="text-sm text-text-primary">{autoReshareToast}</p>
-              <button onClick={() => setAutoReshareToast(null)} className="shrink-0 text-text-secondary hover:text-text-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Version history modal */}
       {versionHistoryFileId && versionHistoryFetchUrl && (
