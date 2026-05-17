@@ -81,7 +81,7 @@ async function uploadToR2(
     }
   }
 
-  await supabase.from('file_references').insert({
+  const { data: insertedRef } = await supabase.from('file_references').insert({
     user_id: userId,
     org_id: orgId,
     provider: 'r2',
@@ -90,7 +90,11 @@ async function uploadToR2(
     file_size: body.file_size,
     mime_type: body.mime_type || null,
     episode_id: episodeId,
-  })
+  }).select('id').single()
+
+  if (insertedRef) {
+    uploadResponse.fileRefId = insertedRef.id
+  }
 
   await incrementUsage(orgId, body.file_size)
 

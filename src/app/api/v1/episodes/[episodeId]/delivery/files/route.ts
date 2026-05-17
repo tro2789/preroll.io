@@ -33,7 +33,7 @@ export async function GET(
     // No external integration — list R2 files from file_references
     const { data: r2Files } = await supabase!
       .from('file_references')
-      .select('id, external_id, name, mime_type, file_size, duration_seconds, created_at')
+      .select('id, external_id, name, mime_type, file_size, duration_seconds, thumbnail_url, created_at')
       .eq('episode_id', episodeId)
       .eq('provider', 'r2')
       .order('created_at', { ascending: false })
@@ -46,6 +46,7 @@ export async function GET(
         mimeType: f.mime_type,
         fileSize: f.file_size,
         durationSeconds: f.duration_seconds,
+        thumbnailUrl: f.thumbnail_url,
         createdAt: f.created_at,
         provider: 'r2',
       })),

@@ -71,8 +71,9 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         }
 
         const { data } = await initRes.json()
-        const { uploadUrls, resumableUrl, tusUrl, uploadProtocol } = data as {
+        const { uploadUrls, resumableUrl, tusUrl, uploadProtocol, fileRefId } = data as {
           fileId: string
+          fileRefId?: string
           uploadUrls?: { url: string; size: number }[]
           resumableUrl?: string
           tusUrl?: string
@@ -90,6 +91,10 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         }
 
         updateUpload(file.name, { status: 'done', uploadedBytes: file.size })
+
+        if (fileRefId && file.type.startsWith('video/')) {
+          generateThumbnail(file, fileRefId).catch(() => {})
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Upload failed'
         updateUpload(file.name, { status: 'error', error: message })
@@ -218,6 +223,55 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
       offset = end
       updateUpload(file.name, { uploadedBytes: offset })
     }
+  }
+
+  async function generateThumbnail(file: File, fileRefId: string) {
+    const video = document.createElement('video')
+    video.preload = 'metadata'
+    video.muted = true
+    video.playsInline = true
+
+    const objectUrl = URL.createObjectURL(file)
+    video.src = objectUrl
+
+    await new Promise<void>((resolve, reject) => {
+      video.onloadeddata = () => resolve()
+      video.onerror = () => reject(new Error('Failed to load video'))
+    })
+
+    video.currentTime = Math.min(2, video.duration / 4)
+    await new Promise<void>((resolve) => { video.onseeked = () => resolve() })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.min(640, video.videoWidth)
+    canvas.height = Math.round(canvas.width * (video.videoHeight / video.videoWidth))
+    const ctx = canvas.getContext('2d')!
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    URL.revokeObjectURL(objectUrl)
+
+    const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.8))
+
+    const initRes = await fetch(`/api/v1/storage/files/${fileRefId}/thumbnail`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contentType: 'image/jpeg' }),
+    })
+    if (!initRes.ok) return
+
+    const { data: initData } = await initRes.json()
+
+    await fetch(initData.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'image/jpeg' },
+      body: blob,
+    })
+
+    await fetch(`/api/v1/storage/files/${fileRefId}/thumbnail`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: initData.key }),
+    })
   }
 
   const startUploads = useCallback(
