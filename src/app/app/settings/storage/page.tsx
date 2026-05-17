@@ -17,7 +17,10 @@ export default function StorageSettingsPage() {
 
   useEffect(() => {
     fetch('/api/v1/storage')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) return null
+        return res.json()
+      })
       .then(setData)
       .finally(() => setLoading(false))
   }, [])
@@ -32,7 +35,7 @@ export default function StorageSettingsPage() {
     )
   }
 
-  if (!data) {
+  if (!data || !data.breakdown) {
     return (
       <div className="max-w-4xl">
         <h1 className="text-2xl font-bold text-text-primary mb-1">Storage</h1>

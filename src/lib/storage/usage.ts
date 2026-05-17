@@ -18,7 +18,7 @@ export async function getStorageUsage(orgId: string, planId?: string, trialEndsA
 
   const usedBytes = org?.storage_used_bytes ?? 0
   const limitMb = entitlements.limit('storage')
-  const limitBytes = limitMb ? limitMb * 1024 * 1024 : null
+  const limitBytes = limitMb && limitMb > 0 ? limitMb * 1024 * 1024 : null
 
   return {
     usedBytes,
