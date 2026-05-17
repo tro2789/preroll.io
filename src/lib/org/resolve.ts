@@ -6,6 +6,7 @@ export interface OrgContext {
   planId: string
   trialEndsAt: string | null
   role: string
+  defaultDeliveryProvider: string | null
 }
 
 export const resolveUserOrg = cache(async (userId: string, preferredOrgId?: string): Promise<OrgContext | null> => {
@@ -13,7 +14,7 @@ export const resolveUserOrg = cache(async (userId: string, preferredOrgId?: stri
 
   const { data: memberships } = await supabase
     .from('memberships')
-    .select('org_id, role, organizations(plan_id, trial_ends_at)')
+    .select('org_id, role, organizations(plan_id, trial_ends_at, default_delivery_provider)')
     .eq('user_id', userId)
 
   if (!memberships || memberships.length === 0) return null
@@ -27,13 +28,14 @@ export const resolveUserOrg = cache(async (userId: string, preferredOrgId?: stri
     membership = memberships.find((m) => m.role !== 'owner') || memberships[0]
   }
 
-  const org = membership.organizations as unknown as { plan_id: string; trial_ends_at: string | null } | null
+  const org = membership.organizations as unknown as { plan_id: string; trial_ends_at: string | null; default_delivery_provider: string | null } | null
 
   return {
     id: membership.org_id,
     planId: org?.plan_id || 'free',
     trialEndsAt: org?.trial_ends_at ?? null,
     role: membership.role,
+    defaultDeliveryProvider: org?.default_delivery_provider ?? null,
   }
 })
 
@@ -42,7 +44,7 @@ export async function resolveOrgFromApiKey(orgId: string): Promise<OrgContext | 
 
   const { data: org } = await supabase
     .from('organizations')
-    .select('id, plan_id, trial_ends_at')
+    .select('id, plan_id, trial_ends_at, default_delivery_provider')
     .eq('id', orgId)
     .single()
 
@@ -53,5 +55,6 @@ export async function resolveOrgFromApiKey(orgId: string): Promise<OrgContext | 
     planId: org.plan_id,
     trialEndsAt: org.trial_ends_at ?? null,
     role: 'owner',
+    defaultDeliveryProvider: org.default_delivery_provider ?? null,
   }
 }
