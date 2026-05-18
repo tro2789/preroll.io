@@ -56,6 +56,7 @@ export default function StorageSettingsPage() {
 
   const [addonDialogOpen, setAddonDialogOpen] = useState(false)
   const [addonQuantity, setAddonQuantity] = useState(0)
+  const [addonConfirming, setAddonConfirming] = useState(false)
   const [addonSaving, setAddonSaving] = useState(false)
 
   useEffect(() => {
@@ -188,76 +189,121 @@ export default function StorageSettingsPage() {
         )}
         {canManageAddon && (
           <div className="mt-4">
-            <Dialog open={addonDialogOpen} onOpenChange={(open) => { setAddonDialogOpen(open); if (open) setAddonQuantity(data.addonTbs) }}>
+            <Dialog open={addonDialogOpen} onOpenChange={(open) => { setAddonDialogOpen(open); if (open) { setAddonQuantity(data.addonTbs); setAddonConfirming(false) } }}>
               <DialogTrigger render={<Button variant="outline" size="sm" />}>
                 {data.addonTbs > 0 ? 'Manage Storage Add-on' : 'Add More Storage'}
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Storage Add-on</DialogTitle>
-                  <DialogDescription>
-                    Add extra storage to your plan at $19 per TB per month. Changes are prorated on your current billing cycle.
-                  </DialogDescription>
-                </DialogHeader>
+                {!addonConfirming ? (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>Storage Add-on</DialogTitle>
+                      <DialogDescription>
+                        Add extra storage to your plan at $19 per TB per month.
+                      </DialogDescription>
+                    </DialogHeader>
 
-                <div className="py-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-text-primary">Extra storage</span>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => setAddonQuantity(Math.max(0, addonQuantity - 1))}
-                        disabled={addonQuantity <= 0}
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-                        </svg>
-                      </Button>
-                      <span className="text-lg font-semibold text-text-primary w-16 text-center tabular-nums">
-                        {addonQuantity} TB
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => setAddonQuantity(addonQuantity + 1)}
-                      >
-                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
-                        </svg>
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border border-border-subtle bg-surface-overlay p-3 space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-text-secondary">Plan storage</span>
-                      <span className="text-text-primary">{planLabel}</span>
-                    </div>
-                    {addonQuantity > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-text-secondary">Add-on storage</span>
-                        <span className="text-text-primary">{addonQuantity} TB</span>
+                    <div className="py-2">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-sm font-medium text-text-primary">Extra storage</span>
+                        <div className="flex items-center gap-3">
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => setAddonQuantity(Math.max(0, addonQuantity - 1))}
+                            disabled={addonQuantity <= 0}
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                            </svg>
+                          </Button>
+                          <span className="text-lg font-semibold text-text-primary w-16 text-center tabular-nums">
+                            {addonQuantity} TB
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => setAddonQuantity(addonQuantity + 1)}
+                          >
+                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
+                            </svg>
+                          </Button>
+                        </div>
                       </div>
-                    )}
-                    <div className="border-t border-border-subtle my-1" />
-                    <div className="flex justify-between text-sm font-medium">
-                      <span className="text-text-secondary">Add-on cost</span>
-                      <span className="text-text-primary">
-                        {addonQuantity > 0 ? `$${addonQuantity * STORAGE_PRICE_PER_TB}/mo` : 'None'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
 
-                <DialogFooter>
-                  <Button
-                    onClick={handleAddonSave}
-                    disabled={addonSaving || addonQuantity === data.addonTbs}
-                  >
-                    {addonSaving ? 'Updating...' : addonQuantity === 0 && data.addonTbs > 0 ? 'Remove Add-on' : 'Confirm'}
-                  </Button>
-                </DialogFooter>
+                      <div className="rounded-lg border border-border-subtle bg-surface-overlay p-3 space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-text-secondary">Plan storage</span>
+                          <span className="text-text-primary">{planLabel}</span>
+                        </div>
+                        {addonQuantity > 0 && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-text-secondary">Add-on storage</span>
+                            <span className="text-text-primary">{addonQuantity} TB</span>
+                          </div>
+                        )}
+                        <div className="border-t border-border-subtle my-1" />
+                        <div className="flex justify-between text-sm font-medium">
+                          <span className="text-text-secondary">Add-on cost</span>
+                          <span className="text-text-primary">
+                            {addonQuantity > 0 ? `$${addonQuantity * STORAGE_PRICE_PER_TB}/mo` : 'None'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        onClick={() => setAddonConfirming(true)}
+                        disabled={addonQuantity === data.addonTbs}
+                      >
+                        {addonQuantity === 0 && data.addonTbs > 0 ? 'Remove Add-on' : 'Continue'}
+                      </Button>
+                    </DialogFooter>
+                  </>
+                ) : (
+                  <>
+                    <DialogHeader>
+                      <DialogTitle>Confirm billing change</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="py-2 space-y-3">
+                      {addonQuantity > 0 ? (
+                        <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
+                          <p className="text-sm text-text-primary">
+                            <span className="font-semibold">${addonQuantity * STORAGE_PRICE_PER_TB}/mo</span> will be added to your subscription for{' '}
+                            <span className="font-semibold">{addonQuantity} TB</span> of extra storage.
+                          </p>
+                          <p className="text-xs text-text-secondary mt-2">
+                            The charge will be prorated for your current billing cycle and applied to your payment method on file.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                          <p className="text-sm text-text-primary">
+                            Your <span className="font-semibold">{data.addonTbs} TB</span> storage add-on will be removed.
+                          </p>
+                          <p className="text-xs text-text-secondary mt-2">
+                            Your storage limit will return to {planLabel} (plan included). If you are over this limit, uploads will be blocked until you free up space.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setAddonConfirming(false)}>
+                        Back
+                      </Button>
+                      <Button
+                        onClick={handleAddonSave}
+                        disabled={addonSaving}
+                      >
+                        {addonSaving ? 'Processing...' : addonQuantity > 0 ? 'Confirm and pay' : 'Confirm removal'}
+                      </Button>
+                    </DialogFooter>
+                  </>
+                )}
               </DialogContent>
             </Dialog>
           </div>
