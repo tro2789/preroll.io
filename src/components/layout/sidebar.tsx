@@ -268,7 +268,14 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts 
       </aside>
 
       {/* Mobile bottom nav */}
-      <MobileBottomNav navItems={navItems} pathname={pathname} />
+      <MobileBottomNav
+        navItems={navItems}
+        pathname={pathname}
+        orgs={orgs}
+        activeOrgId={activeOrgId}
+        userEmail={userEmail}
+        userDisplayName={userDisplayName}
+      />
     </>
   )
 }
@@ -289,12 +296,29 @@ function UsersIcon({ className }: { className?: string }) {
   )
 }
 
-function MobileBottomNav({ navItems, pathname }: { navItems: NavItem[]; pathname: string }) {
+interface MobileBottomNavProps {
+  navItems: NavItem[]
+  pathname: string
+  orgs: OrgMembership[]
+  activeOrgId?: string
+  userEmail: string
+  userDisplayName?: string | null
+}
+
+function MobileBottomNav({ navItems, pathname, orgs, activeOrgId, userEmail, userDisplayName }: MobileBottomNavProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [orgExpanded, setOrgExpanded] = useState(false)
+  const [switching, setSwitching] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
   const primaryItems = navItems.filter((item) => !item.desktopOnly && !item.mobileMenu)
   const menuItems = navItems.filter((item) => item.mobileMenu)
+
+  const activeOrg = orgs.find((o) => o.id === activeOrgId) || orgs[0]
+  const otherOrgs = orgs.filter((o) => o.id !== activeOrg?.id)
+  const initials = (userDisplayName || userEmail).slice(0, 2).toUpperCase()
 
   const menuItemActive = menuItems.some((item) =>
     item.href === '/app' ? pathname === '/app' : pathname.startsWith(item.href)
@@ -305,76 +329,176 @@ function MobileBottomNav({ navItems, pathname }: { navItems: NavItem[]; pathname
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false)
+        setOrgExpanded(false)
       }
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [menuOpen])
 
+  async function switchOrg(orgId: string) {
+    setSwitching(true)
+    try {
+      const res = await fetch('/api/v1/org/switch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orgId }),
+      })
+      if (!res.ok) return
+      setMenuOpen(false)
+      setOrgExpanded(false)
+      router.refresh()
+    } finally {
+      setSwitching(false)
+    }
+  }
+
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-base border-t border-border-default pb-[env(safe-area-inset-bottom,0px)]">
-      <div className="flex justify-around">
-        {primaryItems.map((item) => {
-          const isActive =
-            item.href === '/app'
-              ? pathname === '/app'
-              : pathname.startsWith(item.href)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={isActive ? 'page' : undefined}
+    <>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-base border-t border-border-default pb-[env(safe-area-inset-bottom,0px)]">
+        <div className="flex justify-around">
+          {primaryItems.map((item) => {
+            const isActive =
+              item.href === '/app'
+                ? pathname === '/app'
+                : pathname.startsWith(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] px-2 text-[0.625rem] transition-colors ${
+                  isActive ? 'text-accent-hover' : 'text-text-secondary'
+                }`}
+              >
+                <item.icon className="h-5 w-5 mb-1" />
+                {item.label}
+              </Link>
+            )
+          })}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => { setMenuOpen(!menuOpen); if (menuOpen) setOrgExpanded(false) }}
               className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] px-2 text-[0.625rem] transition-colors ${
-                isActive ? 'text-accent-hover' : 'text-text-secondary'
+                menuOpen || menuItemActive ? 'text-accent-hover' : 'text-text-secondary'
               }`}
             >
-              <item.icon className="h-5 w-5 mb-1" />
-              {item.label}
-            </Link>
-          )
-        })}
-        <div className="relative" ref={menuRef}>
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className={`flex flex-col items-center justify-center min-h-[52px] min-w-[52px] px-2 text-[0.625rem] transition-colors ${
-              menuOpen || menuItemActive ? 'text-accent-hover' : 'text-text-secondary'
-            }`}
-          >
-            <MenuIcon className="h-5 w-5 mb-1" />
-            More
-          </button>
-          {menuOpen && (
-            <div className="absolute bottom-full right-0 mb-2 w-48 rounded-lg border border-border-subtle bg-surface-raised shadow-lg overflow-hidden">
-              {menuItems.map((item) => {
-                const isActive =
-                  item.href === '/app'
-                    ? pathname === '/app'
-                    : pathname.startsWith(item.href)
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                    className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                      isActive
-                        ? 'text-accent-hover bg-accent/5'
-                        : 'text-text-secondary hover:bg-surface-overlay'
-                    }`}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                    {item.external && (
-                      <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-text-tertiary" />
+              <MenuIcon className="h-5 w-5 mb-1" />
+              More
+            </button>
+            {menuOpen && (
+              <div className="absolute bottom-full right-0 mb-2 w-56 rounded-lg border border-border-subtle bg-surface-raised shadow-lg overflow-hidden">
+                {activeOrg && (
+                  <div className="border-b border-border-subtle">
+                    <button
+                      onClick={() => otherOrgs.length > 0 && setOrgExpanded(!orgExpanded)}
+                      className="w-full flex items-center gap-2.5 px-4 py-3 text-left transition-colors hover:bg-surface-overlay"
+                    >
+                      {activeOrg.logoUrl ? (
+                        <img src={activeOrg.logoUrl} alt="" className="h-6 w-6 rounded-[5px] object-cover shrink-0" />
+                      ) : (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-[5px] bg-gradient-to-br from-accent to-[oklch(0.6_0.16_18)] text-white text-xs font-bold shrink-0" style={{ fontFamily: 'var(--font-display, inherit)' }}>
+                          {activeOrg.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-text-primary truncate">{activeOrg.name}</p>
+                        <p className="text-[11px] text-text-tertiary">
+                          {PLAN_LABELS[activeOrg.planId] || activeOrg.planId} &middot; {activeOrg.role}
+                        </p>
+                      </div>
+                      {otherOrgs.length > 0 && (
+                        <ChevronsUpDownIcon className="h-3.5 w-3.5 text-fg-faint shrink-0" />
+                      )}
+                    </button>
+                    {orgExpanded && (
+                      <div className="border-t border-border-subtle">
+                        {otherOrgs.map((org) => (
+                          <button
+                            key={org.id}
+                            onClick={() => switchOrg(org.id)}
+                            disabled={switching}
+                            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-surface-overlay transition-colors disabled:opacity-50"
+                          >
+                            {org.logoUrl ? (
+                              <img src={org.logoUrl} alt="" className="h-5 w-5 rounded-[4px] object-cover shrink-0" />
+                            ) : (
+                              <div className="flex h-5 w-5 items-center justify-center rounded-[4px] bg-surface-input text-text-secondary text-[10px] font-bold shrink-0">
+                                {org.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <p className="text-[13px] text-text-primary truncate">{org.name}</p>
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => { setMenuOpen(false); setOrgExpanded(false); setCreateOpen(true) }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left hover:bg-surface-overlay transition-colors"
+                        >
+                          <div className="flex h-5 w-5 items-center justify-center rounded-[4px] border border-dashed border-border-default text-text-tertiary shrink-0">
+                            <PlusIcon className="h-3 w-3" />
+                          </div>
+                          <p className="text-[13px] font-medium text-text-secondary">New Organization</p>
+                        </button>
+                      </div>
                     )}
-                  </Link>
-                )
-              })}
-            </div>
-          )}
+                  </div>
+                )}
+                {menuItems.map((item) => {
+                  const isActive =
+                    item.href === '/app'
+                      ? pathname === '/app'
+                      : pathname.startsWith(item.href)
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMenuOpen(false)}
+                      {...(item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      className={`flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
+                        isActive
+                          ? 'text-accent-hover bg-accent/5'
+                          : 'text-text-secondary hover:bg-surface-overlay'
+                      }`}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                      {item.external && (
+                        <ExternalLinkIcon className="ml-auto h-3.5 w-3.5 text-text-tertiary" />
+                      )}
+                    </Link>
+                  )
+                })}
+                <div className="border-t border-border-subtle">
+                  <div className="flex items-center gap-2.5 px-4 py-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-3 text-text-secondary text-[11px] font-semibold shrink-0">
+                      {initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium text-text-primary truncate">
+                        {userDisplayName || userEmail}
+                      </p>
+                      {userDisplayName && (
+                        <p className="text-[11px] text-text-tertiary truncate">{userEmail}</p>
+                      )}
+                    </div>
+                    <form action="/auth/signout" method="POST">
+                      <button
+                        type="submit"
+                        className="p-1.5 rounded-[5px] text-fg-faint hover:text-text-secondary hover:bg-surface-overlay transition-colors"
+                        title="Sign out"
+                      >
+                        <SignOutIcon className="h-4 w-4" />
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+      <CreateOrgModal open={createOpen} onClose={() => setCreateOpen(false)} />
+    </>
   )
 }
 
