@@ -38,7 +38,6 @@ interface StorageData {
 }
 
 const STORAGE_PRICE_PER_TB = 19
-const MB_PER_TB = 1_048_576
 
 function planStorageLabel(planId: string): string {
   const labels: Record<string, string> = { free: '10 GB', pro: '500 GB', studio: '2 TB' }
@@ -173,14 +172,14 @@ export default function StorageSettingsPage() {
           <span className="text-sm font-medium text-text-primary">
             {formatFileSize(data.usedBytes)} <span className="text-text-secondary">of {limitLabel} used</span>
           </span>
-          <span className={`text-xs font-medium ${isOverQuota || isOverLimit ? 'text-red-400' : isNearLimit ? 'text-amber-400' : 'text-text-tertiary'}`}>
+          <span className={`text-xs font-medium ${isOverQuota || isOverLimit ? 'text-error' : isNearLimit ? 'text-warning' : 'text-text-tertiary'}`}>
             {percent.toFixed(1)}%
           </span>
         </div>
         <p className="text-xs text-text-secondary mb-3">{storageBreakdownText}</p>
         <div className="h-2.5 bg-surface-overlay rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${isOverQuota || isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-accent'}`}
+            className={`h-full rounded-full transition-all ${isOverQuota || isOverLimit ? 'bg-error' : isNearLimit ? 'bg-warning' : 'bg-accent'}`}
             style={{ width: `${percent}%` }}
           />
         </div>
@@ -270,7 +269,7 @@ export default function StorageSettingsPage() {
 
                     <div className="py-2 space-y-3">
                       {addonQuantity > 0 ? (
-                        <div className="rounded-lg border border-accent/30 bg-accent/5 p-4">
+                        <div className="rounded-lg border border-accent-muted bg-accent-tint p-4">
                           <p className="text-sm text-text-primary">
                             <span className="font-semibold">${addonQuantity * STORAGE_PRICE_PER_TB}/mo</span> will be added to your subscription for{' '}
                             <span className="font-semibold">{addonQuantity} TB</span> of extra storage.
@@ -280,7 +279,7 @@ export default function StorageSettingsPage() {
                           </p>
                         </div>
                       ) : (
-                        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+                        <div className="rounded-lg border border-warning/30 bg-warning/5 p-4">
                           <p className="text-sm text-text-primary">
                             Your <span className="font-semibold">{data.addonTbs} TB</span> storage add-on will be removed.
                           </p>
@@ -311,8 +310,8 @@ export default function StorageSettingsPage() {
       </div>
 
       {isOverQuota && (
-        <div className="border border-red-500/30 bg-red-500/5 rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium text-red-400">
+        <div className="border border-error/30 bg-error/5 rounded-lg p-4 mb-6">
+          <p className="text-sm font-medium text-error">
             You are over your storage limit
           </p>
           <p className="text-xs text-text-secondary mt-1">
@@ -328,8 +327,8 @@ export default function StorageSettingsPage() {
       )}
 
       {!isOverQuota && isNearLimit && (
-        <div className={`border rounded-lg p-4 mb-6 ${isOverLimit ? 'border-red-500/30 bg-red-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
-          <p className={`text-sm font-medium ${isOverLimit ? 'text-red-400' : 'text-amber-400'}`}>
+        <div className={`border rounded-lg p-4 mb-6 ${isOverLimit ? 'border-error/30 bg-error/5' : 'border-warning/30 bg-warning/5'}`}>
+          <p className={`text-sm font-medium ${isOverLimit ? 'text-error' : 'text-warning'}`}>
             {isOverLimit ? 'Storage almost full' : 'Running low on storage'}
           </p>
           <p className="text-xs text-text-secondary mt-1">
@@ -402,7 +401,7 @@ export default function StorageSettingsPage() {
                       <button
                         onClick={() => setConfirmDelete(file)}
                         disabled={deleting === file.id}
-                        className="rounded p-1 text-text-tertiary opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all disabled:opacity-50"
+                        className="rounded p-1 text-text-tertiary opacity-0 group-hover:opacity-100 hover:text-error hover:bg-error/10 transition-all disabled:opacity-50"
                         title="Delete file"
                       >
                         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
