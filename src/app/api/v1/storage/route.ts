@@ -7,6 +7,7 @@ export async function GET() {
   if (error) return error
 
   const usage = await getStorageUsage(org!.id, org!.planId, org!.trialEndsAt)
+  const planId = org!.planId
 
   const supabase = createServiceClient()
   const { data: files } = await supabase
@@ -45,10 +46,13 @@ export async function GET() {
   }
 
   return jsonResponse({
+    planId,
     usedBytes: usage.usedBytes,
     limitBytes: usage.limitBytes,
     usedPercent: Math.round(usage.usedPercent * 10) / 10,
     remaining: usage.remaining,
+    addonTbs: usage.addonTbs,
+    graceStartedAt: usage.graceStartedAt,
     breakdown: Array.from(byShow.entries())
       .map(([show, bytes]) => ({ show, bytes }))
       .sort((a, b) => b.bytes - a.bytes),

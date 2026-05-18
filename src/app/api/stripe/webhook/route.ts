@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getStripe } from '@/lib/stripe/client'
 import { isSelfHosted } from '@/lib/entitlements'
+import { syncGracePeriod } from '@/lib/storage/usage'
 
 async function ensureAiAddon(supabase: ReturnType<typeof createServiceClient>, orgId: string) {
   const { data: existing } = await supabase
@@ -31,6 +32,13 @@ function planFromPriceId(priceId: string): string {
     [process.env.STRIPE_STUDIO_ANNUAL_PRICE_ID || '']: 'studio',
   }
   return map[priceId] || 'free'
+}
+
+function storageAddonTbs(items: { price: { id: string }; quantity?: number | null }[]): number {
+  const addonPriceId = process.env.STRIPE_STORAGE_ADDON_PRICE_ID
+  if (!addonPriceId) return 0
+  const item = items.find((i) => i.price.id === addonPriceId)
+  return item?.quantity ?? 0
 }
 
 export async function POST(request: Request) {
@@ -115,14 +123,17 @@ export async function POST(request: Request) {
           updated_at: new Date().toISOString(),
         }, { onConflict: 'stripe_subscription_id' })
 
+        const addonTbs = storageAddonTbs(subscription.items.data)
         await supabase
           .from('organizations')
-          .update({ plan_id: planId, plan_status: subscription.status })
+          .update({ plan_id: planId, plan_status: subscription.status, storage_addon_tbs: addonTbs })
           .eq('id', orgId)
 
         if (planId === 'pro' || planId === 'studio') {
           await ensureAiAddon(supabase, orgId)
         }
+
+        await syncGracePeriod(orgId).catch(() => {})
       }
       break
     }
@@ -156,14 +167,17 @@ export async function POST(request: Request) {
         .eq('stripe_subscription_id', subscription.id)
 
       const planId = planFromPriceId(priceId)
+      const addonTbs = storageAddonTbs(subscription.items.data)
       await supabase
         .from('organizations')
-        .update({ plan_id: planId, plan_status: subscription.status })
+        .update({ plan_id: planId, plan_status: subscription.status, storage_addon_tbs: addonTbs })
         .eq('id', sub.org_id)
 
       if (planId === 'pro' || planId === 'studio') {
         await ensureAiAddon(supabase, sub.org_id)
       }
+
+      await syncGracePeriod(sub.org_id).catch(() => {})
 
       break
     }
@@ -192,8 +206,10 @@ export async function POST(request: Request) {
 
       await supabase
         .from('organizations')
-        .update({ plan_id: 'free', plan_status: 'canceled' })
+        .update({ plan_id: 'free', plan_status: 'canceled', storage_addon_tbs: 0 })
         .eq('id', sub.org_id)
+
+      await syncGracePeriod(sub.org_id).catch(() => {})
 
       break
     }

@@ -10,7 +10,7 @@ export async function GET() {
 
   const { data: orgData } = await supabase
     .from('organizations')
-    .select('plan_id, plan_status, trial_ends_at')
+    .select('plan_id, plan_status, trial_ends_at, storage_addon_tbs')
     .eq('id', org!.id)
     .single()
 
@@ -27,6 +27,7 @@ export async function GET() {
   return jsonResponse({
     plan_id: orgData.plan_id,
     plan_status: orgData.plan_status,
+    storage_addon_tbs: orgData.storage_addon_tbs ?? 0,
     subscription: subscription || undefined,
     trial: trial ? {
       active: trial.active,

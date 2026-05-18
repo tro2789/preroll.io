@@ -7,6 +7,7 @@ import { PLAN_LABELS } from '@/lib/constants/plans'
 interface OrgBilling {
   plan_id: string
   plan_status: string
+  storage_addon_tbs: number
   subscription?: {
     status: string
     current_period_end: string
@@ -275,6 +276,12 @@ export default function BillingPage() {
                               )}
                             </>
                           )}
+                    </p>
+                  )}
+                  {isPaid && (billing?.storage_addon_tbs ?? 0) > 0 && (
+                    <p className="mt-0.5 text-xs text-text-secondary">
+                      + {billing!.storage_addon_tbs} TB storage add-on (${billing!.storage_addon_tbs * 19}/mo) ·{' '}
+                      <a href="/app/settings/storage" className="text-accent hover:underline">Manage</a>
                     </p>
                   )}
                   {!isPaid && (

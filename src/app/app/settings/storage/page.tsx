@@ -3,6 +3,16 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { formatFileSize } from '@/lib/format'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 
 interface StorageFile {
   id: string
@@ -16,12 +26,23 @@ interface StorageFile {
 }
 
 interface StorageData {
+  planId: string
   usedBytes: number
   limitBytes: number | null
   usedPercent: number
   remaining: number | null
+  addonTbs: number
+  graceStartedAt: string | null
   breakdown: { show: string; bytes: number }[]
   files: StorageFile[]
+}
+
+const STORAGE_PRICE_PER_TB = 19
+const MB_PER_TB = 1_048_576
+
+function planStorageLabel(planId: string): string {
+  const labels: Record<string, string> = { free: '10 GB', pro: '500 GB', studio: '2 TB' }
+  return labels[planId] || '10 GB'
 }
 
 export default function StorageSettingsPage() {
@@ -32,6 +53,10 @@ export default function StorageSettingsPage() {
   const [filterShow, setFilterShow] = useState<string>('all')
   const [sortKey, setSortKey] = useState<'date' | 'size' | 'name'>('date')
   const [sortAsc, setSortAsc] = useState(false)
+
+  const [addonDialogOpen, setAddonDialogOpen] = useState(false)
+  const [addonQuantity, setAddonQuantity] = useState(0)
+  const [addonSaving, setAddonSaving] = useState(false)
 
   useEffect(() => {
     loadData()
@@ -45,7 +70,10 @@ export default function StorageSettingsPage() {
         const body = await res.json()
         return body.data ?? body
       })
-      .then(setData)
+      .then((d) => {
+        setData(d)
+        if (d) setAddonQuantity(d.addonTbs)
+      })
       .finally(() => setLoading(false))
   }
 
@@ -64,6 +92,26 @@ export default function StorageSettingsPage() {
       toast.error(err instanceof Error ? err.message : 'Failed to delete file')
     } finally {
       setDeleting(null)
+    }
+  }
+
+  async function handleAddonSave() {
+    setAddonSaving(true)
+    try {
+      const res = await fetch('/api/stripe/storage-addon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: addonQuantity }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to update storage')
+      toast.success(addonQuantity > 0 ? `Storage updated to ${addonQuantity} TB add-on` : 'Storage add-on removed')
+      setAddonDialogOpen(false)
+      loadData()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update storage')
+    } finally {
+      setAddonSaving(false)
     }
   }
 
@@ -88,8 +136,18 @@ export default function StorageSettingsPage() {
   const percent = Math.min(data.usedPercent, 100)
   const isNearLimit = percent >= 80
   const isOverLimit = percent >= 95
+  const isOverQuota = !!data.graceStartedAt
+  const canManageAddon = ['pro', 'studio'].includes(data.planId)
   const limitLabel = data.limitBytes ? formatFileSize(data.limitBytes) : 'Unlimited'
   const showNames = ['all', ...data.breakdown.map((b) => b.show)]
+
+  const graceDaysLeft = data.graceStartedAt
+    ? Math.max(0, 30 - Math.floor((Date.now() - new Date(data.graceStartedAt).getTime()) / (1000 * 60 * 60 * 24)))
+    : null
+
+  const planLabel = planStorageLabel(data.planId)
+  const addonLabel = data.addonTbs > 0 ? `${data.addonTbs} TB add-on` : null
+  const storageBreakdownText = addonLabel ? `${planLabel} included · ${addonLabel}` : `${planLabel} included`
 
   const filtered = filterShow === 'all' ? data.files : data.files.filter((f) => f.showName === filterShow)
   const sorted = [...filtered].sort((a, b) => {
@@ -110,32 +168,128 @@ export default function StorageSettingsPage() {
       <h1 className="text-2xl font-bold text-text-primary mb-8">Storage</h1>
 
       <div className="border border-border-subtle rounded-lg p-6 bg-surface-raised mb-6">
-        <div className="flex items-baseline justify-between mb-3">
+        <div className="flex items-baseline justify-between mb-1">
           <span className="text-sm font-medium text-text-primary">
             {formatFileSize(data.usedBytes)} <span className="text-text-secondary">of {limitLabel} used</span>
           </span>
-          <span className={`text-xs font-medium ${isOverLimit ? 'text-red-400' : isNearLimit ? 'text-amber-400' : 'text-text-tertiary'}`}>
+          <span className={`text-xs font-medium ${isOverQuota || isOverLimit ? 'text-red-400' : isNearLimit ? 'text-amber-400' : 'text-text-tertiary'}`}>
             {percent.toFixed(1)}%
           </span>
         </div>
+        <p className="text-xs text-text-secondary mb-3">{storageBreakdownText}</p>
         <div className="h-2.5 bg-surface-overlay rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-accent'}`}
+            className={`h-full rounded-full transition-all ${isOverQuota || isOverLimit ? 'bg-red-500' : isNearLimit ? 'bg-amber-500' : 'bg-accent'}`}
             style={{ width: `${percent}%` }}
           />
         </div>
-        {data.remaining !== null && (
-          <p className="text-xs text-text-tertiary mt-2">{formatFileSize(data.remaining)} remaining</p>
+        {data.remaining !== null && !isOverQuota && (
+          <p className="text-xs text-text-secondary mt-2">{formatFileSize(data.remaining)} remaining</p>
+        )}
+        {canManageAddon && (
+          <div className="mt-4">
+            <Dialog open={addonDialogOpen} onOpenChange={(open) => { setAddonDialogOpen(open); if (open) setAddonQuantity(data.addonTbs) }}>
+              <DialogTrigger render={<Button variant="outline" size="sm" />}>
+                {data.addonTbs > 0 ? 'Manage Storage Add-on' : 'Add More Storage'}
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Storage Add-on</DialogTitle>
+                  <DialogDescription>
+                    Add extra storage to your plan at $19 per TB per month. Changes are prorated on your current billing cycle.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="py-2">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm font-medium text-text-primary">Extra storage</span>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => setAddonQuantity(Math.max(0, addonQuantity - 1))}
+                        disabled={addonQuantity <= 0}
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                        </svg>
+                      </Button>
+                      <span className="text-lg font-semibold text-text-primary w-16 text-center tabular-nums">
+                        {addonQuantity} TB
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => setAddonQuantity(addonQuantity + 1)}
+                      >
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14m-7-7h14" />
+                        </svg>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-border-subtle bg-surface-overlay p-3 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Plan storage</span>
+                      <span className="text-text-primary">{planLabel}</span>
+                    </div>
+                    {addonQuantity > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-text-secondary">Add-on storage</span>
+                        <span className="text-text-primary">{addonQuantity} TB</span>
+                      </div>
+                    )}
+                    <div className="border-t border-border-subtle my-1" />
+                    <div className="flex justify-between text-sm font-medium">
+                      <span className="text-text-secondary">Add-on cost</span>
+                      <span className="text-text-primary">
+                        {addonQuantity > 0 ? `$${addonQuantity * STORAGE_PRICE_PER_TB}/mo` : 'None'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    onClick={handleAddonSave}
+                    disabled={addonSaving || addonQuantity === data.addonTbs}
+                  >
+                    {addonSaving ? 'Updating...' : addonQuantity === 0 && data.addonTbs > 0 ? 'Remove Add-on' : 'Confirm'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         )}
       </div>
 
-      {isNearLimit && (
+      {isOverQuota && (
+        <div className="border border-red-500/30 bg-red-500/5 rounded-lg p-4 mb-6">
+          <p className="text-sm font-medium text-red-400">
+            You are over your storage limit
+          </p>
+          <p className="text-xs text-text-secondary mt-1">
+            Uploads are blocked. Delete files or add more storage to resume uploads.
+            {graceDaysLeft !== null && graceDaysLeft > 0 && (
+              <> Files will be removed in {graceDaysLeft} {graceDaysLeft === 1 ? 'day' : 'days'} if the issue is not resolved.</>
+            )}
+            {graceDaysLeft === 0 && (
+              <> The grace period has expired. Files exceeding your limit are being removed.</>
+            )}
+          </p>
+        </div>
+      )}
+
+      {!isOverQuota && isNearLimit && (
         <div className={`border rounded-lg p-4 mb-6 ${isOverLimit ? 'border-red-500/30 bg-red-500/5' : 'border-amber-500/30 bg-amber-500/5'}`}>
           <p className={`text-sm font-medium ${isOverLimit ? 'text-red-400' : 'text-amber-400'}`}>
             {isOverLimit ? 'Storage almost full' : 'Running low on storage'}
           </p>
           <p className="text-xs text-text-secondary mt-1">
-            Delete files below or upgrade your plan for more storage.
+            {canManageAddon
+              ? 'Delete files below or add more storage.'
+              : 'Delete files below or upgrade your plan for more storage.'}
           </p>
         </div>
       )}
@@ -226,19 +380,17 @@ export default function StorageSettingsPage() {
               Permanently delete <span className="font-medium text-text-primary">{confirmDelete.name}</span> ({formatFileSize(confirmDelete.size)})? This cannot be undone.
             </p>
             <div className="mt-5 flex justify-end gap-2">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className="rounded-md px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
-              >
+              <Button variant="outline" size="sm" onClick={() => setConfirmDelete(null)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
                 onClick={() => handleDelete(confirmDelete)}
                 disabled={deleting !== null}
-                className="rounded-md bg-red-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-600 transition-colors disabled:opacity-50"
               >
                 {deleting ? 'Deleting...' : 'Delete'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
