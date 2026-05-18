@@ -116,7 +116,7 @@ export function IntegrationMarquee() {
     <section id="integrations" className="py-[78px] border-t border-b border-border-subtle bg-bg-deeper">
       <div className="max-w-[1200px] mx-auto px-7 text-center reveal">
         <span className="font-mono text-xs tracking-[0.12em] uppercase text-accent">Integrations</span>
-        <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5 mb-10">Connects to the tools you already use.</h2>
+        <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5 mb-10">Connect to the tools you already use.</h2>
       </div>
       <MarqueeTrack items={INTEGRATIONS} />
     </section>
