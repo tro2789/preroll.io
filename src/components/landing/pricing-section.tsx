@@ -72,8 +72,8 @@ export default function PricingSection() {
   return (
     <div className="mx-auto max-w-5xl">
         {/* Segmented toggle */}
-        <div className="flex items-center justify-center gap-3">
-          <div className="inline-flex items-center rounded-[9px] border border-border-subtle bg-surface-input p-[3px]">
+        <div className="flex items-center justify-center">
+          <div className="relative inline-flex items-center rounded-[9px] border border-border-subtle bg-surface-input p-[3px]">
             <button
               onClick={() => setAnnual(false)}
               className={`relative rounded-[7px] px-4 py-1.5 text-[13px] font-medium transition-all duration-200 ${
@@ -94,13 +94,13 @@ export default function PricingSection() {
             >
               Annual
             </button>
+            <span
+              aria-hidden={!annual}
+              className={`absolute left-full ml-3 whitespace-nowrap rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success transition-opacity ${annual ? 'opacity-100' : 'opacity-0'}`}
+            >
+              Save 17%
+            </span>
           </div>
-          <span
-            aria-hidden={!annual}
-            className={`rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success transition-opacity ${annual ? 'opacity-100' : 'opacity-0'}`}
-          >
-            Save 17%
-          </span>
         </div>
 
         {/* Price grid */}
