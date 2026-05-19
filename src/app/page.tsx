@@ -268,8 +268,9 @@ function Footer() {
           ))}
         </div>
 
-        <div className="mt-11 pt-5 border-t border-border-subtle text-[12.5px] text-fg-faint">
+        <div className="mt-11 pt-5 border-t border-border-subtle text-[12.5px] text-fg-faint flex flex-wrap justify-between gap-2">
           <span>&copy; {new Date().getFullYear()} PreRoll.io. All rights reserved.</span>
+          <span>A product of <a href="https://trevorohare.com" className="text-text-secondary hover:text-text-primary transition-colors">Trevor O&apos;Hare Productions</a></span>
         </div>
       </div>
     </footer>

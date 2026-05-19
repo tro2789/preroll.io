@@ -194,13 +194,16 @@ export default async function BlogPost({ params }: Props) {
       </main>
 
       <footer className="border-t border-border-subtle py-8 px-7">
-        <div className="max-w-[1200px] mx-auto flex items-center justify-between text-[12.5px] text-fg-faint">
-          <span>&copy; {new Date().getFullYear()} PreRoll.io</span>
-          <div className="flex gap-5">
-            <Link href="/docs" className="hover:text-text-secondary transition-colors">Docs</Link>
-            <Link href="/privacy" className="hover:text-text-secondary transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-text-secondary transition-colors">Terms</Link>
+        <div className="max-w-[1200px] mx-auto flex flex-col gap-4 text-[12.5px] text-fg-faint">
+          <div className="flex items-center justify-between">
+            <span>&copy; {new Date().getFullYear()} PreRoll.io</span>
+            <div className="flex gap-5">
+              <Link href="/docs" className="hover:text-text-secondary transition-colors">Docs</Link>
+              <Link href="/privacy" className="hover:text-text-secondary transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-text-secondary transition-colors">Terms</Link>
+            </div>
           </div>
+          <span>A product of <a href="https://trevorohare.com" className="text-text-secondary hover:text-text-primary transition-colors">Trevor O&apos;Hare Productions</a></span>
         </div>
       </footer>
     </div>
