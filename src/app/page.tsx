@@ -11,11 +11,11 @@ import { LogoIcon } from '@/components/ui/logo'
 export const metadata: Metadata = {
   title: "Podcast Production Management for Agencies | PreRoll.io",
   description:
-    "The production management platform for podcast agencies and producers. Manage clients, shows, and episodes in one pipeline — with client portals, AI show notes, video review, and one-click publishing.",
+    "The production management platform for podcast agencies and producers. Manage clients, shows, and episodes in one place — with client portals, AI show notes, video review, and one-click publishing.",
   openGraph: {
     title: "Podcast Production Management for Agencies | PreRoll.io",
     description:
-      "Manage clients, shows, and episodes in one pipeline — with client portals, AI show notes, video review, and one-click publishing.",
+      "Manage clients, shows, and episodes in one place — with client portals, AI show notes, video review, and one-click publishing.",
     url: "https://preroll.io",
     images: [{ url: "/images/landing/hero-screenshot.jpg", width: 2880, height: 1800, alt: "PreRoll.io dashboard" }],
   },
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Podcast Production Management for Agencies | PreRoll.io",
     description:
-      "Manage clients, shows, and episodes in one pipeline — with client portals, AI show notes, video review, and one-click publishing.",
+      "Manage clients, shows, and episodes in one place — with client portals, AI show notes, video review, and one-click publishing.",
     images: ["/images/landing/hero-screenshot.jpg"],
   },
   alternates: {
@@ -53,7 +53,7 @@ const jsonLd = {
       operatingSystem: 'Web',
       url: 'https://preroll.io',
       description:
-        'Podcast production management platform. Episode pipelines, client portals, AI-powered show notes, video review, and one-click publishing.',
+        'Podcast production management platform. Episode workflows, client portals, AI-powered show notes, video review, and one-click publishing.',
       offers: [
         { '@type': 'Offer', price: '0', priceCurrency: 'USD', name: 'Free' },
         { '@type': 'Offer', price: '29', priceCurrency: 'USD', name: 'Pro', billingIncrement: 'P1M' },
@@ -218,7 +218,7 @@ function FinalCta() {
             Ship episodes, not spreadsheets.
           </h2>
           <p className="text-text-secondary mt-4 text-[17px]">
-            One pipeline for every show, every client, every deliverable.
+            One workflow for every show, every client, every deliverable.
           </p>
           <div className="flex gap-3 justify-center mt-7 flex-wrap">
             <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 rounded-[9px] text-[15.5px] font-semibold bg-accent text-white hover:bg-accent-hover transition-colors shadow-[0_0_0_0_var(--color-accent-tint),0_8px_24px_-8px_oklch(0.715_0.155_40/0.55)]">
