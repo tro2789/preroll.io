@@ -2,7 +2,7 @@ backend:
   name: gitea
   repo: tro2789/preroll.io
   branch: main
-  app_id: REPLACE_WITH_OAUTH_APP_ID
+  app_id: 7bacd47f-7c2b-4c42-9a4a-54095fd37afa
   api_root: https://gitea.tohareprod.com/api/v1
   base_url: https://gitea.tohareprod.com
   auth_endpoint: login/oauth/authorize
@@ -32,6 +32,6 @@ collections:
         }
       - { label: Excerpt, name: excerpt, widget: text }
       - { label: Tags, name: tags, widget: list }
-      - { label: Author, name: author, widget: string, default: "PreRoll" }
+      - { label: Author, name: author, widget: string, default: "Trevor O'Hare" }
       - { label: Featured image, name: image, widget: image, required: false }
       - { label: Body, name: body, widget: markdown }
