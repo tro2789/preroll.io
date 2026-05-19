@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { getAllPosts } from '@/lib/blog'
 
 export const metadata: Metadata = {
-  title: 'Blog — PreRoll.io',
+  title: 'Blog',
   description: 'Tips on podcast production, workflow automation, and growing your podcast business.',
+  alternates: { canonical: 'https://preroll.io/blog' },
 }
 
 export default function BlogIndex() {

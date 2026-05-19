@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -7,6 +8,61 @@ import { IntegrationMarquee } from '@/components/landing/integration-marquee'
 import { AuroraBackground, CursorGlow, ScrollRevealInit, NavScrollEffect } from '@/components/landing/hero-effects'
 import { LogoIcon } from '@/components/ui/logo'
 
+export const metadata: Metadata = {
+  title: "Podcast Production Management for Agencies | PreRoll.io",
+  description:
+    "The production management platform for podcast agencies and producers. Manage clients, shows, and episodes in one pipeline — with client portals, AI show notes, video review, and one-click publishing.",
+  openGraph: {
+    title: "Podcast Production Management for Agencies | PreRoll.io",
+    description:
+      "Manage clients, shows, and episodes in one pipeline — with client portals, AI show notes, video review, and one-click publishing.",
+    url: "https://preroll.io",
+    images: [{ url: "/images/landing/hero-screenshot.jpg", width: 2880, height: 1800, alt: "PreRoll.io dashboard" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Podcast Production Management for Agencies | PreRoll.io",
+    description:
+      "Manage clients, shows, and episodes in one pipeline — with client portals, AI show notes, video review, and one-click publishing.",
+    images: ["/images/landing/hero-screenshot.jpg"],
+  },
+  alternates: {
+    canonical: "https://preroll.io",
+  },
+}
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: 'PreRoll.io',
+      url: 'https://preroll.io',
+      logo: 'https://preroll.io/images/landing/hero-screenshot.jpg',
+      description: 'Podcast production management platform for agencies and producers.',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: 'trevor@trevorohare.com',
+        contactType: 'customer support',
+      },
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'PreRoll.io',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      url: 'https://preroll.io',
+      description:
+        'Podcast production management platform. Episode pipelines, client portals, AI-powered show notes, video review, and one-click publishing.',
+      offers: [
+        { '@type': 'Offer', price: '0', priceCurrency: 'USD', name: 'Free' },
+        { '@type': 'Offer', price: '29', priceCurrency: 'USD', name: 'Pro', billingIncrement: 'P1M' },
+        { '@type': 'Offer', price: '79', priceCurrency: 'USD', name: 'Studio', billingIncrement: 'P1M' },
+      ],
+    },
+  ],
+}
+
 export default async function LandingPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -14,6 +70,10 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-surface-base overflow-x-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ScrollRevealInit />
       <NavScrollEffect />
       <CursorGlow />
@@ -49,6 +109,7 @@ function Nav() {
             ['Integrations', '#integrations'],
             ['Pricing', '#pricing'],
             ['Docs', '/docs'],
+            ['Blog', '/blog'],
           ].map(([label, href]) => (
             <a key={label} href={href} className="px-[11px] py-[7px] rounded-[6px] text-sm text-text-secondary font-[450] hover:text-text-primary hover:bg-surface-raised transition-colors">
               {label}
@@ -199,7 +260,7 @@ function Footer() {
             { title: 'Resources', links: [['Docs', '/docs'], ['Privacy', '/privacy'], ['Terms', '/terms']] },
           ].map(col => (
             <div key={col.title}>
-              <h4 className="text-xs font-semibold tracking-[0.06em] uppercase text-fg-faint mb-3.5">{col.title}</h4>
+              <h3 className="text-xs font-semibold tracking-[0.06em] uppercase text-fg-faint mb-3.5">{col.title}</h3>
               {col.links.map(([label, href]) => (
                 <a key={label} href={href} className="block text-[13.5px] text-text-secondary py-[5px] hover:text-text-primary transition-colors">{label}</a>
               ))}

@@ -19,15 +19,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return {}
 
   return {
-    title: `${post.title} — PreRoll.io`,
+    title: post.title,
     description: post.excerpt,
+    alternates: { canonical: `https://preroll.io/blog/${slug}` },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
       publishedTime: post.date,
+      url: `https://preroll.io/blog/${slug}`,
       ...(post.image && { images: [{ url: post.image }] }),
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      ...(post.image && { images: [post.image] }),
+    },
+  }
+}
+
+function blogPostJsonLd(post: { title: string; date: string; excerpt: string; slug: string; image?: string; author: string }) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    author: { '@type': 'Person', name: post.author },
+    publisher: { '@type': 'Organization', name: 'PreRoll.io', url: 'https://preroll.io' },
+    url: `https://preroll.io/blog/${post.slug}`,
+    ...(post.image && { image: post.image }),
   }
 }
 
@@ -41,6 +63,7 @@ export default async function BlogPost({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-bg-base text-text-primary">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostJsonLd(post)) }} />
       <article className="max-w-3xl mx-auto px-6 py-24">
         <Link href="/blog" className="text-sm text-text-secondary hover:text-text-primary transition-colors mb-8 inline-block">&larr; Back to blog</Link>
 

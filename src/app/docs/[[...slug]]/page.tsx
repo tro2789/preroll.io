@@ -37,8 +37,10 @@ export async function generateMetadata(props: { params: Promise<{ slug?: string[
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) return {};
+  const slug = params.slug?.join('/') ?? '';
   return {
-    title: `${page.data.title} | preroll.io docs`,
+    title: page.data.title,
     description: page.data.description,
+    alternates: { canonical: `https://preroll.io/docs${slug ? `/${slug}` : ''}` },
   };
 }

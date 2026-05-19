@@ -18,8 +18,31 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "preroll.io",
-  description: "Podcast production management platform",
+  title: {
+    default: "PreRoll.io — Podcast Production Management for Agencies",
+    template: "%s | PreRoll.io",
+  },
+  description:
+    "Manage podcast production for multiple clients in one platform. Episode pipelines, asset management, client portals, AI-powered show notes, and publishing — built for podcast agencies and producers.",
+  metadataBase: new URL("https://preroll.io"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "PreRoll.io",
+    title: "PreRoll.io — Podcast Production Management for Agencies",
+    description:
+      "Manage podcast production for multiple clients in one platform. Episode pipelines, asset management, client portals, and publishing.",
+    url: "https://preroll.io",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PreRoll.io — Podcast Production Management for Agencies",
+    description:
+      "Manage podcast production for multiple clients in one platform. Episode pipelines, asset management, client portals, and publishing.",
+  },
+  alternates: {
+    canonical: "https://preroll.io",
+  },
 };
 
 export const viewport: Viewport = {
