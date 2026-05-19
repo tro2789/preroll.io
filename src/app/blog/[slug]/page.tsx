@@ -128,6 +128,13 @@ export default async function BlogPost({ params }: Props) {
         </Link>
 
         <article>
+          {/* Hero image */}
+          {post.image && (
+            <div className="rounded-[12px] overflow-hidden mb-8 -mx-2 sm:-mx-4">
+              <img src={post.image} alt="" className="w-full aspect-[2.2/1] object-cover" />
+            </div>
+          )}
+
           {/* Header */}
           <header className="mb-10">
             <div className="flex gap-2 mb-4 flex-wrap">
