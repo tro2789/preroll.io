@@ -12,7 +12,7 @@ const TIERS = [
     features: [
       '1 client, 1 show',
       '10 GB storage',
-      'Episode pipeline with drag-and-drop',
+      'Episode board with drag-and-drop',
       'Client portal with magic-link auth',
       'Calendar view',
     ],

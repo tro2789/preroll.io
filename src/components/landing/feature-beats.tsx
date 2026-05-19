@@ -72,7 +72,7 @@ export function FeatureBeats() {
       <div className="text-center max-w-[64ch] mx-auto reveal">
         <span className="font-mono text-xs tracking-[0.12em] uppercase text-accent">Features</span>
         <h2 className="font-[family-name:var(--font-display)] text-[clamp(28px,3.4vw,40px)] font-semibold text-text-primary leading-[1.12] tracking-[-0.022em] mt-3.5">Built for agents, not just humans</h2>
-        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">Ships with a full REST API, a built-in MCP server, and an AI assistant that can run your pipeline for you.</p>
+        <p className="text-text-secondary mt-4 text-[17px] leading-relaxed">Ships with a full REST API, a built-in MCP server, and an AI assistant that can run your production for you.</p>
       </div>
 
       <div className="mt-[72px] space-y-28">
@@ -81,9 +81,9 @@ export function FeatureBeats() {
           <Beat
             kicker="For developers"
             title="API-first. MCP included."
-            lead="Every action in the UI has a corresponding API endpoint. The built-in MCP server turns your entire pipeline into tools that any AI agent can call directly."
+            lead="Every action in the UI has a corresponding API endpoint. The built-in MCP server turns your entire workflow into tools that any AI agent can call directly."
             items={[
-              { bold: 'MCP server.', rest: 'Connect Claude Desktop and your pipeline shows up as callable tools, with nothing to deploy.' },
+              { bold: 'MCP server.', rest: 'Connect Claude Desktop and your shows, episodes, and stages appear as callable tools, with nothing to deploy.' },
               { bold: 'Full REST API.', rest: 'Every resource and every action is available, with webhooks for stage changes and approvals.' },
               { bold: 'Scoped and logged.', rest: 'Agents only see the shows you grant them, and every call is on the record.' },
             ]}
@@ -113,8 +113,8 @@ export function FeatureBeats() {
         <div className="reveal">
           <Beat
             kicker="AI assistant"
-            title="Talk to your pipeline."
-            lead="Ask what&apos;s overdue, draft show notes from a transcript, or advance an episode through the pipeline. The assistant confirms with you before taking any action."
+            title="Talk to your production."
+            lead="Ask what&apos;s overdue, draft show notes from a transcript, or advance an episode to the next stage. The assistant confirms with you before taking any action."
             items={[
               { bold: 'Context-aware.', rest: 'It knows which episode, show, or client you\'re viewing and scopes its answers automatically.' },
               { bold: '22 tools.', rest: 'It can read data, create episodes, generate content, and move stages on your behalf.' },

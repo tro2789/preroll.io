@@ -5,7 +5,7 @@ import { useState } from 'react'
 const FAQS = [
   {
     q: 'Does PreRoll.io replace my hosting platform?',
-    a: 'No. It sits on top of it. PreRoll.io manages the production pipeline — who\'s doing what, what\'s approved, what\'s late — and publishes to Transistor.fm when you\'re ready. Keep using your existing host for distribution.',
+    a: 'No. It sits on top of it. PreRoll.io manages your production — who\'s doing what, what\'s approved, what\'s late — and publishes to Transistor.fm when you\'re ready. Keep using your existing host for distribution.',
   },
   {
     q: 'Where do the audio and video files actually live?',
@@ -17,7 +17,7 @@ const FAQS = [
   },
   {
     q: 'What can the API and the MCP server actually do?',
-    a: 'Everything the app does. The REST API covers clients, shows, episodes, stages, files, deliverables, transcripts, AI generation, and publishing, with webhooks for stage changes and approvals. The MCP server wraps those same operations as tools, so Claude or any AI assistant can run your pipeline.',
+    a: 'Everything the app does. The REST API covers clients, shows, episodes, stages, files, deliverables, transcripts, AI generation, and publishing, with webhooks for stage changes and approvals. The MCP server wraps those same operations as tools, so Claude or any AI assistant can manage your production directly.',
   },
   {
     q: 'Can my clients use it without paying for a seat?',
@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: 'We\'re on a spreadsheet / Trello / Notion today. How hard is moving?',
-    a: 'PreRoll.io is lightweight enough to run alongside what you have. Most producers set up their shows and pipeline stages in an afternoon, then start managing new episodes in PreRoll while wrapping up old ones wherever they are.',
+    a: 'PreRoll.io is lightweight enough to run alongside what you have. Most producers set up their shows and stages in an afternoon, then start managing new episodes in PreRoll while wrapping up old ones wherever they are.',
   },
   {
     q: 'What about security and access control?',
