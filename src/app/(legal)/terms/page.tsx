@@ -10,7 +10,7 @@ export default function TermsOfService() {
     <main className="min-h-screen bg-bg-base text-text-primary">
       <div className="max-w-3xl mx-auto px-6 py-24">
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.02em] mb-2">Terms of Service</h1>
-        <p className="text-sm text-text-tertiary mb-10">Last updated: May 16, 2026</p>
+        <p className="text-sm text-text-tertiary mb-10">Last updated: May 19, 2026</p>
 
         <div className="space-y-8 text-sm text-text-secondary leading-relaxed">
           <section>
@@ -44,27 +44,32 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">7. Service Availability</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">7. Third-Party Integrations</h2>
+            <p>The Service integrates with third-party platforms including YouTube, Frame.io, Google Drive, Vimeo, Transistor.fm, Stripe, and Deepgram. Your use of these integrations is subject to the respective third-party&apos;s terms of service and privacy policies. By connecting a third-party account, you authorize PreRoll to access and transmit data to that service on your behalf as necessary to provide the requested functionality. You can disconnect any integration at any time through your account settings. PreRoll&apos;s use of YouTube API Services is subject to the <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" className="text-accent hover:underline">YouTube API Services Terms of Service</a>. You may also revoke PreRoll&apos;s access to your Google account at any time via <a href="https://myaccount.google.com/permissions" className="text-accent hover:underline">Google&apos;s security settings</a>.</p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-text-primary mb-3">8. Service Availability</h2>
             <p>We strive for high availability but do not guarantee uninterrupted access. We may perform maintenance with reasonable notice. We are not liable for downtime caused by third-party services, infrastructure providers, or events beyond our control.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">8. Limitation of Liability</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">9. Limitation of Liability</h2>
             <p>To the maximum extent permitted by law, PreRoll.io and its operators shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service. Our total liability shall not exceed the amount you paid in the 12 months preceding the claim.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">9. Termination</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">10. Termination</h2>
             <p>Either party may terminate this agreement at any time. We may suspend or terminate your account if you violate these terms. Upon termination, you may export your data within 30 days, after which it will be deleted.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">10. Changes to Terms</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">11. Changes to Terms</h2>
             <p>We may update these terms from time to time. Material changes will be communicated via email or in-app notification at least 14 days before taking effect. Continued use of the Service after changes take effect constitutes acceptance.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">11. Contact</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">12. Contact</h2>
             <p>For questions about these terms, email <a href="mailto:trevor@trevorohare.com" className="text-accent hover:underline">trevor@trevorohare.com</a>.</p>
           </section>
         </div>

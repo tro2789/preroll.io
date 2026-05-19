@@ -10,7 +10,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-bg-base text-text-primary">
       <div className="max-w-3xl mx-auto px-6 py-24">
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-semibold tracking-[-0.02em] mb-2">Privacy Policy</h1>
-        <p className="text-sm text-text-tertiary mb-10">Last updated: May 16, 2026</p>
+        <p className="text-sm text-text-tertiary mb-10">Last updated: May 19, 2026</p>
 
         <div className="space-y-8 text-sm text-text-secondary leading-relaxed">
           <section>
@@ -25,31 +25,36 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-base font-semibold text-text-primary mb-3">3. Third-Party Services</h2>
-            <p>PreRoll integrates with services you connect (Frame.io, Google Drive, Vimeo, Transistor.fm, Stripe, Deepgram, and others). When you authorize an integration, data is shared with that service according to their own privacy policies. We only share what is necessary for the integration to function.</p>
+            <p>PreRoll integrates with services you connect (YouTube, Frame.io, Google Drive, Vimeo, Transistor.fm, Stripe, Deepgram, and others). When you authorize an integration, data is shared with that service according to their own privacy policies. We only share what is necessary for the integration to function.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">4. Data Storage and Security</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">4. YouTube API Services</h2>
+            <p>PreRoll uses the YouTube API Services to let you publish podcast episodes to YouTube. When you connect your YouTube channel, we access your channel name and ID to confirm the connection, and we upload video files, metadata (titles, descriptions, tags, thumbnails), and playlist assignments on your behalf. We store your YouTube channel ID and the video IDs of published episodes. We do not access or store YouTube analytics, viewer data, comments, or revenue information. Your YouTube OAuth tokens are encrypted at rest. You can revoke PreRoll&apos;s access to your YouTube account at any time through Settings in PreRoll or through <a href="https://myaccount.google.com/permissions" className="text-accent hover:underline">Google&apos;s security settings</a>. PreRoll&apos;s use of YouTube API Services is subject to the <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" className="text-accent hover:underline">YouTube API Services Terms of Service</a> and <a href="https://policies.google.com/privacy" className="text-accent hover:underline">Google&apos;s Privacy Policy</a>.</p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold text-text-primary mb-3">5. Data Storage and Security</h2>
             <p>Your data is stored in Supabase (PostgreSQL) with row-level security. File assets are stored in Cloudflare R2. All data is encrypted in transit (TLS) and at rest. We use industry-standard security practices to protect your information.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">5. AI Features</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">6. AI Features</h2>
             <p>When you use AI features (transcription, content generation, chat), your audio and text are processed by Anthropic (Claude) and Deepgram. These providers process data according to their privacy policies and do not use your content for training. You can opt out of AI features entirely.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">6. Data Retention</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">7. Data Retention</h2>
             <p>We retain your data for as long as your account is active. If you delete your account, we remove your data within 30 days, except where required by law or for legitimate business purposes (e.g., payment records).</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">7. Your Rights</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">8. Your Rights</h2>
             <p>You can access, export, correct, or delete your data at any time through your account settings or by contacting us. If you are in the EU/UK, you have additional rights under GDPR including the right to data portability and the right to object to processing.</p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-text-primary mb-3">8. Contact</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-3">9. Contact</h2>
             <p>For privacy questions or requests, email <a href="mailto:trevor@trevorohare.com" className="text-accent hover:underline">trevor@trevorohare.com</a>.</p>
           </section>
         </div>
