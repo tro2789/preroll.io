@@ -101,18 +101,17 @@ export async function POST(
 
   if (dbError) return errorResponse(dbError.message, 500)
 
-  // Auto-create delivery project if user has an integration with createProject support
+  // Auto-create delivery project only if org explicitly chose an external provider
   try {
-    if (org) {
+    if (org && org.defaultDeliveryProvider) {
       const { data: integrations } = await supabase!
         .from('user_integrations')
         .select('provider, account_id, workspace_id')
         .eq('org_id', org.id)
 
-      const priorityOrder = ['frame_io', 'vimeo', 'google_drive'] as const
-      const eligible = priorityOrder
-        .map(p => integrations?.find(i => i.provider === p))
-        .find(i => i?.account_id && i?.workspace_id)
+      const eligible = integrations?.find(
+        (i) => i.provider === org.defaultDeliveryProvider && i.account_id && i.workspace_id
+      )
 
       if (eligible) {
         const { getValidToken } = await import('@/lib/integrations/token-refresh')
