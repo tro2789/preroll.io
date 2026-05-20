@@ -4,12 +4,7 @@ import { decrypt } from '@/lib/integrations/crypto'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { authorizeUpload, createEpisode, publishEpisode } from '@/lib/integrations/providers/transistor'
-import {
-  initiateVideoUpload,
-  uploadVideoBytes,
-  setThumbnail,
-  addToPlaylist,
-} from '@/lib/integrations/providers/youtube-distribution'
+import { initiateVideoUpload } from '@/lib/integrations/providers/youtube-distribution'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 import { getDistributionToken } from '@/lib/integrations/distribution-token'
 import { getDownloadUrl } from '@/lib/r2/client'
@@ -205,8 +200,6 @@ async function handleYouTubePublish(
     privacy_status = 'public',
     scheduled_at,
     video_source,
-    playlist_id,
-    thumbnail_url,
   } = body
 
   if (!title) return errorResponse('title is required', 400)
@@ -216,7 +209,6 @@ async function handleYouTubePublish(
 
   let ytToken: string
 
-  // Prefer per-show client token, fall back to org-level producer token
   const distToken = await getDistributionToken(connection)
   if (distToken) {
     ytToken = distToken
@@ -228,9 +220,10 @@ async function handleYouTubePublish(
     }
   }
 
-  const resolved = await resolveVideoSource(supabase, org.id, video_source)
-  if ('error' in resolved) return resolved.error
-  const { videoBuffer, mimeType } = resolved
+  // Resolve R2 download URL instead of downloading the file
+  const downloadUrl = await resolveSourceDownloadUrl(supabase, org.id, video_source)
+  if ('error' in downloadUrl) return downloadUrl.error
+  const { url: sourceUrl, mimeType, fileSize } = downloadUrl
 
   const resumableUrl = await initiateVideoUpload(
     ytToken,
@@ -243,81 +236,71 @@ async function handleYouTubePublish(
       scheduledAt: scheduled_at,
       madeForKids: false,
     },
-    videoBuffer!.byteLength,
+    fileSize,
     mimeType,
   )
 
-  const uploadResult = await uploadVideoBytes(resumableUrl, videoBuffer!, mimeType)
-
-  const postUploadTasks: Promise<void>[] = []
-
-  if (thumbnail_url) {
-    postUploadTasks.push(
-      fetch(thumbnail_url)
-        .then(async (thumbRes) => {
-          if (!thumbRes.ok) return
-          const thumbBuffer = await thumbRes.arrayBuffer()
-          const thumbType = thumbRes.headers.get('content-type') || 'image/jpeg'
-          await setThumbnail(ytToken, uploadResult.videoId, thumbBuffer, thumbType)
-        })
-        .catch((err) => console.warn('YouTube thumbnail upload failed:', err))
-    )
-  }
-
-  if (playlist_id) {
-    postUploadTasks.push(
-      addToPlaylist(ytToken, playlist_id, uploadResult.videoId)
-        .catch((err) => console.warn('YouTube playlist add failed:', err))
-    )
-  }
-
-  await Promise.all(postUploadTasks)
-
-  const status = scheduled_at ? 'scheduled' : 'published'
-
-  await Promise.all([
-    supabase
-      .from('episodes')
-      .update({
-        distribution_status: status,
-        distribution_external_id: uploadResult.videoId,
-        distribution_published_at: scheduled_at || new Date().toISOString(),
-        distribution_metadata: {
-          provider: 'youtube',
-          youtube_video_id: uploadResult.videoId,
-          view_url: uploadResult.viewUrl,
-          privacy_status,
-          channel_id: connection.external_show_id,
-        },
-      })
-      .eq('id', episodeId),
-    supabase.from('activity_log').insert({
-      show_id: showId,
-      episode_id: episodeId,
-      action: scheduled_at ? 'episode_scheduled' : 'episode_published',
-      description: scheduled_at
-        ? `Episode '${title}' scheduled on YouTube for ${scheduled_at}`
-        : `Episode '${title}' published to YouTube`,
-      metadata: { youtube_video_id: uploadResult.videoId, video_source },
-    }),
-  ])
-
-  dispatchWebhooks(org.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
-    episode_id: episodeId,
-    show_id: showId,
-    title,
-    provider: 'youtube',
-    youtube_video_id: uploadResult.videoId,
-    view_url: uploadResult.viewUrl,
-    scheduled_at: scheduled_at || null,
-  })
-
+  // Return URLs to client for browser-side upload
   return jsonResponse({
     provider: 'youtube',
-    youtube_video_id: uploadResult.videoId,
-    status,
-    view_url: uploadResult.viewUrl,
-  }, 201)
+    mode: 'client_upload',
+    resumableUrl,
+    downloadUrl: sourceUrl,
+    mimeType,
+    fileSize,
+    episodeId,
+    showId,
+    title,
+    privacy_status,
+    scheduled_at,
+    channel_id: connection.external_show_id,
+  })
+}
+
+type SourceUrlResult =
+  | { url: string; mimeType: string; fileSize: number }
+  | { error: Response }
+
+async function resolveSourceDownloadUrl(
+  supabase: any,
+  orgId: string,
+  videoSource: string,
+): Promise<SourceUrlResult> {
+  if (videoSource.startsWith('file:')) {
+    const fileId = videoSource.slice('file:'.length)
+    const { data: fileRef, error: fileRefError } = await supabase
+      .from('file_references')
+      .select('external_id, name, mime_type, file_size, provider')
+      .eq('id', fileId)
+      .single()
+
+    if (fileRefError || !fileRef) {
+      return { error: errorResponse('File not found', 404) }
+    }
+
+    const downloadResult = await resolveDownloadUrl(orgId, fileRef)
+    if (!downloadResult) {
+      return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
+    }
+
+    return {
+      url: downloadResult.url,
+      mimeType: fileRef.mime_type || 'video/mp4',
+      fileSize: fileRef.file_size || 0,
+    }
+  }
+
+  if (videoSource.startsWith('url:')) {
+    const url = videoSource.slice('url:'.length)
+    const headRes = await fetch(url, { method: 'HEAD' })
+    return {
+      url,
+      mimeType: headRes.headers.get('content-type') || 'video/mp4',
+      fileSize: parseInt(headRes.headers.get('content-length') || '0', 10),
+    }
+  }
+
+  return { error: errorResponse('video_source must start with "file:" or "url:"', 400) }
 }
 
 type VideoSourceResult =

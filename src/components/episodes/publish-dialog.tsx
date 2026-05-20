@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { DISTRIBUTION_PROVIDER_NAMES } from '@/lib/integrations/types'
 
 const YOUTUBE_CATEGORIES = [
@@ -62,7 +63,6 @@ export function PublishDialog({
   })
   const [customUrl, setCustomUrl] = useState('')
   const [publishing, setPublishing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{ share_url?: string; view_url?: string } | null>(null)
 
   // YouTube-specific fields
@@ -72,10 +72,11 @@ export function PublishDialog({
 
   if (!isOpen) return null
 
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setPublishing(true)
-    setError(null)
 
     const resolvedSource = sourceValue === 'url:custom'
       ? `url:${customUrl}`
@@ -113,11 +114,92 @@ export function PublishDialog({
       }
 
       const json = await res.json()
-      setResult(json.data)
+      const data = json.data
+
+      if (data.mode === 'client_upload') {
+        await handleClientUpload(data)
+      } else {
+        setResult(data)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      toast.error(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setPublishing(false)
+      setUploadProgress(null)
+    }
+  }
+
+  async function handleClientUpload(data: {
+    resumableUrl: string
+    downloadUrl: string
+    mimeType: string
+    fileSize: number
+    showId: string
+    episodeId: string
+    title: string
+    privacy_status: string
+    scheduled_at?: string
+    channel_id: string
+  }) {
+    setUploadProgress(0)
+
+    const downloadRes = await fetch(data.downloadUrl)
+    if (!downloadRes.ok) throw new Error('Failed to download video from storage')
+    const videoBlob = await downloadRes.blob()
+
+    const CHUNK_SIZE = 16 * 1024 * 1024 // 16MB chunks
+    let offset = 0
+
+    while (offset < videoBlob.size) {
+      const end = Math.min(offset + CHUNK_SIZE, videoBlob.size)
+      const chunk = videoBlob.slice(offset, end)
+      const isLast = end === videoBlob.size
+
+      const putRes = await fetch(data.resumableUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Range': `bytes ${offset}-${end - 1}/${videoBlob.size}`,
+          'Content-Type': data.mimeType,
+        },
+        body: chunk,
+      })
+
+      if (isLast) {
+        if (!putRes.ok) throw new Error(`YouTube upload failed (${putRes.status})`)
+
+        const result = await putRes.json()
+        const videoId = result.id
+
+        const finalizeRes = await fetch(
+          `/api/v1/shows/${data.showId}/episodes/${data.episodeId}/publish/finalize`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              video_id: videoId,
+              title: data.title,
+              privacy_status: data.privacy_status,
+              scheduled_at: data.scheduled_at,
+              channel_id: data.channel_id,
+            }),
+          }
+        )
+
+        if (!finalizeRes.ok) {
+          const body = await finalizeRes.json().catch(() => ({}))
+          throw new Error(body.error || 'Failed to finalize publish')
+        }
+
+        const finalJson = await finalizeRes.json()
+        setResult(finalJson.data)
+      } else {
+        if (!putRes.ok && putRes.status !== 308) {
+          throw new Error(`YouTube upload failed (${putRes.status})`)
+        }
+      }
+
+      offset = end
+      setUploadProgress(Math.round((offset / videoBlob.size) * 100))
     }
   }
 
@@ -284,19 +366,15 @@ export function PublishDialog({
               </div>
             )}
 
-            {error && (
-              <div className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-400">
-                {error}
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={publishing}
               className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {publishing
-                ? 'Publishing...'
+                ? uploadProgress !== null
+                  ? `Uploading to YouTube — ${uploadProgress}%`
+                  : 'Publishing...'
                 : publishMode === 'schedule'
                   ? 'Schedule'
                   : `Publish to ${providerName}`}
