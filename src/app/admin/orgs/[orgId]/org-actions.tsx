@@ -3,6 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface OrgActionsProps {
   orgId: string
@@ -14,6 +22,11 @@ interface OrgActionsProps {
 export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  const [confirmAction, setConfirmAction] = useState<{
+    label: string
+    body: Record<string, unknown>
+    message: string
+  } | null>(null)
 
   async function patchOrg(label: string, body: Record<string, unknown>) {
     setLoading(label)
@@ -70,7 +83,13 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgAc
         <button
           className={outlineBtn}
           disabled={loading !== null}
-          onClick={() => patchOrg('Set Free', { plan_id: 'free' })}
+          onClick={() =>
+            setConfirmAction({
+              label: 'Set Free',
+              body: { plan_id: 'free' },
+              message: 'This will downgrade to the Free plan. Are you sure?',
+            })
+          }
         >
           {loading === 'Set Free' ? 'Updating...' : 'Set Free'}
         </button>
@@ -128,7 +147,13 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgAc
         <button
           className={dangerBtn}
           disabled={loading !== null}
-          onClick={() => patchOrg('End trial', { trial_ends_at: null })}
+          onClick={() =>
+            setConfirmAction({
+              label: 'End trial',
+              body: { trial_ends_at: null },
+              message: 'This will end the trial immediately. Are you sure?',
+            })
+          }
         >
           {loading === 'End trial' ? 'Updating...' : 'End trial'}
         </button>
@@ -154,6 +179,30 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgAc
       >
         {loading === 'Grant 500' ? 'Granting...' : 'Grant 500 Credits'}
       </button>
+
+      <Dialog open={confirmAction !== null} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+            <DialogDescription>{confirmAction?.message}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button onClick={() => setConfirmAction(null)} className={outlineBtn}>
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                patchOrg(confirmAction!.label, confirmAction!.body)
+                setConfirmAction(null)
+              }}
+              className="rounded-md bg-error px-3 py-1.5 text-xs font-semibold text-white hover:bg-error/90 transition-colors disabled:opacity-50"
+              disabled={loading !== null}
+            >
+              {loading ? 'Processing...' : 'Confirm'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

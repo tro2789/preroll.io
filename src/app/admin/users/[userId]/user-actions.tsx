@@ -3,6 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 
 interface UserActionsProps {
   userId: string
@@ -12,6 +20,7 @@ interface UserActionsProps {
 export function UserActions({ userId, isSuperAdmin }: UserActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
+  const [confirmRevoke, setConfirmRevoke] = useState(false)
 
   async function grantSuperAdmin() {
     setLoading('grant')
@@ -72,6 +81,26 @@ export function UserActions({ userId, isSuperAdmin }: UserActionsProps) {
     }
   }
 
+  async function impersonate() {
+    setLoading('impersonate')
+    try {
+      const res = await fetch(`/api/v1/admin/users/${userId}/impersonate`, {
+        method: 'POST',
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Failed to generate impersonation link.')
+      }
+      const data = await res.json()
+      window.open(data.data.url, '_blank')
+      toast.success('Opening session in new tab...')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const grantBtn =
     'rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50'
   const revokeBtn =
@@ -85,7 +114,7 @@ export function UserActions({ userId, isSuperAdmin }: UserActionsProps) {
         <button
           className={revokeBtn}
           disabled={loading !== null}
-          onClick={revokeSuperAdmin}
+          onClick={() => setConfirmRevoke(true)}
         >
           {loading === 'revoke' ? 'Revoking...' : 'Revoke Super Admin'}
         </button>
@@ -106,6 +135,40 @@ export function UserActions({ userId, isSuperAdmin }: UserActionsProps) {
       >
         {loading === 'magic' ? 'Sending...' : 'Send Magic Link'}
       </button>
+
+      <button
+        className={outlineBtn}
+        disabled={loading !== null}
+        onClick={impersonate}
+      >
+        {loading === 'impersonate' ? 'Opening...' : 'Login As'}
+      </button>
+
+      <Dialog open={confirmRevoke} onOpenChange={(open) => !open && setConfirmRevoke(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Action</DialogTitle>
+            <DialogDescription>
+              This will revoke super admin access. The user will lose all platform admin privileges. Are you sure?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button onClick={() => setConfirmRevoke(false)} className={outlineBtn}>
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                revokeSuperAdmin()
+                setConfirmRevoke(false)
+              }}
+              className="rounded-md bg-error px-3 py-1.5 text-xs font-semibold text-white hover:bg-error/90 transition-colors disabled:opacity-50"
+              disabled={loading !== null}
+            >
+              {loading ? 'Processing...' : 'Confirm'}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
