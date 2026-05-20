@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { ChatwootWidget } from '@/components/chatwoot/chatwoot-widget'
 import PricingSection from '@/components/landing/pricing-section'
 import { FeatureBeats } from '@/components/landing/feature-beats'
 import { IntegrationMarquee } from '@/components/landing/integration-marquee'
@@ -86,6 +87,7 @@ export default async function LandingPage() {
       <div className="max-w-[1200px] mx-auto px-7"><div className="h-px bg-gradient-to-r from-transparent via-border-default to-transparent" /></div>
       <FinalCta />
       <Footer />
+      <ChatwootWidget />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { LogoIcon } from '@/components/ui/logo'
+import { ChatwootWidget } from '@/components/chatwoot/chatwoot-widget'
 
 function Nav() {
   return (
@@ -58,6 +59,7 @@ export default function LegalLayout({ children }: { children: React.ReactNode })
         {children}
       </main>
       <Footer />
+      <ChatwootWidget />
     </div>
   )
 }
