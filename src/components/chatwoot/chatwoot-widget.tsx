@@ -82,7 +82,9 @@ export function ChatwootSupport({ identity }: { identity: ChatwootIdentity }) {
         },
       })
       if (identity.planId === 'studio') {
-        window.$chatwoot.setLabel('priority')
+        window.$chatwoot.setLabel('studio')
+      } else if (identity.planId === 'pro') {
+        window.$chatwoot.setLabel('pro')
       }
       window.$chatwoot.toggle('open')
     }
