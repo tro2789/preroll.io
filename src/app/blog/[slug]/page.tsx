@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getAllPosts, getPostBySlug, getRelatedPosts } from '@/lib/blog'
@@ -131,7 +132,7 @@ export default async function BlogPost({ params }: Props) {
           {/* Hero image */}
           {post.image && (
             <div className="rounded-[12px] overflow-hidden mb-8 -mx-2 sm:-mx-4">
-              <img src={post.image} alt="" className="w-full aspect-[2.2/1] object-cover" />
+              <Image src={post.image} alt={`Featured image for ${post.title}`} className="w-full aspect-[2.2/1] object-cover" width={1200} height={545} priority />
             </div>
           )}
 

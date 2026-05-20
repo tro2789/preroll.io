@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -172,12 +173,13 @@ function Hero() {
         <div className="relative z-[2]">
           <div className="shot-aura" aria-hidden="true" />
           <div className="relative rounded-[20px] overflow-hidden shadow-[0_1px_0_oklch(1_0_0/0.04)_inset,0_40px_120px_-40px_oklch(0.05_0_0/0.8),0_0_0_1px_oklch(0_0_0/0.3)] reveal" data-d="3">
-            <img
+            <Image
               src="/images/landing/hero-screenshot.jpg"
               alt="PreRoll.io dashboard showing a kanban board with podcast episodes organized by production stage"
               className="w-full h-auto"
               width={2880}
               height={1800}
+              priority
             />
           </div>
         </div>

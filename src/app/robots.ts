@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/app/', '/portal/', '/api/', '/onboarding', '/invite/', '/team/', '/share/'],
+        disallow: ['/app/', '/portal/', '/api/', '/auth/', '/onboarding', '/invite/', '/team/', '/share/', '/login', '/signup'],
       },
     ],
     sitemap: 'https://preroll.io/sitemap.xml',
