@@ -12,19 +12,18 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 
-const btnBase = 'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50'
-const btnPrimary = `${btnBase} bg-accent text-white hover:bg-accent-hover`
-const btnOutline = `${btnBase} border border-border-default bg-surface-base text-text-primary hover:bg-surface-raised`
-const btnDanger = `${btnBase} border border-error/30 bg-error/5 text-error hover:bg-error/10`
+const btn = 'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50'
+const primary = `${btn} bg-accent text-white hover:bg-accent-hover`
+const outline = `${btn} border border-border-default bg-surface-base text-text-primary hover:bg-surface-raised`
+const danger = `${btn} border border-error/30 bg-error/5 text-error hover:bg-error/10`
 
 interface OrgActionsProps {
   orgId: string
   currentPlan: string
   trialEndsAt: string | null
-  aiEnabled: boolean
 }
 
-export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgActionsProps) {
+export function OrgActions({ orgId, currentPlan, trialEndsAt }: OrgActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<{
@@ -43,7 +42,7 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgAc
       })
       if (!res.ok) {
         const data = await res.json().catch(() => null)
-        throw new Error(data?.error || `Failed to update organization`)
+        throw new Error(data?.error || 'Failed to update organization')
       }
       toast.success(`${label} applied successfully.`)
       router.refresh()
@@ -77,11 +76,9 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgAc
   }
 
   async function deleteOrg() {
-    setLoading('Delete Organization')
+    setLoading('delete')
     try {
-      const res = await fetch(`/api/v1/admin/orgs/${orgId}/delete`, {
-        method: 'POST',
-      })
+      const res = await fetch(`/api/v1/admin/orgs/${orgId}/delete`, { method: 'POST' })
       if (!res.ok) {
         const data = await res.json().catch(() => null)
         throw new Error(data?.error || 'Failed to delete organization')
@@ -95,138 +92,79 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgAc
     }
   }
 
+  const busy = loading !== null
+
   return (
-    <div className="space-y-4">
-      {/* Plan */}
-      <div>
-        <p className="text-xs font-medium text-text-secondary mb-2">Plan</p>
-        <div className="flex flex-wrap gap-2">
-          {currentPlan !== 'free' && (
-            <button
-              className={btnDanger}
-              disabled={loading !== null}
-              onClick={() =>
-                setConfirmAction({
-                  label: 'Set Free',
-                  action: () => patchOrg('Set Free', { plan_id: 'free' }),
-                  message: 'This will downgrade to the Free plan. Are you sure?',
-                })
-              }
-            >
-              {loading === 'Set Free' ? 'Updating...' : 'Set Free'}
-            </button>
-          )}
-          {currentPlan !== 'pro' && (
-            <button
-              className={btnPrimary}
-              disabled={loading !== null}
-              onClick={() => patchOrg('Set Pro', { plan_id: 'pro' })}
-            >
-              {loading === 'Set Pro' ? 'Updating...' : 'Set Pro'}
-            </button>
-          )}
-          {currentPlan !== 'studio' && (
-            <button
-              className={btnPrimary}
-              disabled={loading !== null}
-              onClick={() => patchOrg('Set Studio', { plan_id: 'studio' })}
-            >
-              {loading === 'Set Studio' ? 'Updating...' : 'Set Studio'}
-            </button>
-          )}
-        </div>
-      </div>
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        {currentPlan !== 'pro' && (
+          <button className={primary} disabled={busy} onClick={() => patchOrg('pro', { plan_id: 'pro' })}>
+            {loading === 'pro' ? 'Updating...' : 'Set Pro'}
+          </button>
+        )}
+        {currentPlan !== 'studio' && (
+          <button className={primary} disabled={busy} onClick={() => patchOrg('studio', { plan_id: 'studio' })}>
+            {loading === 'studio' ? 'Updating...' : 'Set Studio'}
+          </button>
+        )}
+        {currentPlan !== 'free' && (
+          <button
+            className={danger}
+            disabled={busy}
+            onClick={() => setConfirmAction({
+              label: 'free',
+              action: () => patchOrg('free', { plan_id: 'free' }),
+              message: 'This will downgrade to the Free plan. Are you sure?',
+            })}
+          >
+            {loading === 'free' ? 'Updating...' : 'Downgrade to Free'}
+          </button>
+        )}
 
-      {/* Trial */}
-      <div>
-        <p className="text-xs font-medium text-text-secondary mb-2">Trial</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            className={btnOutline}
-            disabled={loading !== null}
-            onClick={() =>
-              patchOrg('+7 day trial', {
-                trial_ends_at: new Date(
-                  Date.now() + 7 * 24 * 60 * 60 * 1000
-                ).toISOString(),
-              })
-            }
-          >
-            {loading === '+7 day trial' ? 'Updating...' : '+7 day trial'}
-          </button>
-          <button
-            className={btnOutline}
-            disabled={loading !== null}
-            onClick={() =>
-              patchOrg('+30 day trial', {
-                trial_ends_at: new Date(
-                  Date.now() + 30 * 24 * 60 * 60 * 1000
-                ).toISOString(),
-              })
-            }
-          >
-            {loading === '+30 day trial' ? 'Updating...' : '+30 day trial'}
-          </button>
-          {trialEndsAt && (
-            <button
-              className={btnDanger}
-              disabled={loading !== null}
-              onClick={() =>
-                setConfirmAction({
-                  label: 'End trial',
-                  action: () => patchOrg('End trial', { trial_ends_at: null }),
-                  message: 'This will end the trial immediately. Are you sure?',
-                })
-              }
-            >
-              {loading === 'End trial' ? 'Updating...' : 'End trial'}
-            </button>
-          )}
-        </div>
-      </div>
+        <div className="h-4 w-px bg-border-default" />
 
-      {/* AI Credits */}
-      <div>
-        <p className="text-xs font-medium text-text-secondary mb-2">AI Credits</p>
-        <div className="flex flex-wrap gap-2">
+        <button className={outline} disabled={busy} onClick={() => patchOrg('+7d', { trial_ends_at: new Date(Date.now() + 7 * 86400000).toISOString() })}>
+          {loading === '+7d' ? '...' : '+7 day trial'}
+        </button>
+        <button className={outline} disabled={busy} onClick={() => patchOrg('+30d', { trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString() })}>
+          {loading === '+30d' ? '...' : '+30 day trial'}
+        </button>
+        {trialEndsAt && (
           <button
-            className={btnOutline}
-            disabled={loading !== null || !aiEnabled}
-            title={!aiEnabled ? 'AI add-on not enabled for this org' : undefined}
-            onClick={() => grantCredits('Grant 100', 100)}
+            className={danger}
+            disabled={busy}
+            onClick={() => setConfirmAction({
+              label: 'end-trial',
+              action: () => patchOrg('end-trial', { trial_ends_at: null }),
+              message: 'This will end the trial immediately. Are you sure?',
+            })}
           >
-            {loading === 'Grant 100' ? 'Granting...' : 'Grant 100 Credits'}
+            {loading === 'end-trial' ? '...' : 'End trial'}
           </button>
-          <button
-            className={btnOutline}
-            disabled={loading !== null || !aiEnabled}
-            title={!aiEnabled ? 'AI add-on not enabled for this org' : undefined}
-            onClick={() => grantCredits('Grant 500', 500)}
-          >
-            {loading === 'Grant 500' ? 'Granting...' : 'Grant 500 Credits'}
-          </button>
-        </div>
-      </div>
+        )}
 
-      {/* Danger Zone */}
-      <div>
-        <p className="text-xs font-medium text-text-secondary mb-2">Danger Zone</p>
-        <div className="flex flex-wrap gap-2">
-          <button
-            className={btnDanger}
-            disabled={loading !== null}
-            onClick={() =>
-              setConfirmAction({
-                label: 'Delete Organization',
-                action: deleteOrg,
-                message:
-                  'This will permanently delete this organization and all its data (clients, shows, episodes, files). This cannot be undone.',
-              })
-            }
-          >
-            {loading === 'Delete Organization' ? 'Deleting...' : 'Delete Organization'}
-          </button>
-        </div>
+        <div className="h-4 w-px bg-border-default" />
+
+        <button className={outline} disabled={busy} onClick={() => grantCredits('c100', 100)}>
+          {loading === 'c100' ? '...' : '+100 credits'}
+        </button>
+        <button className={outline} disabled={busy} onClick={() => grantCredits('c500', 500)}>
+          {loading === 'c500' ? '...' : '+500 credits'}
+        </button>
+
+        <div className="h-4 w-px bg-border-default" />
+
+        <button
+          className={danger}
+          disabled={busy}
+          onClick={() => setConfirmAction({
+            label: 'delete',
+            action: deleteOrg,
+            message: 'This will permanently delete this organization and all its data (clients, shows, episodes, files). This cannot be undone.',
+          })}
+        >
+          {loading === 'delete' ? 'Deleting...' : 'Delete Organization'}
+        </button>
       </div>
 
       <Dialog open={confirmAction !== null} onOpenChange={(open) => !open && setConfirmAction(null)}>
@@ -236,22 +174,17 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgAc
             <DialogDescription>{confirmAction?.message}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <button onClick={() => setConfirmAction(null)} className={btnOutline}>
-              Cancel
-            </button>
+            <button onClick={() => setConfirmAction(null)} className={outline}>Cancel</button>
             <button
-              onClick={() => {
-                confirmAction!.action()
-                setConfirmAction(null)
-              }}
-              className={`${btnBase} bg-error text-white hover:bg-error/90`}
-              disabled={loading !== null}
+              onClick={() => { confirmAction!.action(); setConfirmAction(null) }}
+              className={`${btn} bg-error text-white hover:bg-error/90`}
+              disabled={busy}
             >
               {loading ? 'Processing...' : 'Confirm'}
             </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

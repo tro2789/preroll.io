@@ -68,12 +68,20 @@ export default async function AdminOrgDetailPage({
         &larr; Organizations
       </Link>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-2xl font-bold text-text-primary">{org.name}</h1>
         <p className="text-sm text-text-secondary mt-0.5">
           {org.slug} &middot;{' '}
           <span className="font-mono text-xs">{org.id}</span>
         </p>
+      </div>
+
+      <div className="mb-6">
+        <OrgActions
+          orgId={org.id}
+          currentPlan={org.plan_id || 'free'}
+          trialEndsAt={org.trial_ends_at}
+        />
       </div>
 
       <div className="rounded-lg border border-border-subtle bg-surface-raised divide-y divide-border-subtle mb-6">
@@ -126,18 +134,6 @@ export default async function AdminOrgDetailPage({
             Not enabled for this organization.
           </div>
         )}
-      </div>
-
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-text-primary mb-3">
-          Actions
-        </h2>
-        <OrgActions
-          orgId={org.id}
-          currentPlan={org.plan_id || 'free'}
-          trialEndsAt={org.trial_ends_at}
-          aiEnabled={aiAddon?.enabled ?? false}
-        />
       </div>
 
       <div>

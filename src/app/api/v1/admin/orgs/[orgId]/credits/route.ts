@@ -23,30 +23,29 @@ export async function POST(
     return errorResponse('amount must be a positive number')
   }
 
-  // Fetch current balance
-  const { data: addon, error: fetchError } = await service!
+  const { data: addon } = await service!
     .from('ai_addon')
     .select('credits_balance')
     .eq('org_id', orgId)
     .single()
 
-  if (fetchError || !addon) {
-    return errorResponse('AI add-on not enabled for this org', 404)
+  let newBalance: number
+
+  if (addon) {
+    newBalance = (addon.credits_balance ?? 0) + amount
+    const { error: updateError } = await service!
+      .from('ai_addon')
+      .update({ credits_balance: newBalance })
+      .eq('org_id', orgId)
+    if (updateError) return errorResponse(updateError.message, 500)
+  } else {
+    newBalance = amount
+    const { error: insertError } = await service!
+      .from('ai_addon')
+      .insert({ org_id: orgId, enabled: true, credits_balance: newBalance })
+    if (insertError) return errorResponse(insertError.message, 500)
   }
 
-  const newBalance = (addon.credits_balance ?? 0) + amount
-
-  // Update balance
-  const { error: updateError } = await service!
-    .from('ai_addon')
-    .update({ credits_balance: newBalance })
-    .eq('org_id', orgId)
-
-  if (updateError) {
-    return errorResponse(updateError.message, 500)
-  }
-
-  // Insert audit record (negative credits_used = grant)
   await service!
     .from('ai_credit_usage')
     .insert({

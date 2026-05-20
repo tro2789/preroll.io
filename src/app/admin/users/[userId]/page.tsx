@@ -88,7 +88,10 @@ export default async function AdminUserDetailPage({
         </div>
       </div>
 
-      {/* Properties */}
+      <div className="mb-6">
+        <UserActions userId={userId} isSuperAdmin={isSuperAdmin} />
+      </div>
+
       <div className="rounded-lg border border-border-subtle bg-surface-raised divide-y divide-border-subtle mb-6">
         <Row label="User ID">
           <span className="text-sm font-mono text-text-primary">{user.user_id}</span>
@@ -97,12 +100,6 @@ export default async function AdminUserDetailPage({
         <Row label="Display Name" value={user.display_name || '—'} />
         <Row label="Created" value={formatDateTime(user.created_at)} />
         <Row label="Updated" value={formatDateTime(user.updated_at)} />
-      </div>
-
-      {/* Actions */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-text-primary mb-3">Actions</h2>
-        <UserActions userId={userId} isSuperAdmin={isSuperAdmin} />
       </div>
 
       {/* Organizations */}
