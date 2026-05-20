@@ -76,10 +76,10 @@ export function ChatwootSupport({ identity }: { identity: ChatwootIdentity }) {
       window.$chatwoot.setUser(identity.userId, {
         email: identity.email,
         name: identity.name || identity.email,
-      })
-      window.$chatwoot.setCustomAttributes({
-        plan: identity.planId,
-        org_name: identity.orgName || '',
+        custom_attributes: {
+          plan: identity.planId,
+          org_name: identity.orgName || '',
+        },
       })
       if (identity.planId === 'studio') {
         window.$chatwoot.setLabel('priority')
