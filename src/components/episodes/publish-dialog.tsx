@@ -83,9 +83,6 @@ export function PublishDialog({
   const [tags, setTags] = useState('')
   const [categoryId, setCategoryId] = useState('22')
   const [privacyStatus, setPrivacyStatus] = useState<'public' | 'unlisted' | 'private'>('public')
-
-  if (!isOpen) return null
-
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [pendingResume, setPendingResume] = useState<UploadState | null>(null)
 
@@ -105,6 +102,8 @@ export function PublishDialog({
       }
     }
   }, [isYouTube, episodeId])
+
+  if (!isOpen) return null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
