@@ -1,8 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { DISTRIBUTION_PROVIDER_NAMES } from '@/lib/integrations/types'
+
+interface UploadState {
+  resumableUrl: string
+  downloadUrl: string
+  mimeType: string
+  fileSize: number
+  showId: string
+  episodeId: string
+  title: string
+  privacy_status: string
+  scheduled_at?: string
+  channel_id: string
+  expiresAt: number
+}
 
 const YOUTUBE_CATEGORIES = [
   { id: '22', name: 'People & Blogs' },
@@ -73,6 +87,25 @@ export function PublishDialog({
   if (!isOpen) return null
 
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+  const [pendingResume, setPendingResume] = useState<UploadState | null>(null)
+  const videoBlobRef = useRef<Blob | null>(null)
+
+  useEffect(() => {
+    if (!isYouTube) return
+    const stored = localStorage.getItem(`yt-upload:${episodeId}`)
+    if (stored) {
+      try {
+        const state = JSON.parse(stored) as UploadState
+        if (state.resumableUrl && Date.now() < state.expiresAt) {
+          setPendingResume(state)
+        } else {
+          localStorage.removeItem(`yt-upload:${episodeId}`)
+        }
+      } catch {
+        localStorage.removeItem(`yt-upload:${episodeId}`)
+      }
+    }
+  }, [isYouTube, episodeId])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -117,7 +150,7 @@ export function PublishDialog({
       const data = json.data
 
       if (data.mode === 'client_upload') {
-        await handleClientUpload(data)
+        await handleClientUpload({ ...data, expiresAt: Date.now() + 24 * 60 * 60 * 1000 })
       } else {
         setResult(data)
       }
@@ -129,26 +162,74 @@ export function PublishDialog({
     }
   }
 
-  async function handleClientUpload(data: {
-    resumableUrl: string
-    downloadUrl: string
-    mimeType: string
-    fileSize: number
-    showId: string
-    episodeId: string
-    title: string
-    privacy_status: string
-    scheduled_at?: string
-    channel_id: string
-  }) {
+  async function handleClientUpload(data: UploadState) {
+    // Persist state so upload can resume after tab close / connection drop
+    const state: UploadState = {
+      ...data,
+      expiresAt: data.expiresAt || Date.now() + 24 * 60 * 60 * 1000,
+    }
+    localStorage.setItem(`yt-upload:${episodeId}`, JSON.stringify(state))
+    setPendingResume(null)
+
     setUploadProgress(0)
 
-    const downloadRes = await fetch(data.downloadUrl)
-    if (!downloadRes.ok) throw new Error('Failed to download video from storage')
-    const videoBlob = await downloadRes.blob()
+    // Download video from R2 into memory (or reuse existing blob)
+    if (!videoBlobRef.current) {
+      const downloadRes = await fetch(data.downloadUrl)
+      if (!downloadRes.ok) throw new Error('Failed to download video from storage')
+      videoBlobRef.current = await downloadRes.blob()
+    }
 
-    const CHUNK_SIZE = 16 * 1024 * 1024 // 16MB chunks
-    let offset = 0
+    const videoBlob = videoBlobRef.current
+
+    // Query YouTube for how much was already uploaded
+    let offset = await queryResumableOffset(data.resumableUrl, videoBlob.size)
+
+    await streamToYouTube(data, videoBlob, offset)
+  }
+
+  async function handleResume() {
+    if (!pendingResume) return
+    setPublishing(true)
+    setUploadProgress(0)
+    try {
+      await handleClientUpload(pendingResume)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Resume failed')
+    } finally {
+      setPublishing(false)
+      setUploadProgress(null)
+    }
+  }
+
+  function handleDiscardResume() {
+    localStorage.removeItem(`yt-upload:${episodeId}`)
+    setPendingResume(null)
+  }
+
+  async function queryResumableOffset(resumableUrl: string, totalSize: number): Promise<number> {
+    try {
+      const res = await fetch(resumableUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Range': `bytes */${totalSize}`,
+          'Content-Length': '0',
+        },
+      })
+      if (res.status === 308) {
+        const range = res.headers.get('Range')
+        if (range) {
+          const match = range.match(/bytes=0-(\d+)/)
+          if (match) return parseInt(match[1], 10) + 1
+        }
+      }
+    } catch {}
+    return 0
+  }
+
+  async function streamToYouTube(data: UploadState, videoBlob: Blob, startOffset: number) {
+    const CHUNK_SIZE = 16 * 1024 * 1024
+    let offset = startOffset
 
     while (offset < videoBlob.size) {
       const end = Math.min(offset + CHUNK_SIZE, videoBlob.size)
@@ -169,6 +250,8 @@ export function PublishDialog({
 
         const result = await putRes.json()
         const videoId = result.id
+
+        localStorage.removeItem(`yt-upload:${episodeId}`)
 
         const finalizeRes = await fetch(
           `/api/v1/shows/${data.showId}/episodes/${data.episodeId}/publish/finalize`,
@@ -223,7 +306,30 @@ export function PublishDialog({
           </button>
         </div>
 
-        {result ? (
+        {pendingResume && !publishing && !result ? (
+          <div className="space-y-4">
+            <div className="rounded-md bg-warning/5 border border-warning/30 px-4 py-3">
+              <p className="text-sm font-medium text-text-primary">Upload in progress</p>
+              <p className="mt-1 text-xs text-text-secondary">
+                A previous YouTube upload for this episode was interrupted. You can resume it or start over.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleResume}
+                className="flex-1 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
+              >
+                Resume Upload
+              </button>
+              <button
+                onClick={handleDiscardResume}
+                className="rounded-md border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"
+              >
+                Start Over
+              </button>
+            </div>
+          </div>
+        ) : result ? (
           <div className="text-center py-6 space-y-3">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
               <svg className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
