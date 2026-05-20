@@ -145,9 +145,10 @@ interface SidebarProps {
   userEmail: string
   userDisplayName?: string | null
   counts?: NavCounts
+  showAdminLink?: boolean
 }
 
-export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts }: SidebarProps) {
+export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts, showAdminLink }: SidebarProps) {
   const pathname = usePathname()
   const showSwitcher = orgs.length > 0
 
@@ -237,6 +238,20 @@ export function Sidebar({ orgs, activeOrgId, userEmail, userDisplayName, counts 
                     </Link>
                   )
                 })}
+              </>
+            )}
+            {showAdminLink && (
+              <>
+                <div className="pt-3 pb-[5px] px-[10px]">
+                  <span className="text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-faint">Platform</span>
+                </div>
+                <Link
+                  href="/admin"
+                  className="group flex items-center gap-[9px] px-[10px] py-[6.5px] text-[13.5px] rounded-[7px] transition-colors text-text-secondary font-[450] hover:text-text-primary hover:bg-surface-raised"
+                >
+                  <ShieldIcon className="h-4 w-4 flex-shrink-0 text-text-tertiary group-hover:text-text-secondary" />
+                  Admin
+                </Link>
               </>
             )}
           </nav>
@@ -580,6 +595,14 @@ function PlusIcon({ className }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+    </svg>
+  )
+}
+
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
     </svg>
   )
 }

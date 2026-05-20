@@ -9,6 +9,7 @@ import { ORG_COOKIE_NAME } from '@/lib/constants/plans'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ChatShell } from '@/components/chat/chat-shell'
 import { ThemeProvider } from '@/components/layout/theme-provider'
+import { isSuperAdmin } from '@/lib/admin/auth'
 import type { OrgMembership } from '@/components/layout/sidebar'
 
 export default async function AppLayout({
@@ -24,7 +25,7 @@ export default async function AppLayout({
   }
 
   const [service, cookieStore] = [createServiceClient(), await cookies()]
-  const [{ data: memberships }, { data: profile }, activeOrgId] = await Promise.all([
+  const [{ data: memberships }, { data: profile }, activeOrgId, showAdminLink] = await Promise.all([
     service
       .from('memberships')
       .select('org_id, role, organizations(id, name, plan_id, logo_url)')
@@ -35,6 +36,7 @@ export default async function AppLayout({
       .eq('user_id', user.id)
       .single(),
     Promise.resolve(cookieStore.get(ORG_COOKIE_NAME)?.value),
+    isSuperAdmin(user.id),
   ])
 
   const orgs: OrgMembership[] = (memberships || []).map((m) => {
@@ -77,6 +79,7 @@ export default async function AppLayout({
             userEmail={user.email ?? ''}
             userDisplayName={profile?.display_name || null}
             counts={navCounts}
+            showAdminLink={showAdminLink}
           />
           <div className="md:pl-[244px] flex flex-col min-h-screen">
             <Topbar />
