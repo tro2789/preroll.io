@@ -26,7 +26,6 @@ export function DistributionSettings({ showId }: { showId: string }) {
   const [activeProvider, setActiveProvider] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState<SelectionItem[] | null>(null)
   const [pickerProvider, setPickerProvider] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -58,7 +57,6 @@ export function DistributionSettings({ showId }: { showId: string }) {
   const connectedProviders = new Set(connections.map((c) => c.provider))
 
   async function handleTransistorConnect() {
-    setError(null)
     setConnecting(true)
     try {
       const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
@@ -77,14 +75,13 @@ export function DistributionSettings({ showId }: { showId: string }) {
         setActiveProvider(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect')
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
       setConnecting(false)
     }
   }
 
   async function handleYouTubeMyChannel() {
-    setError(null)
     setConnecting(true)
     try {
       const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
@@ -97,14 +94,13 @@ export function DistributionSettings({ showId }: { showId: string }) {
       setShowPicker(json.data?.channels || [])
       setPickerProvider('youtube')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect')
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
       setConnecting(false)
     }
   }
 
   async function handleYouTubeClientLink() {
-    setError(null)
     setConnecting(true)
     try {
       const res = await fetch(`/api/v1/shows/${showId}/distribution/youtube-invite`, {
@@ -115,7 +111,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
       if (!res.ok) throw new Error(json.error || 'Failed to generate link')
       setInviteUrl(json.data.url)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate link')
+      toast.error(err instanceof Error ? err.message : 'Failed to generate link')
     } finally {
       setConnecting(false)
     }
@@ -131,7 +127,6 @@ export function DistributionSettings({ showId }: { showId: string }) {
 
   async function handleSelectItem(externalShowId: string) {
     if (!pickerProvider) return
-    setError(null)
     setConnecting(true)
     try {
       const body: Record<string, string> = {
@@ -153,14 +148,13 @@ export function DistributionSettings({ showId }: { showId: string }) {
       setPickerProvider(null)
       setActiveProvider(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect')
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
       setConnecting(false)
     }
   }
 
   async function handleDisconnect(provider: string) {
-    setError(null)
     try {
       const res = await fetch(`/api/v1/shows/${showId}/distribution?provider=${provider}`, {
         method: 'DELETE',
@@ -171,7 +165,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
       }
       setConnections((prev) => prev.filter((c) => c.provider !== provider))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to disconnect')
+      toast.error(err instanceof Error ? err.message : 'Failed to disconnect')
     }
   }
 
@@ -190,10 +184,6 @@ export function DistributionSettings({ showId }: { showId: string }) {
       <h3 className="text-xs font-medium uppercase tracking-wider text-text-secondary">
         Distribution
       </h3>
-
-      {error && (
-        <p className="mt-3 text-sm text-error">{error}</p>
-      )}
 
       {connections.map((conn) => (
         <div key={conn.id} className="mt-4 flex items-center justify-between">

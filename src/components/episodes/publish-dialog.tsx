@@ -25,6 +25,7 @@ interface PublishDialogProps {
     scheduled_publish_date: string | null
   }
   deliverables: { id: string; title: string; type: string }[]
+  fileReferences?: { id: string; name: string; mimeType: string; provider: string }[]
   isOpen: boolean
   onClose: () => void
 }
@@ -35,14 +36,20 @@ export function PublishDialog({
   provider,
   episode,
   deliverables,
+  fileReferences = [],
   isOpen,
   onClose,
 }: PublishDialogProps) {
   const isYouTube = provider === 'youtube'
 
-  const [sourceValue, setSourceValue] = useState(
-    deliverables.length > 0 ? `deliverable:${deliverables[0].id}` : ''
-  )
+  const videoFiles = fileReferences.filter((f) => f.mimeType?.startsWith('video/'))
+  const audioFiles = fileReferences.filter((f) => f.mimeType?.startsWith('audio/'))
+
+  const defaultSource = isYouTube
+    ? (videoFiles.length > 0 ? `file:${videoFiles[0].id}` : deliverables.length > 0 ? `deliverable:${deliverables[0].id}` : '')
+    : (deliverables.length > 0 ? `deliverable:${deliverables[0].id}` : audioFiles.length > 0 ? `file:${audioFiles[0].id}` : '')
+
+  const [sourceValue, setSourceValue] = useState(defaultSource)
   const [title, setTitle] = useState(episode.title)
   const [description, setDescription] = useState(episode.description || '')
   const [episodeNumber, setEpisodeNumber] = useState<number | null>(episode.episode_number)
@@ -167,11 +174,24 @@ export function PublishDialog({
                 {isYouTube ? 'Video Source' : 'Audio Source'}
               </label>
               <select value={sourceValue} onChange={(e) => setSourceValue(e.target.value)} className={inputClasses}>
-                {deliverables.map((d) => (
-                  <option key={d.id} value={`deliverable:${d.id}`}>
-                    {d.title} ({d.type})
-                  </option>
-                ))}
+                {(isYouTube ? videoFiles : audioFiles).length > 0 && (
+                  <optgroup label="Episode Files">
+                    {(isYouTube ? videoFiles : audioFiles).map((f) => (
+                      <option key={f.id} value={`file:${f.id}`}>
+                        {f.name || 'Untitled file'}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                {deliverables.length > 0 && (
+                  <optgroup label="Shares">
+                    {deliverables.map((d) => (
+                      <option key={d.id} value={`deliverable:${d.id}`}>
+                        {d.title} ({d.type})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
                 <option value="url:custom">Custom URL</option>
               </select>
               {sourceValue === 'url:custom' && (

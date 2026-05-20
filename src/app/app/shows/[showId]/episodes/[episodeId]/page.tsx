@@ -44,7 +44,7 @@ export default async function EpisodeDetailPage({
       .eq('show_id', showId),
     supabase
       .from('file_references')
-      .select('id, mime_type')
+      .select('id, name, mime_type, provider')
       .eq('episode_id', episodeId)
       .limit(10),
     supabase
@@ -120,6 +120,7 @@ export default async function EpisodeDetailPage({
                   scheduled_publish_date: episode.scheduled_publish_date,
                 }}
                 deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, type: d.type }))}
+                fileReferences={(audioFileRefs || []).map((f: any) => ({ id: f.id, name: f.name, mimeType: f.mime_type, provider: f.provider }))}
               />
             ))}
             <EpisodeDetailActions showId={showId} episodeId={episodeId} />

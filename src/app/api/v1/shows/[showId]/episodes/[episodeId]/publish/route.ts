@@ -12,6 +12,7 @@ import {
 } from '@/lib/integrations/providers/youtube-distribution'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 import { getDistributionToken } from '@/lib/integrations/distribution-token'
+import { getDownloadUrl } from '@/lib/r2/client'
 
 export async function POST(
   request: NextRequest,
@@ -369,13 +370,46 @@ async function resolveVideoSource(
     }
   }
 
-  return { error: errorResponse('video_source must start with "deliverable:" or "url:"', 400) }
+  if (videoSource.startsWith('file:')) {
+    const fileId = videoSource.slice('file:'.length)
+    const { data: fileRef, error: fileRefError } = await supabase
+      .from('file_references')
+      .select('external_id, name, mime_type, provider')
+      .eq('id', fileId)
+      .single()
+
+    if (fileRefError || !fileRef) {
+      return { error: errorResponse('File not found', 404) }
+    }
+
+    const downloadUrl = await resolveDownloadUrl(orgId, fileRef)
+    if (!downloadUrl) {
+      return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
+    }
+
+    const res = await fetch(downloadUrl.url, downloadUrl.headers ? { headers: downloadUrl.headers } : undefined)
+    if (!res.ok) {
+      return { error: errorResponse(`Failed to download video: ${res.status}`, 502) }
+    }
+
+    return {
+      videoBuffer: await res.arrayBuffer(),
+      mimeType: fileRef.mime_type || 'video/mp4',
+    }
+  }
+
+  return { error: errorResponse('video_source must start with "deliverable:", "file:", or "url:"', 400) }
 }
 
 async function resolveDownloadUrl(
   orgId: string,
   fileRef: { external_id: string; provider: string },
 ): Promise<{ url: string; headers?: Record<string, string> } | null> {
+  if (fileRef.provider === 'r2') {
+    const url = await getDownloadUrl(fileRef.external_id)
+    return { url }
+  }
+
   ensureProvidersRegistered()
 
   if (fileRef.provider === 'frame_io') {
