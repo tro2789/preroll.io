@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/server'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { PLAN_LABELS, PLAN_BADGE_CLASSES, ROLE_BADGE_CLASSES } from '@/lib/constants/plans'
+import { resolveAssetUrl } from '@/lib/r2/resolve'
 import { UserActions } from './user-actions'
 
 export default async function AdminUserDetailPage({
@@ -46,6 +47,7 @@ export default async function AdminUserDetailPage({
 
   const displayName = user.display_name || user.email
   const initial = (displayName ?? '?')[0]?.toUpperCase()
+  const avatarSrc = resolveAssetUrl(user.avatar_url)
 
   return (
     <div>
@@ -58,9 +60,9 @@ export default async function AdminUserDetailPage({
 
       {/* Header */}
       <div className="mb-6 flex items-center gap-4">
-        {user.avatar_url ? (
+        {avatarSrc ? (
           <img
-            src={user.avatar_url}
+            src={avatarSrc}
             alt=""
             className="h-12 w-12 rounded-full object-cover shrink-0"
           />

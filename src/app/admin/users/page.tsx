@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/format'
 import { PLAN_BADGE_CLASSES } from '@/lib/constants/plans'
+import { resolveAssetUrl } from '@/lib/r2/resolve'
 import {
   Table,
   TableHeader,
@@ -109,6 +110,7 @@ export default async function AdminUsersPage({
               const userOrgs = orgsByUser.get(user.user_id) ?? []
               const isSuperAdmin = superAdminIds.has(user.user_id)
               const displayName = user.display_name || user.email
+              const avatarSrc = resolveAssetUrl(user.avatar_url)
 
               return (
                 <TableRow key={user.user_id}>
@@ -117,9 +119,9 @@ export default async function AdminUsersPage({
                       href={`/admin/users/${user.user_id}`}
                       className="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity"
                     >
-                      {user.avatar_url ? (
+                      {avatarSrc ? (
                         <img
-                          src={user.avatar_url}
+                          src={avatarSrc}
                           alt=""
                           className="h-8 w-8 rounded-full object-cover shrink-0"
                         />

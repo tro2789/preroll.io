@@ -12,6 +12,11 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 
+const btnBase = 'rounded-md px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50'
+const btnPrimary = `${btnBase} bg-accent text-white hover:bg-accent-hover`
+const btnOutline = `${btnBase} border border-border-default bg-surface-base text-text-primary hover:bg-surface-raised`
+const btnDanger = `${btnBase} border border-error/30 bg-error/5 text-error hover:bg-error/10`
+
 interface UserActionsProps {
   userId: string
   isSuperAdmin: boolean
@@ -20,7 +25,11 @@ interface UserActionsProps {
 export function UserActions({ userId, isSuperAdmin }: UserActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
-  const [confirmRevoke, setConfirmRevoke] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<{
+    label: string
+    action: () => void
+    message: string
+  } | null>(null)
 
   async function grantSuperAdmin() {
     setLoading('grant')
@@ -101,67 +110,116 @@ export function UserActions({ userId, isSuperAdmin }: UserActionsProps) {
     }
   }
 
-  const grantBtn =
-    'rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-white hover:bg-accent-hover transition-colors disabled:opacity-50'
-  const revokeBtn =
-    'rounded-md border border-error/30 bg-error/5 px-3 py-1.5 text-xs font-semibold text-error hover:bg-error/10 transition-colors disabled:opacity-50'
-  const outlineBtn =
-    'rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-xs font-semibold text-text-primary hover:bg-surface-raised transition-colors disabled:opacity-50'
+  async function deleteUser() {
+    setLoading('Delete User')
+    try {
+      const res = await fetch(`/api/v1/admin/users/${userId}/delete`, {
+        method: 'POST',
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Failed to delete user')
+      }
+      toast.success('User deleted')
+      router.push('/admin/users')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setLoading(null)
+    }
+  }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {isSuperAdmin ? (
-        <button
-          className={revokeBtn}
-          disabled={loading !== null}
-          onClick={() => setConfirmRevoke(true)}
-        >
-          {loading === 'revoke' ? 'Revoking...' : 'Revoke Super Admin'}
-        </button>
-      ) : (
-        <button
-          className={grantBtn}
-          disabled={loading !== null}
-          onClick={grantSuperAdmin}
-        >
-          {loading === 'grant' ? 'Granting...' : 'Grant Super Admin'}
-        </button>
-      )}
+    <div className="space-y-4">
+      {/* Access */}
+      <div>
+        <p className="text-xs font-medium text-text-secondary mb-2">Access</p>
+        <div className="flex flex-wrap gap-2">
+          {isSuperAdmin ? (
+            <button
+              className={btnDanger}
+              disabled={loading !== null}
+              onClick={() =>
+                setConfirmAction({
+                  label: 'Revoke Super Admin',
+                  action: revokeSuperAdmin,
+                  message:
+                    'This will revoke super admin access. The user will lose all platform admin privileges. Are you sure?',
+                })
+              }
+            >
+              {loading === 'revoke' ? 'Revoking...' : 'Revoke Super Admin'}
+            </button>
+          ) : (
+            <button
+              className={btnPrimary}
+              disabled={loading !== null}
+              onClick={grantSuperAdmin}
+            >
+              {loading === 'grant' ? 'Granting...' : 'Grant Super Admin'}
+            </button>
+          )}
+          <button
+            className={btnOutline}
+            disabled={loading !== null}
+            onClick={impersonate}
+          >
+            {loading === 'impersonate' ? 'Opening...' : 'Login As'}
+          </button>
+        </div>
+      </div>
 
-      <button
-        className={outlineBtn}
-        disabled={loading !== null}
-        onClick={sendMagicLink}
-      >
-        {loading === 'magic' ? 'Sending...' : 'Send Magic Link'}
-      </button>
+      {/* Authentication */}
+      <div>
+        <p className="text-xs font-medium text-text-secondary mb-2">Authentication</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className={btnOutline}
+            disabled={loading !== null}
+            onClick={sendMagicLink}
+          >
+            {loading === 'magic' ? 'Sending...' : 'Send Magic Link'}
+          </button>
+        </div>
+      </div>
 
-      <button
-        className={outlineBtn}
-        disabled={loading !== null}
-        onClick={impersonate}
-      >
-        {loading === 'impersonate' ? 'Opening...' : 'Login As'}
-      </button>
+      {/* Danger Zone */}
+      <div>
+        <p className="text-xs font-medium text-text-secondary mb-2">Danger Zone</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            className={btnDanger}
+            disabled={loading !== null}
+            onClick={() =>
+              setConfirmAction({
+                label: 'Delete User',
+                action: deleteUser,
+                message:
+                  'This will permanently delete this user account and remove them from all organizations. This cannot be undone.',
+              })
+            }
+          >
+            {loading === 'Delete User' ? 'Deleting...' : 'Delete User'}
+          </button>
+        </div>
+      </div>
 
-      <Dialog open={confirmRevoke} onOpenChange={(open) => !open && setConfirmRevoke(false)}>
+      <Dialog open={confirmAction !== null} onOpenChange={(open) => !open && setConfirmAction(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Action</DialogTitle>
-            <DialogDescription>
-              This will revoke super admin access. The user will lose all platform admin privileges. Are you sure?
-            </DialogDescription>
+            <DialogDescription>{confirmAction?.message}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <button onClick={() => setConfirmRevoke(false)} className={outlineBtn}>
+            <button onClick={() => setConfirmAction(null)} className={btnOutline}>
               Cancel
             </button>
             <button
               onClick={() => {
-                revokeSuperAdmin()
-                setConfirmRevoke(false)
+                confirmAction!.action()
+                setConfirmAction(null)
               }}
-              className="rounded-md bg-error px-3 py-1.5 text-xs font-semibold text-white hover:bg-error/90 transition-colors disabled:opacity-50"
+              className={`${btnBase} bg-error text-white hover:bg-error/90`}
               disabled={loading !== null}
             >
               {loading ? 'Processing...' : 'Confirm'}
