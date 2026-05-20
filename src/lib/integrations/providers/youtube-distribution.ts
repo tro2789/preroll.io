@@ -23,16 +23,28 @@ export interface PublishToYouTubeParams {
 }
 
 export async function listChannels(token: string): Promise<YouTubeChannel[]> {
-  const data = await ytJson('/channels?part=snippet&mine=true&maxResults=50', token)
-  return (data.items || []).map((ch: Record<string, unknown>) => {
+  const [owned, managed] = await Promise.all([
+    ytJson('/channels?part=snippet&mine=true&maxResults=50', token),
+    ytJson('/channels?part=snippet&managedByMe=true&maxResults=50', token).catch(() => ({ items: [] })),
+  ])
+
+  const seen = new Set<string>()
+  const channels: YouTubeChannel[] = []
+
+  for (const ch of [...(owned.items || []), ...(managed.items || [])]) {
+    const id = ch.id as string
+    if (seen.has(id)) continue
+    seen.add(id)
     const snippet = ch.snippet as Record<string, unknown>
     const thumbnails = snippet?.thumbnails as Record<string, Record<string, unknown>> | undefined
-    return {
-      id: ch.id as string,
+    channels.push({
+      id,
       name: (snippet?.title as string) || 'Unknown Channel',
       thumbnailUrl: thumbnails?.default?.url as string | undefined,
-    }
-  })
+    })
+  }
+
+  return channels
 }
 
 export async function initiateVideoUpload(
