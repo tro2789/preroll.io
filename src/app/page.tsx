@@ -140,6 +140,15 @@ function Hero() {
       <div className="absolute left-0 right-0 bottom-0 h-[220px] bg-gradient-to-b from-transparent to-surface-base z-[1]" />
 
       <div className="relative z-[2] text-center max-w-[1200px] mx-auto px-7">
+        <div className="reveal in flex justify-center mb-5" data-d="0">
+          <span className="beta-badge inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[13px] font-medium tracking-wide border border-accent/30 bg-accent/8 text-accent backdrop-blur-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+            </span>
+            Limited Beta
+          </span>
+        </div>
         <h1
           className="reveal in font-[family-name:var(--font-display)] font-semibold text-[clamp(38px,5.6vw,67px)] max-w-[17ch] mx-auto mt-5 leading-[1.12] tracking-[-0.022em]"
           data-d="1"
@@ -164,7 +173,7 @@ function Hero() {
           </a>
         </div>
         <p className="reveal in mt-4 text-[13px] text-fg-faint" data-d="4">
-          Free for 7 days · No card required
+          Early access · Free for 7 days · No card required
         </p>
       </div>
 

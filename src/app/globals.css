@@ -736,6 +736,11 @@ body {
 .prose-chat ul { margin: 0.25em 0; }
 .prose-chat li { margin: 0; }
 
+/* Beta badge ambient glow */
+.beta-badge {
+  box-shadow: 0 0 16px -4px oklch(0.715 0.155 40 / 0.3);
+}
+
 /* Blip pulse for live indicator */
 @keyframes blip {
   0%   { box-shadow: 0 0 0 0 oklch(0.74 0.14 165 / 0.55); }
