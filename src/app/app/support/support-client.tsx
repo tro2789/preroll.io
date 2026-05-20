@@ -54,7 +54,7 @@ export function SupportPageClient({ identity }: SupportPageClientProps) {
           icon={<MailIcon className="h-5 w-5" />}
           title="Email"
           description="Reach us directly for account or billing questions."
-          href="mailto:support@preroll.io"
+          href="mailto:trevor@trevorohare.com"
         />
       </div>
 
