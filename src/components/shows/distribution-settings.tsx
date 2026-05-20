@@ -25,6 +25,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
   const [showPicker, setShowPicker] = useState<SelectionItem[] | null>(null)
   const [pickerProvider, setPickerProvider] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [manualChannelId, setManualChannelId] = useState('')
 
   useEffect(() => {
     async function fetchData() {
@@ -90,13 +91,8 @@ export function DistributionSettings({ showId }: { showId: string }) {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to connect')
-      if (json.data?.needs_selection) {
-        setShowPicker(json.data.shows)
-        setPickerProvider('youtube')
-      } else {
-        setConnections((prev) => [...prev.filter((c) => c.provider !== 'youtube'), json.data])
-        setActiveProvider(null)
-      }
+      setShowPicker(json.data?.channels || [])
+      setPickerProvider('youtube')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
@@ -124,6 +120,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
       if (!res.ok) throw new Error(json.error || 'Failed to connect')
       setConnections((prev) => [...prev.filter((c) => c.provider !== pickerProvider), json.data])
       setApiKey('')
+      setManualChannelId('')
       setShowPicker(null)
       setPickerProvider(null)
       setActiveProvider(null)
@@ -198,8 +195,31 @@ export function DistributionSettings({ showId }: { showId: string }) {
               </button>
             ))}
           </div>
+          {pickerProvider === 'youtube' && (
+            <div className="mt-3 border-t border-border-subtle pt-3">
+              <p className="text-xs text-text-secondary mb-2">
+                Channel not listed? Enter the channel ID directly.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={manualChannelId}
+                  onChange={(e) => setManualChannelId(e.target.value)}
+                  placeholder="UC... channel ID"
+                  className="flex-1 rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+                <button
+                  onClick={() => handleSelectItem(manualChannelId.trim())}
+                  disabled={!manualChannelId.trim() || connecting}
+                  className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                >
+                  {connecting ? 'Connecting...' : 'Connect'}
+                </button>
+              </div>
+            </div>
+          )}
           <button
-            onClick={() => { setShowPicker(null); setPickerProvider(null); setApiKey('') }}
+            onClick={() => { setShowPicker(null); setPickerProvider(null); setApiKey(''); setManualChannelId('') }}
             className="mt-3 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             Cancel

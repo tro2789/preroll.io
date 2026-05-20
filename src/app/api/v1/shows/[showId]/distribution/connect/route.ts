@@ -3,6 +3,7 @@ import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/h
 import { encrypt } from '@/lib/integrations/crypto'
 import { verifyApiKey, listShows } from '@/lib/integrations/providers/transistor'
 import { listChannels } from '@/lib/integrations/providers/youtube-distribution'
+import { ytJson } from '@/lib/integrations/providers/youtube'
 import { getValidToken } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 
@@ -80,22 +81,30 @@ export async function POST(
     }
 
     const channels = await listChannels(token)
-    if (channels.length === 0) {
-      return errorResponse('No YouTube channels found for this account', 404)
-    }
 
     let selectedChannel: { id: string; name: string }
 
     if (external_show_id) {
       const found = channels.find((c) => c.id === external_show_id)
-      if (!found) return errorResponse('Channel not found', 404)
-      selectedChannel = { id: found.id, name: found.name }
-    } else if (channels.length === 1) {
-      selectedChannel = { id: channels[0].id, name: channels[0].name }
+      if (found) {
+        selectedChannel = { id: found.id, name: found.name }
+      } else {
+        try {
+          const data = await ytJson(`/channels?part=snippet&id=${external_show_id}`, token)
+          const ch = data.items?.[0]
+          if (!ch) return errorResponse('Channel not found. Check the channel ID and try again.', 404)
+          selectedChannel = {
+            id: ch.id as string,
+            name: (ch.snippet as Record<string, unknown>)?.title as string || 'YouTube Channel',
+          }
+        } catch {
+          return errorResponse('Could not verify channel. Check the channel ID and try again.', 400)
+        }
+      }
     } else {
       return jsonResponse({
         needs_selection: true,
-        shows: channels.map((c) => ({ id: c.id, name: c.name })),
+        channels: channels.map((c) => ({ id: c.id, name: c.name })),
       })
     }
 
