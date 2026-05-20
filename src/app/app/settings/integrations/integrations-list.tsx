@@ -141,7 +141,7 @@ export function IntegrationsList({
               />
               <span className="text-sm text-text-primary">PreRoll Storage (built-in)</span>
             </label>
-            {connectedProviders.map((p) => (
+            {connectedProviders.filter((p) => p.name !== 'youtube').map((p) => (
               <label key={p.name} className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"
