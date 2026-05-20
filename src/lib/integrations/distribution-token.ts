@@ -1,7 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { encrypt, decrypt } from './crypto'
+import { getOAuthConfig } from './providers/youtube'
 
-const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
 const REFRESH_BUFFER_MS = 30 * 60 * 1000
 
 export async function getDistributionToken(
@@ -24,17 +24,16 @@ export async function getDistributionToken(
 
   if (!connection.refresh_token_enc) return null
 
-  const clientId = process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_DRIVE_CLIENT_ID || ''
-  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_DRIVE_CLIENT_SECRET || ''
+  const config = getOAuthConfig()
 
-  const res = await fetch(GOOGLE_TOKEN, {
+  const res = await fetch(config.tokenUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type: 'refresh_token',
       refresh_token: decrypt(connection.refresh_token_enc),
-      client_id: clientId,
-      client_secret: clientSecret,
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
     }).toString(),
   })
 

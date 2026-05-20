@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyInviteToken } from '@/lib/integrations/invite-token'
 import { encrypt } from '@/lib/integrations/crypto'
-import { ytJson } from '@/lib/integrations/providers/youtube'
-
-const GOOGLE_TOKEN = 'https://oauth2.googleapis.com/token'
+import { ytJson, getOAuthConfig } from '@/lib/integrations/providers/youtube'
 
 export async function GET(request: NextRequest) {
   const origin = request.nextUrl.origin
@@ -36,20 +35,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/connect/youtube?error=${msg}`)
   }
 
-  const clientId = process.env.YOUTUBE_CLIENT_ID || process.env.GOOGLE_DRIVE_CLIENT_ID || ''
-  const clientSecret = process.env.YOUTUBE_CLIENT_SECRET || process.env.GOOGLE_DRIVE_CLIENT_SECRET || ''
+  const config = getOAuthConfig()
   const redirectUri = `${origin}/connect/youtube/callback`
 
   try {
-    const tokenRes = await fetch(GOOGLE_TOKEN, {
+    const tokenRes = await fetch(config.tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
         redirect_uri: redirectUri,
-        client_id: clientId,
-        client_secret: clientSecret,
+        client_id: config.clientId,
+        client_secret: config.clientSecret,
       }).toString(),
     })
 
@@ -74,19 +72,23 @@ export async function GET(request: NextRequest) {
       return saveAndRedirect(origin, state, tokens, channelItems[0])
     }
 
-    // Multiple channels — redirect to picker
     const channelData = channelItems.map((ch: Record<string, unknown>) => {
       const snippet = ch.snippet as Record<string, unknown>
       return { id: ch.id, name: snippet?.title || 'Unknown' }
     })
 
+    // Store sensitive tokens in httpOnly cookie, not URL
+    const cookieStore = await cookies()
+    cookieStore.set('yt_connect_tokens', encrypt(JSON.stringify({
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresIn: tokens.expires_in,
+    })), { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 600, path: '/' })
+
     const pickerState = Buffer.from(JSON.stringify({
       inviteToken: state.inviteToken,
       showId: state.showId,
       orgId: state.orgId,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
-      expiresIn: tokens.expires_in,
       channels: channelData,
     })).toString('base64url')
 

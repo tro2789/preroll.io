@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation'
 import { verifyInviteToken } from '@/lib/integrations/invite-token'
 import { createServiceClient } from '@/lib/supabase/server'
 import { YouTubeConnectClient } from './connect-client'
+import { ConnectShell } from './connect-shell'
 
 export const metadata = {
   title: 'Connect YouTube Channel',
@@ -16,7 +16,7 @@ export default async function YouTubeConnectPage({
 
   if (params.success) {
     return (
-      <Shell>
+      <ConnectShell>
         <div className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
             <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -29,24 +29,24 @@ export default async function YouTubeConnectPage({
           </p>
           <p className="mt-4 text-xs text-text-tertiary">You can close this page.</p>
         </div>
-      </Shell>
+      </ConnectShell>
     )
   }
 
   if (!params.token) {
     return (
-      <Shell>
+      <ConnectShell>
         <ErrorState message="Invalid or missing invite link. Ask your producer for a new link." />
-      </Shell>
+      </ConnectShell>
     )
   }
 
   const payload = verifyInviteToken(params.token)
   if (!payload) {
     return (
-      <Shell>
+      <ConnectShell>
         <ErrorState message="This link has expired or is invalid. Ask your producer for a new link." />
-      </Shell>
+      </ConnectShell>
     )
   }
 
@@ -59,9 +59,9 @@ export default async function YouTubeConnectPage({
 
   if (!show) {
     return (
-      <Shell>
+      <ConnectShell>
         <ErrorState message="Show not found. This link may no longer be valid." />
-      </Shell>
+      </ConnectShell>
     )
   }
 
@@ -69,7 +69,7 @@ export default async function YouTubeConnectPage({
   const clientName = (show.clients as unknown as { name: string })?.name
 
   return (
-    <Shell>
+    <ConnectShell>
       <div className="text-center">
         <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-error/10">
           <svg className="h-5 w-5 text-error" viewBox="0 0 24 24" fill="currentColor">
@@ -98,20 +98,7 @@ export default async function YouTubeConnectPage({
           You can revoke access at any time from your Google account settings.
         </p>
       </div>
-    </Shell>
-  )
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-base p-4">
-      <div className="w-full max-w-md rounded-xl border border-border-default bg-surface-raised p-8 shadow-lg">
-        {children}
-        <div className="mt-8 border-t border-border-subtle pt-4 text-center">
-          <p className="text-xs text-text-tertiary">Powered by PreRoll.io</p>
-        </div>
-      </div>
-    </div>
+    </ConnectShell>
   )
 }
 

@@ -1,4 +1,5 @@
 import { ChannelPicker } from './channel-picker'
+import { ConnectShell } from '../connect-shell'
 
 export const metadata = {
   title: 'Select YouTube Channel',
@@ -13,9 +14,9 @@ export default async function PickChannelPage({
 
   if (!params.state) {
     return (
-      <Shell>
+      <ConnectShell>
         <p className="text-sm text-text-secondary text-center">Invalid request. Please try again from the invite link.</p>
-      </Shell>
+      </ConnectShell>
     )
   }
 
@@ -23,9 +24,6 @@ export default async function PickChannelPage({
     inviteToken: string
     showId: string
     orgId: string
-    accessToken: string
-    refreshToken?: string
-    expiresIn?: number
     channels: { id: string; name: string }[]
   }
 
@@ -33,14 +31,14 @@ export default async function PickChannelPage({
     state = JSON.parse(Buffer.from(params.state, 'base64url').toString())
   } catch {
     return (
-      <Shell>
+      <ConnectShell>
         <p className="text-sm text-text-secondary text-center">Invalid state. Please try again from the invite link.</p>
-      </Shell>
+      </ConnectShell>
     )
   }
 
   return (
-    <Shell>
+    <ConnectShell>
       <div className="text-center">
         <h1 className="text-xl font-bold text-text-primary">Select a Channel</h1>
         <p className="mt-2 text-sm text-text-secondary">
@@ -51,19 +49,6 @@ export default async function PickChannelPage({
         channels={state.channels}
         stateParam={params.state}
       />
-    </Shell>
-  )
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-surface-base p-4">
-      <div className="w-full max-w-md rounded-xl border border-border-default bg-surface-raised p-8 shadow-lg">
-        {children}
-        <div className="mt-8 border-t border-border-subtle pt-4 text-center">
-          <p className="text-xs text-text-tertiary">Powered by PreRoll.io</p>
-        </div>
-      </div>
-    </div>
+    </ConnectShell>
   )
 }

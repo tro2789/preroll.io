@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 
 const INVITE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 
@@ -26,7 +26,9 @@ export function verifyInviteToken(token: string): InvitePayload | null {
   if (!encoded || !sig) return null
 
   const expectedSig = createHmac('sha256', getKey()).update(encoded).digest('base64url')
-  if (sig !== expectedSig) return null
+  const sigBuf = Buffer.from(sig)
+  const expectedBuf = Buffer.from(expectedSig)
+  if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null
 
   try {
     const data = JSON.parse(Buffer.from(encoded, 'base64url').toString())

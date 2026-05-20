@@ -220,7 +220,6 @@ async function handleYouTubePublish(
     }
   }
 
-  // Resolve R2 download URL instead of downloading the file
   const downloadUrl = await resolveSourceDownloadUrl(supabase, org.id, video_source)
   if ('error' in downloadUrl) return downloadUrl.error
   const { url: sourceUrl, mimeType, fileSize } = downloadUrl
@@ -301,87 +300,6 @@ async function resolveSourceDownloadUrl(
   }
 
   return { error: errorResponse('video_source must start with "file:" or "url:"', 400) }
-}
-
-type VideoSourceResult =
-  | { videoBuffer: ArrayBuffer; mimeType: string }
-  | { error: Response }
-
-async function resolveVideoSource(
-  supabase: any,
-  orgId: string,
-  videoSource: string,
-): Promise<VideoSourceResult> {
-  if (videoSource.startsWith('deliverable:')) {
-    const deliverableId = videoSource.slice('deliverable:'.length)
-    const { data: fileRef, error: fileRefError } = await supabase
-      .from('file_references')
-      .select('external_id, name, mime_type, provider')
-      .eq('deliverable_id', deliverableId)
-      .single()
-
-    if (fileRefError || !fileRef) {
-      return { error: errorResponse('No file reference found for this deliverable', 404) }
-    }
-
-    const downloadUrl = await resolveDownloadUrl(orgId, fileRef)
-    if (!downloadUrl) {
-      return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
-    }
-
-    const res = await fetch(downloadUrl.url, downloadUrl.headers ? { headers: downloadUrl.headers } : undefined)
-    if (!res.ok) {
-      return { error: errorResponse(`Failed to download video: ${res.status}`, 502) }
-    }
-
-    return {
-      videoBuffer: await res.arrayBuffer(),
-      mimeType: fileRef.mime_type || 'video/mp4',
-    }
-  }
-
-  if (videoSource.startsWith('url:')) {
-    const url = videoSource.slice('url:'.length)
-    const res = await fetch(url)
-    if (!res.ok) {
-      return { error: errorResponse(`Failed to download video from URL: ${res.status}`, 502) }
-    }
-    const contentType = res.headers.get('content-type')
-    return {
-      videoBuffer: await res.arrayBuffer(),
-      mimeType: contentType?.startsWith('video/') ? contentType : 'video/mp4',
-    }
-  }
-
-  if (videoSource.startsWith('file:')) {
-    const fileId = videoSource.slice('file:'.length)
-    const { data: fileRef, error: fileRefError } = await supabase
-      .from('file_references')
-      .select('external_id, name, mime_type, provider')
-      .eq('id', fileId)
-      .single()
-
-    if (fileRefError || !fileRef) {
-      return { error: errorResponse('File not found', 404) }
-    }
-
-    const downloadUrl = await resolveDownloadUrl(orgId, fileRef)
-    if (!downloadUrl) {
-      return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
-    }
-
-    const res = await fetch(downloadUrl.url, downloadUrl.headers ? { headers: downloadUrl.headers } : undefined)
-    if (!res.ok) {
-      return { error: errorResponse(`Failed to download video: ${res.status}`, 502) }
-    }
-
-    return {
-      videoBuffer: await res.arrayBuffer(),
-      mimeType: fileRef.mime_type || 'video/mp4',
-    }
-  }
-
-  return { error: errorResponse('video_source must start with "deliverable:", "file:", or "url:"', 400) }
 }
 
 async function resolveDownloadUrl(

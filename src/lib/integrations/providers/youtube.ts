@@ -12,7 +12,7 @@ const SCOPES = [
   'https://www.googleapis.com/auth/youtube.upload',
 ]
 
-function getOAuthConfig(): OAuthConfig {
+export function getOAuthConfig(): OAuthConfig {
   return {
     authUrl: GOOGLE_AUTH,
     tokenUrl: GOOGLE_TOKEN,

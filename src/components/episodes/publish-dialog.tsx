@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { DISTRIBUTION_PROVIDER_NAMES } from '@/lib/integrations/types'
 
@@ -88,7 +88,6 @@ export function PublishDialog({
 
   const [uploadProgress, setUploadProgress] = useState<number | null>(null)
   const [pendingResume, setPendingResume] = useState<UploadState | null>(null)
-  const videoBlobRef = useRef<Blob | null>(null)
 
   useEffect(() => {
     if (!isYouTube) return
@@ -163,29 +162,16 @@ export function PublishDialog({
   }
 
   async function handleClientUpload(data: UploadState) {
-    // Persist state so upload can resume after tab close / connection drop
     const state: UploadState = {
       ...data,
       expiresAt: data.expiresAt || Date.now() + 24 * 60 * 60 * 1000,
     }
     localStorage.setItem(`yt-upload:${episodeId}`, JSON.stringify(state))
     setPendingResume(null)
-
     setUploadProgress(0)
 
-    // Download video from R2 into memory (or reuse existing blob)
-    if (!videoBlobRef.current) {
-      const downloadRes = await fetch(data.downloadUrl)
-      if (!downloadRes.ok) throw new Error('Failed to download video from storage')
-      videoBlobRef.current = await downloadRes.blob()
-    }
-
-    const videoBlob = videoBlobRef.current
-
-    // Query YouTube for how much was already uploaded
-    let offset = await queryResumableOffset(data.resumableUrl, videoBlob.size)
-
-    await streamToYouTube(data, videoBlob, offset)
+    const offset = await queryResumableOffset(data.resumableUrl, data.fileSize)
+    await streamToYouTube(data, offset)
   }
 
   async function handleResume() {
@@ -227,19 +213,45 @@ export function PublishDialog({
     return 0
   }
 
-  async function streamToYouTube(data: UploadState, videoBlob: Blob, startOffset: number) {
+  async function streamToYouTube(data: UploadState, startOffset: number) {
     const CHUNK_SIZE = 16 * 1024 * 1024
+    const totalSize = data.fileSize
+
+    const downloadHeaders: Record<string, string> = {}
+    if (startOffset > 0) {
+      downloadHeaders['Range'] = `bytes=${startOffset}-`
+    }
+
+    const downloadRes = await fetch(data.downloadUrl, { headers: downloadHeaders })
+    if (!downloadRes.ok && downloadRes.status !== 206) {
+      throw new Error('Failed to download video from storage')
+    }
+
+    const reader = downloadRes.body!.getReader()
+    let buffer = new Uint8Array(0)
     let offset = startOffset
 
-    while (offset < videoBlob.size) {
-      const end = Math.min(offset + CHUNK_SIZE, videoBlob.size)
-      const chunk = videoBlob.slice(offset, end)
-      const isLast = end === videoBlob.size
+    while (offset < totalSize) {
+      while (buffer.length < CHUNK_SIZE && offset + buffer.length < totalSize) {
+        const { done, value } = await reader.read()
+        if (done) break
+        const merged = new Uint8Array(buffer.length + value.length)
+        merged.set(buffer)
+        merged.set(value, buffer.length)
+        buffer = merged
+      }
+
+      const chunkSize = Math.min(buffer.length, CHUNK_SIZE)
+      const chunk = buffer.slice(0, chunkSize)
+      buffer = buffer.slice(chunkSize)
+
+      const end = offset + chunk.length
+      const isLast = end >= totalSize
 
       const putRes = await fetch(data.resumableUrl, {
         method: 'PUT',
         headers: {
-          'Content-Range': `bytes ${offset}-${end - 1}/${videoBlob.size}`,
+          'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
           'Content-Type': data.mimeType,
         },
         body: chunk,
@@ -249,8 +261,6 @@ export function PublishDialog({
         if (!putRes.ok) throw new Error(`YouTube upload failed (${putRes.status})`)
 
         const result = await putRes.json()
-        const videoId = result.id
-
         localStorage.removeItem(`yt-upload:${episodeId}`)
 
         const finalizeRes = await fetch(
@@ -259,7 +269,7 @@ export function PublishDialog({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              video_id: videoId,
+              video_id: result.id,
               title: data.title,
               privacy_status: data.privacy_status,
               scheduled_at: data.scheduled_at,
@@ -282,7 +292,7 @@ export function PublishDialog({
       }
 
       offset = end
-      setUploadProgress(Math.round((offset / videoBlob.size) * 100))
+      setUploadProgress(Math.round((offset / totalSize) * 100))
     }
   }
 
