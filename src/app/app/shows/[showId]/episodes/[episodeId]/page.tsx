@@ -47,7 +47,7 @@ export default async function EpisodeDetailPage({
       .from('file_references')
       .select('id, name, mime_type, provider')
       .eq('episode_id', episodeId)
-      .limit(10),
+      .eq('provider', 'r2'),
     supabase
       .from('pipeline_stages')
       .select('id, name, position')
