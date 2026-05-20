@@ -13,7 +13,7 @@ export async function GET(
 
   let query = supabase!
     .from('distribution_connections')
-    .select('id, provider, external_show_id, external_show_name, created_at')
+    .select('id, provider, external_show_id, external_show_name, connected_by, created_at')
     .eq('show_id', showId)
 
   if (provider) {

@@ -11,6 +11,7 @@ import {
   addToPlaylist,
 } from '@/lib/integrations/providers/youtube-distribution'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
+import { getDistributionToken } from '@/lib/integrations/distribution-token'
 
 export async function POST(
   request: NextRequest,
@@ -213,10 +214,17 @@ async function handleYouTubePublish(
   ensureProvidersRegistered()
 
   let ytToken: string
-  try {
-    ytToken = await getValidToken(org.id, 'youtube')
-  } catch {
-    return errorResponse('YouTube OAuth token not found. Reconnect YouTube in Settings.', 401)
+
+  // Prefer per-show client token, fall back to org-level producer token
+  const distToken = await getDistributionToken(connection)
+  if (distToken) {
+    ytToken = distToken
+  } else {
+    try {
+      ytToken = await getValidToken(org.id, 'youtube')
+    } catch {
+      return errorResponse('YouTube OAuth token not found. Reconnect YouTube in Settings or ask the client to reconnect.', 401)
+    }
   }
 
   const resolved = await resolveVideoSource(supabase, org.id, video_source)

@@ -117,10 +117,11 @@ export async function POST(
           external_show_id: selectedChannel.id,
           external_show_name: selectedChannel.name,
           api_key_enc: encrypt('oauth:youtube'),
+          connected_by: 'producer',
         },
         { onConflict: 'show_id,provider' }
       )
-      .select('id, provider, external_show_id, external_show_name, created_at')
+      .select('id, provider, external_show_id, external_show_name, connected_by, created_at')
       .single()
 
     if (dbError) return errorResponse(dbError.message, 500)
