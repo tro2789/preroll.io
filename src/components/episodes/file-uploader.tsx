@@ -408,7 +408,8 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
           toastIdsRef.current.delete(u.name)
         }
       } else {
-        const msg = `Uploading ${u.name} — ${pct}%`
+        const shortName = u.name.length > 30 ? u.name.slice(0, 27) + '...' : u.name
+        const msg = `Uploading ${shortName} — ${pct}%`
         if (existing) {
           toast.loading(msg, { id: existing })
         } else {
