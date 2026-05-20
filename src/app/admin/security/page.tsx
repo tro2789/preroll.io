@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/format'
+import { resolveAssetUrl } from '@/lib/r2/resolve'
 import {
   Table,
   TableHeader,
@@ -66,9 +67,9 @@ export default async function AdminSecurityPage() {
                 key={sa.user_id}
                 className="flex items-center gap-3 rounded-lg border border-border-subtle bg-surface-raised px-5 py-3.5"
               >
-                {profile?.avatar_url ? (
+                {resolveAssetUrl(profile?.avatar_url) ? (
                   <img
-                    src={profile.avatar_url}
+                    src={resolveAssetUrl(profile?.avatar_url)!}
                     alt=""
                     className="h-9 w-9 rounded-full object-cover shrink-0"
                   />
