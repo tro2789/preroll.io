@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
+import { resolveUserOrg } from '@/lib/org/resolve'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { EpisodeTabs } from './episode-tabs'
@@ -65,6 +66,9 @@ export default async function EpisodeDetailPage({
     )
   }
 
+  const org = await resolveUserOrg(user!.id)
+  const defaultProvider = org?.defaultDeliveryProvider || null
+
   const stage = episode.pipeline_stages as { id: string; name: string; position: number } | null
   const showData = (episode as any).shows as { name?: string; clients?: any } | null
   const client = showData?.clients ?? null
@@ -73,7 +77,6 @@ export default async function EpisodeDetailPage({
     frame_io: { displayName: 'Frame.io' },
     google_drive: { displayName: 'Google Drive' },
     vimeo: { displayName: 'Vimeo', acceptedMimeTypes: ['video/*'] },
-    youtube: { displayName: 'YouTube', acceptedMimeTypes: ['video/*'] },
     dropbox: { displayName: 'Dropbox' },
   }
 
@@ -160,7 +163,10 @@ export default async function EpisodeDetailPage({
         }}
         integration={integration}
         deliverables={deliverables || []}
-        connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
+        connectedProviders={defaultProvider
+          ? (connectedProviders || []).filter(p => p.provider === defaultProvider).map(p => p.provider as IntegrationProvider)
+          : []
+        }
         hasIntegration={!!episodeIntegration}
         hasAudioFiles={hasAudioFiles}
         fileCount={(audioFileRefs || []).length}

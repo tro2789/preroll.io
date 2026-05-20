@@ -113,7 +113,6 @@ export function DeliveryPanel({
     frame_io: 'Frame.io',
     google_drive: 'Google Drive',
     vimeo: 'Vimeo',
-    youtube: 'YouTube',
     dropbox: 'Dropbox',
   }
 
