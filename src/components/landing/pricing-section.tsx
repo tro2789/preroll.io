@@ -31,7 +31,6 @@ const TIERS = [
       'All integrations (Frame.io, Transistor, Drive, Vimeo)',
       'Webhook egress and API keys',
       'MCP server access',
-      'Episode templates',
       'Deliverable approval workflows',
     ],
     cta: 'Start Free, Upgrade Anytime',
