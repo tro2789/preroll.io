@@ -216,35 +216,15 @@ export function PublishDialog({
     const CHUNK_SIZE = 16 * 1024 * 1024
     const totalSize = data.fileSize
 
-    const downloadHeaders: Record<string, string> = {}
-    if (startOffset > 0) {
-      downloadHeaders['Range'] = `bytes=${startOffset}-`
-    }
+    const downloadRes = await fetch(data.downloadUrl)
+    if (!downloadRes.ok) throw new Error('Failed to download video from storage')
+    const videoBlob = await downloadRes.blob()
 
-    const downloadRes = await fetch(data.downloadUrl, { headers: downloadHeaders })
-    if (!downloadRes.ok && downloadRes.status !== 206) {
-      throw new Error('Failed to download video from storage')
-    }
-
-    const reader = downloadRes.body!.getReader()
-    let buffer = new Uint8Array(0)
     let offset = startOffset
 
     while (offset < totalSize) {
-      while (buffer.length < CHUNK_SIZE && offset + buffer.length < totalSize) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const merged = new Uint8Array(buffer.length + value.length)
-        merged.set(buffer)
-        merged.set(value, buffer.length)
-        buffer = merged
-      }
-
-      const chunkSize = Math.min(buffer.length, CHUNK_SIZE)
-      const chunk = buffer.slice(0, chunkSize)
-      buffer = buffer.slice(chunkSize)
-
-      const end = offset + chunk.length
+      const end = Math.min(offset + CHUNK_SIZE, totalSize)
+      const chunk = videoBlob.slice(offset, end)
       const isLast = end >= totalSize
 
       const putRes = await fetch(data.resumableUrl, {
