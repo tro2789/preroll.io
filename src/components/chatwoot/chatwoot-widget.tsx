@@ -71,6 +71,24 @@ export function ChatwootSupport({ identity }: { identity: ChatwootIdentity }) {
     `
     document.head.appendChild(style)
 
+    function onChatwootReady() {
+      if (!window.$chatwoot) return
+      window.$chatwoot.setUser(identity.userId, {
+        email: identity.email,
+        name: identity.name || identity.email,
+      })
+      window.$chatwoot.setCustomAttributes({
+        plan: identity.planId,
+        org_name: identity.orgName || '',
+      })
+      if (identity.planId === 'studio') {
+        window.$chatwoot.setLabel('priority')
+      }
+      window.$chatwoot.toggle('open')
+    }
+
+    window.addEventListener('chatwoot:ready', onChatwootReady)
+
     const script = document.createElement('script')
     script.src = `${CHATWOOT_BASE_URL}/packs/js/sdk.js`
     script.async = true
@@ -79,30 +97,11 @@ export function ChatwootSupport({ identity }: { identity: ChatwootIdentity }) {
         websiteToken: CHATWOOT_TOKEN,
         baseUrl: CHATWOOT_BASE_URL,
       })
-
-      function identifyAndOpen() {
-        if (!window.$chatwoot) {
-          setTimeout(identifyAndOpen, 200)
-          return
-        }
-        window.$chatwoot.setUser(identity.userId, {
-          email: identity.email,
-          name: identity.name || identity.email,
-        })
-        window.$chatwoot.setCustomAttributes({
-          plan: identity.planId,
-          org_name: identity.orgName || '',
-        })
-        if (identity.planId === 'studio') {
-          window.$chatwoot.setLabel('priority')
-        }
-        window.$chatwoot.toggle('open')
-      }
-      identifyAndOpen()
     }
     document.body.appendChild(script)
 
     return () => {
+      window.removeEventListener('chatwoot:ready', onChatwootReady)
       script.remove()
       style.remove()
       document.querySelector('.woot-widget-holder')?.remove()
