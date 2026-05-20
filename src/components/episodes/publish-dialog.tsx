@@ -174,24 +174,11 @@ export function PublishDialog({
                 {isYouTube ? 'Video Source' : 'Audio Source'}
               </label>
               <select value={sourceValue} onChange={(e) => setSourceValue(e.target.value)} className={inputClasses}>
-                {(isYouTube ? videoFiles : audioFiles).length > 0 && (
-                  <optgroup label="Episode Files">
-                    {(isYouTube ? videoFiles : audioFiles).map((f) => (
-                      <option key={f.id} value={`file:${f.id}`}>
-                        {f.name || 'Untitled file'}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {deliverables.length > 0 && (
-                  <optgroup label="Shares">
-                    {deliverables.map((d) => (
-                      <option key={d.id} value={`deliverable:${d.id}`}>
-                        {d.title} ({d.type})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
+                {(isYouTube ? videoFiles : audioFiles).map((f) => (
+                  <option key={f.id} value={`file:${f.id}`}>
+                    {f.name || 'Untitled file'}
+                  </option>
+                ))}
                 <option value="url:custom">Custom URL</option>
               </select>
               {sourceValue === 'url:custom' && (
