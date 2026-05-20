@@ -4,8 +4,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const tabs = [
-  { label: 'Organizations', href: '/admin', exact: true },
+  { label: 'Overview', href: '/admin', exact: true },
+  { label: 'Organizations', href: '/admin/orgs', exact: false },
   { label: 'Users', href: '/admin/users', exact: false },
+  { label: 'Billing', href: '/admin/billing', exact: false },
+  { label: 'Activity', href: '/admin/activity', exact: false },
+  { label: 'Security', href: '/admin/security', exact: false },
 ]
 
 export function AdminNav() {

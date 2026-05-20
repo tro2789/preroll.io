@@ -15,7 +15,7 @@ export default async function AdminOrgDetailPage({
   const { orgId } = await params
   const service = createServiceClient()
 
-  const [orgResult, membersResult, clientsCount, showsCount, episodesCount] =
+  const [orgResult, membersResult, clientsCount, showsCount, episodesCount, aiAddonResult] =
     await Promise.all([
       service
         .from('organizations')
@@ -39,10 +39,16 @@ export default async function AdminOrgDetailPage({
         .from('episodes')
         .select('*', { count: 'exact', head: true })
         .eq('org_id', orgId),
+      service
+        .from('ai_addon')
+        .select('enabled, credits_balance, created_at')
+        .eq('org_id', orgId)
+        .single(),
     ])
 
   if (orgResult.error || !orgResult.data) notFound()
   const org = orgResult.data
+  const aiAddon = aiAddonResult.data
 
   const members = membersResult.data ?? []
 
@@ -56,7 +62,7 @@ export default async function AdminOrgDetailPage({
   return (
     <div>
       <Link
-        href="/admin"
+        href="/admin/orgs"
         className="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors mb-4"
       >
         &larr; Organizations
@@ -79,9 +85,18 @@ export default async function AdminOrgDetailPage({
         <Row label="Plan Status" value={org.plan_status || '—'} />
         <Row label="Trial Ends" value={formatDateTime(org.trial_ends_at)} />
         <Row label="Stripe Customer ID">
-          <span className="text-sm font-mono text-text-primary">
-            {org.stripe_customer_id || '—'}
-          </span>
+          {org.stripe_customer_id ? (
+            <a
+              href={`https://dashboard.stripe.com/customers/${org.stripe_customer_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-mono text-text-primary hover:text-accent transition-colors"
+            >
+              {org.stripe_customer_id}
+            </a>
+          ) : (
+            <span className="text-sm font-mono text-text-primary">—</span>
+          )}
         </Row>
         <Row label="Storage Used" value={storageDisplay} />
         <Row label="Storage Add-on" value={addonDisplay} />
@@ -96,6 +111,23 @@ export default async function AdminOrgDetailPage({
         <StatCard label="Episodes" value={episodesCount.count ?? 0} />
       </div>
 
+      <div className="rounded-lg border border-border-subtle bg-surface-raised divide-y divide-border-subtle mb-6">
+        <div className="px-5 py-3">
+          <h2 className="text-sm font-semibold text-text-primary">AI Add-on</h2>
+        </div>
+        {aiAddon ? (
+          <>
+            <Row label="Enabled" value={aiAddon.enabled ? 'Yes' : 'No'} />
+            <Row label="Credits Balance" value={String(aiAddon.credits_balance ?? 0)} />
+            <Row label="Enabled Since" value={formatDateTime(aiAddon.created_at)} />
+          </>
+        ) : (
+          <div className="px-5 py-3 text-sm text-text-secondary">
+            Not enabled for this organization.
+          </div>
+        )}
+      </div>
+
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-text-primary mb-3">
           Actions
@@ -104,6 +136,7 @@ export default async function AdminOrgDetailPage({
           orgId={org.id}
           currentPlan={org.plan_id || 'free'}
           trialEndsAt={org.trial_ends_at}
+          aiEnabled={aiAddon?.enabled ?? false}
         />
       </div>
 

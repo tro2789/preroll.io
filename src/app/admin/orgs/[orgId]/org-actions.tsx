@@ -8,9 +8,10 @@ interface OrgActionsProps {
   orgId: string
   currentPlan: string
   trialEndsAt: string | null
+  aiEnabled: boolean
 }
 
-export function OrgActions({ orgId, currentPlan, trialEndsAt }: OrgActionsProps) {
+export function OrgActions({ orgId, currentPlan, trialEndsAt, aiEnabled }: OrgActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
 
@@ -27,6 +28,28 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt }: OrgActionsProps)
         throw new Error(data?.error || `Failed to update organization`)
       }
       toast.success(`${label} applied successfully.`)
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  async function grantCredits(label: string, amount: number) {
+    setLoading(label)
+    try {
+      const res = await fetch(`/api/v1/admin/orgs/${orgId}/credits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || 'Failed to grant credits')
+      }
+      const data = await res.json()
+      toast.success(`Granted ${amount} credits. New balance: ${data.data.credits_balance}`)
       router.refresh()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong.')
@@ -110,6 +133,27 @@ export function OrgActions({ orgId, currentPlan, trialEndsAt }: OrgActionsProps)
           {loading === 'End trial' ? 'Updating...' : 'End trial'}
         </button>
       )}
+
+      {/* Divider */}
+      <div className="h-5 w-px bg-border-default mx-1" />
+
+      {/* Credit grant buttons */}
+      <button
+        className={outlineBtn}
+        disabled={loading !== null || !aiEnabled}
+        title={!aiEnabled ? 'AI add-on not enabled for this org' : undefined}
+        onClick={() => grantCredits('Grant 100', 100)}
+      >
+        {loading === 'Grant 100' ? 'Granting...' : 'Grant 100 Credits'}
+      </button>
+      <button
+        className={outlineBtn}
+        disabled={loading !== null || !aiEnabled}
+        title={!aiEnabled ? 'AI add-on not enabled for this org' : undefined}
+        onClick={() => grantCredits('Grant 500', 500)}
+      >
+        {loading === 'Grant 500' ? 'Granting...' : 'Grant 500 Credits'}
+      </button>
     </div>
   )
 }
