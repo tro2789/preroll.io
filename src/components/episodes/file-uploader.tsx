@@ -71,9 +71,11 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         }
 
         const { data } = await initRes.json()
-        const { uploadUrls, resumableUrl, tusUrl, uploadProtocol, fileRefId } = data as {
+        const { fileId, uploadUrls, uploadId, parts: multipartParts, resumableUrl, tusUrl, uploadProtocol, fileRefId } = data as {
           fileId: string
           fileRefId?: string
+          uploadId?: string
+          parts?: { url: string; partNumber: number; size: number }[]
           uploadUrls?: { url: string; size: number }[]
           resumableUrl?: string
           tusUrl?: string
@@ -84,6 +86,8 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
           await uploadResumable(file, resumableUrl)
         } else if (uploadProtocol === 'tus' && tusUrl) {
           await uploadTus(file, tusUrl)
+        } else if (uploadId && multipartParts) {
+          await uploadMultipart(file, fileId, uploadId, multipartParts)
         } else if (uploadUrls) {
           await uploadPresignedChunks(file, uploadUrls)
         } else {
@@ -110,6 +114,41 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
     },
     [episodeId, onUploadComplete, updateUpload]
   )
+
+  async function uploadMultipart(file: File, key: string, uploadId: string, parts: { url: string; partNumber: number; size: number }[]) {
+    const completedParts: { partNumber: number; etag: string }[] = []
+    let offset = 0
+
+    for (const part of parts) {
+      const chunk = file.slice(offset, offset + part.size)
+      offset += part.size
+
+      const putRes = await fetch(part.url, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: chunk,
+      })
+
+      if (!putRes.ok) throw new Error(`Chunk upload failed (${putRes.status})`)
+
+      const etag = putRes.headers.get('ETag')
+      if (!etag) throw new Error('R2 did not return an ETag for uploaded part')
+
+      completedParts.push({ partNumber: part.partNumber, etag: etag.replace(/"/g, '') })
+      updateUpload(file.name, { uploadedBytes: Math.min(offset, file.size) })
+    }
+
+    const completeRes = await fetch('/api/v1/storage/complete-upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, uploadId, parts: completedParts }),
+    })
+
+    if (!completeRes.ok) {
+      const json = await completeRes.json().catch(() => ({ error: 'Failed to complete upload' }))
+      throw new Error(json.error || 'Failed to complete multipart upload')
+    }
+  }
 
   async function uploadPresignedChunks(file: File, uploadUrls: { url: string; size: number }[]) {
     let offset = 0
