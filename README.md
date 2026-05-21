@@ -11,9 +11,9 @@ PreRoll.io is the orchestration layer for podcast production services. It doesn'
 - **Episode pipeline** with customizable stages per show and drag-and-drop kanban board
 - **Client portal** with magic-link auth, deliverable approvals, activity feed, and white-label branding
 - **Built-in file storage** backed by Cloudflare R2 with multipart uploads and per-org quotas
-- **Integrations** with Frame.io, Google Drive, Vimeo, Transistor.fm, and Castopod
+- **Integrations** with Frame.io, Google Drive, Vimeo, YouTube, Transistor.fm, and Castopod
 - **AI transcription** via Deepgram Nova-2 with speaker diarization
-- **AI content generation** — show notes, episode descriptions, social posts, and title suggestions from transcripts (Claude Sonnet/Haiku)
+- **AI content generation** — show notes and title suggestions from transcripts (Claude Sonnet/Haiku)
 - **AI chat assistant** with streaming responses and tool use for managing episodes, shows, and clients from natural language
 - **Calendar** view across all shows (week and month)
 - **Reporting** — episode volume, on-time rate, approval turnaround, broken down by show and month
