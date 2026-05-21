@@ -1,0 +1,25 @@
+name: Feature Request
+description: Suggest an improvement or new feature
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What would you like?
+      description: A clear description of the feature or improvement.
+      placeholder: "It would be useful to bulk-export episode metadata as CSV from the show page."
+    validations:
+      required: true
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Why do you need this?
+      description: What problem does this solve or what workflow does it improve?
+      placeholder: "I manage 15 shows and need to send monthly reports to clients with episode counts and publish dates."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Any workarounds you're currently using, or other approaches you've thought about.
