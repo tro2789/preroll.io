@@ -133,8 +133,8 @@ export async function createEpisode(
 
   form.append('description', params.description || '')
   form.append('type', params.episodeType || 'full')
-  if (params.episodeNumber !== undefined) form.append('episode_number', String(params.episodeNumber))
-  if (params.seasonNumber !== undefined) form.append('season_number', String(params.seasonNumber))
+  if (params.episodeNumber != null) form.append('episode_number', String(params.episodeNumber))
+  if (params.seasonNumber != null) form.append('season_number', String(params.seasonNumber))
 
   const json = (await castopodFetch(creds, '/episodes', {
     method: 'POST',
