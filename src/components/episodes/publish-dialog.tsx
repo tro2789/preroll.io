@@ -56,6 +56,7 @@ export function PublishDialog({
   onClose,
 }: PublishDialogProps) {
   const isYouTube = provider === 'youtube'
+  const isAudioProvider = provider === 'transistor' || provider === 'castopod'
 
   const videoFiles = fileReferences.filter((f) => f.mimeType?.startsWith('video/'))
   const audioFiles = fileReferences.filter((f) => f.mimeType?.startsWith('audio/'))
@@ -374,8 +375,8 @@ export function PublishDialog({
           </div>
         ) : result ? (
           <div className="text-center py-6 space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
-              <svg className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success/15">
+              <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -384,7 +385,7 @@ export function PublishDialog({
             </p>
             {result.share_url && (
               <a href={result.share_url} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-accent hover:text-accent-hover transition-colors">
-                View on Transistor &rarr;
+                View on {providerName} &rarr;
               </a>
             )}
             {result.view_url && (
@@ -422,9 +423,9 @@ export function PublishDialog({
                   required
                 />
               )}
-              {!isYouTube && sourceFiles.length === 0 && videoFiles.length > 0 && (
+              {isAudioProvider && sourceFiles.length === 0 && videoFiles.length > 0 && (
                 <p className="text-xs text-text-secondary mt-1">
-                  Transistor requires an audio file. Upload an audio version or provide a URL.
+                  {providerName} requires an audio file. Upload an audio version or provide a URL.
                 </p>
               )}
             </div>
@@ -439,7 +440,7 @@ export function PublishDialog({
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClasses} />
             </div>
 
-            {!isYouTube && (
+            {isAudioProvider && (
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">

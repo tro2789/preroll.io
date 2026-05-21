@@ -1,10 +1,11 @@
 export type IntegrationProvider = 'frame_io' | 'google_drive' | 'vimeo' | 'dropbox' | 'youtube' | 'r2'
 
-export type DistributionProvider = 'transistor' | 'youtube'
+export type DistributionProvider = 'transistor' | 'youtube' | 'castopod'
 
 export const DISTRIBUTION_PROVIDER_NAMES: Record<DistributionProvider, string> = {
   transistor: 'Transistor.fm',
   youtube: 'YouTube',
+  castopod: 'Castopod',
 }
 
 export interface OAuthConfig {

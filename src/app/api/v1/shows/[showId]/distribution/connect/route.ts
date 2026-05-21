@@ -2,12 +2,13 @@ import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { encrypt } from '@/lib/integrations/crypto'
 import { verifyApiKey, listShows } from '@/lib/integrations/providers/transistor'
+import { listPodcasts } from '@/lib/integrations/providers/castopod'
 import { listChannels } from '@/lib/integrations/providers/youtube-distribution'
 import { ytJson } from '@/lib/integrations/providers/youtube'
 import { getValidToken } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 
-const SUPPORTED_PROVIDERS = ['transistor', 'youtube']
+const SUPPORTED_PROVIDERS = ['transistor', 'youtube', 'castopod']
 
 export async function POST(
   request: NextRequest,
@@ -57,6 +58,59 @@ export async function POST(
           external_show_id: selectedShow.id,
           external_show_name: selectedShow.name,
           api_key_enc: encrypt(api_key),
+        },
+        { onConflict: 'show_id,provider' }
+      )
+      .select('id, provider, external_show_id, external_show_name, created_at')
+      .single()
+
+    if (dbError) return errorResponse(dbError.message, 500)
+    return jsonResponse(data, 201)
+  }
+
+  if (provider === 'castopod') {
+    const { instance_url, username, password, external_show_id: castopodShowId } = body
+    if (!instance_url) return errorResponse('instance_url is required', 400)
+    if (!username) return errorResponse('username is required', 400)
+    if (!password) return errorResponse('password is required', 400)
+
+    const creds = { instanceUrl: instance_url, username, password }
+
+    let podcasts: Awaited<ReturnType<typeof listPodcasts>>
+    try {
+      podcasts = await listPodcasts(creds)
+    } catch {
+      return errorResponse('Could not connect to Castopod. Check the URL and credentials.', 401)
+    }
+
+    let selectedPodcast: { id: number; name: string }
+
+    if (castopodShowId) {
+      const found = podcasts.find((p) => String(p.id) === String(castopodShowId))
+      if (!found) return errorResponse('Podcast not found on this Castopod instance', 404)
+      selectedPodcast = { id: found.id, name: found.title }
+    } else if (podcasts.length === 0) {
+      return errorResponse('No podcasts found on this Castopod instance. Create one in the Castopod admin first.', 404)
+    } else if (podcasts.length === 1) {
+      selectedPodcast = { id: podcasts[0].id, name: podcasts[0].title }
+    } else {
+      return jsonResponse({
+        needs_selection: true,
+        shows: podcasts.map((p) => ({ id: String(p.id), name: p.title })),
+      })
+    }
+
+    const encCredentials = encrypt(JSON.stringify({ instanceUrl: instance_url, username, password }))
+
+    const { data, error: dbError } = await supabase!
+      .from('distribution_connections')
+      .upsert(
+        {
+          show_id: showId,
+          provider: 'castopod',
+          external_show_id: String(selectedPodcast.id),
+          external_show_name: selectedPodcast.name,
+          api_key_enc: encCredentials,
         },
         { onConflict: 'show_id,provider' }
       )

@@ -4,6 +4,12 @@ import { decrypt } from '@/lib/integrations/crypto'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { authorizeUpload, createEpisode, publishEpisode } from '@/lib/integrations/providers/transistor'
+import {
+  createEpisode as createCastopodEpisode,
+  publishEpisode as publishCastopodEpisode,
+  slugify as castopodSlugify,
+  type CastopodCredentials,
+} from '@/lib/integrations/providers/castopod'
 import { initiateVideoUpload } from '@/lib/integrations/providers/youtube-distribution'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 import { getDistributionToken } from '@/lib/integrations/distribution-token'
@@ -36,6 +42,10 @@ export async function POST(
     return handleYouTubePublish(supabase!, org!, showId, episodeId, connection, body)
   }
 
+  if (connection.provider === 'castopod') {
+    return handleCastopodPublish(supabase!, org!, showId, episodeId, connection, body)
+  }
+
   return handleTransistorPublish(supabase!, org!, showId, episodeId, connection, body)
 }
 
@@ -55,38 +65,17 @@ async function handleTransistorPublish(
   const apiKey = decrypt(connection.api_key_enc)
   let audioUrl: string
 
-  if (audio_source.startsWith('file:')) {
-    const fileId = audio_source.slice('file:'.length)
-    const { data: fileRef, error: fileRefError } = await supabase
-      .from('file_references')
-      .select('external_id, name, mime_type, file_size, provider')
-      .eq('id', fileId)
-      .single()
+  if (audio_source.startsWith('url:')) {
+    audioUrl = audio_source.slice('url:'.length)
+  } else {
+    const resolved = await resolveAudioBuffer(supabase, org.id, audio_source)
+    if ('error' in resolved) return resolved.error
 
-    if (fileRefError || !fileRef) {
-      return errorResponse('File not found', 404)
-    }
-
-    const downloadResult = await resolveDownloadUrl(org.id, fileRef)
-    if (!downloadResult) {
-      return errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502)
-    }
-
-    const audioRes = await fetch(downloadResult.url, {
-      headers: downloadResult.headers || {},
-    })
-    if (!audioRes.ok) {
-      return errorResponse(`Failed to download file: ${audioRes.status}`, 502)
-    }
-    const audioBuffer = await audioRes.arrayBuffer()
-
-    const filename = fileRef.name || 'episode.mp3'
-    const upload = await authorizeUpload(apiKey, filename)
-
+    const upload = await authorizeUpload(apiKey, resolved.filename)
     const uploadRes = await fetch(upload.uploadUrl, {
       method: 'PUT',
       headers: { 'Content-Type': upload.contentType },
-      body: Buffer.from(audioBuffer),
+      body: Buffer.from(resolved.buffer),
     })
 
     if (!uploadRes.ok) {
@@ -94,10 +83,6 @@ async function handleTransistorPublish(
     }
 
     audioUrl = upload.audioUrl
-  } else if (audio_source.startsWith('url:')) {
-    audioUrl = audio_source.slice('url:'.length)
-  } else {
-    return errorResponse('audio_source must start with "file:" or "url:"', 400)
   }
 
   const transistorEpisode = await createEpisode(apiKey, {
@@ -163,6 +148,102 @@ async function handleTransistorPublish(
     status: scheduled_at ? 'scheduled' : 'published',
     media_url: mediaUrl,
     share_url: shareUrl,
+  }, 201)
+}
+
+async function handleCastopodPublish(
+  supabase: any,
+  org: { id: string },
+  showId: string,
+  episodeId: string,
+  connection: any,
+  body: any,
+) {
+  const { title, description, episode_number, season_number, episode_type, scheduled_at, audio_source } = body
+
+  if (!title) return errorResponse('title is required', 400)
+  if (!audio_source) return errorResponse('audio_source is required', 400)
+
+  const creds: CastopodCredentials = JSON.parse(decrypt(connection.api_key_enc))
+
+  const resolved = await resolveAudioBuffer(supabase, org.id, audio_source)
+  if ('error' in resolved) return resolved.error
+
+  const castopodEpisode = await createCastopodEpisode(creds, {
+    podcastId: Number(connection.external_show_id),
+    title,
+    slug: castopodSlugify(title),
+    audioFile: resolved.buffer,
+    audioFilename: resolved.filename,
+    createdBy: creds.userId ?? 1,
+    description,
+    episodeNumber: episode_number,
+    seasonNumber: season_number,
+    episodeType: episode_type || 'full',
+  })
+
+  const castopodEpisodeId = castopodEpisode.id
+
+  if (scheduled_at) {
+    const date = new Date(scheduled_at)
+    const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+    await publishCastopodEpisode(creds, castopodEpisodeId, {
+      method: 'schedule',
+      scheduledDate: formatted,
+      createdBy: creds.userId ?? 1,
+    })
+  } else {
+    await publishCastopodEpisode(creds, castopodEpisodeId, {
+      method: 'now',
+      createdBy: creds.userId ?? 1,
+    })
+  }
+
+  const responseSlug = castopodEpisode.slug || castopodSlugify(title)
+  const instanceBase = creds.instanceUrl.replace(/\/+$/, '')
+  const episodeUrl = `${instanceBase}/episode/${responseSlug}`
+
+  await Promise.all([
+    supabase
+      .from('episodes')
+      .update({
+        distribution_status: scheduled_at ? 'scheduled' : 'published',
+        distribution_external_id: String(castopodEpisodeId),
+        distribution_published_at: scheduled_at || new Date().toISOString(),
+        distribution_metadata: {
+          provider: 'castopod',
+          castopod_episode_id: castopodEpisodeId,
+          instance_url: creds.instanceUrl,
+          share_url: episodeUrl,
+        },
+      })
+      .eq('id', episodeId),
+    supabase.from('activity_log').insert({
+      show_id: showId,
+      episode_id: episodeId,
+      action: scheduled_at ? 'episode_scheduled' : 'episode_published',
+      description: scheduled_at
+        ? `Episode '${title}' scheduled on Castopod for ${scheduled_at}`
+        : `Episode '${title}' published to Castopod`,
+      metadata: { castopod_episode_id: castopodEpisodeId, audio_source: body.audio_source },
+    }),
+  ])
+
+  dispatchWebhooks(org.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
+    episode_id: episodeId,
+    show_id: showId,
+    title,
+    provider: 'castopod',
+    castopod_episode_id: castopodEpisodeId,
+    share_url: episodeUrl,
+    scheduled_at: scheduled_at || null,
+  })
+
+  return jsonResponse({
+    provider: 'castopod',
+    castopod_episode_id: castopodEpisodeId,
+    status: scheduled_at ? 'scheduled' : 'published',
+    share_url: episodeUrl,
   }, 201)
 }
 
@@ -282,6 +363,60 @@ async function resolveSourceDownloadUrl(
   }
 
   return { error: errorResponse('video_source must start with "file:" or "url:"', 400) }
+}
+
+type AudioBufferResult =
+  | { buffer: ArrayBuffer; filename: string }
+  | { error: Response }
+
+async function resolveAudioBuffer(
+  supabase: any,
+  orgId: string,
+  audioSource: string,
+): Promise<AudioBufferResult> {
+  if (audioSource.startsWith('file:')) {
+    const fileId = audioSource.slice('file:'.length)
+    const { data: fileRef, error: fileRefError } = await supabase
+      .from('file_references')
+      .select('external_id, name, mime_type, file_size, provider')
+      .eq('id', fileId)
+      .single()
+
+    if (fileRefError || !fileRef) {
+      return { error: errorResponse('File not found', 404) }
+    }
+
+    const downloadResult = await resolveDownloadUrl(orgId, fileRef)
+    if (!downloadResult) {
+      return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
+    }
+
+    const audioRes = await fetch(downloadResult.url, {
+      headers: downloadResult.headers || {},
+    })
+    if (!audioRes.ok) {
+      return { error: errorResponse(`Failed to download file: ${audioRes.status}`, 502) }
+    }
+
+    return {
+      buffer: await audioRes.arrayBuffer(),
+      filename: fileRef.name || 'episode.mp3',
+    }
+  }
+
+  if (audioSource.startsWith('url:')) {
+    const url = audioSource.slice('url:'.length)
+    const audioRes = await fetch(url)
+    if (!audioRes.ok) {
+      return { error: errorResponse(`Failed to download audio from URL: ${audioRes.status}`, 502) }
+    }
+    return {
+      buffer: await audioRes.arrayBuffer(),
+      filename: url.split('/').pop() || 'episode.mp3',
+    }
+  }
+
+  return { error: errorResponse('audio_source must start with "file:" or "url:"', 400) }
 }
 
 async function resolveDownloadUrl(

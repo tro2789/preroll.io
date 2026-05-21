@@ -28,6 +28,9 @@ export function DistributionSettings({ showId }: { showId: string }) {
   const [pickerProvider, setPickerProvider] = useState<string | null>(null)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [castopodUrl, setCastopodUrl] = useState('')
+  const [castopodUsername, setCastopodUsername] = useState('')
+  const [castopodPassword, setCastopodPassword] = useState('')
 
   useEffect(() => {
     async function fetchData() {
@@ -72,6 +75,38 @@ export function DistributionSettings({ showId }: { showId: string }) {
       } else {
         setConnections((prev) => [...prev.filter((c) => c.provider !== 'transistor'), json.data])
         setApiKey('')
+        setActiveProvider(null)
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
+    } finally {
+      setConnecting(false)
+    }
+  }
+
+  async function handleCastopodConnect() {
+    setConnecting(true)
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'castopod',
+          instance_url: castopodUrl,
+          username: castopodUsername,
+          password: castopodPassword,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to connect')
+      if (json.data?.needs_selection) {
+        setShowPicker(json.data.shows)
+        setPickerProvider('castopod')
+      } else {
+        setConnections((prev) => [...prev.filter((c) => c.provider !== 'castopod'), json.data])
+        setCastopodUrl('')
+        setCastopodUsername('')
+        setCastopodPassword('')
         setActiveProvider(null)
       }
     } catch (err) {
@@ -134,6 +169,11 @@ export function DistributionSettings({ showId }: { showId: string }) {
         external_show_id: externalShowId,
       }
       if (pickerProvider === 'transistor') body.api_key = apiKey
+      if (pickerProvider === 'castopod') {
+        body.instance_url = castopodUrl
+        body.username = castopodUsername
+        body.password = castopodPassword
+      }
 
       const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
         method: 'POST',
@@ -206,6 +246,31 @@ export function DistributionSettings({ showId }: { showId: string }) {
           </button>
         </div>
       ))}
+
+      {/* Castopod picker */}
+      {showPicker && pickerProvider === 'castopod' && (
+        <div className="mt-4">
+          <p className="text-sm text-text-secondary mb-3">Select a podcast to connect:</p>
+          <div className="space-y-2">
+            {showPicker.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleSelectItem(item.id)}
+                disabled={connecting}
+                className="block w-full text-left rounded-md border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => { setShowPicker(null); setPickerProvider(null); setCastopodUrl(''); setCastopodUsername(''); setCastopodPassword('') }}
+            className="mt-3 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
 
       {/* Transistor picker */}
       {showPicker && pickerProvider === 'transistor' && (
@@ -381,7 +446,64 @@ export function DistributionSettings({ showId }: { showId: string }) {
             )
           )}
 
-          {connectedProviders.has('transistor') && connectedProviders.has('youtube') && (
+          {/* Castopod */}
+          {!connectedProviders.has('castopod') && (
+            activeProvider === 'castopod' ? (
+              <div>
+                <p className="text-sm text-text-secondary mb-3">
+                  Connect to your self-hosted Castopod instance to publish episodes.
+                </p>
+                <div className="space-y-2">
+                  <input
+                    type="url"
+                    value={castopodUrl}
+                    onChange={(e) => setCastopodUrl(e.target.value)}
+                    placeholder="https://podcast.example.com"
+                    className="w-full rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  <input
+                    type="text"
+                    value={castopodUsername}
+                    onChange={(e) => setCastopodUsername(e.target.value)}
+                    placeholder="API username"
+                    className="w-full rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={castopodPassword}
+                      onChange={(e) => setCastopodPassword(e.target.value)}
+                      placeholder="API password"
+                      className="flex-1 rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                    <button
+                      onClick={handleCastopodConnect}
+                      disabled={!castopodUrl.trim() || !castopodUsername.trim() || !castopodPassword.trim() || connecting}
+                      className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                    >
+                      {connecting ? 'Connecting...' : 'Connect'}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setActiveProvider(null); setCastopodUrl(''); setCastopodUsername(''); setCastopodPassword('') }}
+                  className="mt-2 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setActiveProvider('castopod')}
+                className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5"
+              >
+                <span className="font-medium text-text-primary">Castopod</span>
+                <span className="text-text-secondary">Self-hosted podcast hosting</span>
+              </button>
+            )
+          )}
+
+          {connectedProviders.has('transistor') && connectedProviders.has('youtube') && connectedProviders.has('castopod') && (
             <p className="text-sm text-text-secondary">All distribution providers connected.</p>
           )}
         </div>
