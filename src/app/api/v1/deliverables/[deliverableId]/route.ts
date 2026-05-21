@@ -1,4 +1,4 @@
-import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getAuthenticatedClient, getAuthenticatedClientOrPortalUser, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { dispatchWebhooks, WebhookEvent } from '@/lib/webhooks/dispatch'
 
 export async function GET(
@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, user, org, error } = await getAuthenticatedClient()
+  const { supabase, user, org, portalUserId, error } = await getAuthenticatedClientOrPortalUser()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
@@ -18,7 +18,7 @@ export async function GET(
   if (dbError || !data) return errorResponse('Deliverable not found', 404)
 
   const client = (data.shows as Record<string, unknown>)?.clients as { org_id: string; client_user_id: string | null } | null
-  const isProducer = client?.org_id === org!.id
+  const isProducer = org && client?.org_id === org.id
   const isClient = client?.client_user_id === user!.id
   if (!isProducer && !isClient) return errorResponse('Forbidden', 403)
 

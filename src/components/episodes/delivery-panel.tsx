@@ -327,6 +327,8 @@ export function DeliveryPanel({
       const match = deliverables.find((d) => d.version_group_id === file.version_group_id)
       if (match) return match
     }
+    const byRef = deliverables.find((d) => d.file_reference_id === file.id)
+    if (byRef) return byRef
     return deliverables.find(
       (d) => d.file_url && (d.file_url.includes(file.id) || (file.viewUrl && d.file_url === file.viewUrl))
     ) || null
@@ -352,6 +354,7 @@ export function DeliveryPanel({
         const json = await res.json().catch(() => ({ error: 'Failed to submit' }))
         throw new Error(json.error || 'Failed to share file')
       }
+      await fetchFiles()
       router.refresh()
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to submit')
