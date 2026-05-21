@@ -9,11 +9,13 @@ interface DeliverableListProps {
   deliverables: Deliverable[]
   reviewBaseUrl?: string
   reviewableIds?: Set<string>
+  onDelete?: (id: string) => void
 }
 
-export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: DeliverableListProps) {
+export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds, onDelete }: DeliverableListProps) {
   const router = useRouter()
   const [resubmitting, setResubmitting] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   async function handleResubmit(id: string) {
     setResubmitting(id)
@@ -24,6 +26,19 @@ export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: 
     })
     setResubmitting(null)
     router.refresh()
+  }
+
+  async function handleDelete(id: string) {
+    setDeleting(id)
+    try {
+      const res = await fetch(`/api/v1/deliverables/${id}`, { method: 'DELETE' })
+      if (res.ok || res.status === 204) {
+        onDelete?.(id)
+        router.refresh()
+      }
+    } finally {
+      setDeleting(null)
+    }
   }
 
   if (deliverables.length === 0) return null
@@ -44,10 +59,11 @@ export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: 
                 </div>
                 <p className="text-sm font-medium text-text-primary mt-0.5">{d.title}</p>
               </div>
+              <div className="flex items-center gap-2 shrink-0">
               {reviewBaseUrl && reviewableIds?.has(d.id) ? (
                 <a
                   href={`${reviewBaseUrl}/${d.id}`}
-                  className="shrink-0 text-xs text-accent hover:text-accent-hover transition-colors"
+                  className="text-xs text-accent hover:text-accent-hover transition-colors"
                 >
                   Review
                 </a>
@@ -56,11 +72,21 @@ export function DeliverableList({ deliverables, reviewBaseUrl, reviewableIds }: 
                   href={d.file_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 text-xs text-accent hover:text-accent-hover transition-colors"
+                  className="text-xs text-accent hover:text-accent-hover transition-colors"
                 >
                   View
                 </a>
               ) : null}
+              {onDelete && (
+                <button
+                  onClick={() => handleDelete(d.id)}
+                  disabled={deleting === d.id}
+                  className="text-xs text-text-tertiary hover:text-red-400 transition-colors disabled:opacity-50"
+                >
+                  {deleting === d.id ? '...' : 'Remove'}
+                </button>
+              )}
+            </div>
             </div>
 
             {d.status === 'revision_requested' && d.reviewer_notes && (

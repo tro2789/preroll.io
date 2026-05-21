@@ -120,3 +120,45 @@ export async function PATCH(
 
   return jsonResponse(data)
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ deliverableId: string }> }
+) {
+  const { deliverableId } = await params
+  const { supabase, org, error } = await getAuthenticatedClient()
+  if (error) return error
+
+  const { data: existing, error: fetchError } = await supabase!
+    .from('deliverables')
+    .select('id, title, show_id, episode_id, shows(client_id, clients(org_id))')
+    .eq('id', deliverableId)
+    .single()
+
+  if (fetchError || !existing) return errorResponse('Deliverable not found', 404)
+
+  const show = existing.shows as unknown as { clients: { org_id: string } | null } | null
+  if (!org || show?.clients?.org_id !== org.id) return errorResponse('Forbidden', 403)
+
+  await supabase!
+    .from('file_references')
+    .update({ deliverable_id: null })
+    .eq('deliverable_id', deliverableId)
+
+  const { error: deleteError } = await supabase!
+    .from('deliverables')
+    .delete()
+    .eq('id', deliverableId)
+
+  if (deleteError) return errorResponse(deleteError.message, 500)
+
+  await supabase!.from('activity_log').insert({
+    show_id: existing.show_id,
+    episode_id: existing.episode_id,
+    action: 'deliverable_removed',
+    description: `Deliverable removed: ${existing.title}`,
+    metadata: { deliverable_id: deliverableId },
+  })
+
+  return new Response(null, { status: 204 })
+}

@@ -375,6 +375,7 @@ export function DeliveryPanel({
       }
       setFiles(prev => prev.filter(f => f.id !== file.id))
       setConfirmDelete(null)
+      router.refresh()
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Failed to delete file')
     } finally {
@@ -1092,8 +1093,10 @@ export function DeliveryPanel({
           {(() => {
             const fileIds = files.map((f) => f.id)
             const manualDeliverables = deliverables.filter((d) => {
-              if (!d.file_url) return true
-              return !fileIds.some((fid) => d.file_url!.includes(fid))
+              if (d.file_reference_id && fileIds.includes(d.file_reference_id)) return false
+              if (d.version_group_id && files.some((f) => f.version_group_id === d.version_group_id)) return false
+              if (d.file_url && fileIds.some((fid) => d.file_url!.includes(fid))) return false
+              return true
             })
             const totalLinked = deliverables.length - manualDeliverables.length
             const showSection = manualDeliverables.length > 0 || !hasProvider || showManualForm
@@ -1162,7 +1165,7 @@ export function DeliveryPanel({
                     </form>
                   )}
 
-                  <DeliverableList deliverables={manualDeliverables} />
+                  <DeliverableList deliverables={manualDeliverables} onDelete={() => router.refresh()} />
 
                   {manualDeliverables.length === 0 && !showManualForm && (
                     <p className="text-xs text-text-secondary">No shared files.</p>
