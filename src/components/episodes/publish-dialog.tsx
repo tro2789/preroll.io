@@ -40,7 +40,7 @@ interface PublishDialogProps {
     scheduled_publish_date: string | null
   }
   deliverables: { id: string; title: string; type: string }[]
-  fileReferences?: { id: string; name: string; mimeType: string; provider: string }[]
+  fileReferences?: { id: string; name: string; mimeType: string; fileSize?: number; provider: string }[]
   isOpen: boolean
   onClose: () => void
 }
@@ -60,9 +60,11 @@ export function PublishDialog({
   const videoFiles = fileReferences.filter((f) => f.mimeType?.startsWith('video/'))
   const audioFiles = fileReferences.filter((f) => f.mimeType?.startsWith('audio/'))
 
+  const sourceFiles = isYouTube ? videoFiles : audioFiles
+
   const defaultSource = isYouTube
     ? (videoFiles.length > 0 ? `file:${videoFiles[0].id}` : deliverables.length > 0 ? `deliverable:${deliverables[0].id}` : '')
-    : (deliverables.length > 0 ? `deliverable:${deliverables[0].id}` : audioFiles.length > 0 ? `file:${audioFiles[0].id}` : '')
+    : (audioFiles.length > 0 ? `file:${audioFiles[0].id}` : '')
 
   const [sourceValue, setSourceValue] = useState(defaultSource)
   const [title, setTitle] = useState(episode.title)
@@ -403,7 +405,7 @@ export function PublishDialog({
                 {isYouTube ? 'Video Source' : 'Audio Source'}
               </label>
               <select value={sourceValue} onChange={(e) => setSourceValue(e.target.value)} className={inputClasses}>
-                {(isYouTube ? videoFiles : audioFiles).map((f) => (
+                {sourceFiles.map((f) => (
                   <option key={f.id} value={`file:${f.id}`}>
                     {f.name || 'Untitled file'}
                   </option>
@@ -419,6 +421,11 @@ export function PublishDialog({
                   className={`${inputClasses} mt-2`}
                   required
                 />
+              )}
+              {!isYouTube && sourceFiles.length === 0 && videoFiles.length > 0 && (
+                <p className="text-xs text-text-secondary mt-1">
+                  Transistor requires an audio file. Upload an audio version or provide a URL.
+                </p>
               )}
             </div>
 

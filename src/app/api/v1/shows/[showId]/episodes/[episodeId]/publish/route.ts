@@ -55,50 +55,32 @@ async function handleTransistorPublish(
   const apiKey = decrypt(connection.api_key_enc)
   let audioUrl: string
 
-  if (audio_source.startsWith('deliverable:')) {
-    const deliverableId = audio_source.slice('deliverable:'.length)
+  if (audio_source.startsWith('file:')) {
+    const fileId = audio_source.slice('file:'.length)
     const { data: fileRef, error: fileRefError } = await supabase
       .from('file_references')
-      .select('external_id, name')
-      .eq('deliverable_id', deliverableId)
-      .eq('provider', 'frame_io')
+      .select('external_id, name, mime_type, file_size, provider')
+      .eq('id', fileId)
       .single()
 
     if (fileRefError || !fileRef) {
-      return errorResponse('No Frame.io file reference found for this deliverable', 404)
+      return errorResponse('File not found', 404)
     }
 
-    ensureProvidersRegistered()
-    const [frameToken, accountId] = await Promise.all([
-      getValidToken(org.id, 'frame_io'),
-      getIntegrationAccountId(org.id, 'frame_io'),
-    ])
-
-    const fileRes = await fetch(
-      `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.original`,
-      { headers: { Authorization: `Bearer ${frameToken}` } }
-    )
-
-    if (!fileRes.ok) {
-      const errBody = await fileRes.text()
-      return errorResponse(`Frame.io API error ${fileRes.status}: ${errBody}`, 502)
+    const downloadResult = await resolveDownloadUrl(org.id, fileRef)
+    if (!downloadResult) {
+      return errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502)
     }
 
-    const fileJson = await fileRes.json()
-    const fileData = fileJson.data || fileJson
-    const downloadUrl = fileData.media_links?.original?.url
-
-    if (!downloadUrl) {
-      return errorResponse('Could not resolve download URL from Frame.io', 502)
-    }
-
-    const audioRes = await fetch(downloadUrl)
+    const audioRes = await fetch(downloadResult.url, {
+      headers: downloadResult.headers || {},
+    })
     if (!audioRes.ok) {
-      return errorResponse(`Failed to download audio from Frame.io: ${audioRes.status}`, 502)
+      return errorResponse(`Failed to download file: ${audioRes.status}`, 502)
     }
     const audioBuffer = await audioRes.arrayBuffer()
 
-    const filename = fileRef.name || 'audio.mp3'
+    const filename = fileRef.name || 'episode.mp3'
     const upload = await authorizeUpload(apiKey, filename)
 
     const uploadRes = await fetch(upload.uploadUrl, {
@@ -108,14 +90,14 @@ async function handleTransistorPublish(
     })
 
     if (!uploadRes.ok) {
-      return errorResponse(`Failed to upload audio to Transistor: ${uploadRes.status}`, 502)
+      return errorResponse(`Failed to upload to Transistor: ${uploadRes.status}`, 502)
     }
 
     audioUrl = upload.audioUrl
   } else if (audio_source.startsWith('url:')) {
     audioUrl = audio_source.slice('url:'.length)
   } else {
-    return errorResponse('audio_source must start with "deliverable:" or "url:"', 400)
+    return errorResponse('audio_source must start with "file:" or "url:"', 400)
   }
 
   const transistorEpisode = await createEpisode(apiKey, {
