@@ -12,6 +12,7 @@ import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 import { RichTextEditor } from '@/components/episodes/rich-text-editor'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 import type { Deliverable } from '@/lib/constants/deliverables'
+import { ClientPortalSection } from '@/components/client-portal-section'
 
 type Tab = 'files' | 'content' | 'deliverables' | 'distribution' | 'activity'
 
@@ -61,6 +62,7 @@ interface EpisodeTabsProps {
   showId: string
   showName: string
   clientName: string | null
+  client: { id: string; name: string; email: string | null; invite_code: string | null; onboarded_at: string | null } | null
   stage: { id: string; name: string } | null
   stages: PipelineStage[]
   episode: {
@@ -157,7 +159,7 @@ function ShowNotesContent({ html }: { html: string }) {
 }
 
 export function EpisodeTabs({
-  episodeId, showId, showName, clientName, stage, stages, episode,
+  episodeId, showId, showName, clientName, client, stage, stages, episode,
   integration, deliverables, connectedProviders, hasIntegration,
   hasAudioFiles, fileCount, distributionConnections,
 }: EpisodeTabsProps) {
@@ -722,6 +724,16 @@ export function EpisodeTabs({
             )}
           </div>
         </div>
+
+        {client && (
+          <ClientPortalSection
+            clientId={client.id}
+            clientName={client.name}
+            clientEmail={client.email}
+            inviteCode={client.invite_code}
+            onboardedAt={client.onboarded_at}
+          />
+        )}
 
       </aside>
       </div>

@@ -149,6 +149,7 @@ export default async function EpisodeDetailPage({
         showId={showId}
         showName={showData?.name || 'Show'}
         clientName={client?.name || null}
+        client={client ? { id: client.id, name: client.name, email: client.email, invite_code: client.invite_code, onboarded_at: client.onboarded_at } : null}
         stage={stage ? { id: stage.id, name: stage.name } : null}
         stages={stages}
         episode={{
