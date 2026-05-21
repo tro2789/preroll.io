@@ -84,7 +84,8 @@ async function castopodFetch(
   })
   if (!res.ok) {
     const body = await res.text()
-    throw new Error(`Castopod API error ${res.status}: ${body}`)
+    const preview = body.length > 200 ? body.slice(0, 200) + '...' : body
+    throw new Error(`Castopod API error ${res.status}: ${preview}`)
   }
   return res.json()
 }
