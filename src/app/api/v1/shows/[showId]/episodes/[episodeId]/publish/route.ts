@@ -169,34 +169,51 @@ async function handleCastopodPublish(
   const resolved = await resolveAudioBuffer(supabase, org.id, audio_source)
   if ('error' in resolved) return resolved.error
 
-  const castopodEpisode = await createCastopodEpisode(creds, {
-    podcastId: Number(connection.external_show_id),
-    title,
-    slug: castopodSlugify(title),
-    audioFile: resolved.buffer,
-    audioFilename: resolved.filename,
-    createdBy: creds.userId ?? 1,
-    description,
-    episodeNumber: episode_number,
-    seasonNumber: season_number,
-    episodeType: episode_type || 'full',
-  })
+  // Castopod only accepts .mp3 and .m4a — normalize the filename
+  let audioFilename = resolved.filename
+  if (!audioFilename.endsWith('.mp3') && !audioFilename.endsWith('.m4a')) {
+    audioFilename = audioFilename.replace(/\.[^.]+$/, '') + '.mp3'
+  }
+
+  let castopodEpisode
+  try {
+    castopodEpisode = await createCastopodEpisode(creds, {
+      podcastId: Number(connection.external_show_id),
+      title,
+      slug: castopodSlugify(title),
+      audioFile: resolved.buffer,
+      audioFilename,
+      createdBy: creds.userId ?? 1,
+      description,
+      episodeNumber: episode_number,
+      seasonNumber: season_number,
+      episodeType: episode_type || 'full',
+    })
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error'
+    return errorResponse(`Castopod publish failed: ${detail}`, 502)
+  }
 
   const castopodEpisodeId = castopodEpisode.id
 
-  if (scheduled_at) {
-    const date = new Date(scheduled_at)
-    const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-    await publishCastopodEpisode(creds, castopodEpisodeId, {
-      method: 'schedule',
-      scheduledDate: formatted,
-      createdBy: creds.userId ?? 1,
-    })
-  } else {
-    await publishCastopodEpisode(creds, castopodEpisodeId, {
-      method: 'now',
-      createdBy: creds.userId ?? 1,
-    })
+  try {
+    if (scheduled_at) {
+      const date = new Date(scheduled_at)
+      const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+      await publishCastopodEpisode(creds, castopodEpisodeId, {
+        method: 'schedule',
+        scheduledDate: formatted,
+        createdBy: creds.userId ?? 1,
+      })
+    } else {
+      await publishCastopodEpisode(creds, castopodEpisodeId, {
+        method: 'now',
+        createdBy: creds.userId ?? 1,
+      })
+    }
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error'
+    return errorResponse(`Episode created on Castopod but publish step failed: ${detail}`, 502)
   }
 
   const episodeUrl = castopodEpisode.guid || ''
