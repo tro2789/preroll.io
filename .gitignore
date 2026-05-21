@@ -50,3 +50,6 @@ next-env.d.ts
 /docs/
 CLAUDE.md
 PRODUCT.md
+
+# claude code config
+.claude/
