@@ -79,8 +79,9 @@ export async function POST(
     let podcasts: Awaited<ReturnType<typeof listPodcasts>>
     try {
       podcasts = await listPodcasts(creds)
-    } catch {
-      return errorResponse('Could not connect to Castopod. Check the URL and credentials.', 401)
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Unknown error'
+      return errorResponse(`Could not connect to Castopod: ${detail}`, 401)
     }
 
     let selectedPodcast: { id: number; name: string }
