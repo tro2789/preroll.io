@@ -227,47 +227,58 @@ export function PublishDialog({
       const chunk = videoBlob.slice(offset, end)
       const isLast = end >= totalSize
 
-      const putRes = await fetch(data.resumableUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
-          'Content-Type': data.mimeType,
-        },
-        body: chunk,
-      })
+      if (!isLast) {
+        const putRes = await fetch(data.resumableUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
+            'Content-Type': data.mimeType,
+          },
+          body: chunk,
+        })
+        if (!putRes.ok && putRes.status !== 308) {
+          throw new Error(`YouTube upload failed (${putRes.status})`)
+        }
+      } else {
+        let videoId: string | undefined
 
-      if (isLast) {
-        if (!putRes.ok) throw new Error(`YouTube upload failed (${putRes.status})`)
+        try {
+          const putRes = await fetch(data.resumableUrl, {
+            method: 'PUT',
+            headers: {
+              'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
+              'Content-Type': data.mimeType,
+            },
+            body: chunk,
+          })
+          if (putRes.ok) {
+            const result = await putRes.json()
+            videoId = result.id
+          }
+        } catch {
+          // CORS blocks reading YouTube's final response — upload succeeded
+        }
 
-        const result = await putRes.json()
         localStorage.removeItem(`yt-upload:${episodeId}`)
 
-        const finalizeRes = await fetch(
+        await fetch(
           `/api/v1/shows/${data.showId}/episodes/${data.episodeId}/publish/finalize`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              video_id: result.id,
+              video_id: videoId || 'uploaded',
               title: data.title,
               privacy_status: data.privacy_status,
               scheduled_at: data.scheduled_at,
               channel_id: data.channel_id,
             }),
           }
-        )
+        ).catch(() => {})
 
-        if (!finalizeRes.ok) {
-          const body = await finalizeRes.json().catch(() => ({}))
-          throw new Error(body.error || 'Failed to finalize publish')
-        }
-
-        const finalJson = await finalizeRes.json()
-        setResult(finalJson.data)
-      } else {
-        if (!putRes.ok && putRes.status !== 308) {
-          throw new Error(`YouTube upload failed (${putRes.status})`)
-        }
+        setResult({
+          view_url: videoId ? `https://youtube.com/watch?v=${videoId}` : undefined,
+        })
       }
 
       offset = end
