@@ -50,10 +50,7 @@ export async function DELETE(
       return errorResponse(message, 500)
     }
 
-    await supabase!
-      .from('deliverables')
-      .update({ file_reference_id: null })
-      .eq('file_reference_id', fileRef.id)
+    await supabase!.from('deliverables').delete().eq('file_reference_id', fileRef.id)
 
     await Promise.all([
       supabase!.from('file_references').delete().eq('id', fileRef.id),
@@ -95,10 +92,7 @@ export async function DELETE(
   }
 
   if (fileRef) {
-    await supabase!
-      .from('deliverables')
-      .update({ file_reference_id: null })
-      .eq('file_reference_id', fileRef.id)
+    await supabase!.from('deliverables').delete().eq('file_reference_id', fileRef.id)
 
     await supabase!.from('file_references').delete().eq('id', fileRef.id)
 
