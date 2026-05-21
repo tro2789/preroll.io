@@ -84,6 +84,10 @@ SMTP_USER=your_smtp_user
 SMTP_PASS=your_smtp_password
 SMTP_FROM=noreply@your-domain.com
 
+# AI Features (optional — bring your own keys)
+DEEPGRAM_API_KEY=your_deepgram_key
+ANTHROPIC_API_KEY=your_anthropic_key
+
 # OAuth Integrations (optional — only needed if you use these)
 FRAMEIO_CLIENT_ID=your_client_id
 FRAMEIO_CLIENT_SECRET=your_client_secret
@@ -92,6 +96,8 @@ GOOGLE_CLIENT_SECRET=your_client_secret
 VIMEO_CLIENT_ID=your_client_id
 VIMEO_CLIENT_SECRET=your_client_secret
 ```
+
+AI features (transcription and content generation) require API keys from Deepgram and Anthropic. In self-hosted mode, you can also configure these per-organization in **Settings > AI** using the bring-your-own-key option — no credits needed.
 
 ## Step 4: Deploy
 

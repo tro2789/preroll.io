@@ -89,6 +89,6 @@ The episode is approved. Now get it in front of listeners.
 
 A checklist only works if you actually use it for every episode. The producers who deliver consistently are not the ones with the most talent. They're the ones with the best systems.
 
-If you're managing multiple shows across clients, tracking all of this in spreadsheets or Slack threads breaks down fast. [PreRoll](https://preroll.io) was built specifically for this workflow, giving podcast producers a single place to manage episodes from submission through publishing, with built-in review, approvals, and client communication.
+If you're managing multiple shows across clients, tracking all of this in spreadsheets or Slack threads breaks down fast. [PreRoll.io](https://preroll.io) was built specifically for this workflow, giving podcast producers a single place to manage episodes from submission through publishing, with built-in review, approvals, and client communication.
 
 Print this checklist. Adapt it to your shows. Run every episode through it. Your clients and your listeners will notice the difference.

@@ -1,0 +1,122 @@
+---
+title: Castopod
+description: Publish episodes to your self-hosted Castopod instance with inline audio upload.
+---
+
+## Overview
+
+[Castopod](https://castopod.org/) is a self-hosted, open-source podcast hosting platform. The preroll.io integration lets you publish episodes directly to your Castopod instance — including uploading the audio file — without leaving your production pipeline.
+
+Unlike the Transistor.fm integration (which uses an API key) or Frame.io and Google Drive (which use OAuth), Castopod authenticates with HTTP Basic Auth against your instance. The connection is configured per-show, not per-organization.
+
+**Plan requirement:** Pro or Studio (available during the 7-day Studio trial).
+
+## Requirements
+
+Before connecting, you need:
+
+1. A running Castopod instance accessible over the network from preroll.io's servers
+2. A user account on that instance with permission to create and publish episodes
+3. At least one podcast already created in the Castopod admin panel
+4. The Castopod REST API enabled (API base: `{instanceUrl}/api/rest/v1`)
+
+Castopod API documentation: [docs.castopod.org](https://docs.castopod.org/next/en/api/)
+
+## Connecting a Show
+
+Each show in preroll.io connects to one podcast on your Castopod instance.
+
+1. Open a show in preroll.io
+2. Go to **Settings > Distribution**
+3. Click **Castopod** to expand the connection form
+4. Enter your Castopod credentials:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| Instance URL | The base URL of your Castopod installation | `https://podcasts.example.com` |
+| Username | Your Castopod account username | `admin` |
+| Password | Your Castopod account password | |
+
+5. Click **Connect** — preroll.io verifies the credentials and fetches your podcasts
+6. Select the podcast to link from the list
+7. Save the connection
+
+Once connected, the show's distribution settings display the linked Castopod podcast. Credentials are encrypted at rest.
+
+## Publishing an Episode
+
+Once a show is connected to Castopod, you can publish episodes from the episode detail page.
+
+1. Open the episode
+2. Navigate to the **Distribution** tab
+3. Click **Publish to Castopod**
+4. Review and edit the episode metadata:
+
+| Field | Description | Required |
+|-------|-------------|----------|
+| Title | Episode title (pre-filled from preroll.io) | Yes |
+| Description | Episode description / show notes (HTML supported) | No |
+| Episode number | Numeric episode number | No |
+| Season number | Season grouping number | No |
+| Episode type | `full`, `trailer`, or `bonus` (defaults to `full`) | No |
+| Audio source | The audio file to upload (selected from episode files) | Yes |
+
+5. Choose **Publish Now** or **Schedule** (set a future date/time)
+6. Click **Publish**
+
+### Scheduled Publishing
+
+To schedule an episode for future release:
+
+1. Select **Schedule** instead of **Publish Now**
+2. Set the publish date and time
+3. Castopod holds the episode and publishes it at the scheduled time
+
+Scheduled episodes show `scheduled` status in preroll.io.
+
+## How Audio Upload Works
+
+Castopod does not have a separate file upload step. When you publish an episode, preroll.io:
+
+1. Downloads the audio file from the episode's file storage (R2, Frame.io, Google Drive, or Vimeo)
+2. Uploads it directly to Castopod as `multipart/form-data` in the same API call that creates the episode
+3. Castopod processes the audio and makes it available in the RSS feed
+
+The audio file is sent inline with the episode metadata — there is no intermediate upload or external URL handoff. This means the file must be fully downloadable by the preroll.io server at publish time.
+
+**Accepted formats:** MP3 and M4A. If the source file has a different extension, preroll.io normalizes the filename to `.mp3` before uploading.
+
+## Status Tracking
+
+preroll.io tracks the distribution status after publishing:
+
+| Status | Meaning |
+|--------|---------|
+| `draft` | Not yet sent to Castopod |
+| `scheduled` | Queued for future publish |
+| `published` | Live on Castopod, available in the RSS feed |
+| `failed` | Publish attempt failed (see error details) |
+
+The episode detail page shows the current Castopod status and the episode URL on your instance.
+
+## Limitations and Notes
+
+- **No OAuth.** Credentials (instance URL, username, password) are stored per-show, encrypted at rest. If you change your Castopod password, you need to reconnect each affected show.
+- **Network reachability.** Your Castopod instance must be reachable from preroll.io's servers. If your instance is on a private network or behind a firewall, publishing will fail.
+- **Audio must be downloadable.** The episode must have an audio file in preroll.io's storage (R2) or linked from an external provider. preroll.io downloads the file server-side before uploading it to Castopod.
+- **File size limits.** Large audio files are downloaded into memory before being uploaded to Castopod. Extremely large files may cause timeouts depending on your instance's upload limits and network speed.
+- **One podcast per show.** Each preroll.io show connects to exactly one Castopod podcast. To publish the same episode to multiple Castopod podcasts, create separate shows.
+- **Podcast must exist first.** You must create the podcast in the Castopod admin panel before connecting it in preroll.io. preroll.io does not create podcasts on Castopod.
+- **Slug generation.** Episode slugs are auto-generated from the title (lowercased, special characters replaced with hyphens, max 128 characters).
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| "Could not connect to Castopod" | Verify the instance URL is correct and reachable. Ensure the URL includes the protocol (`https://`). Check that the username and password are valid. |
+| "No podcasts found" | Create at least one podcast in your Castopod admin panel before connecting. |
+| Publish fails with HTML error | This usually means Castopod returned an HTML error page (e.g., from Cloudflare or a reverse proxy) instead of a JSON response. Check that the API endpoint is accessible and not blocked by a WAF or rate limiter. |
+| Timeout during publish | Large audio files may exceed the default timeout. Check your Castopod instance's `upload_max_filesize` and `post_max_size` PHP settings. Consider compressing the audio before publishing. |
+| "Episode created but publish step failed" | The episode was successfully created on Castopod but the separate publish API call failed. Log in to your Castopod admin panel and publish the episode manually, then check server logs for the cause. |
+| Episode URL is empty | Older Castopod versions may not return the `guid` field. Upgrade your Castopod instance to the latest version. |
+| Wrong audio format | Castopod accepts MP3 and M4A. preroll.io normalizes filenames automatically, but the actual audio codec must be compatible. Re-encode the file if needed. |

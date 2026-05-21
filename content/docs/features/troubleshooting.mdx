@@ -105,8 +105,7 @@ Google OAuth tokens expire periodically and need re-authorization. This is norma
 
 **Solutions:**
 
-1. **Check file size** — Ensure you're within your plan's limit (Free: 100MB, Pro: 500MB, Studio: 2GB)
-2. **Check storage quota** — View usage in Settings > Organization
+1. **Check storage quota** — View usage in **Settings > Storage**
 3. **Check your connection** — Large uploads need a stable connection
 4. **Try a different browser** — Some browser extensions block uploads
 5. **Retry** — Click the retry button; transient network issues are common
@@ -117,10 +116,10 @@ Google OAuth tokens expire periodically and need re-authorization. This is norma
 
 **Solutions:**
 
-1. Check your current storage usage in **Settings > Organization**
-2. Delete unused assets to free space
-3. Upgrade your plan for more storage
-4. Consider linking external files instead of uploading (Frame.io, Google Drive, Vimeo links)
+1. Check your current storage usage in **Settings > Storage**
+2. Delete unused files from the storage management table
+3. Upgrade your plan for more storage, or add storage at $19/TB/month (Pro and Studio)
+4. Consider linking external files instead of uploading (Frame.io, Google Drive, Vimeo)
 
 ### Uploaded file shows broken preview
 
@@ -228,6 +227,21 @@ Google OAuth tokens expire periodically and need re-authorization. This is norma
    - Daily upload limit reached
    - Copyright/content policy flag
 3. For large videos, ensure a stable connection during upload
+
+### Castopod publish fails
+
+**Symptoms:** Episode publish returns an error or shows "failed" status.
+
+**Solutions:**
+
+1. Check the error message in the distribution tab
+2. Common causes:
+   - Castopod instance unreachable from the preroll.io server (check the instance URL)
+   - Invalid credentials (username or password changed)
+   - Audio file format not accepted by Castopod
+   - Castopod returned an HTML error page (often from Cloudflare or a reverse proxy — check your Castopod server configuration)
+   - Episode slug conflict (an episode with the same slug already exists on Castopod)
+3. Fix the issue and click **Retry**
 
 ### Scheduled publish didn't fire
 

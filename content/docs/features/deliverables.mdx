@@ -30,13 +30,9 @@ Deliverables support any file type. Common uploads include:
 
 Files are uploaded to Cloudflare R2 and served via signed URLs for security.
 
-### File Size Limits
+### Uploads
 
-| Plan | Max File Size |
-|------|--------------|
-| Free | 100 MB per file |
-| Pro | 500 MB per file |
-| Studio | 2 GB per file |
+There is no per-file size limit. Files over 100 MB automatically use multipart upload (chunked at 64 MB) for reliable delivery of large video files. Total upload capacity is limited by your plan's storage quota (Free: 10 GB, Pro: 500 GB, Studio: 2 TB).
 
 ## Approval Workflow
 

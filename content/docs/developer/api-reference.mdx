@@ -45,11 +45,27 @@ HTTP status codes follow standard conventions: `200` for success, `400` for bad 
 |--------|----------|-------------|
 | `GET` | `/api/v1/dashboard` | Dashboard summary (stats, attention list, recent activity) |
 | `GET` | `/api/v1/clients` | List all clients in your organization |
+| `POST` | `/api/v1/clients` | Create a new client |
+| `GET` | `/api/v1/clients/{client_id}` | Get client details |
+| `PATCH` | `/api/v1/clients/{client_id}` | Update a client |
 | `GET` | `/api/v1/shows` | List all shows (optionally filter by `?client_id=`) |
+| `POST` | `/api/v1/clients/{client_id}/shows` | Create a new show |
 | `GET` | `/api/v1/episodes` | List episodes (filter with `?show_id=`, `?status=`, `?stage_id=`) |
-| `GET` | `/api/v1/deliverables` | List deliverables (filter with `?episode_id=`, `?status=`) |
 | `POST` | `/api/v1/shows/{show_id}/episodes` | Create a new episode for a show |
 | `PATCH` | `/api/v1/shows/{show_id}/episodes/{episode_id}` | Update an episode |
+| `GET` | `/api/v1/deliverables` | List deliverables (filter with `?episode_id=`, `?status=`) |
+| `POST` | `/api/v1/episodes/{episode_id}/deliverables` | Create a deliverable |
+| `PATCH` | `/api/v1/deliverables/{deliverable_id}` | Update a deliverable |
+| `POST` | `/api/v1/episodes/{episode_id}/transcribe` | Start audio transcription (Deepgram) |
+| `POST` | `/api/v1/episodes/{episode_id}/generate` | Generate AI content from transcript |
+| `POST` | `/api/v1/episodes/{episode_id}/pipeline` | Run full AI pipeline (transcribe + generate) |
+| `POST` | `/api/v1/ai/chat` | Stream AI chat response (SSE) |
+| `GET` | `/api/v1/storage` | Storage usage summary and file list |
+| `DELETE` | `/api/v1/storage/files/{file_id}` | Delete a stored file |
+| `GET` | `/api/v1/tags` | List all tags |
+| `POST` | `/api/v1/tags` | Create a tag |
+| `GET` | `/api/v1/webhook-endpoints` | List webhook endpoints |
+| `POST` | `/api/v1/webhook-endpoints` | Create a webhook endpoint |
 
 ### Query Parameters
 

@@ -1,12 +1,12 @@
-# PreRoll
+# PreRoll.io
 
 Production management platform for podcast producers who run multiple client shows. Track episodes through your pipeline, collect approvals, manage assets, publish — one place.
 
-**[preroll.io](https://preroll.io)** · [Docs](https://preroll.io/docs) · [Self-Hosting Guide](https://preroll.io/docs/self-hosting)
+**[preroll.io](https://preroll.io)** · [Docs](https://preroll.io/docs) · [Self-Hosting Guide](https://preroll.io/docs/developer/self-hosting)
 
 ## What it does
 
-PreRoll is the orchestration layer for podcast production services. It doesn't replace your editing tools, review platform, or hosting provider — it connects them and gives you the single source of truth for where everything is.
+PreRoll.io is the orchestration layer for podcast production services. It doesn't replace your editing tools, review platform, or hosting provider — it connects them and gives you the single source of truth for where everything is.
 
 - **Episode pipeline** with customizable stages per show and drag-and-drop kanban board
 - **Client portal** with magic-link auth, deliverable approvals, activity feed, and white-label branding
@@ -36,7 +36,7 @@ PreRoll is the orchestration layer for podcast production services. It doesn't r
 
 ## Self-hosting
 
-PreRoll can be fully self-hosted with all features included. Set `PREROLL_SELF_HOSTED=true` to bypass plan checks and billing.
+PreRoll.io can be fully self-hosted with all features included. Set `PREROLL_SELF_HOSTED=true` to bypass plan checks and billing.
 
 ### Quick start
 
@@ -46,7 +46,7 @@ git clone https://github.com/tro2789/preroll.io.git
 cd preroll.io
 
 # 2. Set up Supabase (self-hosted or cloud)
-#    See: https://preroll.io/docs/self-hosting
+#    See: https://preroll.io/docs/developer/self-hosting
 
 # 3. Run migrations
 supabase db push --db-url "postgresql://postgres:PASSWORD@localhost:5432/postgres"
@@ -69,7 +69,7 @@ npm start
 - Anthropic API key and Deepgram API key for AI features (bring your own keys)
 - OAuth app registrations for external integrations (Frame.io, Google Drive, Vimeo) — optional
 
-Full guide: [preroll.io/docs/self-hosting](https://preroll.io/docs/self-hosting)
+Full guide: [preroll.io/docs/developer/self-hosting](https://preroll.io/docs/developer/self-hosting)
 
 ## Development
 
