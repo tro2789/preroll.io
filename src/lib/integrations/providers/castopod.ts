@@ -125,13 +125,14 @@ export async function createEpisode(
   const ab = params.audioFile instanceof ArrayBuffer
     ? params.audioFile
     : params.audioFile.buffer.slice(params.audioFile.byteOffset, params.audioFile.byteOffset + params.audioFile.byteLength)
-  const blob = new Blob([ab as ArrayBuffer])
+  const mimeType = params.audioFilename.endsWith('.m4a') ? 'audio/mp4' : 'audio/mpeg'
+  const blob = new Blob([ab as ArrayBuffer], { type: mimeType })
   form.append('audio_file', blob, params.audioFilename)
 
-  if (params.description) form.append('description', params.description)
+  form.append('description', params.description || '')
+  form.append('type', params.episodeType || 'full')
   if (params.episodeNumber !== undefined) form.append('episode_number', String(params.episodeNumber))
   if (params.seasonNumber !== undefined) form.append('season_number', String(params.seasonNumber))
-  if (params.episodeType) form.append('type', params.episodeType)
 
   const json = (await castopodFetch(creds, '/episodes', {
     method: 'POST',
