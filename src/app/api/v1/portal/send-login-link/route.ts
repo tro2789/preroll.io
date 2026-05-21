@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       .eq('id', client.id)
   }
 
-  const siteUrl = await getSiteUrl()
+  const siteUrl = getSiteUrl()
   const shareUrl = `${siteUrl}/share/${inviteCode}`
   const producerName = user!.user_metadata?.full_name || user!.email?.split('@')[0] || 'Your producer'
 

@@ -6,16 +6,22 @@ export async function GET(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, user, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
     .from('deliverables')
-    .select('*, episodes(title)')
+    .select('*, episodes(title), shows(client_id, clients(org_id, client_user_id))')
     .eq('id', deliverableId)
     .single()
 
-  if (dbError) return errorResponse(dbError.message, 404)
+  if (dbError || !data) return errorResponse('Deliverable not found', 404)
+
+  const client = (data.shows as Record<string, unknown>)?.clients as { org_id: string; client_user_id: string | null } | null
+  const isProducer = client?.org_id === org!.id
+  const isClient = client?.client_user_id === user!.id
+  if (!isProducer && !isClient) return errorResponse('Forbidden', 403)
+
   return jsonResponse(data)
 }
 

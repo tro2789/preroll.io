@@ -26,7 +26,12 @@ export async function GET() {
     return jsonResponse({ self_hosted: true, registered: false, info: null })
   }
 
-  const info = validateLicenseKey(orgData.license_key)
+  let info: LicenseInfo | null = null
+  try {
+    info = validateLicenseKey(orgData.license_key)
+  } catch {
+    // Signing key not configured — treat as unregistered
+  }
   return jsonResponse({
     self_hosted: true,
     registered: info !== null,
@@ -55,7 +60,12 @@ export async function POST(request: NextRequest) {
     issuedAt: new Date().toISOString(),
   }
 
-  const key = generateLicenseKey(info)
+  let key: string
+  try {
+    key = generateLicenseKey(info)
+  } catch {
+    return errorResponse('License signing key is not configured', 500)
+  }
 
   const supabase = createServiceClient()
   const { error: dbError } = await supabase

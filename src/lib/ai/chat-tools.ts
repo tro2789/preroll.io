@@ -352,7 +352,8 @@ export async function executeTool(
     case 'list_clients': {
       let query = supabase.from('clients').select('id, name, company, email, phone').eq('org_id', ctx.orgId).order('name')
       if (input.search) {
-        query = query.or(`name.ilike.%${input.search}%,company.ilike.%${input.search}%`)
+        const safeSearch = String(input.search).replace(/[%_,().]/g, '')
+        query = query.or(`name.ilike.%${safeSearch}%,company.ilike.%${safeSearch}%`)
       }
       const { data, error } = await query
       if (error) return { result: { error: error.message } }

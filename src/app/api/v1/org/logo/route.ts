@@ -4,7 +4,7 @@ import { requireRole } from '@/lib/org/roles'
 import { resolveImageUrl } from '@/lib/r2/client'
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_SIZE = 2 * 1024 * 1024
 
 const r2 = new S3Client({
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const extMap: Record<string, string> = {
-    'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/svg+xml': 'svg',
+    'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp',
   }
   const ext = extMap[file.type] || 'png'
   const key = `orgs/${org!.id}/logo.${ext}`

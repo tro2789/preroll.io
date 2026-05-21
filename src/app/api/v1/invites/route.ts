@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
   if (updateError) return errorResponse(updateError.message, 500)
 
-  const siteUrl = await getSiteUrl()
+  const siteUrl = getSiteUrl()
   const shareUrl = `${siteUrl}/share/${invite_code}`
 
   const emailSent = await sendEmail(

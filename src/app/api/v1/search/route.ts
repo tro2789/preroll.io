@@ -8,7 +8,10 @@ export async function GET(request: NextRequest) {
   const q = request.nextUrl.searchParams.get('q')?.trim()
   if (!q || q.length < 2) return jsonResponse({ episodes: [], shows: [], clients: [] })
 
-  const pattern = `%${q}%`
+  const safeQ = q.replace(/[%_,().]/g, '')
+  if (!safeQ) return jsonResponse({ episodes: [], shows: [], clients: [] })
+
+  const pattern = `%${safeQ}%`
 
   const [episodesResult, showsResult, clientsResult] = await Promise.all([
     supabase!

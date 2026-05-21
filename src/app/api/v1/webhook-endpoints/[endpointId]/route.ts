@@ -1,4 +1,5 @@
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { isAllowedWebhookUrl } from '@/lib/webhooks/validate-url'
 
 const VALID_EVENTS = [
   'episode.status_changed',
@@ -16,13 +17,14 @@ export async function GET(
   { params }: { params: Promise<{ endpointId: string }> }
 ) {
   const { endpointId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
     .from('webhook_endpoints')
     .select('id, url, events, is_active, description, created_at, updated_at')
     .eq('id', endpointId)
+    .eq('org_id', org!.id)
     .single()
 
   if (dbError) return errorResponse('Webhook endpoint not found', 404)
@@ -34,7 +36,7 @@ export async function PATCH(
   { params }: { params: Promise<{ endpointId: string }> }
 ) {
   const { endpointId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -45,6 +47,9 @@ export async function PATCH(
       new URL(body.url)
     } catch {
       return errorResponse('url must be a valid URL')
+    }
+    if (!isAllowedWebhookUrl(body.url)) {
+      return errorResponse('Webhook URL must use HTTPS and point to a public address')
     }
     updates.url = body.url
   }
@@ -64,6 +69,7 @@ export async function PATCH(
     .from('webhook_endpoints')
     .update(updates)
     .eq('id', endpointId)
+    .eq('org_id', org!.id)
     .select('id, url, events, is_active, description, created_at, updated_at')
     .single()
 
@@ -76,13 +82,14 @@ export async function DELETE(
   { params }: { params: Promise<{ endpointId: string }> }
 ) {
   const { endpointId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { error: dbError } = await supabase!
     .from('webhook_endpoints')
     .delete()
     .eq('id', endpointId)
+    .eq('org_id', org!.id)
 
   if (dbError) return errorResponse(dbError.message, 500)
   return new Response(null, { status: 204 })

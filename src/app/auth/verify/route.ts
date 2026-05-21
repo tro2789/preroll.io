@@ -5,7 +5,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type')
-  const next = searchParams.get('next') || '/portal'
+  const rawNext = searchParams.get('next') || '/portal'
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/portal'
 
   const redirectUrl = request.nextUrl.clone()
 
@@ -58,8 +59,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  redirectUrl.pathname = next
-  redirectUrl.search = ''
+  const nextUrl = new URL(next, redirectUrl.origin)
+  redirectUrl.pathname = nextUrl.pathname
+  redirectUrl.search = nextUrl.search
 
   const redirect = NextResponse.redirect(redirectUrl)
   response.cookies.getAll().forEach((cookie) => {

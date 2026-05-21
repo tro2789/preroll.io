@@ -16,11 +16,11 @@ export async function POST(request: Request) {
     .eq('token', token)
     .single()
 
-  if (fetchError || !invite) return errorResponse('Invalid invite token', 404)
-  if (invite.accepted_at) return errorResponse('This invite has already been accepted', 400)
-  if (new Date(invite.expires_at) < new Date()) return errorResponse('This invite has expired', 400)
+  if (fetchError || !invite) return errorResponse('Unable to process this invite link', 400)
+  if (invite.accepted_at) return errorResponse('Unable to process this invite link', 400)
+  if (new Date(invite.expires_at) < new Date()) return errorResponse('Unable to process this invite link', 400)
 
-  const siteUrl = await getSiteUrl()
+  const siteUrl = getSiteUrl()
   const joinPath = `/team/join?token=${token}`
   const fallbackUrl = `${siteUrl}${joinPath}`
   const loginUrl = await generateMagicLinkUrl(invite.email, siteUrl, joinPath, fallbackUrl)

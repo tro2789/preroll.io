@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { NextRequest } from 'next/server';
 
 export async function GET(
@@ -7,7 +7,11 @@ export async function GET(
   props: { params: Promise<{ slug: string[] }> }
 ) {
   const { slug } = await props.params;
-  const filePath = join(process.cwd(), 'content/docs', `${slug.join('/')}.mdx`);
+  const baseDir = join(process.cwd(), 'content/docs');
+  const filePath = resolve(baseDir, `${slug.join('/')}.mdx`);
+  if (!filePath.startsWith(baseDir + '/')) {
+    return new Response('Not found', { status: 404 });
+  }
 
   try {
     const raw = await readFile(filePath, 'utf-8');

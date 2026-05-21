@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server'
-import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getAuthenticatedClientOrPortalUser, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 
 const FRAMEIO_API = 'https://api.frame.io/v4'
 
 async function getFrameIoContext(
-  supabase: Awaited<ReturnType<typeof getAuthenticatedClient>>['supabase'],
+  supabase: Awaited<ReturnType<typeof getAuthenticatedClientOrPortalUser>>['supabase'],
   deliverableId: string
 ) {
   const [{ data: deliverable }, { data: fileRef }] = await Promise.all([
@@ -48,7 +48,7 @@ export async function GET(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, error } = await getAuthenticatedClientOrPortalUser()
   if (error) return error
 
   const { data: localComments, error: dbError } = await supabase!
@@ -127,7 +127,7 @@ export async function POST(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, user, error } = await getAuthenticatedClient()
+  const { supabase, user, error } = await getAuthenticatedClientOrPortalUser()
   if (error) return error
 
   const body = await request.json()

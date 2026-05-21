@@ -1,13 +1,9 @@
-import { headers } from 'next/headers'
 import nodemailer from 'nodemailer'
 import { createServiceClient } from '@/lib/supabase/server'
 import { isSelfHosted } from '@/lib/entitlements'
 
-export async function getSiteUrl(): Promise<string> {
-  const headersList = await headers()
-  const host = headersList.get('host') || 'dev.preroll.io'
-  const protocol = host.includes('localhost') || host.includes('192.168') ? 'http' : 'https'
-  return `${protocol}://${host}`
+export function getSiteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://preroll.io'
 }
 
 export async function generateMagicLinkUrl(

@@ -59,7 +59,7 @@ export async function GET(
     }
   }
 
-  const siteUrl = await getSiteUrl()
+  const siteUrl = getSiteUrl()
   const magicLinkUrl = await generateMagicLinkUrl(
     client.email,
     siteUrl,

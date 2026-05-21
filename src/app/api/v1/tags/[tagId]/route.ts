@@ -6,7 +6,7 @@ export async function PATCH(
   { params }: { params: Promise<{ tagId: string }> }
 ) {
   const { tagId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
@@ -22,6 +22,7 @@ export async function PATCH(
     .from('tags')
     .update(updateData)
     .eq('id', tagId)
+    .eq('org_id', org!.id)
     .select()
     .single()
 
@@ -34,13 +35,14 @@ export async function DELETE(
   { params }: { params: Promise<{ tagId: string }> }
 ) {
   const { tagId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { error: dbError } = await supabase!
     .from('tags')
     .delete()
     .eq('id', tagId)
+    .eq('org_id', org!.id)
 
   if (dbError) return errorResponse(dbError.message, 500)
   return new Response(null, { status: 204 })

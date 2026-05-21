@@ -88,7 +88,7 @@ export async function POST(
     .eq('org_id', client.org_id)
 
   if (members && members.length > 0) {
-    const siteUrl = await getSiteUrl()
+    const siteUrl = getSiteUrl()
     const episodeUrl = `${siteUrl}/app/shows/${showId}/episodes/${episode.id}`
     const subject = `New episode request: ${episode.title}`
     const detailLines = [

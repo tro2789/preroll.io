@@ -1,5 +1,6 @@
 import { getAdminClient } from '@/lib/admin/api-auth'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getSiteUrl, generateMagicLinkUrl, sendEmail } from '@/lib/email/send'
 
 export async function POST(
   _request: Request,
@@ -24,16 +25,21 @@ export async function POST(
     return errorResponse('User has no email address', 400)
   }
 
-  const { data: linkData, error: linkError } = await service!
-    .auth.admin.generateLink({ type: 'magiclink', email: profile.email })
+  const siteUrl = getSiteUrl()
+  const loginUrl = await generateMagicLinkUrl(profile.email, siteUrl, '/app', `${siteUrl}/login`)
 
-  if (linkError) {
-    return errorResponse(linkError.message, 500)
+  const emailSent = await sendEmail(
+    profile.email,
+    'Your login link for PreRoll',
+    `<p>Click below to sign in to PreRoll:</p><p><a href="${loginUrl}">Sign in to PreRoll</a></p><p>This link expires in 24 hours.</p>`,
+  )
+
+  if (!emailSent) {
+    return errorResponse('Failed to send magic link email', 500)
   }
 
   return jsonResponse({
     email: profile.email,
     sent: true,
-    properties: linkData.properties,
   })
 }

@@ -1,6 +1,10 @@
 import { createHmac } from 'crypto'
 
-const SIGNING_KEY = process.env.INTEGRATION_ENCRYPTION_KEY || 'preroll-license-v1'
+function getSigningKey(): string {
+  const key = process.env.INTEGRATION_ENCRYPTION_KEY
+  if (!key) throw new Error('INTEGRATION_ENCRYPTION_KEY is required')
+  return key
+}
 
 export interface LicenseInfo {
   email: string
@@ -17,7 +21,7 @@ function base64UrlDecode(str: string): string {
 }
 
 function sign(payload: string): string {
-  return createHmac('sha256', SIGNING_KEY).update(payload).digest('base64url')
+  return createHmac('sha256', getSigningKey()).update(payload).digest('base64url')
 }
 
 export function generateLicenseKey(info: LicenseInfo): string {
@@ -55,6 +59,10 @@ export function getLicenseStatus(): { registered: boolean; info: LicenseInfo | n
   const key = process.env.PREROLL_LICENSE_KEY
   if (!key) return { registered: false, info: null }
 
-  const info = validateLicenseKey(key)
-  return { registered: info !== null, info }
+  try {
+    const info = validateLicenseKey(key)
+    return { registered: info !== null, info }
+  } catch {
+    return { registered: false, info: null }
+  }
 }

@@ -890,7 +890,10 @@ function sanitizeHtml(html: string): string {
     if (match.startsWith('</')) return `</${lower}>`
     if (lower === 'a') {
       const href = match.match(/href="([^"]*)"/)
-      return href ? `<a href="${href[1]}" target="_blank" rel="noopener noreferrer">` : ''
+      if (href && /^https?:\/\//i.test(href[1])) {
+        return `<a href="${href[1]}" target="_blank" rel="noopener noreferrer">`
+      }
+      return ''
     }
     return `<${lower}>`
   })

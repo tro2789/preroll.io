@@ -74,10 +74,8 @@ export async function POST(request: Request) {
 
   if (insertError) return errorResponse(insertError.message, 500)
 
-  const [siteUrl, { data: orgData }] = await Promise.all([
-    getSiteUrl(),
-    service.from('organizations').select('name').eq('id', org!.id).single(),
-  ])
+  const siteUrl = getSiteUrl()
+  const { data: orgData } = await service.from('organizations').select('name').eq('id', org!.id).single()
 
   const joinPath = `/team/join?token=${token}`
   const fallbackUrl = `${siteUrl}${joinPath}`

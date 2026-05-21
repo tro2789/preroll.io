@@ -60,6 +60,9 @@ export async function PATCH(request: NextRequest) {
     if (css.length > 10000) {
       return errorResponse('Custom CSS must be under 10,000 characters')
     }
+    if (/<\/?(?:script|style|iframe|object|embed|form|input|link|meta|base)[^>]*>/gi.test(css)) {
+      return errorResponse('Custom CSS must not contain HTML tags')
+    }
     update.portal_custom_css = css || null
   }
 
