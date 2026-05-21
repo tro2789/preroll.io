@@ -105,6 +105,15 @@ Configure in your MCP client:
 }
 ```
 
+### n8n node
+
+The [n8n community node](https://github.com/tro2789/n8n-nodes-preroll) lets you use PreRoll.io as a native node in n8n workflows — create episodes, update clients, run AI pipelines, and trigger workflows on events.
+
+```bash
+# Install in n8n via Settings > Community Nodes
+n8n-nodes-preroll
+```
+
 ## Pricing (hosted)
 
 All new accounts start with a 7-day Studio trial.
