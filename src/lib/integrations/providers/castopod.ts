@@ -21,6 +21,7 @@ export interface CastopodPodcast {
 
 export interface CastopodEpisode {
   id: number
+  guid: string
   title: string
   slug: string
   podcast_id: number

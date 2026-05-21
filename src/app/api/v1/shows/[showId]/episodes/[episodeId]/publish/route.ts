@@ -199,9 +199,7 @@ async function handleCastopodPublish(
     })
   }
 
-  const responseSlug = castopodEpisode.slug || castopodSlugify(title)
-  const instanceBase = creds.instanceUrl.replace(/\/+$/, '')
-  const episodeUrl = `${instanceBase}/episode/${responseSlug}`
+  const episodeUrl = castopodEpisode.guid || ''
 
   await Promise.all([
     supabase
