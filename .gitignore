@@ -45,3 +45,8 @@ next-env.d.ts
 
 # worktrees
 .worktrees/
+
+# internal docs (plans, setup guides, checklists)
+/docs/
+CLAUDE.md
+PRODUCT.md
