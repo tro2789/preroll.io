@@ -56,12 +56,14 @@ export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: Pip
   const { isCollapsed, toggle, expand } = useCollapsedColumns(`pipeline-${showId}`)
   const { compact, toggle: toggleCompact } = useCompactView()
 
-  const columns: KanbanColumn[] = sortedStages.map((stage) => ({
-    id: stage.id,
-    name: stage.name,
-    stageIds: [stage.id],
-    wipLimit: stage.wip_limit ?? null,
-  }))
+  const columns: KanbanColumn[] = sortedStages
+    .filter((stage) => stage.name.toLowerCase() !== 'published')
+    .map((stage) => ({
+      id: stage.id,
+      name: stage.name,
+      stageIds: [stage.id],
+      wipLimit: stage.wip_limit ?? null,
+    }))
 
   const {
     episodes,

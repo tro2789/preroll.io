@@ -49,6 +49,7 @@ export default async function PortalShowPage({
       .from('episodes')
       .select('id, title, episode_number, status, stage_id, scheduled_publish_date')
       .eq('show_id', showId)
+      .not('status', 'eq', 'published')
       .is('archived_at', null)
       .order('episode_number', { ascending: true, nullsFirst: false }),
     supabase

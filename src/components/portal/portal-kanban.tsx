@@ -28,7 +28,7 @@ interface PortalKanbanProps {
 }
 
 export function PortalKanban({ showId, episodes, stages }: PortalKanbanProps) {
-  const sortedStages = useMemo(() => [...stages].sort((a, b) => a.position - b.position), [stages])
+  const sortedStages = useMemo(() => [...stages].filter((s) => s.name.toLowerCase() !== 'published').sort((a, b) => a.position - b.position), [stages])
   const { compact, toggle: toggleCompact } = useCompactView()
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState(() => sortedStages[0]?.id ?? '')

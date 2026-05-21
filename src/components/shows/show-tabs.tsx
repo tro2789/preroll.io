@@ -10,10 +10,12 @@ import { ShowTemplatesTab } from '@/components/shows/show-templates-tab'
 import { ClientPortalSection } from '@/components/client-portal-section'
 import { DistributionSettings } from '@/components/shows/distribution-settings'
 import { ShowAiSettings } from '@/components/shows/show-ai-settings'
+import { PublishedEpisodesTab } from '@/components/shows/published-episodes-tab'
 import { ALL_GENERATION_TYPES } from '@/lib/ai/constants'
 
 const TABS = [
   { key: 'episodes', label: 'Episodes' },
+  { key: 'published', label: 'Published' },
   { key: 'assets', label: 'Assets' },
   { key: 'share', label: 'Share' },
   { key: 'details', label: 'Details' },
@@ -73,15 +75,27 @@ interface ClientData {
   onboarded_at: string | null
 }
 
+export interface PublishedEpisode {
+  id: string
+  title: string
+  episode_number: number | null
+  status: string
+  scheduled_publish_date: string | null
+  published_at: string | null
+  image_url: string | null
+  show_id: string
+}
+
 interface ShowTabsProps {
   show: ShowData
   client: ClientData | null
   stages: Stage[]
   episodes: Episode[]
+  publishedEpisodes: PublishedEpisode[]
   resolvedCoverArtUrl: string | null
 }
 
-export function ShowTabs({ show, client, stages, episodes, resolvedCoverArtUrl }: ShowTabsProps) {
+export function ShowTabs({ show, client, stages, episodes, publishedEpisodes, resolvedCoverArtUrl }: ShowTabsProps) {
   const searchParams = useSearchParams()
   const initialTab = TABS.find((t) => t.key === searchParams.get('tab'))?.key || 'episodes'
   const [activeTab, setActiveTab] = useState<Tab>(initialTab)
@@ -124,7 +138,11 @@ export function ShowTabs({ show, client, stages, episodes, resolvedCoverArtUrl }
       </div>
 
       <nav className="mt-6 flex gap-1 border-b border-border-default overflow-x-auto overflow-y-hidden">
-        {TABS.filter((tab) => tab.key !== 'share' || client).map((tab) => (
+        {TABS.filter((tab) => {
+          if (tab.key === 'share') return !!client
+          if (tab.key === 'published') return publishedEpisodes.length > 0
+          return true
+        }).map((tab) => (
           <button
             key={tab.key}
             onClick={() => switchTab(tab.key)}
@@ -154,6 +172,10 @@ export function ShowTabs({ show, client, stages, episodes, resolvedCoverArtUrl }
               />
             )}
           </section>
+        )}
+
+        {activeTab === 'published' && (
+          <PublishedEpisodesTab showId={show.id} episodes={publishedEpisodes} />
         )}
 
         {activeTab === 'assets' && (
