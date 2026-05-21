@@ -262,10 +262,12 @@ export function PublishDialog({
       return
     }
 
+    setUploadProgress(-1)
     const downloadRes = await fetch(data.downloadUrl)
     if (!downloadRes.ok) throw new Error('Failed to download video from storage')
     const videoBlob = await downloadRes.blob()
 
+    setUploadProgress(startOffset > 0 ? Math.round((startOffset / totalSize) * 100) : 0)
     let offset = startOffset
 
     while (offset < totalSize) {
@@ -293,6 +295,7 @@ export function PublishDialog({
         }
 
         localStorage.removeItem(`yt-upload:${episodeId}`)
+        setUploadProgress(100)
 
         const finalizeRes = await fetch(
           `/api/v1/shows/${data.showId}/episodes/${data.episodeId}/publish/finalize`,
@@ -515,9 +518,11 @@ export function PublishDialog({
               className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {publishing
-                ? uploadProgress !== null
-                  ? `Uploading to YouTube — ${uploadProgress}%`
-                  : 'Publishing...'
+                ? uploadProgress === -1
+                  ? 'Preparing video...'
+                  : uploadProgress !== null
+                    ? `Uploading to YouTube — ${uploadProgress}%`
+                    : 'Publishing...'
                 : publishMode === 'schedule'
                   ? 'Schedule'
                   : `Publish to ${providerName}`}
