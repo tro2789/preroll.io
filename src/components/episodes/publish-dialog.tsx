@@ -267,7 +267,8 @@ export function PublishDialog({
     if (!downloadRes.ok) throw new Error('Failed to download video from storage')
     const videoBlob = await downloadRes.blob()
 
-    setUploadProgress(startOffset > 0 ? Math.round((startOffset / totalSize) * 100) : 0)
+    const isMultiChunk = totalSize - startOffset > CHUNK_SIZE
+    setUploadProgress(isMultiChunk ? (startOffset > 0 ? Math.round((startOffset / totalSize) * 100) : 0) : -2)
     let offset = startOffset
 
     while (offset < totalSize) {
@@ -520,9 +521,11 @@ export function PublishDialog({
               {publishing
                 ? uploadProgress === -1
                   ? 'Preparing video...'
-                  : uploadProgress !== null
-                    ? `Uploading to YouTube — ${uploadProgress}%`
-                    : 'Publishing...'
+                  : uploadProgress === -2
+                    ? 'Uploading to YouTube...'
+                    : uploadProgress !== null && uploadProgress >= 0
+                      ? `Uploading to YouTube — ${uploadProgress}%`
+                      : 'Publishing...'
                 : publishMode === 'schedule'
                   ? 'Schedule'
                   : `Publish to ${providerName}`}
