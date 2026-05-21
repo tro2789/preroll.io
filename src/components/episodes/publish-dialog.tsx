@@ -196,10 +196,8 @@ export function PublishDialog({
     try {
       const res = await fetch(resumableUrl, {
         method: 'PUT',
-        headers: {
-          'Content-Range': `bytes */${totalSize}`,
-          'Content-Length': '0',
-        },
+        headers: { 'Content-Range': `bytes */${totalSize}` },
+        body: null,
       })
       if (res.status === 308) {
         const range = res.headers.get('Range')
@@ -207,14 +205,62 @@ export function PublishDialog({
           const match = range.match(/bytes=0-(\d+)/)
           if (match) return parseInt(match[1], 10) + 1
         }
+        return 0
       }
-    } catch {}
+      if (res.status === 200 || res.status === 201) {
+        return totalSize
+      }
+      if (res.status === 404) {
+        throw new Error('Upload session expired. Please try again.')
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('expired')) throw err
+    }
     return 0
+  }
+
+  async function uploadChunkWithRetry(
+    resumableUrl: string, chunk: Blob, offset: number, end: number, totalSize: number, mimeType: string,
+  ): Promise<Response> {
+    const MAX_RETRIES = 5
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const res = await fetch(resumableUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
+            'Content-Type': mimeType,
+          },
+          body: chunk,
+        })
+        if (res.status >= 500 && attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 32000)))
+          continue
+        }
+        if (res.status === 404) {
+          throw new Error('Upload session expired. Please try again.')
+        }
+        return res
+      } catch (err) {
+        if (attempt < MAX_RETRIES && err instanceof TypeError) {
+          await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 32000)))
+          continue
+        }
+        throw err
+      }
+    }
+    throw new Error('YouTube upload failed after retries')
   }
 
   async function streamToYouTube(data: UploadState, startOffset: number) {
     const CHUNK_SIZE = 16 * 1024 * 1024
     const totalSize = data.fileSize
+
+    if (startOffset >= totalSize) {
+      localStorage.removeItem(`yt-upload:${episodeId}`)
+      setResult({})
+      return
+    }
 
     const downloadRes = await fetch(data.downloadUrl)
     if (!downloadRes.ok) throw new Error('Failed to download video from storage')
@@ -228,14 +274,7 @@ export function PublishDialog({
       const isLast = end >= totalSize
 
       if (!isLast) {
-        const putRes = await fetch(data.resumableUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
-            'Content-Type': data.mimeType,
-          },
-          body: chunk,
-        })
+        const putRes = await uploadChunkWithRetry(data.resumableUrl, chunk, offset, end, totalSize, data.mimeType)
         if (!putRes.ok && putRes.status !== 308) {
           throw new Error(`YouTube upload failed (${putRes.status})`)
         }
@@ -243,25 +282,19 @@ export function PublishDialog({
         let videoId: string | undefined
 
         try {
-          const putRes = await fetch(data.resumableUrl, {
-            method: 'PUT',
-            headers: {
-              'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
-              'Content-Type': data.mimeType,
-            },
-            body: chunk,
-          })
+          const putRes = await uploadChunkWithRetry(data.resumableUrl, chunk, offset, end, totalSize, data.mimeType)
           if (putRes.ok) {
             const result = await putRes.json()
             videoId = result.id
           }
-        } catch {
+        } catch (err) {
+          if (!(err instanceof TypeError)) throw err
           // CORS blocks reading YouTube's final response — upload succeeded
         }
 
         localStorage.removeItem(`yt-upload:${episodeId}`)
 
-        await fetch(
+        const finalizeRes = await fetch(
           `/api/v1/shows/${data.showId}/episodes/${data.episodeId}/publish/finalize`,
           {
             method: 'POST',
@@ -274,7 +307,11 @@ export function PublishDialog({
               channel_id: data.channel_id,
             }),
           }
-        ).catch(() => {})
+        )
+
+        if (!finalizeRes.ok) {
+          toast.error('Video uploaded to YouTube but failed to update PreRoll. Refresh the page.')
+        }
 
         setResult({
           view_url: videoId ? `https://youtube.com/watch?v=${videoId}` : undefined,

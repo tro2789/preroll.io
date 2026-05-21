@@ -6,11 +6,6 @@ export interface YouTubeChannel {
   thumbnailUrl?: string
 }
 
-export interface YouTubeUploadResult {
-  videoId: string
-  viewUrl: string
-}
-
 export interface PublishToYouTubeParams {
   title: string
   description?: string
@@ -86,32 +81,6 @@ export async function initiateVideoUpload(
   const resumableUrl = res.headers.get('location')
   if (!resumableUrl) throw new Error('YouTube did not return a resumable upload URL')
   return resumableUrl
-}
-
-export async function uploadVideoBytes(
-  resumableUrl: string,
-  videoBuffer: ArrayBuffer,
-  mimeType: string = 'video/mp4'
-): Promise<YouTubeUploadResult> {
-  const res = await fetch(resumableUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': mimeType,
-      'Content-Length': String(videoBuffer.byteLength),
-    },
-    body: videoBuffer,
-  })
-
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`YouTube upload failed ${res.status}: ${body}`)
-  }
-
-  const data = await res.json()
-  return {
-    videoId: data.id,
-    viewUrl: `https://youtube.com/watch?v=${data.id}`,
-  }
 }
 
 export async function setThumbnail(
