@@ -118,7 +118,7 @@ export function PublishDialog({
         provider,
         title,
         description,
-        scheduled_at: publishMode === 'schedule' ? scheduledAt : undefined,
+        scheduled_at: publishMode === 'schedule' ? new Date(scheduledAt).toISOString() : undefined,
       }
 
       if (isYouTube) {
