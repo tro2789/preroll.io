@@ -53,3 +53,10 @@ PRODUCT.md
 
 # claude code config
 .claude/
+
+# mcp / serena config
+.mcp.json
+.serena/
+
+# supabase local state
+supabase/.temp/
