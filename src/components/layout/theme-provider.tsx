@@ -7,7 +7,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     <div id="app-theme-root">
       <script
         dangerouslySetInnerHTML={{
-          __html: `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');if(t&&t!=='${DEFAULT_THEME}')document.getElementById('app-theme-root').classList.add('theme-'+t)}catch(e){}})()`,
+          __html: `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');if(t&&t!=='${DEFAULT_THEME}'){document.getElementById('app-theme-root').classList.add('theme-'+t);document.documentElement.classList.add('theme-'+t)}}catch(e){}})()`,
         }}
       />
       {children}

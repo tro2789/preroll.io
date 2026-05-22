@@ -139,11 +139,12 @@ export default function AppearancePage() {
   function applyTheme(themeId: string) {
     setActiveTheme(themeId)
 
-    const root = document.getElementById('app-theme-root')
-    if (root) {
-      THEMES.forEach((t) => root.classList.remove(`theme-${t.id}`))
+    const targets = [document.getElementById('app-theme-root'), document.documentElement]
+    for (const el of targets) {
+      if (!el) continue
+      THEMES.forEach((t) => el.classList.remove(`theme-${t.id}`))
       if (themeId !== DEFAULT_THEME) {
-        root.classList.add(`theme-${themeId}`)
+        el.classList.add(`theme-${themeId}`)
       }
     }
 
