@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
+import { UploadToast } from './upload-toast'
 
 interface UploadingFile {
   name: string
@@ -395,27 +396,18 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
   useEffect(() => {
     for (const u of uploads) {
       const existing = toastIdsRef.current.get(u.name)
-      const pct = u.totalBytes > 0 ? Math.round((u.uploadedBytes / u.totalBytes) * 100) : 0
+      const render = () => <UploadToast {...u} />
 
-      if (u.status === 'done') {
+      if (u.status === 'done' || u.status === 'error') {
         if (existing) {
-          toast.success(`${u.name} uploaded`, { id: existing })
+          toast.custom(render, { id: existing, duration: 4000 })
           toastIdsRef.current.delete(u.name)
         }
-      } else if (u.status === 'error') {
-        if (existing) {
-          toast.error(`${u.name} failed to upload`, { id: existing })
-          toastIdsRef.current.delete(u.name)
-        }
+      } else if (existing) {
+        toast.custom(render, { id: existing, duration: Infinity })
       } else {
-        const shortName = u.name.length > 30 ? u.name.slice(0, 27) + '...' : u.name
-        const msg = `Uploading ${shortName} — ${pct}%`
-        if (existing) {
-          toast.loading(msg, { id: existing })
-        } else {
-          const id = toast.loading(msg)
-          toastIdsRef.current.set(u.name, id)
-        }
+        const id = toast.custom(render, { duration: Infinity })
+        toastIdsRef.current.set(u.name, id)
       }
     }
   }, [uploads])
