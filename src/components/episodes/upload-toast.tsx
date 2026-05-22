@@ -27,17 +27,21 @@ function fileIcon(name: string) {
   return <FileIcon className="size-5 shrink-0 text-text-secondary" />
 }
 
+const toastShell = "w-[356px] rounded-lg border border-border-default bg-surface-raised p-4 shadow-lg"
+
 export function UploadToast({ name, totalBytes, uploadedBytes, status, error }: UploadToastProps) {
   const pct = totalBytes > 0 ? Math.round((uploadedBytes / totalBytes) * 100) : 0
   const shortName = name.length > 35 ? name.slice(0, 32) + '...' : name
 
   if (status === 'done') {
     return (
-      <div className="flex items-center gap-3 w-[356px]">
-        <CircleCheckIcon className="size-5 shrink-0 text-success" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-text-primary truncate">{shortName}</p>
-          <p className="text-xs text-text-secondary mt-0.5">Upload complete</p>
+      <div className={toastShell}>
+        <div className="flex items-center gap-3">
+          <CircleCheckIcon className="size-5 shrink-0 text-success" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-text-primary truncate">{shortName}</p>
+            <p className="text-xs text-text-secondary mt-0.5">Upload complete</p>
+          </div>
         </div>
       </div>
     )
@@ -45,28 +49,32 @@ export function UploadToast({ name, totalBytes, uploadedBytes, status, error }: 
 
   if (status === 'error') {
     return (
-      <div className="flex items-center gap-3 w-[356px]">
-        <OctagonXIcon className="size-5 shrink-0 text-error" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-text-primary truncate">{shortName}</p>
-          <p className="text-xs text-error mt-0.5">{error || 'Upload failed'}</p>
+      <div className={toastShell}>
+        <div className="flex items-center gap-3">
+          <OctagonXIcon className="size-5 shrink-0 text-error" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-text-primary truncate">{shortName}</p>
+            <p className="text-xs text-error mt-0.5">{error || 'Upload failed'}</p>
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex gap-3 w-[356px]">
-      <Loader2Icon className="size-5 shrink-0 text-accent animate-spin mt-0.5" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium text-text-primary truncate">{shortName}</p>
-          <span className="text-xs tabular-nums text-text-secondary shrink-0">{pct}%</span>
+    <div className={toastShell}>
+      <div className="flex gap-3">
+        <Loader2Icon className="size-5 shrink-0 text-accent animate-spin mt-0.5" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium text-text-primary truncate">{shortName}</p>
+            <span className="text-xs tabular-nums text-text-secondary shrink-0">{pct}%</span>
+          </div>
+          <Progress value={pct} className="mt-1.5 [&_[data-slot=progress-track]]:h-1.5 [&_[data-slot=progress-track]]:bg-surface-overlay [&_[data-slot=progress-indicator]]:bg-accent" />
+          <p className="text-xs text-text-secondary mt-1">
+            {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
+          </p>
         </div>
-        <Progress value={pct} className="mt-1.5 [&_[data-slot=progress-track]]:h-1.5 [&_[data-slot=progress-indicator]]:bg-accent" />
-        <p className="text-xs text-text-secondary mt-1">
-          {formatBytes(uploadedBytes)} / {formatBytes(totalBytes)}
-        </p>
       </div>
     </div>
   )
