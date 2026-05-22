@@ -8,7 +8,7 @@ interface UploadingFile {
   name: string
   totalBytes: number
   uploadedBytes: number
-  status: 'uploading' | 'done' | 'error'
+  status: 'uploading' | 'done' | 'error' | 'cancelled'
   error?: string
 }
 
@@ -42,6 +42,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
   const activeCountRef = useRef(0)
   const queueRef = useRef<File[]>([])
   const dragCountRef = useRef(0)
+  const abortControllersRef = useRef<Map<string, AbortController>>(new Map())
 
   const updateUpload = useCallback((name: string, updates: Partial<UploadingFile>) => {
     setUploads((prev) =>
@@ -52,6 +53,9 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
   const processFile = useCallback(
     async (file: File) => {
       activeCountRef.current++
+      const controller = new AbortController()
+      abortControllersRef.current.set(file.name, controller)
+      const { signal } = controller
       try {
         if (acceptedMimeTypes && file.type && !matchesMimeType(file.type, acceptedMimeTypes)) {
           throw new Error(`${file.type.split('/')[0]} files are not supported by this provider — only ${acceptedMimeTypes.join(', ')} allowed`)
@@ -61,6 +65,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: file.name, file_size: file.size, mime_type: file.type || null }),
+          signal,
         })
 
         if (!initRes.ok) {
@@ -84,13 +89,13 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         }
 
         if (uploadProtocol === 'resumable' && resumableUrl) {
-          await uploadResumable(file, resumableUrl)
+          await uploadResumable(file, resumableUrl, signal)
         } else if (uploadProtocol === 'tus' && tusUrl) {
-          await uploadTus(file, tusUrl)
+          await uploadTus(file, tusUrl, signal)
         } else if (uploadId && multipartParts) {
-          await uploadMultipart(file, fileId, uploadId, multipartParts)
+          await uploadMultipart(file, fileId, uploadId, multipartParts, signal)
         } else if (uploadUrls) {
-          await uploadPresignedChunks(file, uploadUrls)
+          await uploadPresignedChunks(file, uploadUrls, signal)
         } else {
           throw new Error('No supported upload method returned')
         }
@@ -101,9 +106,14 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
           generateThumbnail(file, fileRefId).catch(() => {})
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Upload failed'
-        updateUpload(file.name, { status: 'error', error: message })
+        if (signal.aborted) {
+          updateUpload(file.name, { status: 'cancelled' })
+        } else {
+          const message = err instanceof Error ? err.message : 'Upload failed'
+          updateUpload(file.name, { status: 'error', error: message })
+        }
       } finally {
+        abortControllersRef.current.delete(file.name)
         activeCountRef.current--
         const next = queueRef.current.shift()
         if (next) {
@@ -116,7 +126,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
     [episodeId, onUploadComplete, updateUpload]
   )
 
-  async function uploadMultipart(file: File, key: string, uploadId: string, parts: { url: string; partNumber: number; size: number }[]) {
+  async function uploadMultipart(file: File, key: string, uploadId: string, parts: { url: string; partNumber: number; size: number }[], signal: AbortSignal) {
     const completedParts: { partNumber: number; etag: string }[] = []
     let offset = 0
 
@@ -128,6 +138,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         method: 'PUT',
         headers: { 'Content-Type': file.type || 'application/octet-stream' },
         body: chunk,
+        signal,
       })
 
       if (!putRes.ok) throw new Error(`Chunk upload failed (${putRes.status})`)
@@ -143,6 +154,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, uploadId, parts: completedParts }),
+      signal,
     })
 
     if (!completeRes.ok) {
@@ -151,7 +163,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
     }
   }
 
-  async function uploadPresignedChunks(file: File, uploadUrls: { url: string; size: number }[]) {
+  async function uploadPresignedChunks(file: File, uploadUrls: { url: string; size: number }[], signal: AbortSignal) {
     let offset = 0
     for (const urlInfo of uploadUrls) {
       const chunkSize = urlInfo.size
@@ -164,6 +176,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
           'Content-Type': file.type || 'application/octet-stream',
         },
         body: chunk,
+        signal,
       })
 
       if (!putRes.ok) throw new Error(`Chunk upload failed (${putRes.status})`)
@@ -171,7 +184,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
     }
   }
 
-  async function uploadResumable(file: File, resumableUrl: string) {
+  async function uploadResumable(file: File, resumableUrl: string, signal: AbortSignal) {
     const CHUNK_SIZE = 5 * 1024 * 1024
 
     if (file.size <= CHUNK_SIZE) {
@@ -182,6 +195,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
             'Content-Type': file.type || 'application/octet-stream',
           },
           body: file,
+          signal,
         })
         if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`)
       } catch (err) {
@@ -209,6 +223,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
             'Content-Type': file.type || 'application/octet-stream',
           },
           body: chunk,
+          signal,
         })
 
         if (isLast) {
@@ -231,7 +246,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
     }
   }
 
-  async function uploadTus(file: File, tusUrl: string) {
+  async function uploadTus(file: File, tusUrl: string, signal: AbortSignal) {
     const CHUNK_SIZE = 5 * 1024 * 1024
     let offset = 0
 
@@ -249,6 +264,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
             'Tus-Resumable': '1.0.0',
           },
           body: chunk,
+          signal,
         })
 
         if (!patchRes.ok) throw new Error(`tus upload failed (${patchRes.status})`)
@@ -313,6 +329,16 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
       body: JSON.stringify({ key: initData.key }),
     })
   }
+
+  const cancelUpload = useCallback((name: string) => {
+    const controller = abortControllersRef.current.get(name)
+    if (controller) {
+      controller.abort()
+    } else {
+      queueRef.current = queueRef.current.filter((f) => f.name !== name)
+      setUploads((prev) => prev.map((u) => u.name === name && u.status === 'uploading' ? { ...u, status: 'cancelled' as const } : u))
+    }
+  }, [])
 
   const startUploads = useCallback(
     (files: File[]) => {
@@ -396,11 +422,16 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
   useEffect(() => {
     for (const u of uploads) {
       const existing = toastIdsRef.current.get(u.name)
-      const render = () => <UploadToast {...u} />
+      const render = () => <UploadToast {...u} onCancel={u.status === 'uploading' ? () => cancelUpload(u.name) : undefined} />
 
       if (u.status === 'done' || u.status === 'error') {
         if (existing) {
           toast.custom(render, { id: existing, duration: 4000 })
+          toastIdsRef.current.delete(u.name)
+        }
+      } else if (u.status === 'cancelled') {
+        if (existing) {
+          toast.dismiss(existing)
           toastIdsRef.current.delete(u.name)
         }
       } else if (existing) {
@@ -410,7 +441,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         toastIdsRef.current.set(u.name, id)
       }
     }
-  }, [uploads])
+  }, [uploads, cancelUpload])
 
   return (
     <>

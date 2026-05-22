@@ -1,14 +1,15 @@
 'use client'
 
-import { CircleCheckIcon, OctagonXIcon, FileVideoIcon, FileAudioIcon, FileIcon, Loader2Icon } from 'lucide-react'
+import { CircleCheckIcon, OctagonXIcon, FileVideoIcon, FileAudioIcon, FileIcon, Loader2Icon, XIcon } from 'lucide-react'
 import { Progress } from '@/components/ui/progress'
 
 interface UploadToastProps {
   name: string
   totalBytes: number
   uploadedBytes: number
-  status: 'uploading' | 'done' | 'error'
+  status: 'uploading' | 'done' | 'error' | 'cancelled'
   error?: string
+  onCancel?: () => void
 }
 
 function formatBytes(bytes: number): string {
@@ -29,7 +30,7 @@ function fileIcon(name: string) {
 
 const toastShell = "w-[356px] rounded-lg border border-border-default bg-surface-raised p-4 shadow-lg"
 
-export function UploadToast({ name, totalBytes, uploadedBytes, status, error }: UploadToastProps) {
+export function UploadToast({ name, totalBytes, uploadedBytes, status, error, onCancel }: UploadToastProps) {
   const pct = totalBytes > 0 ? Math.round((uploadedBytes / totalBytes) * 100) : 0
   const shortName = name.length > 35 ? name.slice(0, 32) + '...' : name
 
@@ -68,7 +69,17 @@ export function UploadToast({ name, totalBytes, uploadedBytes, status, error }: 
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-medium text-text-primary truncate">{shortName}</p>
-            <span className="text-xs tabular-nums text-text-secondary shrink-0">{pct}%</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs tabular-nums text-text-secondary">{pct}%</span>
+              {onCancel && (
+                <button
+                  onClick={onCancel}
+                  className="rounded-md p-0.5 text-text-tertiary hover:text-text-primary hover:bg-surface-overlay transition-colors"
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              )}
+            </div>
           </div>
           <Progress value={pct} className="mt-1.5 [&_[data-slot=progress-track]]:h-1.5 [&_[data-slot=progress-track]]:bg-surface-overlay [&_[data-slot=progress-indicator]]:bg-accent" />
           <p className="text-xs text-text-secondary mt-1">
