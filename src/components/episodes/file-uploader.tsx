@@ -112,9 +112,9 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
         if (signal.aborted) {
           updateUpload(file.name, { status: 'cancelled' })
           if (cleanupFileId) {
-            fetch(`/api/v1/episodes/${episodeId}/delivery/files/${cleanupFileId}`, { method: 'DELETE' })
-              .catch(() => {})
+            await fetch(`/api/v1/episodes/${episodeId}/delivery/files/${cleanupFileId}`, { method: 'DELETE' }).catch(() => {})
           }
+          onUploadComplete()
         } else {
           const message = err instanceof Error ? err.message : 'Upload failed'
           updateUpload(file.name, { status: 'error', error: message })
