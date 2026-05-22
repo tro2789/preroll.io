@@ -49,7 +49,7 @@ export default async function PortalLayout({
         <style>{`:root { --color-accent: ${accentColor}; }`}</style>
       )}
       {portalCustomCss && (
-        <style>{portalCustomCss}</style>
+        <style>{portalCustomCss.replace(/<\/?style[^>]*>/gi, '')}</style>
       )}
       {isPreview && <PortalPreviewBanner clientName={client.name} />}
       <PortalHeader

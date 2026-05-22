@@ -12,6 +12,7 @@ import { ThumbnailUpload } from '@/components/ui/thumbnail-upload'
 import { RichTextEditor } from '@/components/episodes/rich-text-editor'
 import type { IntegrationProvider } from '@/lib/integrations/types'
 import type { Deliverable } from '@/lib/constants/deliverables'
+import { ClientPortalSection } from '@/components/client-portal-section'
 
 type Tab = 'files' | 'content' | 'deliverables' | 'distribution' | 'activity'
 
@@ -61,6 +62,7 @@ interface EpisodeTabsProps {
   showId: string
   showName: string
   clientName: string | null
+  client: { id: string; name: string; email: string | null; invite_code: string | null; onboarded_at: string | null } | null
   stage: { id: string; name: string } | null
   stages: PipelineStage[]
   episode: {
@@ -126,7 +128,10 @@ function sanitizeHtml(html: string): string {
     if (match.startsWith('</')) return `</${lower}>`
     if (lower === 'a') {
       const href = match.match(/href="([^"]*)"/)
-      return href ? `<a href="${href[1]}" target="_blank" rel="noopener noreferrer">` : ''
+      if (href && /^https?:\/\//i.test(href[1])) {
+        return `<a href="${href[1]}" target="_blank" rel="noopener noreferrer">`
+      }
+      return ''
     }
     return `<${lower}>`
   })
@@ -154,7 +159,7 @@ function ShowNotesContent({ html }: { html: string }) {
 }
 
 export function EpisodeTabs({
-  episodeId, showId, showName, clientName, stage, stages, episode,
+  episodeId, showId, showName, clientName, client, stage, stages, episode,
   integration, deliverables, connectedProviders, hasIntegration,
   hasAudioFiles, fileCount, distributionConnections,
 }: EpisodeTabsProps) {
@@ -168,6 +173,9 @@ export function EpisodeTabs({
   const [editStage, setEditStage] = useState(false)
   const [imageUrl, setImageUrl] = useState(episode.image_url)
   const [saving, setSaving] = useState(false)
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [notesValue, setNotesValue] = useState(episode.notes || '')
+  const [savingNotes, setSavingNotes] = useState(false)
 
   const patchEpisode = async (fields: Record<string, unknown>) => {
     setSaving(true)
@@ -360,9 +368,8 @@ export function EpisodeTabs({
   const stageColor = stage ? STAGE_COLORS[stage.name.toLowerCase()] || undefined : undefined
 
   const showNotes = latestGenByType.get('show_notes')
-  const description = latestGenByType.get('description')
   const titleSuggestions = latestGenByType.get('title_suggestions')
-  const hasContent = showNotes || description || titleSuggestions
+  const hasAiContent = showNotes || titleSuggestions
 
   const sortedStages = [...stages].sort((a, b) => a.position - b.position)
 
@@ -461,82 +468,126 @@ export function EpisodeTabs({
           />
         )}
 
-        {/* Content tab — clean AI content */}
+        {/* Content tab — show notes + AI content */}
         {tab === 'content' && (
           <div>
             {aiLoading ? (
               <div className="py-12 text-center text-sm text-text-secondary">Loading...</div>
-            ) : !hasContent && !isRunning ? (
-              <div className="rounded-[10px] border border-border-subtle bg-surface-raised p-6 text-center space-y-3">
-                <p className="text-sm text-text-secondary">
-                  {hasAudio
-                    ? 'Run the AI pipeline to generate show notes, descriptions, and title suggestions.'
-                    : 'Upload or link audio to generate content from your episode.'}
-                </p>
-                {hasAudio && (
-                  <button
-                    onClick={handleRunPipeline}
-                    disabled={startingPipeline}
-                    className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
-                  >
-                    {startingPipeline ? 'Starting...' : 'Generate Content'}
-                  </button>
+            ) : (
+              <div className="space-y-6">
+                {/* Show Notes — always visible, manually editable */}
+                <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-[11px] border-b border-border-subtle">
+                    <h3 className="text-[13px] font-semibold text-text-primary">Show Notes</h3>
+                    <div className="flex items-center gap-1.5">
+                      {editingNotes ? (
+                        <>
+                          <button
+                            onClick={() => { setEditingNotes(false); setNotesValue(episode.notes || '') }}
+                            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={async () => {
+                              setSavingNotes(true)
+                              const ok = await patchEpisode({ notes: notesValue || null })
+                              if (ok) setEditingNotes(false)
+                              setSavingNotes(false)
+                            }}
+                            disabled={savingNotes}
+                            className="rounded bg-accent px-2 py-0.5 text-xs font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                          >
+                            {savingNotes ? 'Saving...' : 'Save'}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => { setNotesValue(episode.notes || ''); setEditingNotes(true) }}
+                          className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    {editingNotes ? (
+                      <RichTextEditor content={notesValue} onChange={setNotesValue} limit={4000} />
+                    ) : episode.notes ? (
+                      <ShowNotesContent html={episode.notes} />
+                    ) : (
+                      <p className="text-sm text-text-secondary py-2">
+                        No show notes yet. Click Edit to write them{hasAudio ? ', or generate them with AI below' : ''}.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pipeline running indicator */}
+                {isRunning && (
+                  <div className="flex items-center gap-2 text-sm text-text-secondary">
+                    <div className="h-4 w-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+                    Generating content...
+                  </div>
+                )}
+
+                {/* AI-generated suggestions */}
+                {hasAiContent && (
+                  <div>
+                    <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wide mb-3">AI Suggestions</h3>
+                    <div className="flex flex-col lg:flex-row gap-6 items-start">
+                      <div className="flex-1 min-w-0 space-y-6">
+                        {showNotes && (
+                          <ContentBlock
+                            type="show_notes"
+                            content={showNotes.result}
+                            onApply={(c) => handleApply('show_notes', c)}
+                            onRegenerate={() => handleGenerate('show_notes')}
+                            generating={generating === 'show_notes'}
+                          />
+                        )}
+                      </div>
+
+                      {titleSuggestions && (
+                        <div className="w-full lg:w-[340px] shrink-0">
+                          <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
+                            <div className="flex items-center justify-between px-4 py-[11px] border-b border-border-subtle">
+                              <h3 className="text-[13px] font-semibold text-text-primary">Title Suggestions</h3>
+                              <button
+                                onClick={() => handleGenerate('title_suggestions')}
+                                disabled={generating !== null}
+                                className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors disabled:opacity-50"
+                              >
+                                {generating === 'title_suggestions' ? 'Generating...' : 'Regenerate'}
+                              </button>
+                            </div>
+                            <TitleSuggestionsList content={titleSuggestions.result} onApplyTitle={handleApplyTitle} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Generate with AI */}
+                {hasAudio && !isRunning && (
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleRunPipeline}
+                      disabled={startingPipeline}
+                      className="rounded-md border border-accent/30 bg-accent/10 px-4 py-2 text-sm font-medium text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+                    >
+                      {startingPipeline ? 'Starting...' : 'Generate with AI'}
+                    </button>
+                    <span className="text-xs text-text-tertiary">Generate show notes and title suggestions from your audio.</span>
+                  </div>
+                )}
+                {!hasAudio && !hasAiContent && !episode.notes && (
+                  <p className="text-xs text-text-tertiary">Upload audio to an episode to use AI generation.</p>
                 )}
                 {aiError && <p className="text-xs text-red-400">{aiError}</p>}
               </div>
-            ) : (
-              <>
-                {isRunning && (
-                  <div className="flex items-center gap-2 text-sm text-text-secondary mb-4">
-                    <div className="h-4 w-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
-                    AI pipeline running...
-                  </div>
-                )}
-
-                <div className="flex flex-col lg:flex-row gap-6 items-start">
-                  {/* Left: show notes + description */}
-                  <div className="flex-1 min-w-0 space-y-6">
-                    {showNotes && (
-                      <ContentBlock
-                        type="show_notes"
-                        content={showNotes.result}
-                        onApply={(c) => handleApply('show_notes', c)}
-                        onRegenerate={() => handleGenerate('show_notes')}
-                        generating={generating === 'show_notes'}
-                      />
-                    )}
-
-                    {description && (
-                      <ContentBlock
-                        type="description"
-                        content={description.result}
-                        onApply={(c) => handleApply('description', c)}
-                        onRegenerate={() => handleGenerate('description')}
-                        generating={generating === 'description'}
-                      />
-                    )}
-                  </div>
-
-                  {/* Right: title suggestions */}
-                  {titleSuggestions && (
-                    <div className="w-full lg:w-[340px] shrink-0">
-                      <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
-                        <div className="flex items-center justify-between px-4 py-[11px] border-b border-border-subtle">
-                          <h3 className="text-[13px] font-semibold text-text-primary">Title Suggestions</h3>
-                          <button
-                            onClick={() => handleGenerate('title_suggestions')}
-                            disabled={generating !== null}
-                            className="rounded border border-border-subtle bg-surface-default px-2 py-0.5 text-xs text-text-secondary hover:border-border-hover hover:text-text-primary transition-colors disabled:opacity-50"
-                          >
-                            {generating === 'title_suggestions' ? 'Generating...' : 'Regenerate'}
-                          </button>
-                        </div>
-                        <TitleSuggestionsList content={titleSuggestions.result} onApplyTitle={handleApplyTitle} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
             )}
           </div>
         )}
@@ -719,6 +770,16 @@ export function EpisodeTabs({
             )}
           </div>
         </div>
+
+        {client && (
+          <ClientPortalSection
+            clientId={client.id}
+            clientName={client.name}
+            clientEmail={client.email}
+            inviteCode={client.invite_code}
+            onboardedAt={client.onboarded_at}
+          />
+        )}
 
       </aside>
       </div>

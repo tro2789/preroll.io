@@ -6,11 +6,6 @@ export interface YouTubeChannel {
   thumbnailUrl?: string
 }
 
-export interface YouTubeUploadResult {
-  videoId: string
-  viewUrl: string
-}
-
 export interface PublishToYouTubeParams {
   title: string
   description?: string
@@ -23,16 +18,28 @@ export interface PublishToYouTubeParams {
 }
 
 export async function listChannels(token: string): Promise<YouTubeChannel[]> {
-  const data = await ytJson('/channels?part=snippet&mine=true&maxResults=50', token)
-  return (data.items || []).map((ch: Record<string, unknown>) => {
+  const [owned, managed] = await Promise.all([
+    ytJson('/channels?part=snippet&mine=true&maxResults=50', token),
+    ytJson('/channels?part=snippet&managedByMe=true&maxResults=50', token).catch(() => ({ items: [] })),
+  ])
+
+  const seen = new Set<string>()
+  const channels: YouTubeChannel[] = []
+
+  for (const ch of [...(owned.items || []), ...(managed.items || [])]) {
+    const id = ch.id as string
+    if (seen.has(id)) continue
+    seen.add(id)
     const snippet = ch.snippet as Record<string, unknown>
     const thumbnails = snippet?.thumbnails as Record<string, Record<string, unknown>> | undefined
-    return {
-      id: ch.id as string,
+    channels.push({
+      id,
       name: (snippet?.title as string) || 'Unknown Channel',
       thumbnailUrl: thumbnails?.default?.url as string | undefined,
-    }
-  })
+    })
+  }
+
+  return channels
 }
 
 export async function initiateVideoUpload(
@@ -74,32 +81,6 @@ export async function initiateVideoUpload(
   const resumableUrl = res.headers.get('location')
   if (!resumableUrl) throw new Error('YouTube did not return a resumable upload URL')
   return resumableUrl
-}
-
-export async function uploadVideoBytes(
-  resumableUrl: string,
-  videoBuffer: ArrayBuffer,
-  mimeType: string = 'video/mp4'
-): Promise<YouTubeUploadResult> {
-  const res = await fetch(resumableUrl, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': mimeType,
-      'Content-Length': String(videoBuffer.byteLength),
-    },
-    body: videoBuffer,
-  })
-
-  if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`YouTube upload failed ${res.status}: ${body}`)
-  }
-
-  const data = await res.json()
-  return {
-    videoId: data.id,
-    viewUrl: `https://youtube.com/watch?v=${data.id}`,
-  }
 }
 
 export async function setThumbnail(

@@ -1,7 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { DISTRIBUTION_PROVIDER_NAMES } from '@/lib/integrations/types'
+
+interface UploadState {
+  resumableUrl: string
+  downloadUrl: string
+  mimeType: string
+  fileSize: number
+  showId: string
+  episodeId: string
+  title: string
+  privacy_status: string
+  scheduled_at?: string
+  channel_id: string
+  expiresAt: number
+}
 
 const YOUTUBE_CATEGORIES = [
   { id: '22', name: 'People & Blogs' },
@@ -25,6 +40,7 @@ interface PublishDialogProps {
     scheduled_publish_date: string | null
   }
   deliverables: { id: string; title: string; type: string }[]
+  fileReferences?: { id: string; name: string; mimeType: string; fileSize?: number; provider: string }[]
   isOpen: boolean
   onClose: () => void
 }
@@ -35,14 +51,23 @@ export function PublishDialog({
   provider,
   episode,
   deliverables,
+  fileReferences = [],
   isOpen,
   onClose,
 }: PublishDialogProps) {
   const isYouTube = provider === 'youtube'
+  const isAudioProvider = provider === 'transistor' || provider === 'castopod'
 
-  const [sourceValue, setSourceValue] = useState(
-    deliverables.length > 0 ? `deliverable:${deliverables[0].id}` : ''
-  )
+  const videoFiles = fileReferences.filter((f) => f.mimeType?.startsWith('video/'))
+  const audioFiles = fileReferences.filter((f) => f.mimeType?.startsWith('audio/'))
+
+  const sourceFiles = isYouTube ? videoFiles : audioFiles
+
+  const defaultSource = isYouTube
+    ? (videoFiles.length > 0 ? `file:${videoFiles[0].id}` : deliverables.length > 0 ? `deliverable:${deliverables[0].id}` : '')
+    : (audioFiles.length > 0 ? `file:${audioFiles[0].id}` : '')
+
+  const [sourceValue, setSourceValue] = useState(defaultSource)
   const [title, setTitle] = useState(episode.title)
   const [description, setDescription] = useState(episode.description || '')
   const [episodeNumber, setEpisodeNumber] = useState<number | null>(episode.episode_number)
@@ -55,20 +80,37 @@ export function PublishDialog({
   })
   const [customUrl, setCustomUrl] = useState('')
   const [publishing, setPublishing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<{ share_url?: string; view_url?: string } | null>(null)
 
   // YouTube-specific fields
   const [tags, setTags] = useState('')
   const [categoryId, setCategoryId] = useState('22')
   const [privacyStatus, setPrivacyStatus] = useState<'public' | 'unlisted' | 'private'>('public')
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null)
+  const [pendingResume, setPendingResume] = useState<UploadState | null>(null)
+
+  useEffect(() => {
+    if (!isYouTube) return
+    const stored = localStorage.getItem(`yt-upload:${episodeId}`)
+    if (stored) {
+      try {
+        const state = JSON.parse(stored) as UploadState
+        if (state.resumableUrl && Date.now() < state.expiresAt) {
+          setPendingResume(state)
+        } else {
+          localStorage.removeItem(`yt-upload:${episodeId}`)
+        }
+      } catch {
+        localStorage.removeItem(`yt-upload:${episodeId}`)
+      }
+    }
+  }, [isYouTube, episodeId])
 
   if (!isOpen) return null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setPublishing(true)
-    setError(null)
 
     const resolvedSource = sourceValue === 'url:custom'
       ? `url:${customUrl}`
@@ -79,7 +121,7 @@ export function PublishDialog({
         provider,
         title,
         description,
-        scheduled_at: publishMode === 'schedule' ? scheduledAt : undefined,
+        scheduled_at: publishMode === 'schedule' ? new Date(scheduledAt).toISOString() : undefined,
       }
 
       if (isYouTube) {
@@ -106,11 +148,185 @@ export function PublishDialog({
       }
 
       const json = await res.json()
-      setResult(json.data)
+      const data = json.data
+
+      if (data.mode === 'client_upload') {
+        await handleClientUpload({ ...data, expiresAt: Date.now() + 24 * 60 * 60 * 1000 })
+      } else {
+        setResult(data)
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
+      toast.error(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setPublishing(false)
+      setUploadProgress(null)
+    }
+  }
+
+  async function handleClientUpload(data: UploadState) {
+    const state: UploadState = {
+      ...data,
+      expiresAt: data.expiresAt || Date.now() + 24 * 60 * 60 * 1000,
+    }
+    localStorage.setItem(`yt-upload:${episodeId}`, JSON.stringify(state))
+    setPendingResume(null)
+    setUploadProgress(0)
+
+    const offset = await queryResumableOffset(data.resumableUrl, data.fileSize)
+    await streamToYouTube(data, offset)
+  }
+
+  async function handleResume() {
+    if (!pendingResume) return
+    setPublishing(true)
+    setUploadProgress(0)
+    try {
+      await handleClientUpload(pendingResume)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Resume failed')
+    } finally {
+      setPublishing(false)
+      setUploadProgress(null)
+    }
+  }
+
+  function handleDiscardResume() {
+    localStorage.removeItem(`yt-upload:${episodeId}`)
+    setPendingResume(null)
+  }
+
+  async function queryResumableOffset(resumableUrl: string, totalSize: number): Promise<number> {
+    try {
+      const res = await fetch(resumableUrl, {
+        method: 'PUT',
+        headers: { 'Content-Range': `bytes */${totalSize}` },
+        body: null,
+      })
+      if (res.status === 308) {
+        const range = res.headers.get('Range')
+        if (range) {
+          const match = range.match(/bytes=0-(\d+)/)
+          if (match) return parseInt(match[1], 10) + 1
+        }
+        return 0
+      }
+      if (res.status === 200 || res.status === 201) {
+        return totalSize
+      }
+      if (res.status === 404) {
+        throw new Error('Upload session expired. Please try again.')
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes('expired')) throw err
+    }
+    return 0
+  }
+
+  async function uploadChunkWithRetry(
+    resumableUrl: string, chunk: Blob, offset: number, end: number, totalSize: number, mimeType: string,
+  ): Promise<Response> {
+    const MAX_RETRIES = 5
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const res = await fetch(resumableUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Range': `bytes ${offset}-${end - 1}/${totalSize}`,
+            'Content-Type': mimeType,
+          },
+          body: chunk,
+        })
+        if (res.status >= 500 && attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 32000)))
+          continue
+        }
+        if (res.status === 404) {
+          throw new Error('Upload session expired. Please try again.')
+        }
+        return res
+      } catch (err) {
+        if (attempt < MAX_RETRIES && err instanceof TypeError) {
+          await new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** attempt, 32000)))
+          continue
+        }
+        throw err
+      }
+    }
+    throw new Error('YouTube upload failed after retries')
+  }
+
+  async function streamToYouTube(data: UploadState, startOffset: number) {
+    const CHUNK_SIZE = 16 * 1024 * 1024
+    const totalSize = data.fileSize
+
+    if (startOffset >= totalSize) {
+      localStorage.removeItem(`yt-upload:${episodeId}`)
+      setResult({})
+      return
+    }
+
+    setUploadProgress(-1)
+    const downloadRes = await fetch(data.downloadUrl)
+    if (!downloadRes.ok) throw new Error('Failed to download video from storage')
+    const videoBlob = await downloadRes.blob()
+
+    const isMultiChunk = totalSize - startOffset > CHUNK_SIZE
+    setUploadProgress(isMultiChunk ? (startOffset > 0 ? Math.round((startOffset / totalSize) * 100) : 0) : -2)
+    let offset = startOffset
+
+    while (offset < totalSize) {
+      const end = Math.min(offset + CHUNK_SIZE, totalSize)
+      const chunk = videoBlob.slice(offset, end)
+      const isLast = end >= totalSize
+
+      if (!isLast) {
+        const putRes = await uploadChunkWithRetry(data.resumableUrl, chunk, offset, end, totalSize, data.mimeType)
+        if (!putRes.ok && putRes.status !== 308) {
+          throw new Error(`YouTube upload failed (${putRes.status})`)
+        }
+      } else {
+        let videoId: string | undefined
+
+        try {
+          const putRes = await uploadChunkWithRetry(data.resumableUrl, chunk, offset, end, totalSize, data.mimeType)
+          if (putRes.ok) {
+            const result = await putRes.json()
+            videoId = result.id
+          }
+        } catch (err) {
+          if (!(err instanceof TypeError)) throw err
+          // CORS blocks reading YouTube's final response — upload succeeded
+        }
+
+        localStorage.removeItem(`yt-upload:${episodeId}`)
+        setUploadProgress(100)
+
+        const finalizeRes = await fetch(
+          `/api/v1/shows/${data.showId}/episodes/${data.episodeId}/publish/finalize`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              video_id: videoId || 'uploaded',
+              title: data.title,
+              privacy_status: data.privacy_status,
+              scheduled_at: data.scheduled_at,
+              channel_id: data.channel_id,
+            }),
+          }
+        )
+
+        if (!finalizeRes.ok) {
+          toast.error('Video uploaded to YouTube but failed to update PreRoll. Refresh the page.')
+        }
+
+        setResult({
+          view_url: videoId ? `https://youtube.com/watch?v=${videoId}` : undefined,
+        })
+      }
+
+      offset = end
+      setUploadProgress(Math.round((offset / totalSize) * 100))
     }
   }
 
@@ -134,10 +350,33 @@ export function PublishDialog({
           </button>
         </div>
 
-        {result ? (
+        {pendingResume && !publishing && !result ? (
+          <div className="space-y-4">
+            <div className="rounded-md bg-warning/5 border border-warning/30 px-4 py-3">
+              <p className="text-sm font-medium text-text-primary">Upload in progress</p>
+              <p className="mt-1 text-xs text-text-secondary">
+                A previous YouTube upload for this episode was interrupted. You can resume it or start over.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleResume}
+                className="flex-1 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover transition-colors"
+              >
+                Resume Upload
+              </button>
+              <button
+                onClick={handleDiscardResume}
+                className="rounded-md border border-border-default bg-surface-overlay px-4 py-2.5 text-sm font-medium text-text-primary hover:bg-surface-input transition-colors"
+              >
+                Start Over
+              </button>
+            </div>
+          </div>
+        ) : result ? (
           <div className="text-center py-6 space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
-              <svg className="h-6 w-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-success/15">
+              <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -146,7 +385,7 @@ export function PublishDialog({
             </p>
             {result.share_url && (
               <a href={result.share_url} target="_blank" rel="noopener noreferrer" className="inline-block text-sm text-accent hover:text-accent-hover transition-colors">
-                View on Transistor &rarr;
+                View on {providerName} &rarr;
               </a>
             )}
             {result.view_url && (
@@ -167,9 +406,9 @@ export function PublishDialog({
                 {isYouTube ? 'Video Source' : 'Audio Source'}
               </label>
               <select value={sourceValue} onChange={(e) => setSourceValue(e.target.value)} className={inputClasses}>
-                {deliverables.map((d) => (
-                  <option key={d.id} value={`deliverable:${d.id}`}>
-                    {d.title} ({d.type})
+                {sourceFiles.map((f) => (
+                  <option key={f.id} value={`file:${f.id}`}>
+                    {f.name || 'Untitled file'}
                   </option>
                 ))}
                 <option value="url:custom">Custom URL</option>
@@ -184,6 +423,11 @@ export function PublishDialog({
                   required
                 />
               )}
+              {isAudioProvider && sourceFiles.length === 0 && videoFiles.length > 0 && (
+                <p className="text-xs text-text-secondary mt-1">
+                  {providerName} requires an audio file. Upload an audio version or provide a URL.
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
@@ -196,7 +440,7 @@ export function PublishDialog({
               <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} className={inputClasses} />
             </div>
 
-            {!isYouTube && (
+            {isAudioProvider && (
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -277,19 +521,19 @@ export function PublishDialog({
               </div>
             )}
 
-            {error && (
-              <div className="rounded-md bg-red-500/10 border border-red-500/20 px-3 py-2 text-sm text-red-400">
-                {error}
-              </div>
-            )}
-
             <button
               type="submit"
               disabled={publishing}
               className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {publishing
-                ? 'Publishing...'
+                ? uploadProgress === -1
+                  ? 'Preparing video...'
+                  : uploadProgress === -2
+                    ? 'Uploading to YouTube...'
+                    : uploadProgress !== null && uploadProgress >= 0
+                      ? `Uploading to YouTube — ${uploadProgress}%`
+                      : 'Publishing...'
                 : publishMode === 'schedule'
                   ? 'Schedule'
                   : `Publish to ${providerName}`}

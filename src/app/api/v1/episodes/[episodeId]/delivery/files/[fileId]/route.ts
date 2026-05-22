@@ -50,6 +50,8 @@ export async function DELETE(
       return errorResponse(message, 500)
     }
 
+    await supabase!.from('deliverables').delete().eq('file_reference_id', fileRef.id)
+
     await Promise.all([
       supabase!.from('file_references').delete().eq('id', fileRef.id),
       fileRef.file_size ? decrementUsage(org!.id, fileRef.file_size) : null,
@@ -90,6 +92,8 @@ export async function DELETE(
   }
 
   if (fileRef) {
+    await supabase!.from('deliverables').delete().eq('file_reference_id', fileRef.id)
+
     await supabase!.from('file_references').delete().eq('id', fileRef.id)
 
     await supabase!.from('activity_log').insert({

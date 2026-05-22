@@ -11,7 +11,6 @@ export type Feature =
   | 'webhooks'
   | 'api_keys'
   | 'mcp'
-  | 'templates'
   | 'client_portal'
   | 'multi_user'
   | 'white_label'

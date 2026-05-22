@@ -7,13 +7,14 @@ export async function GET(
   { params }: { params: Promise<{ showId: string }> }
 ) {
   const { showId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data: show, error: showError } = await supabase!
     .from('shows')
-    .select('*, pipeline_stages(*)')
+    .select('*, pipeline_stages(*), clients!inner(org_id)')
     .eq('id', showId)
+    .eq('clients.org_id', org!.id)
     .order('position', { referencedTable: 'pipeline_stages' })
     .single()
 
@@ -40,7 +41,8 @@ export async function GET(
     episode_count: countsMap[stage.id] || 0,
   }))
 
-  return jsonResponse({ ...show, pipeline_stages: stagesWithCounts })
+  const { clients: _clients, ...showData } = show
+  return jsonResponse({ ...showData, pipeline_stages: stagesWithCounts })
 }
 
 export async function PATCH(
@@ -48,8 +50,16 @@ export async function PATCH(
   { params }: { params: Promise<{ showId: string }> }
 ) {
   const { showId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+
+  const { data: existing } = await supabase!
+    .from('shows')
+    .select('id, clients!inner(org_id)')
+    .eq('id', showId)
+    .eq('clients.org_id', org!.id)
+    .single()
+  if (!existing) return errorResponse('Show not found', 404)
 
   const body = await request.json()
   const allowedFields = ['name', 'description', 'format', 'schedule', 'cover_art_url', 'episode_template', 'allow_client_downloads', 'ai_auto_transcribe', 'ai_auto_generate', 'ai_tone', 'ai_length']
@@ -81,6 +91,14 @@ export async function DELETE(
 
   const roleError = requireRole(org!, 'admin')
   if (roleError) return roleError
+
+  const { data: existing } = await supabase!
+    .from('shows')
+    .select('id, clients!inner(org_id)')
+    .eq('id', showId)
+    .eq('clients.org_id', org!.id)
+    .single()
+  if (!existing) return errorResponse('Show not found', 404)
 
   const { error: dbError } = await supabase!
     .from('shows')

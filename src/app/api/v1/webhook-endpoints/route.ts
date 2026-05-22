@@ -3,6 +3,7 @@ import { getOrgEntitlements } from '@/lib/entitlements'
 import { requireRole } from '@/lib/org/roles'
 import { encrypt } from '@/lib/integrations/crypto'
 import { randomBytes } from 'crypto'
+import { isAllowedWebhookUrl } from '@/lib/webhooks/validate-url'
 
 const VALID_EVENTS = [
   'episode.status_changed',
@@ -48,6 +49,9 @@ export async function POST(request: Request) {
     new URL(body.url)
   } catch {
     return errorResponse('url must be a valid URL')
+  }
+  if (!isAllowedWebhookUrl(body.url)) {
+    return errorResponse('Webhook URL must use HTTPS and point to a public address')
   }
 
   if (body.events) {

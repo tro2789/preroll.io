@@ -26,7 +26,14 @@ A default organization is auto-created on first signup, so the first user become
 | Resend API key | Use any SMTP provider instead |
 | License key | Self-hosted mode is a soft gate with contact capture |
 
-## Step 1: Set Up Supabase
+## Step 1: Clone the Repo
+
+```bash
+git clone https://github.com/tro2789/preroll.io.git
+cd preroll.io
+```
+
+## Step 2: Set Up Supabase
 
 ### Option A: Self-Hosted (Docker)
 
@@ -42,7 +49,7 @@ docker compose up -d
 
 Create a project at [supabase.com](https://supabase.com). Note your project URL and service role key from the API settings page.
 
-## Step 2: Run Migrations
+## Step 3: Run Migrations
 
 Install the Supabase CLI and apply all migrations:
 
@@ -56,7 +63,7 @@ supabase link --project-ref your_project_id
 supabase db push
 ```
 
-## Step 3: Configure Environment
+## Step 4: Configure Environment
 
 Create a `.env.local` file with the following variables:
 
@@ -84,6 +91,10 @@ SMTP_USER=your_smtp_user
 SMTP_PASS=your_smtp_password
 SMTP_FROM=noreply@your-domain.com
 
+# AI Features (optional — bring your own keys)
+DEEPGRAM_API_KEY=your_deepgram_key
+ANTHROPIC_API_KEY=your_anthropic_key
+
 # OAuth Integrations (optional — only needed if you use these)
 FRAMEIO_CLIENT_ID=your_client_id
 FRAMEIO_CLIENT_SECRET=your_client_secret
@@ -93,7 +104,9 @@ VIMEO_CLIENT_ID=your_client_id
 VIMEO_CLIENT_SECRET=your_client_secret
 ```
 
-## Step 4: Deploy
+AI features (transcription and content generation) require API keys from Deepgram and Anthropic. In self-hosted mode, you can also configure these per-organization in **Settings > AI** using the bring-your-own-key option — no credits needed.
+
+## Step 5: Deploy
 
 ### Docker
 
@@ -118,7 +131,7 @@ npm run build
 npm start
 ```
 
-## Step 5: Register OAuth Apps
+## Step 6: Register OAuth Apps
 
 If you plan to use integrations, register OAuth applications with each provider:
 
@@ -129,7 +142,7 @@ If you plan to use integrations, register OAuth applications with each provider:
 | Vimeo | [Vimeo Developer](https://developer.vimeo.com) | `/api/integrations/vimeo/callback` |
 | YouTube | [Google Cloud Console](https://console.cloud.google.com) | `/api/integrations/youtube/callback` |
 
-## Step 6: Configure Auth
+## Step 7: Configure Auth
 
 Supabase Auth handles user authentication. Configure SMTP in your Supabase dashboard (or Docker `.env`) so magic link emails can be sent:
 
@@ -139,7 +152,7 @@ Supabase Auth handles user authentication. Configure SMTP in your Supabase dashb
 
 ![Auth Flows](/docs/diagrams/auth-flow.svg)
 
-## Step 7: Email Notifications (Optional)
+## Step 8: Email Notifications (Optional)
 
 preroll.io can send email notifications for deliverable approvals, revision requests, and other events. Configure these SMTP variables:
 

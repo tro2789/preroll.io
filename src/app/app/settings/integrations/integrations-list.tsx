@@ -28,6 +28,7 @@ interface IntegrationsListProps {
   returnTo?: string
   connectedProvider?: string
   oauthError?: string
+  oauthErrorDetail?: string
 }
 
 export function IntegrationsList({
@@ -37,13 +38,15 @@ export function IntegrationsList({
   returnTo,
   connectedProvider,
   oauthError,
+  oauthErrorDetail,
 }: IntegrationsListProps) {
   useEffect(() => {
     if (connectedProvider) {
       toast.success(`${connectedProvider.replace(/_/g, ' ')} connected successfully.`)
     }
     if (oauthError) {
-      toast.error(`Connection failed: ${oauthError.replace(/_/g, ' ')}`)
+      const detail = oauthErrorDetail ? `: ${decodeURIComponent(oauthErrorDetail)}` : ''
+      toast.error(`Connection failed: ${oauthError.replace(/_/g, ' ')}${detail}`)
     }
     if (connectedProvider || oauthError) {
       const url = new URL(window.location.href)
@@ -138,7 +141,7 @@ export function IntegrationsList({
               />
               <span className="text-sm text-text-primary">PreRoll Storage (built-in)</span>
             </label>
-            {connectedProviders.map((p) => (
+            {connectedProviders.filter((p) => p.name !== 'youtube').map((p) => (
               <label key={p.name} className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="radio"

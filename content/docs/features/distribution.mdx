@@ -1,6 +1,6 @@
 ---
 title: "Distribution"
-description: "Publish episodes to Transistor.fm and YouTube with metadata management and scheduled publishing."
+description: "Publish episodes to Transistor.fm, Castopod, and YouTube with metadata management and scheduled publishing."
 ---
 
 
@@ -13,6 +13,7 @@ preroll.io connects to podcast hosting platforms and video services so you can p
 | Platform | Content Type | Connection Method |
 |----------|-------------|-------------------|
 | Transistor.fm | Audio podcasts | API key |
+| Castopod | Audio podcasts (self-hosted) | HTTP Basic Auth |
 | YouTube | Video episodes | OAuth2 (Google account) |
 
 ## Transistor.fm Integration
@@ -74,6 +75,49 @@ After an episode is published to Transistor, you can:
 
 Changes sync to Transistor within seconds.
 
+## Castopod Integration
+
+[Castopod](https://castopod.org) is a self-hosted, open-source podcast hosting platform. If you run your own Castopod instance, preroll.io can publish episodes directly to it.
+
+### Connecting to Castopod
+
+1. Go to your show's **Settings > Distribution**
+2. Click **Connect Castopod**
+3. Enter your Castopod instance URL (e.g., `https://podcasts.example.com`)
+4. Enter your Castopod username and password
+5. Select the matching podcast from your Castopod instance
+6. Click **Save Connection**
+
+Castopod uses HTTP Basic Auth rather than OAuth. Credentials are stored per-show, not per-organization.
+
+### Publishing an Episode to Castopod
+
+1. Open the episode detail view
+2. Navigate to the **Distribution** tab
+3. Click **Publish to Castopod**
+4. Review and edit the episode metadata:
+
+| Field | Description |
+|-------|-------------|
+| Title | Episode title (pre-filled from preroll.io) |
+| Description | Episode description / show notes |
+| Episode number | Numeric episode number |
+| Season number | Optional season number |
+| Episode type | Full, trailer, or bonus |
+
+5. Choose **Publish Now** or **Schedule** (set a future publish date/time)
+6. Click **Publish**
+
+Audio is downloaded from the episode's file storage (R2, Frame.io, Google Drive, or Vimeo) and uploaded directly to Castopod as multipart form data. There is no separate upload step.
+
+### Castopod Requirements
+
+- Your Castopod instance must be reachable from the preroll.io server
+- The Castopod user account needs permissions to create and publish episodes
+- Audio files must be in a format Castopod accepts (MP3, M4A, etc.)
+
+See [Castopod Integration](/docs/developer/integrations/castopod) for detailed setup and troubleshooting.
+
 ## YouTube Integration
 
 Publish video episodes directly to YouTube from preroll.io.
@@ -130,7 +174,7 @@ Publish video episodes directly to YouTube from preroll.io.
 
 ## Scheduled Publishing
 
-Both Transistor and YouTube support scheduled publishing:
+All distribution platforms support scheduled publishing:
 
 ### Setting a Schedule
 
@@ -149,10 +193,10 @@ Both Transistor and YouTube support scheduled publishing:
 
 Publish the same episode to multiple platforms:
 
-- Audio version to Transistor.fm
+- Audio version to Transistor.fm or Castopod
 - Video version to YouTube
 - Each platform has independent metadata and status tracking
-- Publish to one, both, or neither — it's your choice per episode
+- Publish to any combination of platforms per episode
 
 ## Metadata Management
 
@@ -188,6 +232,7 @@ When publishing fails:
 | Feature | Required Plan |
 |---------|--------------|
 | Transistor.fm publishing | Pro or Studio |
+| Castopod publishing | Pro or Studio |
 | YouTube publishing | Pro or Studio |
 | Scheduled publishing | Pro or Studio |
 | Multi-platform publishing | Pro or Studio |

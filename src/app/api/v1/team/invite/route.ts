@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { requireRole } from '@/lib/org/roles'
 import { getOrgEntitlements } from '@/lib/entitlements'
 import { getSiteUrl, generateMagicLinkUrl, sendEmail } from '@/lib/email/send'
+import { emailTemplate } from '@/lib/email/template'
 
 export async function POST(request: Request) {
   const { user, org, error } = await getAuthenticatedClient()
@@ -73,10 +74,8 @@ export async function POST(request: Request) {
 
   if (insertError) return errorResponse(insertError.message, 500)
 
-  const [siteUrl, { data: orgData }] = await Promise.all([
-    getSiteUrl(),
-    service.from('organizations').select('name').eq('id', org!.id).single(),
-  ])
+  const siteUrl = getSiteUrl()
+  const { data: orgData } = await service.from('organizations').select('name').eq('id', org!.id).single()
 
   const joinPath = `/team/join?token=${token}`
   const fallbackUrl = `${siteUrl}${joinPath}`
@@ -88,23 +87,12 @@ export async function POST(request: Request) {
   const emailSent = await sendEmail(
     email,
     `${inviterName} invited you to join ${orgName} on preroll.io`,
-    `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-        <h1 style="font-size: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;">PREROLL.IO</h1>
-        <p style="font-size: 15px; color: #333; line-height: 1.6;">
-          Hi there,
-        </p>
-        <p style="font-size: 15px; color: #333; line-height: 1.6;">
-          ${inviterName} has invited you to join <strong>${orgName}</strong> on preroll.io as a ${role}. You'll be able to collaborate on podcast production, manage episodes, and more.
-        </p>
-        <a href="${loginUrl}" style="display: inline-block; margin: 24px 0; padding: 12px 24px; background-color: #7c3aed; color: #fff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600;">
-          Join Team
-        </a>
-        <p style="font-size: 13px; color: #888; line-height: 1.5; margin-top: 24px;">
-          This link expires in 7 days. If it's expired, ask ${inviterName} to send a new invite.
-        </p>
-      </div>
-    `,
+    emailTemplate({
+      greeting: 'Hi there,',
+      body: `<p style="margin: 0;">${inviterName} has invited you to join <strong>${orgName}</strong> on preroll.io as a ${role}. You'll be able to collaborate on podcast production, manage episodes, and more.</p>`,
+      cta: { label: 'Join Team', url: loginUrl },
+      footer: `This link expires in 7 days. If it's expired, ask ${inviterName} to send a new invite.`,
+    }),
   )
 
   return jsonResponse({ ...invite, email_sent: emailSent }, 201)

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getAuthenticatedClientOrPortalUser, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { getDownloadUrl } from '@/lib/r2/client'
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, portalUserId, error } = await getAuthenticatedClientOrPortalUser()
   if (error) return error
 
   const stream = request.nextUrl.searchParams.get('stream')
@@ -19,15 +19,21 @@ export async function GET(
 
   const { data: deliverable, error: dbError } = await supabase!
     .from('deliverables')
-    .select('*, shows(client_id, clients(org_id))')
+    .select('*, shows(client_id, clients(org_id, client_user_id))')
     .eq('id', deliverableId)
     .single()
 
   if (dbError || !deliverable) return errorResponse('Deliverable not found', 404)
 
-  const show = (deliverable as unknown as { shows: { clients: { org_id: string } } }).shows
+  const show = (deliverable as unknown as { shows: { clients: { org_id: string; client_user_id: string | null } } }).shows
   const producerOrgId = show?.clients?.org_id
   if (!producerOrgId) return errorResponse('Could not resolve producer for this deliverable', 404)
+
+  if (portalUserId) {
+    if (show?.clients?.client_user_id !== portalUserId) return errorResponse('Forbidden', 403)
+  } else if (producerOrgId !== org!.id) {
+    return errorResponse('Forbidden', 403)
+  }
 
   // Support loading a specific version via file_reference_id query param
   const specificFileRefId = request.nextUrl.searchParams.get('file_reference_id')
@@ -165,7 +171,7 @@ function resolveGoogleDrive(deliverableId: string, fileRef: FileRef) {
 }
 
 async function streamGoogleDrive(
-  supabase: NonNullable<Awaited<ReturnType<typeof getAuthenticatedClient>>['supabase']>,
+  supabase: NonNullable<Awaited<ReturnType<typeof getAuthenticatedClientOrPortalUser>>['supabase']>,
   deliverableId: string
 ) {
   const { data: deliverable } = await supabase

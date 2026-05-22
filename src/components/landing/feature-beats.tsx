@@ -118,7 +118,7 @@ export function FeatureBeats() {
             items={[
               { bold: 'Context-aware.', rest: 'It knows which episode, show, or client you\'re viewing and scopes its answers automatically.' },
               { bold: '22 tools.', rest: 'It can read data, create episodes, generate content, and move stages on your behalf.' },
-              { bold: 'Transcribe and draft.', rest: 'Upload audio and get back a transcript, show notes, titles, and social posts.' },
+              { bold: 'Transcribe and draft.', rest: 'Upload audio and get back a transcript, show notes, and title suggestions.' },
             ]}
             linkText="Try it free"
             linkHref="/signup"

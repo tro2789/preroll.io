@@ -26,9 +26,9 @@ interface EpisodeCardProps {
 
 function DistributionDot({ status }: { status?: string | null }) {
   if (status === 'published')
-    return <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-400" title="Published to Transistor" />
+    return <span className="shrink-0 h-2 w-2 rounded-full bg-success" title="Published" />
   if (status === 'scheduled')
-    return <span className="shrink-0 h-2 w-2 rounded-full bg-amber-400" title="Scheduled on Transistor" />
+    return <span className="shrink-0 h-2 w-2 rounded-full bg-warning" title="Scheduled" />
   return null
 }
 
@@ -110,10 +110,10 @@ export function EpisodeCard({ episode, showId, compact, onArchive }: EpisodeCard
             </span>
           )}
           {episode.distribution_status === 'published' && (
-            <span className="shrink-0 h-2 w-2 rounded-full bg-emerald-400" title="Published to Transistor" />
+            <span className="shrink-0 h-2 w-2 rounded-full bg-success" title="Published" />
           )}
           {episode.distribution_status === 'scheduled' && (
-            <span className="shrink-0 h-2 w-2 rounded-full bg-amber-400" title="Scheduled on Transistor" />
+            <span className="shrink-0 h-2 w-2 rounded-full bg-warning" title="Scheduled" />
           )}
         </div>
         {episode.tags && episode.tags.length > 0 && (

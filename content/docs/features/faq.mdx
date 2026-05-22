@@ -54,18 +54,14 @@ We offer a full refund within 14 days of your first payment if preroll.io isn't 
 | Clients | 1 | Unlimited | Unlimited |
 | Shows | 1 | Unlimited | Unlimited |
 | Episodes | Unlimited | Unlimited | Unlimited |
-| Storage | 1 GB | 50 GB | 250 GB |
+| Storage | 10 GB | 500 GB | 2 TB |
 | Team members | 1 | 1 | Unlimited |
+
+Additional storage is available at **$19/TB/month** for Pro and Studio plans.
 
 ### Is there a limit on file upload size?
 
-Yes, per-file limits depend on your plan:
-
-- Free: 100 MB per file
-- Pro: 500 MB per file
-- Studio: 2 GB per file
-
-For larger files, use the external file linking feature (link to Frame.io, Google Drive, or Vimeo).
+Files over 100 MB automatically use multipart upload (chunked at 64 MB) for reliability. There is no hard per-file size limit — upload size is constrained by your storage quota. For very large files, you can also use external file linking (Frame.io, Google Drive, or Vimeo).
 
 ### What counts toward storage?
 
@@ -170,10 +166,12 @@ When `PREROLL_SELF_HOSTED=true` is set, all plan entitlement checks are bypassed
 | Google Drive | File delivery and collaboration |
 | Vimeo | Video delivery |
 | Transistor.fm | Podcast publishing |
+| Castopod | Podcast publishing (self-hosted) |
 | YouTube | Video episode publishing |
 | Webhooks | Custom automation (send events to any URL) |
 | API Keys | Programmatic access for scripts and tools |
 | MCP Server | AI assistant integration |
+| n8n Node | Workflow automation node |
 
 ### Do integrations cost extra?
 
@@ -181,7 +179,7 @@ No. All integrations are included in the Pro and Studio plans at no additional c
 
 ### What if an integration disconnects?
 
-OAuth-based integrations (Frame.io, Google, Vimeo, YouTube) may need periodic re-authentication. When this happens:
+OAuth-based integrations (Frame.io, Google Drive, Vimeo, YouTube) may need periodic re-authentication. Castopod and Transistor use stored credentials (Basic Auth and API key respectively) and don't expire unless you change them. When an OAuth token expires:
 
 1. You'll see a warning in Settings > Integrations
 2. Click **Reconnect** and re-authenticate
@@ -279,10 +277,14 @@ Not currently. preroll.io is a web application optimized for desktop use. The cl
 - **Email support** — support@preroll.io
 - **Troubleshooting guide** — [Common issues and solutions](/docs/features/troubleshooting)
 
+### How does the AI add-on work?
+
+The AI add-on is separate from your plan tier. Pro and Studio plans include monthly AI credits (200 for Pro, 500 for Studio). Credits cover transcription, content generation (show notes, descriptions, social posts, title suggestions), and in-app AI chat. You can purchase additional credit packs if you need more. See [AI Assistant](/docs/features/ai-assistant) for details.
+
 ### Is there an API?
 
-Yes. preroll.io is API-first. Everything the web UI does is available via the REST API. Authenticate with API keys (available on Pro and Studio plans). See the [API documentation](/docs/api) for details.
+Yes. preroll.io is API-first. Everything the web UI does is available via the REST API. Authenticate with API keys (available on Pro and Studio plans). See the [API Reference](/docs/developer/api-reference) for details.
 
 ### Can I use preroll.io with my AI assistant?
 
-Yes. preroll.io includes an MCP (Model Context Protocol) server that AI assistants can use to interact with your production data — creating episodes, checking status, managing deliverables, and more. The MCP server wraps the same REST API that powers the web UI.
+Yes. preroll.io includes an MCP (Model Context Protocol) server that AI assistants can use to interact with your production data — creating episodes, checking status, managing deliverables, and more. The MCP server wraps the same REST API that powers the web UI. See [MCP Server](/docs/developer/mcp-server) for setup instructions.

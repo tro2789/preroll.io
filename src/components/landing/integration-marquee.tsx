@@ -39,6 +39,14 @@ function TransistorIcon(props: SVGProps<SVGSVGElement>) {
   )
 }
 
+function CastopodIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <path d="M12 1C5.925 1 1 5.925 1 12s4.925 11 11 11 11-4.925 11-11S18.075 1 12 1zm0 4a7 7 0 110 14 7 7 0 010-14zm0 3a4 4 0 100 8 4 4 0 000-8zm0 2.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+    </svg>
+  )
+}
+
 function SlackIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
@@ -66,6 +74,7 @@ const INTEGRATIONS: Integration[] = [
   { name: 'Google Drive', icon: SiGoogledrive as IconComponent, color: '#4285F4' },
   { name: 'Vimeo', icon: SiVimeo as IconComponent, color: '#1AB7EA' },
   { name: 'Transistor.fm', icon: TransistorIcon, color: '#6B50FF' },
+  { name: 'Castopod', icon: CastopodIcon, color: '#00564A' },
   { name: 'Deepgram', icon: SiDeepgram as IconComponent, color: '#13EF93' },
   { name: 'Claude AI', icon: SiAnthropic as IconComponent, color: '#D4A27F' },
   { name: 'Stripe', icon: SiStripe as IconComponent, color: '#635BFF' },

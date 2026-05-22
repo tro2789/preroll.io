@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Sora, Inter } from "next/font/google";
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import { Toaster } from "@/components/ui/sonner";
@@ -47,6 +48,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   viewportFit: "cover",
+  themeColor: "#1a1a1a",
 };
 
 export default function RootLayout({
@@ -56,6 +58,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn(sora.variable, inter.variable, "font-sans")} suppressHydrationWarning>
+      <head>
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-0YL0D03X7L" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">{`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-0YL0D03X7L');
+        `}</Script>
+      </head>
       <body className="antialiased">
         <RootProvider
           theme={{

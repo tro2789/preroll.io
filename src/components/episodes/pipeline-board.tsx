@@ -51,17 +51,17 @@ function MobileEpisodeCard({ episode, showId }: { episode: Episode; showId: stri
 
 export function PipelineBoard({ showId, stages, episodes: initialEpisodes }: PipelineBoardProps) {
   const router = useRouter()
-  const sortedStages = [...stages].sort((a, b) => a.position - b.position)
+  const sortedStages = [...stages].filter((s) => s.name.toLowerCase() !== 'published').sort((a, b) => a.position - b.position)
   const [filters, setFilters] = useState<BoardFilters>({ search: '', overdueOnly: false, showId: null, tagIds: [] })
   const { isCollapsed, toggle, expand } = useCollapsedColumns(`pipeline-${showId}`)
   const { compact, toggle: toggleCompact } = useCompactView()
 
   const columns: KanbanColumn[] = sortedStages.map((stage) => ({
-    id: stage.id,
-    name: stage.name,
-    stageIds: [stage.id],
-    wipLimit: stage.wip_limit ?? null,
-  }))
+      id: stage.id,
+      name: stage.name,
+      stageIds: [stage.id],
+      wipLimit: stage.wip_limit ?? null,
+    }))
 
   const {
     episodes,

@@ -39,7 +39,7 @@ export const resolveUserOrg = cache(async (userId: string, preferredOrgId?: stri
   }
 })
 
-export async function resolveOrgFromApiKey(orgId: string): Promise<OrgContext | null> {
+export async function resolveOrgFromApiKey(orgId: string, userId?: string): Promise<OrgContext | null> {
   const supabase = createServiceClient()
 
   const { data: org } = await supabase
@@ -50,11 +50,22 @@ export async function resolveOrgFromApiKey(orgId: string): Promise<OrgContext | 
 
   if (!org) return null
 
+  let role = 'member'
+  if (userId) {
+    const { data: membership } = await supabase
+      .from('memberships')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('org_id', orgId)
+      .single()
+    if (membership) role = membership.role
+  }
+
   return {
     id: org.id,
     planId: org.plan_id,
     trialEndsAt: org.trial_ends_at ?? null,
-    role: 'owner',
+    role,
     defaultDeliveryProvider: org.default_delivery_provider ?? null,
   }
 }

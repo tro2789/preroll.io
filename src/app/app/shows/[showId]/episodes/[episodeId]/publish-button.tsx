@@ -15,9 +15,10 @@ interface PublishButtonProps {
     scheduled_publish_date: string | null
   }
   deliverables: { id: string; title: string; type: string }[]
+  fileReferences?: { id: string; name: string; mimeType: string; provider: string }[]
 }
 
-export function PublishButton({ showId, episodeId, provider, episode, deliverables }: PublishButtonProps) {
+export function PublishButton({ showId, episodeId, provider, episode, deliverables, fileReferences }: PublishButtonProps) {
   const [open, setOpen] = useState(false)
   const label = DISTRIBUTION_PROVIDER_NAMES[provider as keyof typeof DISTRIBUTION_PROVIDER_NAMES] || provider
 
@@ -35,6 +36,7 @@ export function PublishButton({ showId, episodeId, provider, episode, deliverabl
         provider={provider}
         episode={episode}
         deliverables={deliverables}
+        fileReferences={fileReferences}
         isOpen={open}
         onClose={() => setOpen(false)}
       />

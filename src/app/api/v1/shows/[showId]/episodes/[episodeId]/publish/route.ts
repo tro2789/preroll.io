@@ -5,12 +5,15 @@ import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { authorizeUpload, createEpisode, publishEpisode } from '@/lib/integrations/providers/transistor'
 import {
-  initiateVideoUpload,
-  uploadVideoBytes,
-  setThumbnail,
-  addToPlaylist,
-} from '@/lib/integrations/providers/youtube-distribution'
+  createEpisode as createCastopodEpisode,
+  publishEpisode as publishCastopodEpisode,
+  slugify as castopodSlugify,
+  type CastopodCredentials,
+} from '@/lib/integrations/providers/castopod'
+import { initiateVideoUpload } from '@/lib/integrations/providers/youtube-distribution'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
+import { getDistributionToken } from '@/lib/integrations/distribution-token'
+import { getDownloadUrl } from '@/lib/r2/client'
 
 export async function POST(
   request: NextRequest,
@@ -39,6 +42,10 @@ export async function POST(
     return handleYouTubePublish(supabase!, org!, showId, episodeId, connection, body)
   }
 
+  if (connection.provider === 'castopod') {
+    return handleCastopodPublish(supabase!, org!, showId, episodeId, connection, body)
+  }
+
   return handleTransistorPublish(supabase!, org!, showId, episodeId, connection, body)
 }
 
@@ -58,67 +65,24 @@ async function handleTransistorPublish(
   const apiKey = decrypt(connection.api_key_enc)
   let audioUrl: string
 
-  if (audio_source.startsWith('deliverable:')) {
-    const deliverableId = audio_source.slice('deliverable:'.length)
-    const { data: fileRef, error: fileRefError } = await supabase
-      .from('file_references')
-      .select('external_id, name')
-      .eq('deliverable_id', deliverableId)
-      .eq('provider', 'frame_io')
-      .single()
+  if (audio_source.startsWith('url:')) {
+    audioUrl = audio_source.slice('url:'.length)
+  } else {
+    const resolved = await resolveAudioBuffer(supabase, org.id, audio_source)
+    if ('error' in resolved) return resolved.error
 
-    if (fileRefError || !fileRef) {
-      return errorResponse('No Frame.io file reference found for this deliverable', 404)
-    }
-
-    ensureProvidersRegistered()
-    const [frameToken, accountId] = await Promise.all([
-      getValidToken(org.id, 'frame_io'),
-      getIntegrationAccountId(org.id, 'frame_io'),
-    ])
-
-    const fileRes = await fetch(
-      `https://api.frame.io/v4/accounts/${accountId}/files/${fileRef.external_id}?include=media_links.original`,
-      { headers: { Authorization: `Bearer ${frameToken}` } }
-    )
-
-    if (!fileRes.ok) {
-      const errBody = await fileRes.text()
-      return errorResponse(`Frame.io API error ${fileRes.status}: ${errBody}`, 502)
-    }
-
-    const fileJson = await fileRes.json()
-    const fileData = fileJson.data || fileJson
-    const downloadUrl = fileData.media_links?.original?.url
-
-    if (!downloadUrl) {
-      return errorResponse('Could not resolve download URL from Frame.io', 502)
-    }
-
-    const audioRes = await fetch(downloadUrl)
-    if (!audioRes.ok) {
-      return errorResponse(`Failed to download audio from Frame.io: ${audioRes.status}`, 502)
-    }
-    const audioBuffer = await audioRes.arrayBuffer()
-
-    const filename = fileRef.name || 'audio.mp3'
-    const upload = await authorizeUpload(apiKey, filename)
-
+    const upload = await authorizeUpload(apiKey, resolved.filename)
     const uploadRes = await fetch(upload.uploadUrl, {
       method: 'PUT',
       headers: { 'Content-Type': upload.contentType },
-      body: Buffer.from(audioBuffer),
+      body: Buffer.from(resolved.buffer),
     })
 
     if (!uploadRes.ok) {
-      return errorResponse(`Failed to upload audio to Transistor: ${uploadRes.status}`, 502)
+      return errorResponse(`Failed to upload to Transistor: ${uploadRes.status}`, 502)
     }
 
     audioUrl = upload.audioUrl
-  } else if (audio_source.startsWith('url:')) {
-    audioUrl = audio_source.slice('url:'.length)
-  } else {
-    return errorResponse('audio_source must start with "deliverable:" or "url:"', 400)
   }
 
   const transistorEpisode = await createEpisode(apiKey, {
@@ -187,6 +151,117 @@ async function handleTransistorPublish(
   }, 201)
 }
 
+async function handleCastopodPublish(
+  supabase: any,
+  org: { id: string },
+  showId: string,
+  episodeId: string,
+  connection: any,
+  body: any,
+) {
+  const { title, description, episode_number, season_number, episode_type, scheduled_at, audio_source } = body
+
+  if (!title) return errorResponse('title is required', 400)
+  if (!audio_source) return errorResponse('audio_source is required', 400)
+
+  const creds: CastopodCredentials = JSON.parse(decrypt(connection.api_key_enc))
+
+  const resolved = await resolveAudioBuffer(supabase, org.id, audio_source)
+  if ('error' in resolved) return resolved.error
+
+  // Castopod only accepts .mp3 and .m4a — normalize the filename
+  let audioFilename = resolved.filename
+  if (!audioFilename.endsWith('.mp3') && !audioFilename.endsWith('.m4a')) {
+    audioFilename = audioFilename.replace(/\.[^.]+$/, '') + '.mp3'
+  }
+
+  let castopodEpisode
+  try {
+    castopodEpisode = await createCastopodEpisode(creds, {
+      podcastId: Number(connection.external_show_id),
+      title,
+      slug: castopodSlugify(title),
+      audioFile: resolved.buffer,
+      audioFilename,
+      createdBy: creds.userId ?? 1,
+      description,
+      episodeNumber: episode_number,
+      seasonNumber: season_number,
+      episodeType: episode_type || 'full',
+    })
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error'
+    return errorResponse(`Castopod publish failed: ${detail}`, 502)
+  }
+
+  const castopodEpisodeId = castopodEpisode.id
+
+  try {
+    if (scheduled_at) {
+      const date = new Date(scheduled_at)
+      const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+      await publishCastopodEpisode(creds, castopodEpisodeId, {
+        method: 'schedule',
+        scheduledDate: formatted,
+        createdBy: creds.userId ?? 1,
+      })
+    } else {
+      await publishCastopodEpisode(creds, castopodEpisodeId, {
+        method: 'now',
+        createdBy: creds.userId ?? 1,
+      })
+    }
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error'
+    return errorResponse(`Episode created on Castopod but publish step failed: ${detail}`, 502)
+  }
+
+  const episodeUrl = castopodEpisode.guid || ''
+
+  await Promise.all([
+    supabase
+      .from('episodes')
+      .update({
+        distribution_status: scheduled_at ? 'scheduled' : 'published',
+        distribution_external_id: String(castopodEpisodeId),
+        distribution_published_at: scheduled_at || new Date().toISOString(),
+        distribution_metadata: {
+          provider: 'castopod',
+          castopod_episode_id: castopodEpisodeId,
+          instance_url: creds.instanceUrl,
+          share_url: episodeUrl,
+        },
+      })
+      .eq('id', episodeId),
+    supabase.from('activity_log').insert({
+      show_id: showId,
+      episode_id: episodeId,
+      action: scheduled_at ? 'episode_scheduled' : 'episode_published',
+      description: scheduled_at
+        ? `Episode '${title}' scheduled on Castopod for ${scheduled_at}`
+        : `Episode '${title}' published to Castopod`,
+      metadata: { castopod_episode_id: castopodEpisodeId, audio_source: body.audio_source },
+    }),
+  ])
+
+  dispatchWebhooks(org.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
+    episode_id: episodeId,
+    show_id: showId,
+    title,
+    provider: 'castopod',
+    castopod_episode_id: castopodEpisodeId,
+    share_url: episodeUrl,
+    scheduled_at: scheduled_at || null,
+  })
+
+  return jsonResponse({
+    provider: 'castopod',
+    castopod_episode_id: castopodEpisodeId,
+    status: scheduled_at ? 'scheduled' : 'published',
+    share_url: episodeUrl,
+  }, 201)
+}
+
 async function handleYouTubePublish(
   supabase: any,
   org: { id: string },
@@ -203,8 +278,6 @@ async function handleYouTubePublish(
     privacy_status = 'public',
     scheduled_at,
     video_source,
-    playlist_id,
-    thumbnail_url,
   } = body
 
   if (!title) return errorResponse('title is required', 400)
@@ -213,15 +286,21 @@ async function handleYouTubePublish(
   ensureProvidersRegistered()
 
   let ytToken: string
-  try {
-    ytToken = await getValidToken(org.id, 'youtube')
-  } catch {
-    return errorResponse('YouTube OAuth token not found. Reconnect YouTube in Settings.', 401)
+
+  const distToken = await getDistributionToken(connection)
+  if (distToken) {
+    ytToken = distToken
+  } else {
+    try {
+      ytToken = await getValidToken(org.id, 'youtube')
+    } catch {
+      return errorResponse('YouTube OAuth token not found. Reconnect YouTube in Settings or ask the client to reconnect.', 401)
+    }
   }
 
-  const resolved = await resolveVideoSource(supabase, org.id, video_source)
-  if ('error' in resolved) return resolved.error
-  const { videoBuffer, mimeType } = resolved
+  const downloadUrl = await resolveSourceDownloadUrl(supabase, org.id, video_source)
+  if ('error' in downloadUrl) return downloadUrl.error
+  const { url: sourceUrl, mimeType, fileSize } = downloadUrl
 
   const resumableUrl = await initiateVideoUpload(
     ytToken,
@@ -234,140 +313,136 @@ async function handleYouTubePublish(
       scheduledAt: scheduled_at,
       madeForKids: false,
     },
-    videoBuffer!.byteLength,
+    fileSize,
     mimeType,
   )
 
-  const uploadResult = await uploadVideoBytes(resumableUrl, videoBuffer!, mimeType)
-
-  const postUploadTasks: Promise<void>[] = []
-
-  if (thumbnail_url) {
-    postUploadTasks.push(
-      fetch(thumbnail_url)
-        .then(async (thumbRes) => {
-          if (!thumbRes.ok) return
-          const thumbBuffer = await thumbRes.arrayBuffer()
-          const thumbType = thumbRes.headers.get('content-type') || 'image/jpeg'
-          await setThumbnail(ytToken, uploadResult.videoId, thumbBuffer, thumbType)
-        })
-        .catch((err) => console.warn('YouTube thumbnail upload failed:', err))
-    )
-  }
-
-  if (playlist_id) {
-    postUploadTasks.push(
-      addToPlaylist(ytToken, playlist_id, uploadResult.videoId)
-        .catch((err) => console.warn('YouTube playlist add failed:', err))
-    )
-  }
-
-  await Promise.all(postUploadTasks)
-
-  const status = scheduled_at ? 'scheduled' : 'published'
-
-  await Promise.all([
-    supabase
-      .from('episodes')
-      .update({
-        distribution_status: status,
-        distribution_external_id: uploadResult.videoId,
-        distribution_published_at: scheduled_at || new Date().toISOString(),
-        distribution_metadata: {
-          provider: 'youtube',
-          youtube_video_id: uploadResult.videoId,
-          view_url: uploadResult.viewUrl,
-          privacy_status,
-          channel_id: connection.external_show_id,
-        },
-      })
-      .eq('id', episodeId),
-    supabase.from('activity_log').insert({
-      show_id: showId,
-      episode_id: episodeId,
-      action: scheduled_at ? 'episode_scheduled' : 'episode_published',
-      description: scheduled_at
-        ? `Episode '${title}' scheduled on YouTube for ${scheduled_at}`
-        : `Episode '${title}' published to YouTube`,
-      metadata: { youtube_video_id: uploadResult.videoId, video_source },
-    }),
-  ])
-
-  dispatchWebhooks(org.id, scheduled_at ? 'episode.scheduled' : 'episode.published', {
-    episode_id: episodeId,
-    show_id: showId,
-    title,
-    provider: 'youtube',
-    youtube_video_id: uploadResult.videoId,
-    view_url: uploadResult.viewUrl,
-    scheduled_at: scheduled_at || null,
-  })
-
+  // Return URLs to client for browser-side upload
   return jsonResponse({
     provider: 'youtube',
-    youtube_video_id: uploadResult.videoId,
-    status,
-    view_url: uploadResult.viewUrl,
-  }, 201)
+    mode: 'client_upload',
+    resumableUrl,
+    downloadUrl: sourceUrl,
+    mimeType,
+    fileSize,
+    episodeId,
+    showId,
+    title,
+    privacy_status,
+    scheduled_at,
+    channel_id: connection.external_show_id,
+  })
 }
 
-type VideoSourceResult =
-  | { videoBuffer: ArrayBuffer; mimeType: string }
+type SourceUrlResult =
+  | { url: string; mimeType: string; fileSize: number }
   | { error: Response }
 
-async function resolveVideoSource(
+async function resolveSourceDownloadUrl(
   supabase: any,
   orgId: string,
   videoSource: string,
-): Promise<VideoSourceResult> {
-  if (videoSource.startsWith('deliverable:')) {
-    const deliverableId = videoSource.slice('deliverable:'.length)
+): Promise<SourceUrlResult> {
+  if (videoSource.startsWith('file:')) {
+    const fileId = videoSource.slice('file:'.length)
     const { data: fileRef, error: fileRefError } = await supabase
       .from('file_references')
-      .select('external_id, name, mime_type, provider')
-      .eq('deliverable_id', deliverableId)
+      .select('external_id, name, mime_type, file_size, provider')
+      .eq('id', fileId)
       .single()
 
     if (fileRefError || !fileRef) {
-      return { error: errorResponse('No file reference found for this deliverable', 404) }
+      return { error: errorResponse('File not found', 404) }
     }
 
-    const downloadUrl = await resolveDownloadUrl(orgId, fileRef)
-    if (!downloadUrl) {
+    const downloadResult = await resolveDownloadUrl(orgId, fileRef)
+    if (!downloadResult) {
       return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
     }
 
-    const res = await fetch(downloadUrl.url, downloadUrl.headers ? { headers: downloadUrl.headers } : undefined)
-    if (!res.ok) {
-      return { error: errorResponse(`Failed to download video: ${res.status}`, 502) }
-    }
-
     return {
-      videoBuffer: await res.arrayBuffer(),
+      url: downloadResult.url,
       mimeType: fileRef.mime_type || 'video/mp4',
+      fileSize: fileRef.file_size || 0,
     }
   }
 
   if (videoSource.startsWith('url:')) {
     const url = videoSource.slice('url:'.length)
-    const res = await fetch(url)
-    if (!res.ok) {
-      return { error: errorResponse(`Failed to download video from URL: ${res.status}`, 502) }
-    }
-    const contentType = res.headers.get('content-type')
+    const headRes = await fetch(url, { method: 'HEAD' })
     return {
-      videoBuffer: await res.arrayBuffer(),
-      mimeType: contentType?.startsWith('video/') ? contentType : 'video/mp4',
+      url,
+      mimeType: headRes.headers.get('content-type') || 'video/mp4',
+      fileSize: parseInt(headRes.headers.get('content-length') || '0', 10),
     }
   }
 
-  return { error: errorResponse('video_source must start with "deliverable:" or "url:"', 400) }
+  return { error: errorResponse('video_source must start with "file:" or "url:"', 400) }
+}
+
+type AudioBufferResult =
+  | { buffer: ArrayBuffer; filename: string }
+  | { error: Response }
+
+async function resolveAudioBuffer(
+  supabase: any,
+  orgId: string,
+  audioSource: string,
+): Promise<AudioBufferResult> {
+  if (audioSource.startsWith('file:')) {
+    const fileId = audioSource.slice('file:'.length)
+    const { data: fileRef, error: fileRefError } = await supabase
+      .from('file_references')
+      .select('external_id, name, mime_type, file_size, provider')
+      .eq('id', fileId)
+      .single()
+
+    if (fileRefError || !fileRef) {
+      return { error: errorResponse('File not found', 404) }
+    }
+
+    const downloadResult = await resolveDownloadUrl(orgId, fileRef)
+    if (!downloadResult) {
+      return { error: errorResponse(`Could not resolve download URL from ${fileRef.provider}`, 502) }
+    }
+
+    const audioRes = await fetch(downloadResult.url, {
+      headers: downloadResult.headers || {},
+    })
+    if (!audioRes.ok) {
+      return { error: errorResponse(`Failed to download file: ${audioRes.status}`, 502) }
+    }
+
+    return {
+      buffer: await audioRes.arrayBuffer(),
+      filename: fileRef.name || 'episode.mp3',
+    }
+  }
+
+  if (audioSource.startsWith('url:')) {
+    const url = audioSource.slice('url:'.length)
+    const audioRes = await fetch(url)
+    if (!audioRes.ok) {
+      return { error: errorResponse(`Failed to download audio from URL: ${audioRes.status}`, 502) }
+    }
+    return {
+      buffer: await audioRes.arrayBuffer(),
+      filename: url.split('/').pop() || 'episode.mp3',
+    }
+  }
+
+  return { error: errorResponse('audio_source must start with "file:" or "url:"', 400) }
 }
 
 async function resolveDownloadUrl(
   orgId: string,
   fileRef: { external_id: string; provider: string },
 ): Promise<{ url: string; headers?: Record<string, string> } | null> {
+  if (fileRef.provider === 'r2') {
+    const url = await getDownloadUrl(fileRef.external_id)
+    return { url }
+  }
+
   ensureProvidersRegistered()
 
   if (fileRef.provider === 'frame_io') {

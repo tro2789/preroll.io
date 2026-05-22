@@ -25,7 +25,7 @@ The workflow is pretty straightforward. The episode audio gets transcribed using
 
 Once you have a transcript, a language model reads it and generates structured output: show notes with key topics, a concise episode description, social media copy for different platforms, or all of the above.
 
-In [PreRoll's AI pipeline](/docs/features/ai-assistant), this happens as a connected sequence. Upload an episode's audio, and the system automatically transcribes it, then generates show notes, descriptions, and social posts from the transcript. You can trigger each step individually or re-run generation with different settings.
+In [PreRoll.io's AI pipeline](/docs/features/ai-assistant), this happens as a connected sequence. Upload an episode's audio, and the system automatically transcribes it, then generates show notes, descriptions, and social posts from the transcript. You can trigger each step individually or re-run generation with different settings.
 
 The whole process typically finishes in under two minutes for a 60-minute episode. Compare that to 30+ minutes of manual work.
 
@@ -53,7 +53,7 @@ The practical takeaway: AI gets you 80% of the way there. The edit pass takes 5-
 
 There's a real gap between "default AI output" and "well-configured AI output." A few settings make a noticeable difference.
 
-**Set the tone.** Most AI generation tools let you specify a tone: professional, casual, energetic. A business strategy podcast and a comedy interview show need fundamentally different show notes, and telling the model which direction to lean produces noticeably better first drafts. In PreRoll, tone and length are configurable per show, so you set them once and every [episode](/docs/features/episodes) inherits the right style.
+**Set the tone.** Most AI generation tools let you specify a tone: professional, casual, energetic. A business strategy podcast and a comedy interview show need fundamentally different show notes, and telling the model which direction to lean produces noticeably better first drafts. In PreRoll.io, tone and length are configurable per show, so you set them once and every [episode](/docs/features/episodes) inherits the right style.
 
 **Provide context beyond the transcript.** A transcript alone is missing context that a producer has: the show's format, the audience, what makes this episode different. Tools that include the show description, previous episode titles, or a show notes template in the prompt produce output that fits the show better. This is why integrated tools outperform copy-pasting a transcript into a generic chatbot.
 
@@ -71,7 +71,7 @@ Show notes get the most attention, but the same pipeline handles two other time 
 
 **Social media copy** is where the time savings really compound. Each episode needs posts for multiple platforms, each with different conventions: character limits on Twitter, paragraph-friendly formatting on LinkedIn, hashtag expectations on Instagram. Generating all of these from a single transcript, with platform-specific formatting baked in, eliminates the context-switching that makes social promotion such a drag.
 
-In PreRoll, all three outputs generate from the same transcript in one pipeline run. You review and edit them in the same interface where you manage the rest of the episode workflow, no tab-switching or copy-pasting between tools.
+In PreRoll.io, all three outputs generate from the same transcript in one pipeline run. You review and edit them in the same interface where you manage the rest of the episode workflow, no tab-switching or copy-pasting between tools.
 
 ## When AI Is Not the Right Tool
 

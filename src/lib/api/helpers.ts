@@ -35,7 +35,7 @@ export async function getAuthenticatedClient() {
       return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'User not found' }, { status: 401 }) }
     }
 
-    const org = await resolveOrgFromApiKey(apiKey.org_id)
+    const org = await resolveOrgFromApiKey(apiKey.org_id, apiKey.user_id)
     if (!org) {
       return { supabase: null, user: null, org: null as OrgContext | null, error: NextResponse.json({ error: 'Organization not found' }, { status: 401 }) }
     }
@@ -59,6 +59,39 @@ export async function getAuthenticatedClient() {
   }
 
   return { supabase, user, org, error: null }
+}
+
+export async function getAuthenticatedClientOrPortalUser() {
+  const result = await getAuthenticatedClient()
+
+  if (!result.error) {
+    return { ...result, portalUserId: null as string | null }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return { ...result, portalUserId: null as string | null }
+  }
+
+  const { data: clientCheck } = await supabase
+    .from('clients')
+    .select('id')
+    .eq('client_user_id', user.id)
+    .limit(1)
+    .single()
+
+  if (!clientCheck) {
+    return { ...result, portalUserId: null as string | null }
+  }
+
+  return {
+    supabase,
+    user,
+    org: null as OrgContext | null,
+    error: null as NextResponse | null,
+    portalUserId: user.id as string | null,
+  }
 }
 
 export function jsonResponse(data: unknown, status = 200) {

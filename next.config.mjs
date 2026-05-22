@@ -26,6 +26,18 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    if (process.env.PREROLL_SELF_HOSTED === 'true') {
+      return [
+        {
+          source: '/admin/:path*',
+          destination: '/app',
+          permanent: false,
+        },
+      ]
+    }
+    return []
+  },
 };
 
 const withMDX = createMDX();

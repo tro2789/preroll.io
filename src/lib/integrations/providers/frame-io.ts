@@ -1,5 +1,5 @@
 import type { IntegrationProviderClient, OAuthConfig, BrowseResult, BrowseItem, ShareLink, ProviderAccount, ProviderCapabilities } from '../types'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 
 const FRAMEIO_API = 'https://api.frame.io/v4'
 const ADOBE_IMS_AUTH = 'https://ims-na1.adobelogin.com/ims/authorize/v2'
@@ -255,7 +255,9 @@ class FrameIoClient implements IntegrationProviderClient {
     if (!secret) return false
     const message = `v0:${timestamp}:${payload}`
     const expected = createHmac('sha256', secret).update(message).digest('hex')
-    return `v0=${expected}` === signature
+    const expectedStr = `v0=${expected}`
+    if (Buffer.byteLength(expectedStr) !== Buffer.byteLength(signature)) return false
+    return timingSafeEqual(Buffer.from(expectedStr), Buffer.from(signature))
   }
 
   async createProject(accessToken: string, accountId: string, workspaceId: string, name: string) {

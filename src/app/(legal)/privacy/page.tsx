@@ -2,8 +2,20 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — PreRoll.io',
+  title: 'Privacy Policy',
   description: 'How PreRoll.io collects, uses, and protects your data.',
+  alternates: { canonical: 'https://preroll.io/privacy' },
+  openGraph: {
+    title: 'Privacy Policy | PreRoll.io',
+    description: 'How PreRoll.io collects, uses, and protects your data.',
+    url: 'https://preroll.io/privacy',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Privacy Policy | PreRoll.io',
+    description: 'How PreRoll.io collects, uses, and protects your data.',
+  },
 }
 
 const sections = [

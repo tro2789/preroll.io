@@ -6,13 +6,14 @@ export async function GET(
   { params }: { params: Promise<{ endpointId: string }> }
 ) {
   const { endpointId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data: endpoint } = await supabase!
     .from('webhook_endpoints')
     .select('id')
     .eq('id', endpointId)
+    .eq('org_id', org!.id)
     .single()
 
   if (!endpoint) return errorResponse('Webhook endpoint not found', 404)

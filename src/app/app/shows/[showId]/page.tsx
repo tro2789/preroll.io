@@ -16,7 +16,7 @@ export default async function ShowDetailPage({
 
   autoArchiveApprovedEpisodes(supabase)
 
-  const [{ data: show, error }, { data: episodes }] = await Promise.all([
+  const [{ data: show, error }, { data: episodes }, { data: publishedEpisodes }] = await Promise.all([
     supabase
       .from('shows')
       .select('id, name, description, cover_art_url, format, schedule, allow_client_downloads, client_id, ai_auto_transcribe, ai_auto_generate, ai_tone, ai_length, episode_template, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(id, name, position, wip_limit, status_override)')
@@ -27,9 +27,18 @@ export default async function ShowDetailPage({
       .from('episodes')
       .select('id, title, episode_number, stage_id, status, position, scheduled_publish_date, frame_io_url, image_url, show_id, distribution_status, episode_tags(tag_id, tags(id, name, color))')
       .eq('show_id', showId)
+      .not('status', 'eq', 'published')
       .is('archived_at', null)
       .order('position', { ascending: true })
       .order('episode_number', { ascending: true }),
+    supabase
+      .from('episodes')
+      .select('id, title, episode_number, status, scheduled_publish_date, published_at, image_url, show_id')
+      .eq('show_id', showId)
+      .eq('status', 'published')
+      .is('archived_at', null)
+      .order('published_at', { ascending: false, nullsFirst: false })
+      .order('episode_number', { ascending: false }),
   ])
 
   if (error || !show) {
@@ -76,6 +85,11 @@ export default async function ShowDetailPage({
     }
   })
 
+  const mappedPublished = (publishedEpisodes ?? []).map((ep) => ({
+    ...ep,
+    image_url: resolveImageUrl(ep.image_url),
+  }))
+
   const resolvedCoverArtUrl = resolveImageUrl(show.cover_art_url)
 
   return (
@@ -86,6 +100,7 @@ export default async function ShowDetailPage({
         client={client}
         stages={stages}
         episodes={mappedEpisodes}
+        publishedEpisodes={mappedPublished}
         resolvedCoverArtUrl={resolvedCoverArtUrl}
       />
     </div>

@@ -55,24 +55,44 @@ export async function POST(request: Request) {
   const fileProvider = body.provider || (body.frameio_file_id ? 'frame_io' : null)
 
   if (externalFileId && fileProvider && body.episode_id) {
-    const { data: { user } } = await supabase!.auth.getUser()
-    const { data: fileRef } = await supabase!.from('file_references').insert({
-      user_id: user!.id,
-      org_id: org!.id,
-      provider: fileProvider,
-      external_id: externalFileId,
-      name: body.title,
-      mime_type: body.mime_type || null,
-      external_url: body.file_url || null,
-      episode_id: body.episode_id,
-      deliverable_id: data.id,
-    }).select('id, version_group_id').single()
+    if (fileProvider === 'r2') {
+      const { data: existingRef } = await supabase!
+        .from('file_references')
+        .select('id, version_group_id')
+        .eq('id', externalFileId)
+        .eq('provider', 'r2')
+        .single()
 
-    if (fileRef) {
-      await supabase!
-        .from('deliverables')
-        .update({ version_group_id: fileRef.version_group_id, file_reference_id: fileRef.id })
-        .eq('id', data.id)
+      if (existingRef) {
+        await supabase!
+          .from('file_references')
+          .update({ deliverable_id: data.id })
+          .eq('id', existingRef.id)
+        await supabase!
+          .from('deliverables')
+          .update({ version_group_id: existingRef.version_group_id, file_reference_id: existingRef.id })
+          .eq('id', data.id)
+      }
+    } else {
+      const { data: { user } } = await supabase!.auth.getUser()
+      const { data: fileRef } = await supabase!.from('file_references').insert({
+        user_id: user!.id,
+        org_id: org!.id,
+        provider: fileProvider,
+        external_id: externalFileId,
+        name: body.title,
+        mime_type: body.mime_type || null,
+        external_url: body.file_url || null,
+        episode_id: body.episode_id,
+        deliverable_id: data.id,
+      }).select('id, version_group_id').single()
+
+      if (fileRef) {
+        await supabase!
+          .from('deliverables')
+          .update({ version_group_id: fileRef.version_group_id, file_reference_id: fileRef.id })
+          .eq('id', data.id)
+      }
     }
   }
 

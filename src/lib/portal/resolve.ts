@@ -1,5 +1,6 @@
 import { headers, cookies } from 'next/headers'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase/server'
 
 const CLIENT_SELECT = 'id, name, org_id, portal_welcome_dismissed_at, organizations(display_name, logo_url, accent_color, portal_custom_css, plan_id, allow_client_downloads)' as const
 
@@ -29,14 +30,24 @@ export async function resolvePortalClient(
   const previewClientId = previewFromUrl || cookieStore.get('portal_preview_client_id')?.value || null
 
   if (previewClientId) {
-    const { data } = await supabase
+    const service = createServiceClient()
+    const { data } = await service
       .from('clients')
       .select(CLIENT_SELECT)
       .eq('id', previewClientId)
       .single()
 
     if (data) {
-      return { client: data as unknown as PortalClient, isPreview: true }
+      const { data: membership } = await service
+        .from('memberships')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('org_id', data.org_id)
+        .single()
+
+      if (membership) {
+        return { client: data as unknown as PortalClient, isPreview: true }
+      }
     }
   }
 

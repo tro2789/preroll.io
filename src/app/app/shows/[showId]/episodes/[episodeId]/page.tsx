@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { resolveImageUrl } from '@/lib/r2/client'
+import { resolveUserOrg } from '@/lib/org/resolve'
 import { EpisodeDetailActions } from './episode-detail-actions'
 import { PublishButton } from './publish-button'
 import { EpisodeTabs } from './episode-tabs'
@@ -26,7 +27,7 @@ export default async function EpisodeDetailPage({
       .single(),
     supabase
       .from('deliverables')
-      .select('id, type, title, description, producer_notes, file_url, file_key, status, reviewer_notes, reviewed_at, created_at, updated_at, episode_id, show_id')
+      .select('id, type, title, description, producer_notes, file_url, file_key, status, reviewer_notes, reviewed_at, created_at, updated_at, episode_id, show_id, version_group_id, file_reference_id')
       .eq('episode_id', episodeId)
       .order('created_at', { ascending: false }),
     supabase
@@ -44,9 +45,8 @@ export default async function EpisodeDetailPage({
       .eq('show_id', showId),
     supabase
       .from('file_references')
-      .select('id, mime_type')
-      .eq('episode_id', episodeId)
-      .limit(10),
+      .select('id, name, mime_type, file_size, provider')
+      .eq('episode_id', episodeId),
     supabase
       .from('pipeline_stages')
       .select('id, name, position')
@@ -65,6 +65,9 @@ export default async function EpisodeDetailPage({
     )
   }
 
+  const org = await resolveUserOrg(user!.id)
+  const defaultProvider = org?.defaultDeliveryProvider || null
+
   const stage = episode.pipeline_stages as { id: string; name: string; position: number } | null
   const showData = (episode as any).shows as { name?: string; clients?: any } | null
   const client = showData?.clients ?? null
@@ -73,7 +76,6 @@ export default async function EpisodeDetailPage({
     frame_io: { displayName: 'Frame.io' },
     google_drive: { displayName: 'Google Drive' },
     vimeo: { displayName: 'Vimeo', acceptedMimeTypes: ['video/*'] },
-    youtube: { displayName: 'YouTube', acceptedMimeTypes: ['video/*'] },
     dropbox: { displayName: 'Dropbox' },
   }
 
@@ -120,6 +122,7 @@ export default async function EpisodeDetailPage({
                   scheduled_publish_date: episode.scheduled_publish_date,
                 }}
                 deliverables={(deliverables || []).map((d: any) => ({ id: d.id, title: d.title, type: d.type }))}
+                fileReferences={(audioFileRefs || []).map((f: any) => ({ id: f.id, name: f.name, mimeType: f.mime_type, fileSize: f.file_size, provider: f.provider }))}
               />
             ))}
             <EpisodeDetailActions showId={showId} episodeId={episodeId} />
@@ -146,6 +149,7 @@ export default async function EpisodeDetailPage({
         showId={showId}
         showName={showData?.name || 'Show'}
         clientName={client?.name || null}
+        client={client ? { id: client.id, name: client.name, email: client.email, invite_code: client.invite_code, onboarded_at: client.onboarded_at } : null}
         stage={stage ? { id: stage.id, name: stage.name } : null}
         stages={stages}
         episode={{
@@ -159,7 +163,10 @@ export default async function EpisodeDetailPage({
         }}
         integration={integration}
         deliverables={deliverables || []}
-        connectedProviders={(connectedProviders || []).map(p => p.provider as IntegrationProvider)}
+        connectedProviders={defaultProvider
+          ? (connectedProviders || []).filter(p => p.provider === defaultProvider).map(p => p.provider as IntegrationProvider)
+          : []
+        }
         hasIntegration={!!episodeIntegration}
         hasAudioFiles={hasAudioFiles}
         fileCount={(audioFileRefs || []).length}

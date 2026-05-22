@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { getAllPosts } from '@/lib/blog'
 import { LogoIcon } from '@/components/ui/logo'
@@ -7,6 +8,17 @@ export const metadata: Metadata = {
   title: 'Blog',
   description: 'Tips on podcast production, workflow automation, and growing your podcast business.',
   alternates: { canonical: 'https://preroll.io/blog' },
+  openGraph: {
+    title: 'Blog | PreRoll.io',
+    description: 'Tips on podcast production, workflow automation, and growing your podcast business.',
+    url: 'https://preroll.io/blog',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Blog | PreRoll.io',
+    description: 'Tips on podcast production, workflow automation, and growing your podcast business.',
+  },
 }
 
 function formatDate(date: string) {
@@ -50,7 +62,7 @@ function FeaturedPost({ post }: { post: ReturnType<typeof getAllPosts>[0] }) {
       <article className="relative overflow-hidden rounded-[16px] border border-border-default bg-surface-raised transition-all hover:border-border-hover hover:shadow-[0_20px_60px_-20px_oklch(0.05_0_0/0.6)]">
         {post.image && (
           <div className="aspect-[2.4/1] overflow-hidden">
-            <img src={post.image} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
+            <Image src={post.image} alt={`Featured image for ${post.title}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" width={1200} height={500} priority />
           </div>
         )}
         <div className="relative p-8 sm:p-10">
@@ -85,7 +97,7 @@ function PostCard({ post }: { post: ReturnType<typeof getAllPosts>[0] }) {
       <article className="h-full rounded-[12px] border border-border-default bg-surface-raised transition-all hover:border-border-hover hover:shadow-[0_12px_40px_-12px_oklch(0.05_0_0/0.5)] flex flex-col overflow-hidden">
         {post.image && (
           <div className="aspect-[1.8/1] overflow-hidden">
-            <img src={post.image} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+            <Image src={post.image} alt={`Featured image for ${post.title}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" width={600} height={333} />
           </div>
         )}
         <div className="p-6 flex flex-col flex-1">

@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: 'How good is the AI, and what model is it?',
-    a: 'It\'s built on Claude and Deepgram. Upload audio and it auto-transcribes, then generates ranked title suggestions, full show notes, episode descriptions, and social posts for Twitter, LinkedIn, and Instagram. Every draft lands in the episode for a human to edit and approve.',
+    a: 'It\'s built on Claude and Deepgram. Upload audio and it auto-transcribes, then generates ranked title suggestions and full show notes. Every draft lands in the episode for a human to edit and approve.',
   },
   {
     q: 'What can the API and the MCP server actually do?',

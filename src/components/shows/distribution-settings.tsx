@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { DISTRIBUTION_PROVIDER_NAMES } from '@/lib/integrations/types'
 
 interface Connection {
@@ -8,6 +9,7 @@ interface Connection {
   provider: string
   external_show_id: string
   external_show_name: string
+  connected_by?: string
 }
 
 interface SelectionItem {
@@ -24,7 +26,11 @@ export function DistributionSettings({ showId }: { showId: string }) {
   const [activeProvider, setActiveProvider] = useState<string | null>(null)
   const [showPicker, setShowPicker] = useState<SelectionItem[] | null>(null)
   const [pickerProvider, setPickerProvider] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+  const [castopodUrl, setCastopodUrl] = useState('')
+  const [castopodUsername, setCastopodUsername] = useState('')
+  const [castopodPassword, setCastopodPassword] = useState('')
 
   useEffect(() => {
     async function fetchData() {
@@ -54,7 +60,6 @@ export function DistributionSettings({ showId }: { showId: string }) {
   const connectedProviders = new Set(connections.map((c) => c.provider))
 
   async function handleTransistorConnect() {
-    setError(null)
     setConnecting(true)
     try {
       const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
@@ -73,14 +78,45 @@ export function DistributionSettings({ showId }: { showId: string }) {
         setActiveProvider(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect')
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
       setConnecting(false)
     }
   }
 
-  async function handleYouTubeConnect() {
-    setError(null)
+  async function handleCastopodConnect() {
+    setConnecting(true)
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          provider: 'castopod',
+          instance_url: castopodUrl,
+          username: castopodUsername,
+          password: castopodPassword,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to connect')
+      if (json.data?.needs_selection) {
+        setShowPicker(json.data.shows)
+        setPickerProvider('castopod')
+      } else {
+        setConnections((prev) => [...prev.filter((c) => c.provider !== 'castopod'), json.data])
+        setCastopodUrl('')
+        setCastopodUsername('')
+        setCastopodPassword('')
+        setActiveProvider(null)
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
+    } finally {
+      setConnecting(false)
+    }
+  }
+
+  async function handleYouTubeMyChannel() {
     setConnecting(true)
     try {
       const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
@@ -90,23 +126,42 @@ export function DistributionSettings({ showId }: { showId: string }) {
       })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed to connect')
-      if (json.data?.needs_selection) {
-        setShowPicker(json.data.shows)
-        setPickerProvider('youtube')
-      } else {
-        setConnections((prev) => [...prev.filter((c) => c.provider !== 'youtube'), json.data])
-        setActiveProvider(null)
-      }
+      setShowPicker(json.data?.channels || [])
+      setPickerProvider('youtube')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect')
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
       setConnecting(false)
     }
   }
 
+  async function handleYouTubeClientLink() {
+    setConnecting(true)
+    try {
+      const res = await fetch(`/api/v1/shows/${showId}/distribution/youtube-invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to generate link')
+      setInviteUrl(json.data.url)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to generate link')
+    } finally {
+      setConnecting(false)
+    }
+  }
+
+  async function handleCopyLink() {
+    if (!inviteUrl) return
+    await navigator.clipboard.writeText(inviteUrl)
+    setCopied(true)
+    toast.success('Link copied to clipboard')
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   async function handleSelectItem(externalShowId: string) {
     if (!pickerProvider) return
-    setError(null)
     setConnecting(true)
     try {
       const body: Record<string, string> = {
@@ -114,6 +169,11 @@ export function DistributionSettings({ showId }: { showId: string }) {
         external_show_id: externalShowId,
       }
       if (pickerProvider === 'transistor') body.api_key = apiKey
+      if (pickerProvider === 'castopod') {
+        body.instance_url = castopodUrl
+        body.username = castopodUsername
+        body.password = castopodPassword
+      }
 
       const res = await fetch(`/api/v1/shows/${showId}/distribution/connect`, {
         method: 'POST',
@@ -128,14 +188,13 @@ export function DistributionSettings({ showId }: { showId: string }) {
       setPickerProvider(null)
       setActiveProvider(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect')
+      toast.error(err instanceof Error ? err.message : 'Failed to connect')
     } finally {
       setConnecting(false)
     }
   }
 
   async function handleDisconnect(provider: string) {
-    setError(null)
     try {
       const res = await fetch(`/api/v1/shows/${showId}/distribution?provider=${provider}`, {
         method: 'DELETE',
@@ -146,8 +205,16 @@ export function DistributionSettings({ showId }: { showId: string }) {
       }
       setConnections((prev) => prev.filter((c) => c.provider !== provider))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to disconnect')
+      toast.error(err instanceof Error ? err.message : 'Failed to disconnect')
     }
+  }
+
+  function resetYouTubeState() {
+    setActiveProvider(null)
+    setShowPicker(null)
+    setPickerProvider(null)
+    setInviteUrl(null)
+    setCopied(false)
   }
 
   if (loading) return null
@@ -158,10 +225,6 @@ export function DistributionSettings({ showId }: { showId: string }) {
         Distribution
       </h3>
 
-      {error && (
-        <p className="mt-3 text-sm text-red-400">{error}</p>
-      )}
-
       {connections.map((conn) => (
         <div key={conn.id} className="mt-4 flex items-center justify-between">
           <div>
@@ -170,22 +233,49 @@ export function DistributionSettings({ showId }: { showId: string }) {
             </p>
             <p className="text-sm text-text-secondary">
               {conn.external_show_name}
+              {conn.connected_by === 'client' && (
+                <span className="ml-2 text-xs text-text-tertiary">(connected by client)</span>
+              )}
             </p>
           </div>
           <button
             onClick={() => handleDisconnect(conn.provider)}
-            className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700 transition-colors"
+            className="rounded-md border border-error/30 bg-error/5 px-3 py-1.5 text-sm font-medium text-error hover:bg-error/10 transition-colors"
           >
             Disconnect
           </button>
         </div>
       ))}
 
-      {showPicker && (
+      {/* Castopod picker */}
+      {showPicker && pickerProvider === 'castopod' && (
         <div className="mt-4">
-          <p className="text-sm text-text-secondary mb-3">
-            Select {pickerProvider === 'youtube' ? 'a channel' : 'a show'} to connect:
-          </p>
+          <p className="text-sm text-text-secondary mb-3">Select a podcast to connect:</p>
+          <div className="space-y-2">
+            {showPicker.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleSelectItem(item.id)}
+                disabled={connecting}
+                className="block w-full text-left rounded-md border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => { setShowPicker(null); setPickerProvider(null); setCastopodUrl(''); setCastopodUsername(''); setCastopodPassword('') }}
+            className="mt-3 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Transistor picker */}
+      {showPicker && pickerProvider === 'transistor' && (
+        <div className="mt-4">
+          <p className="text-sm text-text-secondary mb-3">Select a show to connect:</p>
           <div className="space-y-2">
             {showPicker.map((item) => (
               <button
@@ -200,15 +290,70 @@ export function DistributionSettings({ showId }: { showId: string }) {
           </div>
           <button
             onClick={() => { setShowPicker(null); setPickerProvider(null); setApiKey('') }}
-            className="mt-3 text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="mt-3 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             Cancel
           </button>
         </div>
       )}
 
-      {!showPicker && (
+      {/* YouTube channel picker */}
+      {showPicker && pickerProvider === 'youtube' && (
+        <div className="mt-4">
+          <p className="text-sm text-text-secondary mb-3">Select a channel to connect:</p>
+          <div className="space-y-2">
+            {showPicker.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleSelectItem(item.id)}
+                disabled={connecting}
+                className="block w-full text-left rounded-md border border-border-default bg-surface-overlay px-3 py-2 text-sm text-text-primary hover:bg-surface-input transition-colors disabled:opacity-50"
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={resetYouTubeState}
+            className="mt-3 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* YouTube invite link */}
+      {inviteUrl && (
+        <div className="mt-4">
+          <p className="text-sm text-text-secondary mb-3">
+            Send this link to your client. They will connect their YouTube channel and you will be able to publish episodes to it. The link expires in 7 days.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              readOnly
+              value={inviteUrl}
+              className="flex-1 rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary truncate"
+            />
+            <button
+              onClick={handleCopyLink}
+              className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors"
+            >
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+          <button
+            onClick={resetYouTubeState}
+            className="mt-3 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {!showPicker && !inviteUrl && (
         <div className="mt-4 space-y-3">
+          {/* Transistor */}
           {!connectedProviders.has('transistor') && (
             activeProvider === 'transistor' ? (
               <div>
@@ -233,7 +378,7 @@ export function DistributionSettings({ showId }: { showId: string }) {
                 </div>
                 <button
                   onClick={() => { setActiveProvider(null); setApiKey('') }}
-                  className="mt-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                  className="mt-2 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
                 >
                   Cancel
                 </button>
@@ -249,30 +394,116 @@ export function DistributionSettings({ showId }: { showId: string }) {
             )
           )}
 
+          {/* YouTube */}
           {!connectedProviders.has('youtube') && (
-            youtubeConnected ? (
-              <button
-                onClick={handleYouTubeConnect}
-                disabled={connecting}
-                className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5 disabled:opacity-50"
-              >
-                <span className="font-medium text-text-primary">YouTube</span>
-                <span className="text-text-secondary">
-                  {connecting && activeProvider !== 'transistor' ? 'Connecting...' : 'Video publishing'}
-                </span>
-              </button>
+            activeProvider === 'youtube' ? (
+              <div className="space-y-2">
+                <p className="text-sm text-text-secondary mb-1">
+                  How should this show connect to YouTube?
+                </p>
+                {youtubeConnected && (
+                  <button
+                    onClick={handleYouTubeMyChannel}
+                    disabled={connecting}
+                    className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5 disabled:opacity-50"
+                  >
+                    <span className="font-medium text-text-primary">Use my channel</span>
+                    <span className="text-text-secondary">Select from your connected channels</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleYouTubeClientLink}
+                  disabled={connecting}
+                  className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5 disabled:opacity-50"
+                >
+                  <span className="font-medium text-text-primary">Send link to client</span>
+                  <span className="text-text-secondary">Client connects their own channel</span>
+                </button>
+                {!youtubeConnected && (
+                  <a
+                    href="/app/settings/integrations?connect=youtube"
+                    className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5"
+                  >
+                    <span className="font-medium text-text-primary">Use my channel</span>
+                    <span className="text-text-secondary">Connect your account first</span>
+                  </a>
+                )}
+                <button
+                  onClick={resetYouTubeState}
+                  className="mt-1 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
             ) : (
-              <a
-                href="/app/settings/integrations?connect=youtube"
+              <button
+                onClick={() => setActiveProvider('youtube')}
                 className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5"
               >
                 <span className="font-medium text-text-primary">YouTube</span>
-                <span className="text-text-secondary">Connect account first &rarr;</span>
-              </a>
+                <span className="text-text-secondary">Video publishing</span>
+              </button>
             )
           )}
 
-          {connectedProviders.has('transistor') && connectedProviders.has('youtube') && (
+          {/* Castopod */}
+          {!connectedProviders.has('castopod') && (
+            activeProvider === 'castopod' ? (
+              <div>
+                <p className="text-sm text-text-secondary mb-3">
+                  Connect to your self-hosted Castopod instance to publish episodes.
+                </p>
+                <div className="space-y-2">
+                  <input
+                    type="url"
+                    value={castopodUrl}
+                    onChange={(e) => setCastopodUrl(e.target.value)}
+                    placeholder="https://podcast.example.com"
+                    className="w-full rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  <input
+                    type="text"
+                    value={castopodUsername}
+                    onChange={(e) => setCastopodUsername(e.target.value)}
+                    placeholder="API username"
+                    className="w-full rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={castopodPassword}
+                      onChange={(e) => setCastopodPassword(e.target.value)}
+                      placeholder="API password"
+                      className="flex-1 rounded-md border border-border-default bg-surface-input px-3 py-1.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                    <button
+                      onClick={handleCastopodConnect}
+                      disabled={!castopodUrl.trim() || !castopodUsername.trim() || !castopodPassword.trim() || connecting}
+                      className="rounded-md bg-accent px-4 py-1.5 text-sm font-medium text-white hover:bg-accent-hover transition-colors disabled:opacity-50"
+                    >
+                      {connecting ? 'Connecting...' : 'Connect'}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setActiveProvider(null); setCastopodUrl(''); setCastopodUsername(''); setCastopodPassword('') }}
+                  className="mt-2 rounded-md border border-border-default bg-surface-base px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setActiveProvider('castopod')}
+                className="flex w-full items-center justify-between rounded-md border border-border-default bg-surface-overlay px-4 py-3 text-left text-sm transition-colors hover:border-accent hover:bg-accent/5"
+              >
+                <span className="font-medium text-text-primary">Castopod</span>
+                <span className="text-text-secondary">Self-hosted podcast hosting</span>
+              </button>
+            )
+          )}
+
+          {connectedProviders.has('transistor') && connectedProviders.has('youtube') && connectedProviders.has('castopod') && (
             <p className="text-sm text-text-secondary">All distribution providers connected.</p>
           )}
         </div>

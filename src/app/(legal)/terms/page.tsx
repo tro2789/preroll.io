@@ -2,8 +2,20 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service — PreRoll.io',
+  title: 'Terms of Service',
   description: 'Terms and conditions for using PreRoll.io.',
+  alternates: { canonical: 'https://preroll.io/terms' },
+  openGraph: {
+    title: 'Terms of Service | PreRoll.io',
+    description: 'Terms and conditions for using PreRoll.io.',
+    url: 'https://preroll.io/terms',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Terms of Service | PreRoll.io',
+    description: 'Terms and conditions for using PreRoll.io.',
+  },
 }
 
 const sections = [

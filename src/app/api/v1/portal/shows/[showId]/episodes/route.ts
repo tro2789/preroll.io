@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
 import { cookies } from 'next/headers'
 import { sendEmail, getSiteUrl } from '@/lib/email/send'
+import { emailTemplate, emailHighlightBlock } from '@/lib/email/template'
 
 export async function POST(
   request: NextRequest,
@@ -87,20 +88,18 @@ export async function POST(
     .eq('org_id', client.org_id)
 
   if (members && members.length > 0) {
-    const siteUrl = await getSiteUrl()
+    const siteUrl = getSiteUrl()
     const episodeUrl = `${siteUrl}/app/shows/${showId}/episodes/${episode.id}`
     const subject = `New episode request: ${episode.title}`
-    const html = `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px;">
-        <p><strong>${client.name}</strong> submitted a new episode request for <strong>${show.name}</strong>.</p>
-        <div style="background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 16px 0;">
-          <p style="margin: 0 0 8px; font-weight: 600;">${episode.title}</p>
-          ${notes ? `<p style="margin: 0 0 8px; color: #666;">${notes}</p>` : ''}
-          ${links.length > 0 ? `<p style="margin: 0; color: #666;">Content links:<br/>${links.map((l: string) => `<a href="${l.trim()}">${l.trim()}</a>`).join('<br/>')}</p>` : ''}
-        </div>
-        <a href="${episodeUrl}" style="display: inline-block; background: #e86a47; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 500;">View Episode</a>
-      </div>
-    `
+    const detailLines = [
+      `<p style="margin: 0 0 8px; font-weight: 600;">${episode.title}</p>`,
+      notes ? `<p style="margin: 0 0 8px; color: #6b7280;">${notes}</p>` : '',
+      links.length > 0 ? `<p style="margin: 0; color: #6b7280;">Content links:<br/>${links.map((l: string) => `<a href="${l.trim()}" style="color: #e86a47;">${l.trim()}</a>`).join('<br/>')}</p>` : '',
+    ].filter(Boolean).join('')
+    const html = emailTemplate({
+      body: `<p style="margin: 0 0 16px;"><strong>${client.name}</strong> submitted a new episode request for <strong>${show.name}</strong>.</p>${emailHighlightBlock(detailLines)}`,
+      cta: { label: 'View Episode', url: episodeUrl },
+    })
 
     for (const m of members) {
       const email = (m.user_profiles as unknown as { email: string } | null)?.email

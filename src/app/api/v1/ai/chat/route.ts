@@ -1,6 +1,6 @@
 import { getAuthenticatedClient, errorResponse } from '@/lib/api/helpers'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getAiAddonStatus, totalAvailableCredits, consumeCredits, getAnthropicApiKey } from '@/lib/ai/entitlements'
+import { getAiAddonStatus, totalAvailableCredits, consumeCredits, refundCredits, getAnthropicApiKey } from '@/lib/ai/entitlements'
 import { streamChat, buildSystemPrompt } from '@/lib/ai/chat-stream'
 import { executeAction, WRITE_TOOL_NAMES } from '@/lib/ai/chat-tools'
 import { AI_CHAT_CREDIT_COST, AI_CHAT_CONTEXT_WINDOW } from '@/lib/ai/constants'
@@ -18,6 +18,13 @@ export async function POST(request: Request) {
   const available = totalAvailableCredits(addon)
   if (!addon.selfHosted && available < AI_CHAT_CREDIT_COST) {
     return errorResponse('Insufficient AI credits', 403)
+  }
+
+  if (!addon.selfHosted) {
+    const reservation = await consumeCredits(org!.id, AI_CHAT_CREDIT_COST, 'ai_chat_reserve', `reserve-${Date.now()}`)
+    if (!reservation.success) {
+      return errorResponse('Insufficient AI credits', 403)
+    }
   }
 
   const body = await request.json()
@@ -175,8 +182,6 @@ export async function POST(request: Request) {
           tokens_used: totalTokens,
         })
 
-        await consumeCredits(org!.id, AI_CHAT_CREDIT_COST, 'ai_chat', sessionId!)
-
         const sessionUpdate: Record<string, string> = {}
         if (!session_id) {
           sessionUpdate.title = message.length > 60 ? message.slice(0, 57) + '...' : message
@@ -186,6 +191,9 @@ export async function POST(request: Request) {
         send('done', { tokens_used: totalTokens })
       } catch (err) {
         send('error', { message: (err as Error).message })
+        if (!addon.selfHosted) {
+          await refundCredits(org!.id, AI_CHAT_CREDIT_COST, 'ai_chat_error_refund', sessionId!)
+        }
       } finally {
         controller.close()
       }

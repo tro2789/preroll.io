@@ -47,7 +47,7 @@ export function ShowAiSettings({
     const next = !autoTranscribe
     setAutoTranscribe(next)
     if (next && autoGenerate.length === 0) {
-      const defaults: string[] = ['show_notes', 'description']
+      const defaults: string[] = ['show_notes', 'title_suggestions']
       setAutoGenerate(defaults)
       save({ ai_auto_transcribe: next, ai_auto_generate: defaults })
     } else {

@@ -12,7 +12,7 @@ const PROVIDERS = [
   { name: 'youtube', displayName: 'YouTube', comingSoon: false },
 ]
 
-export default async function IntegrationsPage({ searchParams }: { searchParams: Promise<{ connect?: string; returnTo?: string; connected?: string; error?: string }> }) {
+export default async function IntegrationsPage({ searchParams }: { searchParams: Promise<{ connect?: string; returnTo?: string; connected?: string; error?: string; detail?: string }> }) {
   const params = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -52,6 +52,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
       returnTo={params.returnTo}
       connectedProvider={params.connected}
       oauthError={params.error}
+      oauthErrorDetail={params.detail}
     />
   )
 }

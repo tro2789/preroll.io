@@ -7,13 +7,14 @@ export async function GET(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   const { clientId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data, error: dbError } = await supabase!
     .from('clients')
     .select('*')
     .eq('id', clientId)
+    .eq('org_id', org!.id)
     .single()
 
   if (dbError) return errorResponse('Client not found', 404)
@@ -25,14 +26,23 @@ export async function PATCH(
   { params }: { params: Promise<{ clientId: string }> }
 ) {
   const { clientId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const body = await request.json()
+  const allowedFields = ['name', 'company', 'email', 'phone', 'notes', 'service_terms']
+  const updateData: Record<string, unknown> = {}
+  for (const field of allowedFields) {
+    if (field in body) updateData[field] = body[field]
+  }
+
+  if (Object.keys(updateData).length === 0) return errorResponse('No valid fields to update')
+
   const { data, error: dbError } = await supabase!
     .from('clients')
-    .update(body)
+    .update(updateData)
     .eq('id', clientId)
+    .eq('org_id', org!.id)
     .select()
     .single()
 
@@ -55,6 +65,7 @@ export async function DELETE(
     .from('clients')
     .delete()
     .eq('id', clientId)
+    .eq('org_id', org!.id)
 
   if (dbError) return errorResponse(dbError.message, 500)
   return new Response(null, { status: 204 })
