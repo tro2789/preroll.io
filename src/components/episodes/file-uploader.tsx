@@ -56,6 +56,7 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
       const controller = new AbortController()
       abortControllersRef.current.set(file.name, controller)
       const { signal } = controller
+      let cleanupFileId: string | undefined
       try {
         if (acceptedMimeTypes && file.type && !matchesMimeType(file.type, acceptedMimeTypes)) {
           throw new Error(`${file.type.split('/')[0]} files are not supported by this provider — only ${acceptedMimeTypes.join(', ')} allowed`)
@@ -88,6 +89,8 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
           uploadProtocol?: string
         }
 
+        cleanupFileId = fileRefId || fileId
+
         if (uploadProtocol === 'resumable' && resumableUrl) {
           await uploadResumable(file, resumableUrl, signal)
         } else if (uploadProtocol === 'tus' && tusUrl) {
@@ -108,6 +111,10 @@ export function FileUploader({ episodeId, enabled, listenForDrags = true, accept
       } catch (err) {
         if (signal.aborted) {
           updateUpload(file.name, { status: 'cancelled' })
+          if (cleanupFileId) {
+            fetch(`/api/v1/episodes/${episodeId}/delivery/files/${cleanupFileId}`, { method: 'DELETE' })
+              .catch(() => {})
+          }
         } else {
           const message = err instanceof Error ? err.message : 'Upload failed'
           updateUpload(file.name, { status: 'error', error: message })
