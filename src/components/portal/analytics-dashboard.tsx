@@ -24,8 +24,16 @@ interface AnalyticsData {
     avg_downloads: number
     followers: number | null
   }
+  providers: string[]
   episodes: EpisodeData[]
   trends: TrendPoint[]
+}
+
+const PROVIDER_LABELS: Record<string, string> = {
+  apple: 'Apple Podcasts',
+  spotify_csv: 'Spotify',
+  transistor: 'Transistor',
+  castopod: 'Castopod',
 }
 
 const PERIODS = [
@@ -40,12 +48,14 @@ export function PortalAnalyticsDashboard({ showId }: { showId?: string }) {
   const [loading, setLoading] = useState(true)
   const [unavailable, setUnavailable] = useState(false)
   const [period, setPeriod] = useState('30d')
+  const [provider, setProvider] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({ period })
       if (showId) params.set('show_id', showId)
+      if (provider) params.set('provider', provider)
       const res = await fetch(`/api/v1/portal/analytics?${params}`)
       if (res.status === 403) { setUnavailable(true); return }
       const json = await res.json()
@@ -55,7 +65,7 @@ export function PortalAnalyticsDashboard({ showId }: { showId?: string }) {
     } finally {
       setLoading(false)
     }
-  }, [period, showId])
+  }, [period, showId, provider])
 
   useEffect(() => { fetchData() }, [fetchData])
 
@@ -90,6 +100,34 @@ export function PortalAnalyticsDashboard({ showId }: { showId?: string }) {
           ))}
         </div>
       </div>
+
+      {data.providers.length > 1 && (
+        <div className="inline-flex items-center rounded-[7px] border border-border-subtle bg-surface-input p-[2px]">
+          <button
+            onClick={() => setProvider('')}
+            className={`rounded-[4px] px-[9px] py-[3.5px] text-[12.5px] transition-colors ${
+              !provider
+                ? 'bg-surface-overlay text-text-primary font-[500]'
+                : 'text-text-secondary font-[450] hover:text-text-primary'
+            }`}
+          >
+            All
+          </button>
+          {data.providers.map((p) => (
+            <button
+              key={p}
+              onClick={() => setProvider(p)}
+              className={`rounded-[4px] px-[9px] py-[3.5px] text-[12.5px] transition-colors ${
+                provider === p
+                  ? 'bg-surface-overlay text-text-primary font-[500]'
+                  : 'text-text-secondary font-[450] hover:text-text-primary'
+              }`}
+            >
+              {PROVIDER_LABELS[p] || p}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-4">
         <SummaryCard label="Total Downloads" value={formatNumber(data.summary.total_downloads)} />
@@ -171,45 +209,71 @@ function Sparkline({ data }: { data: number[] }) {
 }
 
 function TrendChart({ data }: { data: TrendPoint[] }) {
-  const maxVal = Math.max(...data.map((d) => d.downloads), 1)
+  if (data.length < 2) return null
 
-  const grouped = groupByWeek(data)
-  if (grouped.length === 0) return null
+  const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
+  const values = sorted.map((d) => d.downloads)
+  const maxVal = Math.max(...values, 1)
+  const minVal = Math.min(...values)
+  const range = maxVal - minVal || 1
+
+  const W = 600
+  const H = 160
+  const padL = 45
+  const padR = 12
+  const padT = 8
+  const padB = 28
+  const chartW = W - padL - padR
+  const chartH = H - padT - padB
+
+  const points = sorted.map((d, i) => ({
+    x: padL + (i / (sorted.length - 1)) * chartW,
+    y: padT + chartH - ((d.downloads - minVal) / range) * chartH,
+    date: d.date,
+    downloads: d.downloads,
+  }))
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+  const areaPath = `${linePath} L${points[points.length - 1].x},${padT + chartH} L${points[0].x},${padT + chartH} Z`
+
+  const gridLines = 4
+  const yLabels = Array.from({ length: gridLines + 1 }, (_, i) => {
+    const val = minVal + (range * i) / gridLines
+    return { y: padT + chartH - (i / gridLines) * chartH, label: formatNumber(Math.round(val)) }
+  })
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const xLabelCount = Math.min(sorted.length, 6)
+  const xLabels = Array.from({ length: xLabelCount }, (_, i) => {
+    const idx = Math.round((i / (xLabelCount - 1)) * (sorted.length - 1))
+    const d = new Date(sorted[idx].date + 'T00:00:00')
+    return { x: points[idx].x, label: `${months[d.getMonth()]} ${d.getDate()}` }
+  })
 
   return (
-    <div className="space-y-2">
-      {grouped.map((row) => (
-        <div key={row.label} className="flex items-center gap-3">
-          <span className="w-20 text-xs text-text-secondary text-right shrink-0">{row.label}</span>
-          <div className="flex-1 flex items-center gap-2">
-            <div
-              className="h-4 rounded-sm bg-accent transition-all"
-              style={{ width: `${(row.downloads / maxVal) * 100}%`, minWidth: row.downloads > 0 ? '4px' : '0' }}
-            />
-            <span className="text-xs text-text-tertiary tabular-nums">{formatNumber(row.downloads)}</span>
-          </div>
-        </div>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="xMidYMid meet">
+      {yLabels.map((yl, i) => (
+        <g key={i}>
+          <line x1={padL} y1={yl.y} x2={W - padR} y2={yl.y} stroke="var(--color-border-subtle, #333)" strokeWidth="0.5" />
+          <text x={padL - 6} y={yl.y + 3.5} textAnchor="end" className="fill-text-tertiary" style={{ fontSize: '9px' }}>{yl.label}</text>
+        </g>
       ))}
-    </div>
+      <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--color-accent, #e86a47)" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="var(--color-accent, #e86a47)" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#areaGrad)" />
+      <path d={linePath} fill="none" stroke="var(--color-accent, #e86a47)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--color-accent, #e86a47)" opacity={sorted.length <= 14 ? 1 : 0} />
+      ))}
+      {xLabels.map((xl, i) => (
+        <text key={i} x={xl.x} y={H - 4} textAnchor="middle" className="fill-text-tertiary" style={{ fontSize: '9px' }}>{xl.label}</text>
+      ))}
+    </svg>
   )
-}
-
-function groupByWeek(data: TrendPoint[]): { label: string; downloads: number }[] {
-  const weeks = new Map<string, number>()
-  for (const d of data) {
-    const date = new Date(d.date)
-    const weekStart = new Date(date)
-    weekStart.setDate(date.getDate() - date.getDay())
-    const key = weekStart.toISOString().slice(0, 10)
-    weeks.set(key, (weeks.get(key) ?? 0) + d.downloads)
-  }
-  return [...weeks.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, downloads]) => {
-      const d = new Date(key)
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      return { label: `${months[d.getMonth()]} ${d.getDate()}`, downloads }
-    })
 }
 
 function formatNumber(n: number): string {

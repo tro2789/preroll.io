@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams
   const showId = params.get('show_id')
   const period = params.get('period') || '30d'
+  const provider = params.get('provider')
 
   const filterIds = showId && showIds.includes(showId) ? [showId] : showIds
   const since = periodToDate(period)
@@ -79,6 +80,7 @@ export async function GET(request: NextRequest) {
     .in('show_id', filterIds)
     .order('date', { ascending: false })
 
+  if (provider) epQuery = epQuery.eq('provider', provider)
   if (since) epQuery = epQuery.gte('date', since)
 
   let showQuery = service
@@ -87,7 +89,15 @@ export async function GET(request: NextRequest) {
     .in('show_id', filterIds)
     .order('date', { ascending: true })
 
+  if (provider) showQuery = showQuery.eq('provider', provider)
   if (since) showQuery = showQuery.gte('date', since)
+
+  const { data: providerRows } = await service
+    .from('episode_analytics')
+    .select('provider')
+    .in('show_id', filterIds)
+
+  const availableProviders = [...new Set((providerRows ?? []).map((r) => r.provider))].sort()
 
   const [{ data: epData }, { data: showData }] = await Promise.all([epQuery, showQuery])
 
@@ -139,6 +149,7 @@ export async function GET(request: NextRequest) {
 
   return jsonResponse({
     summary: { total_downloads: totalDownloads, avg_downloads: avgDownloads, followers: latestFollowers },
+    providers: availableProviders,
     episodes,
     trends: showTrends,
   })

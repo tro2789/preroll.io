@@ -217,28 +217,17 @@ export default function ReportsPage() {
     return { totalDownloads, avgDownloadsPerEpisode, followers, avgCompletion }
   }, [audienceEpisodes, audienceShows])
 
-  // Grouped show trend data
-  const showTrendBuckets = useMemo(() => {
-    const allDaily: { date: string; downloads: number }[] = []
+  const showTrendDaily = useMemo(() => {
+    const byDate = new Map<string, number>()
     for (const s of audienceShows) {
       for (const d of s.daily) {
-        allDaily.push({ date: d.date, downloads: d.downloads })
+        byDate.set(d.date, (byDate.get(d.date) ?? 0) + d.downloads)
       }
     }
-    allDaily.sort((a, b) => a.date.localeCompare(b.date))
-
-    if (allDaily.length === 0) return []
-
-    const useWeeks = period === '30d' || period === '90d'
-
-    const bucketMap = new Map<string, number>()
-    for (const d of allDaily) {
-      const key = useWeeks ? getWeekKey(d.date) : getMonthKey(d.date)
-      bucketMap.set(key, (bucketMap.get(key) ?? 0) + d.downloads)
-    }
-
-    return [...bucketMap.entries()].map(([label, downloads]) => ({ label, downloads }))
-  }, [audienceShows, period])
+    return [...byDate.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, downloads]) => ({ date, downloads }))
+  }, [audienceShows])
 
   const handleSort = (key: AudienceSortKey) => {
     if (audienceSortKey === key) {
@@ -658,13 +647,13 @@ export default function ReportsPage() {
                   )}
 
                   {/* Show-level trends */}
-                  {showTrendBuckets.length > 0 && (
+                  {showTrendDaily.length > 1 && (
                     <div className="rounded-[10px] border border-border-subtle bg-surface-raised overflow-hidden">
                       <div className="px-5 py-4 border-b border-border-subtle">
                         <h2 className="text-sm font-semibold text-text-primary">Downloads Over Time</h2>
                       </div>
                       <div className="p-5">
-                        <TrendBarChart data={showTrendBuckets} />
+                        <TrendAreaChart data={showTrendDaily} />
                       </div>
                     </div>
                   )}
@@ -770,30 +759,68 @@ function Sparkline({ data }: { data: number[] }) {
   )
 }
 
-function TrendBarChart({ data }: { data: { label: string; downloads: number }[] }) {
-  const maxVal = Math.max(...data.map((d) => d.downloads), 1)
+function TrendAreaChart({ data }: { data: { date: string; downloads: number }[] }) {
+  if (data.length < 2) return null
+
+  const values = data.map((d) => d.downloads)
+  const maxVal = Math.max(...values, 1)
+  const minVal = Math.min(...values)
+  const range = maxVal - minVal || 1
+
+  const W = 600
+  const H = 180
+  const padL = 50
+  const padR = 12
+  const padT = 8
+  const padB = 28
+  const chartW = W - padL - padR
+  const chartH = H - padT - padB
+
+  const points = data.map((d, i) => ({
+    x: padL + (i / (data.length - 1)) * chartW,
+    y: padT + chartH - ((d.downloads - minVal) / range) * chartH,
+  }))
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+  const areaPath = `${linePath} L${points[points.length - 1].x},${padT + chartH} L${points[0].x},${padT + chartH} Z`
+
+  const gridLines = 4
+  const yLabels = Array.from({ length: gridLines + 1 }, (_, i) => {
+    const val = minVal + (range * i) / gridLines
+    return { y: padT + chartH - (i / gridLines) * chartH, label: formatNumber(Math.round(val)) }
+  })
+
+  const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const xLabelCount = Math.min(data.length, 7)
+  const xLabels = Array.from({ length: xLabelCount }, (_, i) => {
+    const idx = Math.round((i / (xLabelCount - 1)) * (data.length - 1))
+    const d = new Date(data[idx].date + 'T00:00:00')
+    return { x: points[idx].x, label: `${MONTHS[d.getMonth()]} ${d.getDate()}` }
+  })
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-4 text-xs text-text-secondary">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-sm bg-accent" />
-          Downloads
-        </span>
-      </div>
-      {data.map((row) => (
-        <div key={row.label} className="flex items-center gap-3">
-          <span className="w-20 text-xs text-text-secondary text-right shrink-0">{row.label}</span>
-          <div className="flex-1 flex items-center gap-2">
-            <div
-              className="h-4 rounded-sm bg-accent transition-all"
-              style={{ width: `${(row.downloads / maxVal) * 100}%`, minWidth: row.downloads > 0 ? '4px' : '0' }}
-            />
-            <span className="text-xs text-text-tertiary tabular-nums">{formatNumber(row.downloads)}</span>
-          </div>
-        </div>
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" preserveAspectRatio="xMidYMid meet">
+      {yLabels.map((yl, i) => (
+        <g key={i}>
+          <line x1={padL} y1={yl.y} x2={W - padR} y2={yl.y} stroke="var(--color-border-subtle, #333)" strokeWidth="0.5" />
+          <text x={padL - 6} y={yl.y + 3.5} textAnchor="end" className="fill-text-tertiary" style={{ fontSize: '10px' }}>{yl.label}</text>
+        </g>
       ))}
-    </div>
+      <defs>
+        <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--color-accent, #e86a47)" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="var(--color-accent, #e86a47)" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#trendGrad)" />
+      <path d={linePath} fill="none" stroke="var(--color-accent, #e86a47)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {data.length <= 14 && points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--color-accent, #e86a47)" />
+      ))}
+      {xLabels.map((xl, i) => (
+        <text key={i} x={xl.x} y={H - 4} textAnchor="middle" className="fill-text-tertiary" style={{ fontSize: '10px' }}>{xl.label}</text>
+      ))}
+    </svg>
   )
 }
 
@@ -957,19 +984,3 @@ function formatNumber(n: number): string {
   return n.toLocaleString()
 }
 
-function getWeekKey(dateStr: string): string {
-  const d = new Date(dateStr)
-  const dayOfWeek = d.getUTCDay()
-  const monday = new Date(d)
-  monday.setUTCDate(d.getUTCDate() - ((dayOfWeek + 6) % 7))
-  const m = monday.toISOString().slice(5, 7)
-  const day = monday.toISOString().slice(8, 10)
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  return `${months[parseInt(m, 10) - 1]} ${parseInt(day, 10)}`
-}
-
-function getMonthKey(dateStr: string): string {
-  const [y, m] = dateStr.split('-')
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  return `${months[parseInt(m, 10) - 1]} ${y.slice(2)}`
-}
