@@ -208,14 +208,33 @@ function Sparkline({ data }: { data: number[] }) {
   )
 }
 
+function niceScale(minVal: number, maxVal: number, tickCount: number): number[] {
+  const range = maxVal - minVal || 1
+  const roughStep = range / tickCount
+  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)))
+  const residual = roughStep / magnitude
+  const niceStep = residual <= 1.5 ? magnitude : residual <= 3 ? 2 * magnitude : residual <= 7 ? 5 * magnitude : 10 * magnitude
+  const niceMin = Math.floor(minVal / niceStep) * niceStep
+  const niceMax = Math.ceil(maxVal / niceStep) * niceStep
+  const ticks: number[] = []
+  for (let v = niceMin; v <= niceMax + niceStep * 0.5; v += niceStep) {
+    ticks.push(Math.round(v))
+  }
+  return ticks
+}
+
 function TrendChart({ data }: { data: TrendPoint[] }) {
   if (data.length < 2) return null
 
   const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
   const values = sorted.map((d) => d.downloads)
-  const maxVal = Math.max(...values, 1)
-  const minVal = Math.min(...values)
-  const range = maxVal - minVal || 1
+  const rawMax = Math.max(...values, 1)
+  const rawMin = Math.min(...values)
+
+  const ticks = niceScale(rawMin, rawMax, 4)
+  const scaleMin = ticks[0]
+  const scaleMax = ticks[ticks.length - 1]
+  const scaleRange = scaleMax - scaleMin || 1
 
   const W = 600
   const H = 160
@@ -228,7 +247,7 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
 
   const points = sorted.map((d, i) => ({
     x: padL + (i / (sorted.length - 1)) * chartW,
-    y: padT + chartH - ((d.downloads - minVal) / range) * chartH,
+    y: padT + chartH - ((d.downloads - scaleMin) / scaleRange) * chartH,
     date: d.date,
     downloads: d.downloads,
   }))
@@ -236,11 +255,10 @@ function TrendChart({ data }: { data: TrendPoint[] }) {
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
   const areaPath = `${linePath} L${points[points.length - 1].x},${padT + chartH} L${points[0].x},${padT + chartH} Z`
 
-  const gridLines = 4
-  const yLabels = Array.from({ length: gridLines + 1 }, (_, i) => {
-    const val = minVal + (range * i) / gridLines
-    return { y: padT + chartH - (i / gridLines) * chartH, label: formatNumber(Math.round(val)) }
-  })
+  const yLabels = ticks.map((val) => ({
+    y: padT + chartH - ((val - scaleMin) / scaleRange) * chartH,
+    label: formatNumber(val),
+  }))
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
   const xLabelCount = Math.min(sorted.length, 6)
