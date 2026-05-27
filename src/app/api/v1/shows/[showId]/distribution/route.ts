@@ -38,7 +38,7 @@ export async function DELETE(
 
   const provider = request.nextUrl.searchParams.get('provider')
 
-  const query = supabase!
+  let query = supabase!
     .from('distribution_connections')
     .delete()
     .eq('show_id', showId)
