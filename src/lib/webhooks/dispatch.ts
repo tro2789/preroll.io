@@ -11,6 +11,7 @@ export type WebhookEvent =
   | 'deliverable.approved'
   | 'deliverable.revision_requested'
   | 'deliverable.resubmitted'
+  | 'episode.milestone_reached'
 
 interface WebhookPayload {
   id: string

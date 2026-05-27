@@ -9,6 +9,7 @@ import { ShowAssetsTab } from '@/components/shows/show-assets-tab'
 import { ShowTemplatesTab } from '@/components/shows/show-templates-tab'
 import { ClientPortalSection } from '@/components/client-portal-section'
 import { DistributionSettings } from '@/components/shows/distribution-settings'
+import { AnalyticsSettings } from '@/components/shows/analytics-settings'
 import { ShowAiSettings } from '@/components/shows/show-ai-settings'
 import { PublishedEpisodesTab } from '@/components/shows/published-episodes-tab'
 import { ALL_GENERATION_TYPES } from '@/lib/ai/constants'
@@ -21,6 +22,7 @@ const TABS = [
   { key: 'details', label: 'Details' },
   { key: 'templates', label: 'Templates' },
   { key: 'distribution', label: 'Distribution' },
+  { key: 'analytics', label: 'Analytics' },
   { key: 'ai', label: 'AI' },
 ] as const
 
@@ -64,6 +66,7 @@ interface ShowData {
   ai_length: string | null
   episode_template: { description?: string; notes?: string } | null
   client_id: string | null
+  analytics_milestones: { downloads: number }[] | null
 }
 
 interface ClientData {
@@ -220,6 +223,12 @@ export function ShowTabs({ show, client, stages, episodes, publishedEpisodes, re
         {activeTab === 'distribution' && (
           <div className="max-w-lg">
             <DistributionSettings showId={show.id} />
+          </div>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="max-w-lg">
+            <AnalyticsSettings showId={show.id} initialMilestones={show.analytics_milestones?.map((m) => m.downloads)} />
           </div>
         )}
 

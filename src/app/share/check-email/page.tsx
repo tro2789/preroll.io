@@ -31,7 +31,7 @@ export default async function CheckEmailPage({
           </div>
 
           <p className="text-xs text-text-tertiary">
-            The link expires in 1 hour. Check your spam folder if you don't see it.
+            The link expires in 1 hour. Check your spam folder if you don&apos;t see it.
           </p>
         </div>
       </div>

@@ -22,15 +22,16 @@ export default async function PortalShowPage({
 
   const { data: show } = await supabase
     .from('shows')
-    .select('id, name, description, cover_art_url, allow_client_downloads, clients!inner(org_id, organizations(allow_client_downloads))')
+    .select('id, name, description, cover_art_url, allow_client_downloads, clients!inner(org_id, organizations(allow_client_downloads, portal_analytics_enabled))')
     .eq('id', showId)
     .single()
 
   if (!show) redirect('/portal')
 
-  const clientRow = show.clients as unknown as { organizations: { allow_client_downloads: boolean } | null } | null
+  const clientRow = show.clients as unknown as { organizations: { allow_client_downloads: boolean; portal_analytics_enabled: boolean } | null } | null
   const orgDownloads = clientRow?.organizations?.allow_client_downloads ?? true
   const allowDownloads = show.allow_client_downloads !== null ? show.allow_client_downloads : orgDownloads
+  const analyticsEnabled = clientRow?.organizations?.portal_analytics_enabled ?? false
 
   const [
     { data: stages },
@@ -148,6 +149,7 @@ export default async function PortalShowPage({
           assetType: a.asset_type,
           mimeType: a.mime_type,
         }))}
+        analyticsEnabled={analyticsEnabled}
       />
     </div>
   )

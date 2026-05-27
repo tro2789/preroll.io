@@ -6,6 +6,7 @@ import { ReviewQueue } from './review-queue'
 import { ActivityFeed } from './activity-feed'
 import { PortalKanban } from './portal-kanban'
 import { EpisodeSubmitForm } from './episode-submit-form'
+import { PortalAnalyticsDashboard } from './analytics-dashboard'
 
 interface ReviewDeliverable {
   id: string
@@ -62,9 +63,10 @@ interface ShowTabsProps {
   stages: Stage[]
   activities: Activity[]
   assets: Asset[]
+  analyticsEnabled?: boolean
 }
 
-type Tab = 'review' | 'episodes' | 'assets' | 'activity'
+type Tab = 'review' | 'episodes' | 'assets' | 'activity' | 'analytics'
 
 const assetTypeLabels: Record<string, string> = {
   cover_art: 'Cover Art',
@@ -77,7 +79,7 @@ const assetTypeLabels: Record<string, string> = {
   other: 'Other',
 }
 
-export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages, activities, assets }: ShowTabsProps) {
+export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages, activities, assets, analyticsEnabled }: ShowTabsProps) {
   const [active, setActive] = useState<Tab>(reviewItems.length > 0 ? 'review' : 'episodes')
   const [showSubmitForm, setShowSubmitForm] = useState(false)
   const router = useRouter()
@@ -87,6 +89,7 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
     { id: 'episodes', label: 'Episodes', count: episodes.length || undefined },
     { id: 'assets', label: 'Brand Assets', count: assets.length || undefined },
     { id: 'activity', label: 'Activity' },
+    ...(analyticsEnabled ? [{ id: 'analytics' as Tab, label: 'Analytics' }] : []),
   ]
 
   return (
@@ -161,6 +164,10 @@ export function ShowTabs({ showId, reviewItems, allowDownload, episodes, stages,
         <div className="rounded-lg bg-surface-raised border border-border-subtle p-4">
           <ActivityFeed activities={activities} />
         </div>
+      )}
+
+      {active === 'analytics' && (
+        <PortalAnalyticsDashboard showId={showId} />
       )}
 
       {showSubmitForm && (
