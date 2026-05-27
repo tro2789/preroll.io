@@ -11,7 +11,7 @@ export async function GET(
 
   const provider = request.nextUrl.searchParams.get('provider')
 
-  let query = supabase!
+  const query = supabase!
     .from('distribution_connections')
     .select('id, provider, external_show_id, external_show_name, connected_by, created_at')
     .eq('show_id', showId)
@@ -38,7 +38,7 @@ export async function DELETE(
 
   const provider = request.nextUrl.searchParams.get('provider')
 
-  let query = supabase!
+  const query = supabase!
     .from('distribution_connections')
     .delete()
     .eq('show_id', showId)
