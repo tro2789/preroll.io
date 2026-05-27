@@ -62,7 +62,7 @@ export async function PATCH(
   if (!existing) return errorResponse('Show not found', 404)
 
   const body = await request.json()
-  const allowedFields = ['name', 'description', 'format', 'schedule', 'cover_art_url', 'episode_template', 'allow_client_downloads', 'ai_auto_transcribe', 'ai_auto_generate', 'ai_tone', 'ai_length']
+  const allowedFields = ['name', 'description', 'format', 'schedule', 'cover_art_url', 'episode_template', 'allow_client_downloads', 'ai_auto_transcribe', 'ai_auto_generate', 'ai_tone', 'ai_length', 'analytics_milestones']
   const updateData: Record<string, unknown> = {}
   for (const field of allowedFields) {
     if (field in body) {

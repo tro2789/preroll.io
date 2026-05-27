@@ -17,6 +17,7 @@ export type Feature =
   | 'reporting'
   | 'ai'
   | 'storage'
+  | 'analytics'
 
 export interface TrialInfo {
   active: boolean

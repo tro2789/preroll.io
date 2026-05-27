@@ -19,7 +19,7 @@ export default async function ShowDetailPage({
   const [{ data: show, error }, { data: episodes }, { data: publishedEpisodes }] = await Promise.all([
     supabase
       .from('shows')
-      .select('id, name, description, cover_art_url, format, schedule, allow_client_downloads, client_id, ai_auto_transcribe, ai_auto_generate, ai_tone, ai_length, episode_template, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(id, name, position, wip_limit, status_override)')
+      .select('id, name, description, cover_art_url, format, schedule, allow_client_downloads, client_id, ai_auto_transcribe, ai_auto_generate, ai_tone, ai_length, episode_template, analytics_milestones, clients(id, name, email, invite_code, client_user_id, onboarded_at), pipeline_stages(id, name, position, wip_limit, status_override)')
       .eq('id', showId)
       .order('position', { referencedTable: 'pipeline_stages' })
       .single(),
@@ -73,6 +73,7 @@ export default async function ShowDetailPage({
     ai_length: show.ai_length as string | null,
     episode_template: show.episode_template as { description?: string; notes?: string } | null,
     client_id: show.client_id as string | null,
+    analytics_milestones: show.analytics_milestones as { downloads: number }[] | null,
   }
 
   const mappedEpisodes = (episodes ?? []).map((ep) => {
