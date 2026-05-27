@@ -17,6 +17,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Generate Fumadocs sources
+        run: npx fumadocs-mdx
+
       - name: Type check
         run: npx tsc --noEmit
 
