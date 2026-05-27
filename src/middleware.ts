@@ -9,7 +9,7 @@ export async function middleware(request: NextRequest) {
     const previewId = request.nextUrl.searchParams.get('preview')
     if (previewId) {
       response.cookies.set('portal_preview_client_id', previewId, {
-        path: '/portal',
+        path: '/',
         maxAge: 60 * 60,
         httpOnly: true,
         sameSite: 'lax',
