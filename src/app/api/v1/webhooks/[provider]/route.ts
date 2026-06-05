@@ -22,7 +22,12 @@ export async function POST(
   const timestamp = request.headers.get('x-frameio-request-timestamp') || ''
 
   const provider = getProvider(providerName)
-  if (provider.verifyWebhookSignature && !provider.verifyWebhookSignature(rawBody, signature, timestamp)) {
+  // SECURITY: default-deny. A provider with no signature verifier cannot be authenticated,
+  // so reject rather than processing forged, attacker-shaped payloads.
+  if (!provider.verifyWebhookSignature) {
+    return NextResponse.json({ error: 'Webhook verification not supported for this provider' }, { status: 401 })
+  }
+  if (!provider.verifyWebhookSignature(rawBody, signature, timestamp)) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
@@ -39,28 +44,32 @@ export async function POST(
 
   const supabase = createServiceClient()
 
-  if (eventId) {
-    const { data: existing } = await supabase
-      .from('webhook_events')
-      .select('id')
-      .eq('provider', providerName)
-      .eq('external_id', eventId)
-      .eq('event_type', eventType)
-      .not('processed_at', 'is', null)
-      .limit(1)
-      .single()
+  const externalId = eventId || resourceId || null
 
-    if (existing) {
-      return NextResponse.json({ received: true, duplicate: true })
+  // Idempotent ingest: a unique constraint on (provider, event_type, external_id)
+  // turns concurrent/replayed deliveries into a single processed event.
+  if (externalId) {
+    const { error: insertErr } = await supabase.from('webhook_events').insert({
+      provider: providerName,
+      event_type: eventType,
+      external_id: externalId,
+      payload,
+    })
+    if (insertErr) {
+      // 23505 = unique violation => already received this event.
+      if (insertErr.code === '23505') {
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+      return NextResponse.json({ error: 'Failed to record event' }, { status: 500 })
     }
+  } else {
+    await supabase.from('webhook_events').insert({
+      provider: providerName,
+      event_type: eventType,
+      external_id: null,
+      payload,
+    })
   }
-
-  await supabase.from('webhook_events').insert({
-    provider: providerName,
-    event_type: eventType,
-    external_id: eventId || resourceId || null,
-    payload,
-  })
 
   if (!resourceId) {
     return NextResponse.json({ received: true })

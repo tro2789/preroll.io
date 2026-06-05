@@ -7,6 +7,7 @@ import { listChannels } from '@/lib/integrations/providers/youtube-distribution'
 import { ytJson } from '@/lib/integrations/providers/youtube'
 import { getValidToken } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
+import { getShowForOrg } from '@/lib/api/ownership'
 
 const SUPPORTED_PROVIDERS = ['transistor', 'youtube', 'castopod']
 
@@ -17,6 +18,7 @@ export async function POST(
   const { showId } = await params
   const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getShowForOrg(supabase!, showId, org!.id))) return errorResponse('Show not found', 404)
 
   const body = await request.json()
   const { provider, api_key, external_show_id } = body

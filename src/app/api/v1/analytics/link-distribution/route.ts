@@ -14,18 +14,14 @@ export async function POST() {
   const { data: distConnections } = await service
     .from('distribution_connections')
     .select('show_id, provider, external_show_id, external_show_name, shows!inner(client_id, clients!inner(org_id))')
+    .eq('shows.clients.org_id', org!.id)
     .in('provider', ['transistor', 'castopod'])
 
   if (!distConnections?.length) return jsonResponse({ linked: 0 })
 
-  const orgConnections = distConnections.filter((dc) => {
-    const show = dc.shows as unknown as { client_id: string; clients: { org_id: string } }
-    return show.clients.org_id === org!.id
-  })
-
   let linked = 0
 
-  for (const dc of orgConnections) {
+  for (const dc of distConnections) {
     const { error: upsertError } = await service
       .from('analytics_connections')
       .upsert({

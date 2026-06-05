@@ -1,9 +1,38 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClientOrPortalUser, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getDeliverableForOrg } from '@/lib/api/ownership'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
 
 const FRAMEIO_API = 'https://api.frame.io/v4'
+
+/**
+ * Verify the caller may access this deliverable's comments.
+ * Producer callers (org set) must own the deliverable's org.
+ * Portal users (portalUserId set) must own the deliverable's client.
+ * Returns true when access is allowed.
+ */
+async function canAccessDeliverable(
+  supabase: Awaited<ReturnType<typeof getAuthenticatedClientOrPortalUser>>['supabase'],
+  deliverableId: string,
+  org: Awaited<ReturnType<typeof getAuthenticatedClientOrPortalUser>>['org'],
+  portalUserId: string | null
+): Promise<boolean> {
+  if (org) {
+    return (await getDeliverableForOrg(supabase!, deliverableId, org.id)) !== null
+  }
+  if (portalUserId) {
+    const { data: deliverable } = await supabase!
+      .from('deliverables')
+      .select('id, shows(client_id, clients(client_user_id))')
+      .eq('id', deliverableId)
+      .maybeSingle()
+    if (!deliverable) return false
+    const show = deliverable.shows as unknown as { clients: { client_user_id: string | null } | null } | null
+    return show?.clients?.client_user_id === portalUserId
+  }
+  return false
+}
 
 async function getFrameIoContext(
   supabase: Awaited<ReturnType<typeof getAuthenticatedClientOrPortalUser>>['supabase'],
@@ -48,8 +77,11 @@ export async function GET(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, error } = await getAuthenticatedClientOrPortalUser()
+  const { supabase, org, error, portalUserId } = await getAuthenticatedClientOrPortalUser()
   if (error) return error
+  if (!(await canAccessDeliverable(supabase, deliverableId, org, portalUserId))) {
+    return errorResponse('Deliverable not found', 404)
+  }
 
   const { data: localComments, error: dbError } = await supabase!
     .from('review_comments')
@@ -127,8 +159,11 @@ export async function POST(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, user, error } = await getAuthenticatedClientOrPortalUser()
+  const { supabase, user, org, error, portalUserId } = await getAuthenticatedClientOrPortalUser()
   if (error) return error
+  if (!(await canAccessDeliverable(supabase, deliverableId, org, portalUserId))) {
+    return errorResponse('Deliverable not found', 404)
+  }
 
   const body = await request.json()
   const text = body.text

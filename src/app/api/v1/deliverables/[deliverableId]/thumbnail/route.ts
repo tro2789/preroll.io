@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const { data: deliverable } = await supabase!
@@ -21,6 +21,7 @@ export async function GET(
   const show = (deliverable as unknown as { shows: { clients: { org_id: string } } }).shows
   const producerOrgId = show?.clients?.org_id
   if (!producerOrgId) return errorResponse('Not found', 404)
+  if (producerOrgId !== org!.id) return errorResponse('Deliverable not found', 404)
 
   const { data: fileRef } = await supabase!
     .from('file_references')

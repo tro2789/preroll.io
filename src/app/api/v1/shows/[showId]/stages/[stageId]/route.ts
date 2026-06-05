@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getShowForOrg } from '@/lib/api/ownership'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ showId: string; stageId: string }> }
 ) {
   const { showId, stageId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getShowForOrg(supabase!, showId, org!.id))) return errorResponse('Show not found', 404)
 
   const body = await request.json()
   const allowedFields = ['name', 'position', 'status_override', 'wip_limit']
@@ -40,13 +42,15 @@ export async function DELETE(
   { params }: { params: Promise<{ showId: string; stageId: string }> }
 ) {
   const { showId, stageId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getShowForOrg(supabase!, showId, org!.id))) return errorResponse('Show not found', 404)
 
   const { data: episodes } = await supabase!
     .from('episodes')
     .select('id')
     .eq('stage_id', stageId)
+    .eq('show_id', showId)
     .limit(1)
 
   if (episodes && episodes.length > 0) {

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getEpisodeForShowAndOrg } from '@/lib/api/ownership'
 import { decrypt } from '@/lib/integrations/crypto'
 import { getValidToken, getIntegrationAccountId } from '@/lib/integrations/token-refresh'
 import { ensureProvidersRegistered } from '@/lib/integrations/init'
@@ -15,6 +16,8 @@ import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 import { getDistributionToken } from '@/lib/integrations/distribution-token'
 import { getDownloadUrl } from '@/lib/r2/client'
 
+export const maxDuration = 300
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
@@ -22,6 +25,7 @@ export async function POST(
   const { showId, episodeId } = await params
   const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getEpisodeForShowAndOrg(supabase!, episodeId, showId, org!.id))) return errorResponse('Episode not found', 404)
 
   const body = await request.json()
   const { provider: requestedProvider } = body
@@ -68,15 +72,21 @@ async function handleTransistorPublish(
   if (audio_source.startsWith('url:')) {
     audioUrl = audio_source.slice('url:'.length)
   } else {
-    const resolved = await resolveAudioBuffer(supabase, org.id, audio_source)
+    const resolved = await resolveAudioStream(supabase, org.id, episodeId, audio_source)
     if ('error' in resolved) return resolved.error
 
     const upload = await authorizeUpload(apiKey, resolved.filename)
+    const uploadHeaders: Record<string, string> = { 'Content-Type': upload.contentType }
+    if (resolved.contentLength != null) {
+      uploadHeaders['Content-Length'] = String(resolved.contentLength)
+    }
     const uploadRes = await fetch(upload.uploadUrl, {
       method: 'PUT',
-      headers: { 'Content-Type': upload.contentType },
-      body: Buffer.from(resolved.buffer),
-    })
+      headers: uploadHeaders,
+      body: resolved.body,
+      // Required by undici/fetch when streaming a ReadableStream request body
+      ...(resolved.body instanceof ReadableStream ? { duplex: 'half' } : {}),
+    } as RequestInit & { duplex?: 'half' })
 
     if (!uploadRes.ok) {
       return errorResponse(`Failed to upload to Transistor: ${uploadRes.status}`, 502)
@@ -166,8 +176,12 @@ async function handleCastopodPublish(
 
   const creds: CastopodCredentials = JSON.parse(decrypt(connection.api_key_enc))
 
-  const resolved = await resolveAudioBuffer(supabase, org.id, audio_source)
+  const resolved = await resolveAudioStream(supabase, org.id, episodeId, audio_source)
   if ('error' in resolved) return resolved.error
+
+  // Castopod uploads via multipart FormData and genuinely needs the full
+  // buffer, so materialize the stream here (only on this provider path).
+  const audioBuffer = await resolved.arrayBuffer()
 
   // Castopod only accepts .mp3 and .m4a — normalize the filename
   let audioFilename = resolved.filename
@@ -181,7 +195,7 @@ async function handleCastopodPublish(
       podcastId: Number(connection.external_show_id),
       title,
       slug: castopodSlugify(title),
-      audioFile: resolved.buffer,
+      audioFile: audioBuffer,
       audioFilename,
       createdBy: creds.userId ?? 1,
       description,
@@ -298,7 +312,7 @@ async function handleYouTubePublish(
     }
   }
 
-  const downloadUrl = await resolveSourceDownloadUrl(supabase, org.id, video_source)
+  const downloadUrl = await resolveSourceDownloadUrl(supabase, org.id, episodeId, video_source)
   if ('error' in downloadUrl) return downloadUrl.error
   const { url: sourceUrl, mimeType, fileSize } = downloadUrl
 
@@ -341,6 +355,7 @@ type SourceUrlResult =
 async function resolveSourceDownloadUrl(
   supabase: any,
   orgId: string,
+  episodeId: string,
   videoSource: string,
 ): Promise<SourceUrlResult> {
   if (videoSource.startsWith('file:')) {
@@ -349,6 +364,8 @@ async function resolveSourceDownloadUrl(
       .from('file_references')
       .select('external_id, name, mime_type, file_size, provider')
       .eq('id', fileId)
+      .eq('episode_id', episodeId)
+      .eq('org_id', orgId)
       .single()
 
     if (fileRefError || !fileRef) {
@@ -380,21 +397,44 @@ async function resolveSourceDownloadUrl(
   return { error: errorResponse('video_source must start with "file:" or "url:"', 400) }
 }
 
-type AudioBufferResult =
-  | { buffer: ArrayBuffer; filename: string }
-  | { error: Response }
+type AudioStream = {
+  // Streamable upload body — passed straight through to provider uploads that
+  // accept a ReadableStream (avoids buffering large video masters into memory).
+  body: ReadableStream<Uint8Array> | ArrayBuffer
+  // Content length when the source advertises it (needed for streamed PUTs).
+  contentLength: number | null
+  filename: string
+  // Fallback for providers that genuinely require the full buffer.
+  arrayBuffer: () => Promise<ArrayBuffer>
+}
 
-async function resolveAudioBuffer(
+type AudioStreamResult = AudioStream | { error: Response }
+
+function audioStreamFromResponse(res: Response, filename: string): AudioStream {
+  const contentLengthHeader = res.headers.get('content-length')
+  const contentLength = contentLengthHeader ? parseInt(contentLengthHeader, 10) : null
+  return {
+    body: res.body ?? new Uint8Array(0).buffer,
+    contentLength: Number.isFinite(contentLength as number) ? contentLength : null,
+    filename,
+    arrayBuffer: () => res.arrayBuffer(),
+  }
+}
+
+async function resolveAudioStream(
   supabase: any,
   orgId: string,
+  episodeId: string,
   audioSource: string,
-): Promise<AudioBufferResult> {
+): Promise<AudioStreamResult> {
   if (audioSource.startsWith('file:')) {
     const fileId = audioSource.slice('file:'.length)
     const { data: fileRef, error: fileRefError } = await supabase
       .from('file_references')
       .select('external_id, name, mime_type, file_size, provider')
       .eq('id', fileId)
+      .eq('episode_id', episodeId)
+      .eq('org_id', orgId)
       .single()
 
     if (fileRefError || !fileRef) {
@@ -413,10 +453,7 @@ async function resolveAudioBuffer(
       return { error: errorResponse(`Failed to download file: ${audioRes.status}`, 502) }
     }
 
-    return {
-      buffer: await audioRes.arrayBuffer(),
-      filename: fileRef.name || 'episode.mp3',
-    }
+    return audioStreamFromResponse(audioRes, fileRef.name || 'episode.mp3')
   }
 
   if (audioSource.startsWith('url:')) {
@@ -425,10 +462,7 @@ async function resolveAudioBuffer(
     if (!audioRes.ok) {
       return { error: errorResponse(`Failed to download audio from URL: ${audioRes.status}`, 502) }
     }
-    return {
-      buffer: await audioRes.arrayBuffer(),
-      filename: url.split('/').pop() || 'episode.mp3',
-    }
+    return audioStreamFromResponse(audioRes, url.split('/').pop() || 'episode.mp3')
   }
 
   return { error: errorResponse('audio_source must start with "file:" or "url:"', 400) }

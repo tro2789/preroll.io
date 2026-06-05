@@ -161,7 +161,7 @@ function periodToDate(period: string): string | null {
     case '30d': return new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10)
     case '90d': return new Date(now.getTime() - 90 * 86400000).toISOString().slice(0, 10)
     case '12m': return new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()).toISOString().slice(0, 10)
-    case 'all': return null
+    case 'all': return new Date(now.getTime() - 730 * 86400000).toISOString().slice(0, 10)
     default: return new Date(now.getTime() - 30 * 86400000).toISOString().slice(0, 10)
   }
 }

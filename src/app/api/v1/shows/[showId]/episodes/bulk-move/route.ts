@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
+import { getShowForOrg } from '@/lib/api/ownership'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ showId: string }> }
 ) {
   const { showId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getShowForOrg(supabase!, showId, org!.id))) return errorResponse('Show not found', 404)
 
   const body = await request.json()
   const { episodeIds, stageId } = body
@@ -21,6 +23,7 @@ export async function POST(
     .from('pipeline_stages')
     .select('name, status_override')
     .eq('id', stageId)
+    .eq('show_id', showId)
     .single()
 
   if (!stage) return errorResponse('Stage not found', 404)

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
+import { getEpisodeForShowAndOrg } from '@/lib/api/ownership'
 import { dispatchWebhooks, WebhookEvent } from '@/lib/webhooks/dispatch'
 
 export async function GET(
@@ -7,8 +8,9 @@ export async function GET(
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
 ) {
   const { showId, episodeId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getEpisodeForShowAndOrg(supabase!, episodeId, showId, org!.id))) return errorResponse('Episode not found', 404)
 
   const { data, error: dbError } = await supabase!
     .from('episodes')
@@ -28,6 +30,7 @@ export async function PATCH(
   const { showId, episodeId } = await params
   const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getEpisodeForShowAndOrg(supabase!, episodeId, showId, org!.id))) return errorResponse('Episode not found', 404)
 
   const body = await request.json()
   const allowedFields = [
@@ -56,6 +59,7 @@ export async function PATCH(
       .from('pipeline_stages')
       .select('name, status_override')
       .eq('id', body.stage_id)
+      .eq('show_id', showId)
       .single()
 
     if (stage) {
@@ -129,8 +133,9 @@ export async function DELETE(
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
 ) {
   const { showId, episodeId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getEpisodeForShowAndOrg(supabase!, episodeId, showId, org!.id))) return errorResponse('Episode not found', 404)
 
   const { error: dbError } = await supabase!
     .from('episodes')

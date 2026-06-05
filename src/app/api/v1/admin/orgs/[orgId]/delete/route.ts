@@ -1,11 +1,11 @@
-import { getAdminClient } from '@/lib/admin/api-auth'
+import { getAdminClient, logAdminAction } from '@/lib/admin/api-auth'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 
 export async function POST(
   _request: Request,
   { params }: { params: Promise<{ orgId: string }> }
 ) {
-  const { service, error } = await getAdminClient()
+  const { service, actor, error } = await getAdminClient()
   if (error) return error
 
   const { orgId } = await params
@@ -28,6 +28,10 @@ export async function POST(
   if (deleteError) {
     return errorResponse(deleteError.message, 500)
   }
+
+  await logAdminAction(service!, actor, 'org.delete', {
+    type: 'org', id: orgId, metadata: { name: org.name },
+  })
 
   return jsonResponse({ deleted: true, id: orgId })
 }

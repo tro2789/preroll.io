@@ -17,7 +17,7 @@ const STATIC_LABELS: Record<string, string> = {
 }
 
 export async function GET(request: NextRequest) {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const path = request.nextUrl.searchParams.get('path') || ''
@@ -49,39 +49,44 @@ export async function GET(request: NextRequest) {
       showId = seg
       const { data } = await supabase!
         .from('shows')
-        .select('name')
+        .select('name, clients!inner(org_id)')
         .eq('id', seg)
-        .single()
+        .eq('clients.org_id', org!.id)
+        .maybeSingle()
       crumbs.push({ label: data?.name || 'Show', href })
     } else if (prev === 'episodes') {
       episodeId = seg
       const { data } = await supabase!
         .from('episodes')
-        .select('title')
+        .select('title, shows!inner(clients!inner(org_id))')
         .eq('id', seg)
-        .single()
+        .eq('shows.clients.org_id', org!.id)
+        .maybeSingle()
       crumbs.push({ label: data?.title || 'Episode', href })
     } else if (prev === 'clients') {
       const { data } = await supabase!
         .from('clients')
         .select('name')
         .eq('id', seg)
-        .single()
+        .eq('org_id', org!.id)
+        .maybeSingle()
       crumbs.push({ label: data?.name || 'Client', href })
     } else if (prev === 'review') {
       const { data } = await supabase!
         .from('deliverables')
-        .select('title')
+        .select('title, shows!inner(clients!inner(org_id))')
         .eq('id', seg)
-        .single()
+        .eq('shows.clients.org_id', org!.id)
+        .maybeSingle()
       crumbs.push({ label: data?.title || 'Review', href })
     } else if (prev === 'preview') {
       const { data } = await supabase!
         .from('file_references')
-        .select('file_name')
+        .select('name')
         .eq('external_id', seg)
+        .eq('org_id', org!.id)
         .maybeSingle()
-      crumbs.push({ label: data?.file_name || seg, href })
+      crumbs.push({ label: data?.name || seg, href })
     }
   }
 

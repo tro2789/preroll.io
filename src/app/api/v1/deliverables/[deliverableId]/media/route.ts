@@ -12,11 +12,6 @@ export async function GET(
   const { supabase, org, portalUserId, error } = await getAuthenticatedClientOrPortalUser()
   if (error) return error
 
-  const stream = request.nextUrl.searchParams.get('stream')
-  if (stream === 'google_drive') {
-    return streamGoogleDrive(supabase!, deliverableId)
-  }
-
   const { data: deliverable, error: dbError } = await supabase!
     .from('deliverables')
     .select('*, shows(client_id, clients(org_id, client_user_id))')
@@ -33,6 +28,12 @@ export async function GET(
     if (show?.clients?.client_user_id !== portalUserId) return errorResponse('Forbidden', 403)
   } else if (producerOrgId !== org!.id) {
     return errorResponse('Forbidden', 403)
+  }
+
+  // Authorization has passed above; only now dispatch to the byte-streaming branch.
+  const stream = request.nextUrl.searchParams.get('stream')
+  if (stream === 'google_drive') {
+    return streamGoogleDrive(supabase!, deliverableId, request.headers.get('range'))
   }
 
   // Support loading a specific version via file_reference_id query param
@@ -172,7 +173,8 @@ function resolveGoogleDrive(deliverableId: string, fileRef: FileRef) {
 
 async function streamGoogleDrive(
   supabase: NonNullable<Awaited<ReturnType<typeof getAuthenticatedClientOrPortalUser>>['supabase']>,
-  deliverableId: string
+  deliverableId: string,
+  rangeHeader: string | null
 ) {
   const { data: deliverable } = await supabase
     .from('deliverables')
@@ -200,20 +202,34 @@ async function streamGoogleDrive(
   ensureProvidersRegistered()
   const token = await getValidToken(producerOrgId, 'google_drive')
 
+  // Forward the client's Range header so byte-range seeking works for video playback.
+  const upstreamHeaders: Record<string, string> = { Authorization: `Bearer ${token}` }
+  if (rangeHeader) upstreamHeaders.Range = rangeHeader
+
   const driveRes = await fetch(
     `https://www.googleapis.com/drive/v3/files/${fileRef.external_id}?alt=media`,
-    { headers: { Authorization: `Bearer ${token}` } }
+    { headers: upstreamHeaders }
   )
 
   if (!driveRes.ok || !driveRes.body) {
     return errorResponse(`Google Drive error: ${driveRes.status}`, 502)
   }
 
+  // Propagate range/length metadata and the 206 status from the upstream response.
+  const headers: Record<string, string> = {
+    'Content-Type': fileRef.mime_type || 'video/mp4',
+    'Cache-Control': 'private, max-age=3600',
+  }
+  const contentRange = driveRes.headers.get('content-range')
+  if (contentRange) headers['Content-Range'] = contentRange
+  const acceptRanges = driveRes.headers.get('accept-ranges')
+  headers['Accept-Ranges'] = acceptRanges || 'bytes'
+  const contentLength = driveRes.headers.get('content-length')
+  if (contentLength) headers['Content-Length'] = contentLength
+
   return new Response(driveRes.body, {
-    headers: {
-      'Content-Type': fileRef.mime_type || 'video/mp4',
-      'Cache-Control': 'private, max-age=3600',
-    },
+    status: driveRes.status === 206 ? 206 : 200,
+    headers,
   })
 }
 

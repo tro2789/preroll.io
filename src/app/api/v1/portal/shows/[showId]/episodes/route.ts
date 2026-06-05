@@ -3,7 +3,8 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
 import { cookies } from 'next/headers'
 import { sendEmail, getSiteUrl } from '@/lib/email/send'
-import { emailTemplate, emailHighlightBlock } from '@/lib/email/template'
+import { emailTemplate, emailHighlightBlock, escapeHtml } from '@/lib/email/template'
+import { userIsOrgMember } from '@/lib/portal/resolve'
 
 export async function POST(
   request: NextRequest,
@@ -29,13 +30,17 @@ export async function POST(
 
   const client = show.clients as unknown as { id: string; client_user_id: string | null; org_id: string; name: string }
   const isClient = client.client_user_id === user.id
-  const isPreview = previewClientId === client.id
+  // SECURITY: the preview cookie is attacker-settable. Only honor it for a real org member.
+  const isPreview = !isClient && previewClientId === client.id
+    && (await userIsOrgMember(serviceClient, user.id, client.org_id))
   if (!isClient && !isPreview) return errorResponse('Forbidden', 403)
 
   const body = await request.json()
   const title = body.title?.trim()
   const notes = body.notes?.trim() || null
-  const links: string[] = Array.isArray(body.links) ? body.links.filter((l: string) => l?.trim()) : []
+  const links: string[] = Array.isArray(body.links)
+    ? body.links.filter((l: string) => typeof l === 'string' && /^https?:\/\//i.test(l.trim()))
+    : []
 
   if (!title && links.length === 0) {
     return errorResponse('Provide a title or at least one link')
@@ -92,12 +97,12 @@ export async function POST(
     const episodeUrl = `${siteUrl}/app/shows/${showId}/episodes/${episode.id}`
     const subject = `New episode request: ${episode.title}`
     const detailLines = [
-      `<p style="margin: 0 0 8px; font-weight: 600;">${episode.title}</p>`,
-      notes ? `<p style="margin: 0 0 8px; color: #6b7280;">${notes}</p>` : '',
-      links.length > 0 ? `<p style="margin: 0; color: #6b7280;">Content links:<br/>${links.map((l: string) => `<a href="${l.trim()}" style="color: #e86a47;">${l.trim()}</a>`).join('<br/>')}</p>` : '',
+      `<p style="margin: 0 0 8px; font-weight: 600;">${escapeHtml(episode.title)}</p>`,
+      notes ? `<p style="margin: 0 0 8px; color: #6b7280;">${escapeHtml(notes)}</p>` : '',
+      links.length > 0 ? `<p style="margin: 0; color: #6b7280;">Content links:<br/>${links.map((l: string) => `<a href="${escapeHtml(l.trim())}" style="color: #e86a47;">${escapeHtml(l.trim())}</a>`).join('<br/>')}</p>` : '',
     ].filter(Boolean).join('')
     const html = emailTemplate({
-      body: `<p style="margin: 0 0 16px;"><strong>${client.name}</strong> submitted a new episode request for <strong>${show.name}</strong>.</p>${emailHighlightBlock(detailLines)}`,
+      body: `<p style="margin: 0 0 16px;"><strong>${escapeHtml(client.name)}</strong> submitted a new episode request for <strong>${escapeHtml(show.name)}</strong>.</p>${emailHighlightBlock(detailLines)}`,
       cta: { label: 'View Episode', url: episodeUrl },
     })
 

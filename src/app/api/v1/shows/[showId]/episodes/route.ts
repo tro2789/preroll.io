@@ -1,16 +1,21 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse, getNextPositionInStage } from '@/lib/api/helpers'
+import { getShowForOrg } from '@/lib/api/ownership'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ showId: string }> }
 ) {
   const { showId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getShowForOrg(supabase!, showId, org!.id))) return errorResponse('Show not found', 404)
 
   const status = request.nextUrl.searchParams.get('status')
   const stageId = request.nextUrl.searchParams.get('stage_id')
+
+  const limit = Math.min(parseInt(request.nextUrl.searchParams.get('limit') || '100', 10) || 100, 200)
+  const offset = parseInt(request.nextUrl.searchParams.get('offset') || '0', 10) || 0
 
   let query = supabase!
     .from('episodes')
@@ -27,6 +32,8 @@ export async function GET(
     query = query.eq('stage_id', stageId)
   }
 
+  query = query.range(offset, offset + limit - 1)
+
   const { data, error: dbError } = await query
 
   if (dbError) return errorResponse(dbError.message, 500)
@@ -40,6 +47,7 @@ export async function POST(
   const { showId } = await params
   const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getShowForOrg(supabase!, showId, org!.id))) return errorResponse('Show not found', 404)
 
   const body = await request.json()
   if (!body.title) return errorResponse('title is required')

@@ -1,3 +1,5 @@
+import { createHmac, timingSafeEqual } from 'crypto'
+
 const DEEPGRAM_API_BASE = 'https://api.deepgram.com/v1'
 
 interface TranscriptionResult {
@@ -43,8 +45,33 @@ export function getSiteBaseUrl(): string {
     || 'http://localhost:3003'
 }
 
+/**
+ * Secret used to sign Deepgram callback URLs so a forged POST to the public
+ * callback endpoint (knowing only a transcription UUID) cannot mark a job
+ * completed. Falls back to INTEGRATION_ENCRYPTION_KEY, which is always present.
+ */
+function callbackSecret(): string {
+  const secret = process.env.DEEPGRAM_CALLBACK_SECRET || process.env.INTEGRATION_ENCRYPTION_KEY
+  if (!secret) throw new Error('DEEPGRAM_CALLBACK_SECRET or INTEGRATION_ENCRYPTION_KEY is required')
+  return secret
+}
+
+export function signCallbackToken(transcriptionId: string): string {
+  return createHmac('sha256', callbackSecret()).update(transcriptionId).digest('hex')
+}
+
+export function verifyCallbackToken(transcriptionId: string, token: string | null): boolean {
+  if (!token) return false
+  const expected = signCallbackToken(transcriptionId)
+  const tokenBuf = Buffer.from(token)
+  const expectedBuf = Buffer.from(expected)
+  if (tokenBuf.length !== expectedBuf.length) return false
+  return timingSafeEqual(tokenBuf, expectedBuf)
+}
+
 export function buildCallbackUrl(transcriptionId: string): string {
-  return `${getSiteBaseUrl()}/api/v1/webhooks/deepgram?id=${transcriptionId}`
+  const token = signCallbackToken(transcriptionId)
+  return `${getSiteBaseUrl()}/api/v1/webhooks/deepgram?id=${transcriptionId}&token=${token}`
 }
 
 export interface DeepgramSegment {

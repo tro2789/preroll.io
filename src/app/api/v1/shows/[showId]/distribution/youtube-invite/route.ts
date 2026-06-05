@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createInviteToken } from '@/lib/integrations/invite-token'
+import { getShowForOrg } from '@/lib/api/ownership'
 
 export async function POST(
   request: NextRequest,
@@ -9,6 +10,7 @@ export async function POST(
   const { showId } = await params
   const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getShowForOrg(supabase!, showId, org!.id))) return errorResponse('Show not found', 404)
 
   const { data: show } = await supabase!
     .from('shows')

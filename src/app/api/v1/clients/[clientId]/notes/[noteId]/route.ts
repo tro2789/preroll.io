@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getClientForOrg } from '@/lib/api/ownership'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string; noteId: string }> }
 ) {
   const { clientId, noteId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getClientForOrg(supabase!, clientId, org!.id))) return errorResponse('Client not found', 404)
 
   const { data, error: dbError } = await supabase!
     .from('meeting_notes')
@@ -25,8 +27,9 @@ export async function PATCH(
   { params }: { params: Promise<{ clientId: string; noteId: string }> }
 ) {
   const { clientId, noteId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getClientForOrg(supabase!, clientId, org!.id))) return errorResponse('Client not found', 404)
 
   const body = await request.json()
 
@@ -56,8 +59,9 @@ export async function DELETE(
   { params }: { params: Promise<{ clientId: string; noteId: string }> }
 ) {
   const { clientId, noteId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getClientForOrg(supabase!, clientId, org!.id))) return errorResponse('Client not found', 404)
 
   const { error: dbError } = await supabase!
     .from('meeting_notes')

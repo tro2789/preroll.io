@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getOrgEntitlements } from '@/lib/entitlements'
 import { requireRole } from '@/lib/org/roles'
+import { getClientForOrg } from '@/lib/api/ownership'
 
 export async function GET(request: NextRequest) {
   const { supabase, org, error } = await getAuthenticatedClient()
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
   const body = await request.json()
   if (!body.client_id) return errorResponse('client_id is required')
   if (!body.name) return errorResponse('name is required')
+
+  if (!(await getClientForOrg(supabase!, body.client_id, org!.id))) return errorResponse('Client not found', 404)
 
   const { data: show, error: showError } = await supabase!
     .from('shows')

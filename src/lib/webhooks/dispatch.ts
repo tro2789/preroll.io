@@ -1,6 +1,7 @@
 import { createHmac, randomUUID } from 'crypto'
 import { createServiceClient } from '@/lib/supabase/server'
 import { decrypt } from '@/lib/integrations/crypto'
+import { isWebhookUrlSafeResolved } from '@/lib/webhooks/validate-url'
 
 export type WebhookEvent =
   | 'episode.status_changed'
@@ -71,6 +72,12 @@ async function doDispatch(
       let error: string | null = null
 
       try {
+        // SECURITY: re-validate (incl. DNS resolution) at dispatch time to catch
+        // DNS-rebinding / TOCTOU, and never follow redirects into internal hosts.
+        if (!(await isWebhookUrlSafeResolved(endpoint.url))) {
+          throw new Error('Endpoint URL resolves to a disallowed address')
+        }
+
         const secret = decrypt(endpoint.secret_enc)
         const signature = sign(body, secret, timestamp)
 
@@ -83,6 +90,7 @@ async function doDispatch(
             'X-PreRoll-Event': event,
           },
           body,
+          redirect: 'manual',
           signal: AbortSignal.timeout(10_000),
         })
 

@@ -1,5 +1,6 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getShowForOrg, getEpisodeForOrg, getClientForOrg } from '@/lib/api/ownership'
 import type { GenerationType, AiTone, AiLength } from '@/lib/ai/constants'
 
 type Tool = Anthropic.Messages.Tool
@@ -643,6 +644,10 @@ export async function executeAction(
 
   switch (actionType) {
     case 'create_episode': {
+      // SECURITY: action_data is client-supplied; re-verify ownership (RLS is bypassed on the service client).
+      if (!(await getShowForOrg(supabase, actionData.show_id as string, ctx.orgId))) {
+        return { result: null, error: 'Show not found' }
+      }
       const { data: firstStage } = await supabase
         .from('pipeline_stages')
         .select('id')
@@ -672,6 +677,19 @@ export async function executeAction(
 
     case 'update_episode': {
       const { episode_id, ...updates } = actionData
+      // SECURITY: re-verify the episode belongs to the caller's org before mutating.
+      const ownedEpisode = await getEpisodeForOrg(supabase, episode_id as string, ctx.orgId)
+      if (!ownedEpisode) return { result: null, error: 'Episode not found' }
+      // If moving stages, the target stage must belong to the same show.
+      if (updates.stage_id) {
+        const { data: stage } = await supabase
+          .from('pipeline_stages')
+          .select('id')
+          .eq('id', updates.stage_id as string)
+          .eq('show_id', ownedEpisode.show_id)
+          .maybeSingle()
+        if (!stage) return { result: null, error: 'Stage not found' }
+      }
       const { data, error } = await supabase
         .from('episodes')
         .update(updates)
@@ -701,6 +719,10 @@ export async function executeAction(
     }
 
     case 'create_show': {
+      // SECURITY: the target client must belong to the caller's org.
+      if (!(await getClientForOrg(supabase, actionData.client_id as string, ctx.orgId))) {
+        return { result: null, error: 'Client not found' }
+      }
       const { data: show, error: showError } = await supabase
         .from('shows')
         .insert({
@@ -727,6 +749,16 @@ export async function executeAction(
     }
 
     case 'create_deliverable': {
+      // SECURITY: the parent show (and episode, if given) must belong to the caller's org.
+      if (!(await getShowForOrg(supabase, actionData.show_id as string, ctx.orgId))) {
+        return { result: null, error: 'Show not found' }
+      }
+      if (actionData.episode_id) {
+        const ep = await getEpisodeForOrg(supabase, actionData.episode_id as string, ctx.orgId)
+        if (!ep || ep.show_id !== actionData.show_id) {
+          return { result: null, error: 'Episode not found' }
+        }
+      }
       const { data, error } = await supabase
         .from('deliverables')
         .insert({
@@ -746,6 +778,10 @@ export async function executeAction(
     }
 
     case 'create_note': {
+      // SECURITY: the target client must belong to the caller's org.
+      if (!(await getClientForOrg(supabase, actionData.client_id as string, ctx.orgId))) {
+        return { result: null, error: 'Client not found' }
+      }
       const { data, error } = await supabase
         .from('meeting_notes')
         .insert({
@@ -784,6 +820,11 @@ export async function executeAction(
       const addon = await getAiAddonStatus(ctx.orgId)
       const cost = CREDIT_COSTS[genType] || 1
 
+      // SECURITY: the episode must belong to the caller's org (RLS is bypassed here).
+      if (!(await getEpisodeForOrg(supabase, actionData.episode_id as string, ctx.orgId))) {
+        return { result: null, error: 'Episode not found' }
+      }
+
       const { data: episode } = await supabase
         .from('episodes')
         .select('id, title, description, notes, show_id, shows(name, description, ai_tone, ai_length)')
@@ -793,19 +834,19 @@ export async function executeAction(
 
       const { data: transcription } = await supabase
         .from('transcriptions')
-        .select('result')
+        .select('full_text')
         .eq('episode_id', actionData.episode_id as string)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()
-      if (!transcription?.result) return { result: null, error: 'No transcript available for this episode' }
+      if (!transcription?.full_text) return { result: null, error: 'No transcript available for this episode' }
 
       const apiKey = getAnthropicApiKey(addon)
       const show = episode.shows as unknown as { name: string; description: string; ai_tone: string | null; ai_length: string | null }
 
       const genResult = await generate(genType, {
-        transcript: transcription.result as string,
+        transcript: transcription.full_text as string,
         showName: show.name,
         showDescription: show.description || '',
         episodeTitle: episode.title,
@@ -834,6 +875,11 @@ export async function executeAction(
       const { submitTranscription, buildCallbackUrl } = await import('@/lib/ai/deepgram')
 
       const addon = await getAiAddonStatus(ctx.orgId)
+
+      // SECURITY: the episode must belong to the caller's org before we transcribe/charge.
+      if (!(await getEpisodeForOrg(supabase, actionData.episode_id as string, ctx.orgId))) {
+        return { result: null, error: 'Episode not found' }
+      }
 
       const { data: fileRef } = await supabase
         .from('file_references')

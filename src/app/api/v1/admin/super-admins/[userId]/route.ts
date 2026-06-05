@@ -1,4 +1,4 @@
-import { getAdminClient } from '@/lib/admin/api-auth'
+import { getAdminClient, logAdminAction } from '@/lib/admin/api-auth'
 import { errorResponse } from '@/lib/api/helpers'
 import { createClient } from '@/lib/supabase/server'
 
@@ -6,7 +6,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { service, error } = await getAdminClient()
+  const { service, actor, error } = await getAdminClient()
   if (error) return error
 
   const { userId } = await params
@@ -24,6 +24,10 @@ export async function DELETE(
     .eq('user_id', userId)
 
   if (deleteError) return errorResponse(deleteError.message, 500)
+
+  await logAdminAction(service!, actor, 'super_admin.revoke', {
+    type: 'user', id: userId,
+  })
 
   return new Response(null, { status: 204 })
 }

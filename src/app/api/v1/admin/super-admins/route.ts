@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getAdminClient } from '@/lib/admin/api-auth'
+import { getAdminClient, logAdminAction } from '@/lib/admin/api-auth'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 
 export async function GET() {
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { service, error } = await getAdminClient()
+  const { service, actor, error } = await getAdminClient()
   if (error) return error
 
   let body: { user_id?: string }
@@ -51,6 +51,10 @@ export async function POST(request: NextRequest) {
     }
     return errorResponse(insertError.message, 500)
   }
+
+  await logAdminAction(service!, actor, 'super_admin.grant', {
+    type: 'user', id: body.user_id,
+  })
 
   return jsonResponse({ user_id: body.user_id }, 201)
 }

@@ -19,6 +19,25 @@ export interface PortalClient {
   } | null
 }
 
+/**
+ * True when `userId` is a member of `orgId`. The portal preview cookie is
+ * attacker-settable, so any route honoring it MUST confirm the caller actually
+ * belongs to the previewed client's org before granting access.
+ */
+export async function userIsOrgMember(
+  service: SupabaseClient,
+  userId: string,
+  orgId: string
+): Promise<boolean> {
+  const { data } = await service
+    .from('memberships')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('org_id', orgId)
+    .maybeSingle()
+  return !!data
+}
+
 export async function resolvePortalClient(
   supabase: SupabaseClient,
   userId: string

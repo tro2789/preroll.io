@@ -29,6 +29,10 @@ export async function POST(request: NextRequest) {
   if (!payload) {
     return errorResponse('Invite link has expired', 401)
   }
+  // SECURITY: bind the connection to the SIGNED show id, not the unsigned state blob.
+  if (payload.provider !== 'youtube' || state.showId !== payload.showId) {
+    return errorResponse('Invalid state', 400)
+  }
 
   const channel = state.channels.find((c) => c.id === channelId)
   if (!channel) {
@@ -57,7 +61,7 @@ export async function POST(request: NextRequest) {
     : null
 
   await supabase.from('distribution_connections').upsert({
-    show_id: state.showId,
+    show_id: payload.showId,
     provider: 'youtube',
     external_show_id: channel.id,
     external_show_name: channel.name,

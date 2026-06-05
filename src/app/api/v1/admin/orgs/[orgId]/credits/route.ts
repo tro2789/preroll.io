@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server'
-import { getAdminClient } from '@/lib/admin/api-auth'
+import { getAdminClient, logAdminAction } from '@/lib/admin/api-auth'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ orgId: string }> }
 ) {
-  const { service, error } = await getAdminClient()
+  const { service, actor, error } = await getAdminClient()
   if (error) return error
 
   const { orgId } = await params
@@ -54,6 +54,10 @@ export async function POST(
       balance_after: newBalance,
       reason: 'admin_grant',
     })
+
+  await logAdminAction(service!, actor, 'org.grant_credits', {
+    type: 'org', id: orgId, metadata: { amount, new_balance: newBalance },
+  })
 
   return jsonResponse({ credits_balance: newBalance })
 }

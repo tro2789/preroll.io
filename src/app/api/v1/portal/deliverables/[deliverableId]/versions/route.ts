@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { userIsOrgMember } from '@/lib/portal/resolve'
 import { cookies } from 'next/headers'
 
 export async function GET(
@@ -22,7 +23,14 @@ export async function GET(
   const show = deliverable.shows as unknown as { client_id: string; clients: { client_user_id: string | null; org_id: string } | null } | null
   const isClient = show?.clients?.client_user_id === user.id
   const cookieStore = await cookies()
-  const isPreview = !!cookieStore.get('portal_preview_client_id')?.value
+  const previewClientId = cookieStore.get('portal_preview_client_id')?.value
+  // SECURITY: only honor the preview cookie when it matches THIS deliverable's client
+  // and the caller is actually a member of that client's org.
+  const isPreview = !isClient
+    && !!previewClientId
+    && previewClientId === show?.client_id
+    && !!show?.clients
+    && (await userIsOrgMember(createServiceClient(), user.id, show.clients.org_id))
   if (!show?.clients || (!isClient && !isPreview)) {
     return errorResponse('Forbidden', 403)
   }

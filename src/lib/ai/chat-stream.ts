@@ -18,7 +18,20 @@ const MAX_TOOL_ROUNDS = 5
 
 export async function* streamChat(params: StreamParams): AsyncGenerator<ChatEvent> {
   const client = new Anthropic({ apiKey: params.apiKey })
-  const tools = getAllTools()
+  const baseTools = getAllTools()
+
+  // Cache the large, static system prompt and the full tool-definition block across
+  // the up-to-5 tool-use rounds. cache_control on the system block and on the last
+  // tool definition marks the cumulative prefix (system + all tools) as cacheable.
+  const system: Anthropic.Messages.TextBlockParam[] = [
+    { type: 'text', text: params.systemPrompt, cache_control: { type: 'ephemeral' } },
+  ]
+  const tools: Anthropic.Messages.Tool[] = baseTools.map((tool, i) =>
+    i === baseTools.length - 1
+      ? { ...tool, cache_control: { type: 'ephemeral' } }
+      : tool
+  )
+
   let messages = [...params.messages]
   let toolRound = 0
 
@@ -26,7 +39,7 @@ export async function* streamChat(params: StreamParams): AsyncGenerator<ChatEven
     const stream = client.messages.stream({
       model: AI_CHAT_MODEL,
       max_tokens: AI_CHAT_MAX_TOKENS,
-      system: params.systemPrompt,
+      system,
       messages,
       tools,
     })

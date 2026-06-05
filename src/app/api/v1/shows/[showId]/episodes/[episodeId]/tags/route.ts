@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getEpisodeForShowAndOrg } from '@/lib/api/ownership'
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
 ) {
-  const { episodeId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { showId, episodeId } = await params
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getEpisodeForShowAndOrg(supabase!, episodeId, showId, org!.id))) return errorResponse('Episode not found', 404)
 
   const { data, error: dbError } = await supabase!
     .from('episode_tags')
@@ -22,13 +24,27 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ showId: string; episodeId: string }> }
 ) {
-  const { episodeId } = await params
-  const { supabase, error } = await getAuthenticatedClient()
+  const { showId, episodeId } = await params
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
+  if (!(await getEpisodeForShowAndOrg(supabase!, episodeId, showId, org!.id))) return errorResponse('Episode not found', 404)
 
   const body = await request.json()
   const tagIds: string[] = body.tagIds
   if (!Array.isArray(tagIds)) return errorResponse('tagIds must be an array')
+
+  if (tagIds.length > 0) {
+    const { data: ownedTags } = await supabase!
+      .from('tags')
+      .select('id')
+      .eq('org_id', org!.id)
+      .in('id', tagIds)
+
+    const ownedIds = new Set((ownedTags || []).map((t) => t.id))
+    if (tagIds.some((id) => !ownedIds.has(id))) {
+      return errorResponse('One or more tags not found', 404)
+    }
+  }
 
   await supabase!
     .from('episode_tags')

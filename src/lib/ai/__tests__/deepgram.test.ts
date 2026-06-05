@@ -1,13 +1,18 @@
-import { describe, it, expect } from 'vitest'
-import { parseDeepgramResponse, buildCallbackUrl } from '../deepgram'
+import { describe, it, expect, beforeAll } from 'vitest'
+import { parseDeepgramResponse, buildCallbackUrl, signCallbackToken, verifyCallbackToken } from '../deepgram'
 
 describe('buildCallbackUrl', () => {
-  it('uses NEXT_PUBLIC_SITE_URL when set', () => {
+  // The callback URL is signed; ensure a secret is available for the token.
+  beforeAll(() => {
+    process.env.INTEGRATION_ENCRYPTION_KEY ||= 'test-integration-encryption-key'
+  })
+
+  it('uses NEXT_PUBLIC_SITE_URL when set, with a signed token', () => {
     const original = process.env.NEXT_PUBLIC_SITE_URL
     process.env.NEXT_PUBLIC_SITE_URL = 'https://preroll.io'
     try {
       const url = buildCallbackUrl('txn-123')
-      expect(url).toBe('https://preroll.io/api/v1/webhooks/deepgram?id=txn-123')
+      expect(url).toBe(`https://preroll.io/api/v1/webhooks/deepgram?id=txn-123&token=${signCallbackToken('txn-123')}`)
     } finally {
       process.env.NEXT_PUBLIC_SITE_URL = original
     }
@@ -20,7 +25,7 @@ describe('buildCallbackUrl', () => {
     process.env.VERCEL_URL = 'preroll-abc.vercel.app'
     try {
       const url = buildCallbackUrl('txn-456')
-      expect(url).toBe('https://preroll-abc.vercel.app/api/v1/webhooks/deepgram?id=txn-456')
+      expect(url).toBe(`https://preroll-abc.vercel.app/api/v1/webhooks/deepgram?id=txn-456&token=${signCallbackToken('txn-456')}`)
     } finally {
       process.env.NEXT_PUBLIC_SITE_URL = origSite
       process.env.VERCEL_URL = origVercel
@@ -34,11 +39,20 @@ describe('buildCallbackUrl', () => {
     delete process.env.VERCEL_URL
     try {
       const url = buildCallbackUrl('txn-789')
-      expect(url).toBe('http://localhost:3003/api/v1/webhooks/deepgram?id=txn-789')
+      expect(url).toBe(`http://localhost:3003/api/v1/webhooks/deepgram?id=txn-789&token=${signCallbackToken('txn-789')}`)
     } finally {
       process.env.NEXT_PUBLIC_SITE_URL = origSite
       process.env.VERCEL_URL = origVercel
     }
+  })
+
+  it('verifies a matching token and rejects forged/empty ones', () => {
+    const token = signCallbackToken('txn-abc')
+    expect(verifyCallbackToken('txn-abc', token)).toBe(true)
+    expect(verifyCallbackToken('txn-abc', 'wrong')).toBe(false)
+    expect(verifyCallbackToken('txn-abc', null)).toBe(false)
+    // token is bound to the id
+    expect(verifyCallbackToken('txn-different', token)).toBe(false)
   })
 })
 

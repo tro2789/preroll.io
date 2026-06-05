@@ -5,7 +5,7 @@ import { ensureProvidersRegistered } from '@/lib/integrations/init'
 import { getDownloadUrl } from '@/lib/r2/client'
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ deliverableId: string }> }
 ) {
   const { deliverableId } = await params
@@ -77,16 +77,31 @@ export async function GET(
   if (fileRef.provider === 'google_drive') {
     try {
       const token = await getValidToken(producerOrgId, 'google_drive')
+      // Forward the client's Range header so byte-range seeking works for video playback.
+      const upstreamHeaders: Record<string, string> = { Authorization: `Bearer ${token}` }
+      const rangeHeader = request.headers.get('range')
+      if (rangeHeader) upstreamHeaders.Range = rangeHeader
+
       const res = await fetch(
         `https://www.googleapis.com/drive/v3/files/${fileRef.external_id}?alt=media`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: upstreamHeaders }
       )
       if (res.ok && res.body) {
+        // Propagate range/length metadata and the 206 status from the upstream response.
+        const headers: Record<string, string> = {
+          'Content-Disposition': `attachment; filename="${deliverable.title.replace(/[^\w\s.-]/g, '_')}"`,
+          'Content-Type': res.headers.get('Content-Type') || 'application/octet-stream',
+        }
+        const contentRange = res.headers.get('content-range')
+        if (contentRange) headers['Content-Range'] = contentRange
+        const acceptRanges = res.headers.get('accept-ranges')
+        headers['Accept-Ranges'] = acceptRanges || 'bytes'
+        const contentLength = res.headers.get('content-length')
+        if (contentLength) headers['Content-Length'] = contentLength
+
         return new Response(res.body, {
-          headers: {
-            'Content-Disposition': `attachment; filename="${deliverable.title.replace(/[^\w\s.-]/g, '_')}"`,
-            'Content-Type': res.headers.get('Content-Type') || 'application/octet-stream',
-          },
+          status: res.status === 206 ? 206 : 200,
+          headers,
         })
       }
     } catch {}

@@ -1,4 +1,4 @@
-import { getAdminClient } from '@/lib/admin/api-auth'
+import { getAdminClient, logAdminAction } from '@/lib/admin/api-auth'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { createClient } from '@/lib/supabase/server'
 
@@ -6,7 +6,7 @@ export async function POST(
   _request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { service, error } = await getAdminClient()
+  const { service, actor, error } = await getAdminClient()
   if (error) return error
 
   const { userId } = await params
@@ -34,6 +34,10 @@ export async function POST(
   if (deleteError) {
     return errorResponse(deleteError.message, 500)
   }
+
+  await logAdminAction(service!, actor, 'user.delete', {
+    type: 'user', id: userId, metadata: { email: profile.email },
+  })
 
   return jsonResponse({ deleted: true, user_id: userId })
 }

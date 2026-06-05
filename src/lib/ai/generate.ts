@@ -9,14 +9,25 @@ import {
 import type { GenerationType } from './constants'
 
 const MAX_TRANSCRIPT_CHARS = 200_000
+// Short-form generation types only need a representative slice of the transcript,
+// not the whole thing. Cap their input to keep cost/latency down.
+const SHORT_FORM_TRANSCRIPT_CHARS = 40_000
+const SHORT_FORM_TYPES: ReadonlySet<GenerationType> = new Set([
+  'social_twitter',
+  'social_linkedin',
+  'social_instagram',
+  'description',
+  'title_suggestions',
+])
 
-function truncateTranscript(transcript: string): string {
-  if (transcript.length <= MAX_TRANSCRIPT_CHARS) return transcript
-  return transcript.slice(0, MAX_TRANSCRIPT_CHARS) + '\n\n[Transcript truncated]'
+function truncateTranscript(transcript: string, maxChars: number): string {
+  if (transcript.length <= maxChars) return transcript
+  return transcript.slice(0, maxChars) + '\n\n[Transcript truncated]'
 }
 
 function getPrompt(type: GenerationType, ctx: GenerationContext): { system: string; user: string } {
-  const truncatedCtx = { ...ctx, transcript: truncateTranscript(ctx.transcript) }
+  const maxChars = SHORT_FORM_TYPES.has(type) ? SHORT_FORM_TRANSCRIPT_CHARS : MAX_TRANSCRIPT_CHARS
+  const truncatedCtx = { ...ctx, transcript: truncateTranscript(ctx.transcript, maxChars) }
 
   switch (type) {
     case 'show_notes':

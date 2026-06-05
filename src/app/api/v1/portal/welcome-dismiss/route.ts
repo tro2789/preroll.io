@@ -1,5 +1,6 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { userIsOrgMember } from '@/lib/portal/resolve'
 import { cookies } from 'next/headers'
 
 export async function POST() {
@@ -12,6 +13,15 @@ export async function POST() {
 
   if (previewClientId) {
     const serviceClient = createServiceClient()
+    // SECURITY: the preview cookie is attacker-settable; confirm org membership first.
+    const { data: client } = await serviceClient
+      .from('clients')
+      .select('id, org_id')
+      .eq('id', previewClientId)
+      .maybeSingle()
+    if (!client || !(await userIsOrgMember(serviceClient, user.id, client.org_id))) {
+      return errorResponse('Forbidden', 403)
+    }
     const { error } = await serviceClient
       .from('clients')
       .update({ portal_welcome_dismissed_at: new Date().toISOString() })

@@ -34,6 +34,13 @@ export async function GET(request: NextRequest) {
     const msg = encodeURIComponent('Invite link has expired. Ask your producer for a new link.')
     return NextResponse.redirect(`${origin}/connect/youtube?error=${msg}`)
   }
+  // SECURITY: trust only the SIGNED show id from the invite token, never the unsigned state blob.
+  if (payload.provider !== 'youtube' || state.showId !== payload.showId) {
+    const msg = encodeURIComponent('Invalid state parameter.')
+    return NextResponse.redirect(`${origin}/connect/youtube?error=${msg}`)
+  }
+  // Use the verified values downstream.
+  const signedState = { inviteToken: state.inviteToken, showId: payload.showId, orgId: payload.orgId }
 
   const config = getOAuthConfig()
   const redirectUri = `${origin}/connect/youtube/callback`
@@ -69,7 +76,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (channelItems.length === 1) {
-      return saveAndRedirect(origin, state, tokens, channelItems[0])
+      return saveAndRedirect(origin, signedState, tokens, channelItems[0])
     }
 
     const channelData = channelItems.map((ch: Record<string, unknown>) => {
@@ -86,9 +93,9 @@ export async function GET(request: NextRequest) {
     })), { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 600, path: '/' })
 
     const pickerState = Buffer.from(JSON.stringify({
-      inviteToken: state.inviteToken,
-      showId: state.showId,
-      orgId: state.orgId,
+      inviteToken: signedState.inviteToken,
+      showId: signedState.showId,
+      orgId: signedState.orgId,
       channels: channelData,
     })).toString('base64url')
 

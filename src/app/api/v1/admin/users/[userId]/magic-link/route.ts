@@ -1,4 +1,4 @@
-import { getAdminClient } from '@/lib/admin/api-auth'
+import { getAdminClient, logAdminAction } from '@/lib/admin/api-auth'
 import { jsonResponse, errorResponse } from '@/lib/api/helpers'
 import { getSiteUrl, generateMagicLinkUrl, sendEmail } from '@/lib/email/send'
 
@@ -6,7 +6,7 @@ export async function POST(
   _request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { service, error } = await getAdminClient()
+  const { service, actor, error } = await getAdminClient()
   if (error) return error
 
   const { userId } = await params
@@ -37,6 +37,10 @@ export async function POST(
   if (!emailSent) {
     return errorResponse('Failed to send magic link email', 500)
   }
+
+  await logAdminAction(service!, actor, 'user.magic_link', {
+    type: 'user', id: userId, metadata: { email: profile.email },
+  })
 
   return jsonResponse({
     email: profile.email,

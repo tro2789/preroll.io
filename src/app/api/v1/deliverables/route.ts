@@ -1,9 +1,10 @@
 import { NextRequest } from 'next/server'
 import { getAuthenticatedClient, jsonResponse, errorResponse } from '@/lib/api/helpers'
+import { getShowForOrg } from '@/lib/api/ownership'
 import { dispatchWebhooks } from '@/lib/webhooks/dispatch'
 
 export async function GET(request: NextRequest) {
-  const { supabase, error } = await getAuthenticatedClient()
+  const { supabase, org, error } = await getAuthenticatedClient()
   if (error) return error
 
   const searchParams = request.nextUrl.searchParams
@@ -11,10 +12,15 @@ export async function GET(request: NextRequest) {
   const episodeId = searchParams.get('episode_id')
   const status = searchParams.get('status')
 
+  const limit = Math.min(parseInt(searchParams.get('limit') || '100', 10) || 100, 200)
+  const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0)
+
   let query = supabase!
     .from('deliverables')
-    .select('*, episodes(title)')
+    .select('*, episodes(title), shows!inner(clients!inner(org_id))')
+    .eq('shows.clients.org_id', org!.id)
     .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (showId) query = query.eq('show_id', showId)
   if (episodeId) query = query.eq('episode_id', episodeId)
@@ -33,6 +39,8 @@ export async function POST(request: Request) {
   const body = await request.json()
   if (!body.show_id) return errorResponse('show_id is required')
   if (!body.title) return errorResponse('title is required')
+
+  if (!(await getShowForOrg(supabase!, body.show_id, org!.id))) return errorResponse('Show not found', 404)
 
   const { data, error: dbError } = await supabase!
     .from('deliverables')

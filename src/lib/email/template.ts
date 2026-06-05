@@ -1,3 +1,14 @@
+/** Escape a string for safe interpolation into email HTML (prevents markup/phishing injection). */
+export function escapeHtml(value: string | null | undefined): string {
+  if (!value) return ''
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 const BRAND_COLOR = '#e86a47'
 const TEXT_PRIMARY = '#1a1a1a'
 const TEXT_SECONDARY = '#6b7280'

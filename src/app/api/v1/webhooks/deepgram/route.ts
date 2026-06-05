@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { parseDeepgramResponse } from '@/lib/ai/deepgram'
+import { parseDeepgramResponse, verifyCallbackToken } from '@/lib/ai/deepgram'
 import { refundCredits } from '@/lib/ai/entitlements'
 import { runAutoGeneration } from '@/lib/ai/auto-generate'
 
@@ -8,6 +8,12 @@ export async function POST(request: NextRequest) {
   const transcriptionId = request.nextUrl.searchParams.get('id')
   if (!transcriptionId) {
     return NextResponse.json({ error: 'Missing transcription id' }, { status: 400 })
+  }
+
+  // SECURITY: the callback URL is signed; reject forged callbacks that only know the UUID.
+  const token = request.nextUrl.searchParams.get('token')
+  if (!verifyCallbackToken(transcriptionId, token)) {
+    return NextResponse.json({ error: 'Invalid callback token' }, { status: 401 })
   }
 
   let body: Record<string, unknown>
