@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Turnstile, turnstileEnabled } from '@/components/auth/turnstile'
 
 export default function InvitePage() {
   const params = useParams()
@@ -13,6 +14,8 @@ export default function InvitePage() {
   const [error, setError] = useState<string | null>(null)
   const [showName, setShowName] = useState<string | null>(null)
   const [validating, setValidating] = useState(true)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaKey, setCaptchaKey] = useState(0)
 
   useEffect(() => {
     async function validateInvite() {
@@ -45,11 +48,14 @@ export default function InvitePage() {
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(onboardingPath)}`,
+        captchaToken: captchaToken ?? undefined,
       },
     })
 
     if (error) {
       setError(error.message)
+      setCaptchaToken(null)
+      setCaptchaKey((k) => k + 1)
       setLoading(false)
       return
     }
@@ -129,9 +135,11 @@ export default function InvitePage() {
             </div>
           </div>
 
+          <Turnstile key={captchaKey} onToken={setCaptchaToken} />
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (turnstileEnabled && !captchaToken)}
             className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Sending...' : 'Send me a login link'}

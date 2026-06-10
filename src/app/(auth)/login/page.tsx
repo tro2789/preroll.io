@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LogoIcon } from '@/components/ui/logo'
 import { createClient } from '@/lib/supabase/client'
+import { Turnstile, turnstileEnabled } from '@/components/auth/turnstile'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -12,6 +13,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaKey, setCaptchaKey] = useState(0)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -19,10 +22,16 @@ export default function LoginPage() {
     setLoading(true)
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+      options: { captchaToken: captchaToken ?? undefined },
+    })
 
     if (error) {
       setError(error.message)
+      setCaptchaToken(null)
+      setCaptchaKey((k) => k + 1)
       setLoading(false)
       return
     }
@@ -89,9 +98,11 @@ export default function LoginPage() {
             </div>
           </div>
 
+          <Turnstile key={captchaKey} onToken={setCaptchaToken} />
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (turnstileEnabled && !captchaToken)}
             className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-hover focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Signing in...' : 'Sign in'}
